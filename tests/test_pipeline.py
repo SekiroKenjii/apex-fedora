@@ -71,3 +71,16 @@ def test_installer_console_uses_pam_and_expected_generator_target():
         command = (ROOT / 'guest' / name).read_text()
         assert 'ExecStart=\n' in command
         assert "ExecStart=/usr/bin/bash -c 'exec /usr/bin/tmux " in command
+
+
+def test_installer_exposes_manual_user_creation_without_root_password():
+    import configparser
+    settings = configparser.ConfigParser()
+    settings.read(ROOT / 'guest/installer-ui.conf')
+    hidden = settings['User Interface']['hidden_spokes'].split()
+    assert hidden == ['NetworkSpoke', 'PasswordSpoke']
+    setup = (ROOT / 'guest/installer-configure.sh').read_text()
+    assert '/etc/anaconda/conf.d/90-apex-ui.conf' in setup
+    assert "configuration.set_from_detected_profile('fedora', 'silverblue')" in setup
+    assert "assert 'UserSpoke' not in configuration.ui.hidden_spokes" in setup
+    assert 'guest/installer-ui.conf' in (ROOT / 'guest/installer.Containerfile').read_text()

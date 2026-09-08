@@ -17,6 +17,20 @@ Path('/usr/share/anaconda/interactive-defaults.ks').write_text(
 Path('/usr/share/apex/installer-payload.json').write_text(json.dumps({'reference': payload}))
 PY
 install -Dm0644 /apex-installer-source/installer-diagnostics.py /usr/libexec/apex/installer-diagnostics.py
+install -Dm0644 /apex-installer-source/installer-ui.conf /etc/anaconda/conf.d/90-apex-ui.conf
+python3 - <<'PY'
+import json
+from pathlib import Path
+from pyanaconda.core.configuration.anaconda import AnacondaConfiguration
+configuration = AnacondaConfiguration.from_defaults()
+configuration.set_from_detected_profile('fedora', 'silverblue')
+configuration.set_from_files()
+assert 'UserSpoke' not in configuration.ui.hidden_spokes
+assert 'PasswordSpoke' in configuration.ui.hidden_spokes
+Path('/usr/share/apex/installer-ui.json').write_text(json.dumps({
+    'hidden_spokes': configuration.ui.hidden_spokes,
+    'user_creation': 'interactive', 'boot_test': 'NOT TESTED'}))
+PY
 # Anaconda's local installer account exists only in this derived environment.
 useradd --non-unique --uid 0 --gid 0 --no-create-home --home-dir /root \
     --shell /usr/libexec/anaconda/run-anaconda install

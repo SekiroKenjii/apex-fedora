@@ -38,6 +38,7 @@ if test "$kind" = installer; then
     podman image inspect "$artifact_ref" > output/installer/derived-image.json
     podman run --rm "$artifact_ref" rpm -qa --qf '%{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort > output/installer/installer-rpms.txt
     podman run --rm "$artifact_ref" cat /usr/share/anaconda/interactive-defaults.ks > output/installer/interactive-defaults.ks
+    podman run --rm "$artifact_ref" cat /usr/share/apex/installer-ui.json > output/installer/user-interface.json
     jq -n --arg digest "$digest" '{target_digest: $digest, installer_is_derived: true, automated_storage: false, selinux_required: "Enforcing", boot_test: "NOT TESTED"}' > output/installer/contract.json
     payload_args=(--bootc-installer-payload-ref "$tag")
     disk_args=()

@@ -79,6 +79,14 @@ digest. The tested bundle retained the original digest, but no installed boot fr
 that ISO has been accepted.
 
 Offline installation, user creation, ISO removal, installed boot and non-target disk
-preservation remain required. The current TUI only exposed language, time and storage
-on its first screen; its user-creation path also needs verification. Do not replace
-these checks with the private-account QCOW2 result.
+preservation remain required. The diagnostic TUI only exposed language, time and storage.
+The Silverblue profile inherits Workstation's hidden `UserSpoke`; Apex overrides this
+in the installer only. It keeps the root-password screen hidden and exposes manual
+user creation. Image construction validates the effective Anaconda configuration and
+records it in the signed artifact inventory. Actual account creation, administrator
+selection and password login still need a clean VM test. The private-account QCOW2
+does not prove the installer's account workflow.
+
+Sources: [Silverblue profile](https://github.com/rhinstaller/anaconda/blob/anaconda-44.30/data/profile.d/fedora-silverblue.conf),
+[Workstation profile](https://github.com/rhinstaller/anaconda/blob/anaconda-44.30/data/profile.d/fedora-workstation.conf),
+[configuration loading](https://github.com/rhinstaller/anaconda/blob/anaconda-44.30/pyanaconda/core/configuration/anaconda.py).
