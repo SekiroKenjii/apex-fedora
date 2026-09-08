@@ -1,0 +1,7 @@
+{
+  "build": ["image.lint", "rpm.dependencies", "kernel.modules", "nvidia.kernel-match", "initramfs.installed", "initramfs.live", "live.parity", "signature.accept", "signature.reject", "sources.locked"],
+  "vm": ["installer.offline", "installer.cancel", "installer.other-disks", "boot.ten-cycles", "desktop.password-wayland", "desktop.theme-surfaces", "boot.log-review", "firstboot.offline", "firstboot.interrupted", "update.forward", "update.rollback", "update.disk-full", "update.interrupted", "update.power-loss", "update.bad-signature", "update.untrusted-source", "boot.gdm-failure", "boot.dbus-failure", "boot.root-failure", "boot.initramfs-failure", "boot.pre-userspace-failure", "boot.grub-counter", "boot.tty-rescue", "live.direct", "live.ventoy", "live.disk-protection"],
+  "hardware": ["coldboot.three-cycles", "suspend.ten-cycles", "audio.speakers", "audio.microphone", "audio.headphones", "audio.resume", "fingerprint.enroll", "fingerprint.claim-cleanup", "fingerprint.lock-unlock", "fingerprint.reboot", "gpu.offload", "gpu.runtime-suspend", "display.oled-hdmi", "network.wifi-bluetooth", "input.webcam-touchpad-fn", "ubuntu.return-boot"],
+  "recovery": ["rescue.usb-boot", "backup.off-device", "backup.restore-drill", "storage.review", "installation.operator-approval"],
+  "git": ["git.private-stage", "git.commit-policy", "git.outgoing-history"]
+}

@@ -1,0 +1,23 @@
+{
+  "fedora": 44,
+  "gnome": "50",
+  "architecture": "x86_64",
+  "builder": {
+    "cpus": 4,
+    "memory_mib": 6144,
+    "reserve_mib": 1536,
+    "disk_gib": 160,
+    "minimum_free_gib": 180,
+    "ssh_port": 22244,
+    "firmware_code": "/usr/share/OVMF/OVMF_CODE_4M.fd",
+    "firmware_vars": "/usr/share/OVMF/OVMF_VARS_4M.fd",
+    "url": "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2",
+    "sha256": "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f"
+  },
+  "base": "quay.io/fedora-ostree-desktops/silverblue:44",
+  "image_builder": "ghcr.io/osbuild/image-builder-cli:latest",
+  "sources": {
+    "shadcn-gnome": {"repository": "https://github.com/SekiroKenjii/shadcn-gnome", "commit": "39d566801b07c7ef6af4377ef58904a019e9693b"},
+    "macos-genie": {"repository": "https://github.com/SekiroKenjii/macos-genie", "commit": "375f785b74b7903e48923e88b250e10cd813fd13"}
+  }
+}

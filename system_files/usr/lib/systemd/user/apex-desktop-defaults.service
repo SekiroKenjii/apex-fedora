@@ -1,0 +1,10 @@
+[Unit]
+Description=Maintain Apex GTK imports without replacing user styles
+Before=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/apex/desktop-defaults.py
+
+[Install]
+WantedBy=default.target

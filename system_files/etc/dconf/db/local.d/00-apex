@@ -1,0 +1,15 @@
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita-dark'
+icon-theme='Papirus-Dark'
+font-name='Geist 11'
+monospace-font-name='Maple Mono NF Medium 12'
+font-antialiasing='grayscale'
+font-hinting='slight'
+enable-hot-corners=false
+
+[org/gnome/shell]
+enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'macos-genie@thuongvo.dev']
+
+[org/gnome/shell/extensions/user-theme]
+name='Shadcn-Graphite'

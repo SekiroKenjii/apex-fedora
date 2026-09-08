@@ -1,0 +1,5 @@
+{
+  "audio": {"status": "BLOCKED", "reason": "ALC294 speaker initialization needs reproduction on target hardware"},
+  "fingerprint": {"status": "BLOCKED", "reason": "Enrollment reports an existing claim; the owning client and cleanup path are unconfirmed"},
+  "nvidia": {"status": "NOT TESTED", "reason": "A matching prebuilt kernel-module and userspace set has not been validated"}
+}

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "base": {"reference": "quay.io/fedora-ostree-desktops/silverblue@sha256:3756011b47fa4cb86037666047338cb2d4517de453268c22d443a62edbc03255", "digest": "sha256:3756011b47fa4cb86037666047338cb2d4517de453268c22d443a62edbc03255", "verified_boot": false},
+  "image_builder": {"reference": "ghcr.io/osbuild/image-builder-cli@sha256:540cfcb552d5bb71733cfb9452cbb59b687448fcc4b2d74e5629598af7875e8f", "digest": "sha256:540cfcb552d5bb71733cfb9452cbb59b687448fcc4b2d74e5629598af7875e8f", "verified_boot": false},
+  "sources": {
+    "shadcn-gnome": {"commit": "39d566801b07c7ef6af4377ef58904a019e9693b", "url": "https://codeload.github.com/SekiroKenjii/shadcn-gnome/tar.gz/39d566801b07c7ef6af4377ef58904a019e9693b", "sha256": "66b79251a3a6d3929e6257f7c48a89192c7d4eafa35f713b85177ca997aaa0e2"},
+    "macos-genie": {"commit": "375f785b74b7903e48923e88b250e10cd813fd13", "url": "https://codeload.github.com/SekiroKenjii/macos-genie/tar.gz/375f785b74b7903e48923e88b250e10cd813fd13", "sha256": "e2f551c3a29ad01d06c8564446fade59f68b92cf029fc6131b30e13cd9d331f4"},
+    "titanoboa": {"commit": "5c457c3d0518bd17e754be0fd98a60d29d26abb4", "url": "https://codeload.github.com/ublue-os/titanoboa/tar.gz/5c457c3d0518bd17e754be0fd98a60d29d26abb4", "sha256": "3397cb1a57e338ab876ecbe10e3f3482469561a441f946026fdc1fc7b2e889d1"},
+    "greenboot-rs": {"commit": "5e7a1c8d9fc465b7513de5a173fd3697bfb5fa03", "url": "https://codeload.github.com/fedora-iot/greenboot-rs/tar.gz/5e7a1c8d9fc465b7513de5a173fd3697bfb5fa03", "sha256": "b7e2bbed9119ce2fcd2a782ee18ed9e1332f3e360a14c2d2dba33ba6b1c2fea9"},
+    "maple-mono-nf": {"version": "7.9", "filename": "MapleMono-NF.zip", "url": "https://github.com/subframe7536/maple-font/releases/download/v7.9/MapleMono-NF.zip", "sha256": "59098b87c895d871635d37680e88000ae2b2b25b55428195b228ec589e35fb89"},
+    "geist-font": {"version": "1.7.2", "filename": "geist-font-v1.7.2.zip", "url": "https://github.com/vercel/geist-font/releases/download/v1.7.2/geist-font-v1.7.2.zip", "sha256": "7fc800d2ac6b92844895196e5041aca55d814c15db70c44f79b3b83ab82b04e2"}
+  }
+}

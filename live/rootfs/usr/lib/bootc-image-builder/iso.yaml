@@ -1,0 +1,7 @@
+label: Apex-Live
+grub2:
+  timeout: 10
+  entries:
+    - name: Apex live diagnostic candidate
+      linux: /images/pxeboot/vmlinuz root=live:CDLABEL=Apex-Live rd.live.image rd.lvm=0 rd.md=0 rd.luks=0 rd.fstab=0 fstab=0 rd.systemd.gpt_auto=no systemd.gpt_auto=no noresume rd.live.overlay.overlayfs=1 enforcing=1 console=tty0 console=ttyS0,115200n8
+      initrd: /images/pxeboot/initrd.img

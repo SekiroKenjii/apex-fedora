@@ -1,0 +1,2 @@
+/* Resolve the Adwaita-dark name to the dark resources shipped with GTK3. */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained-dark.css");

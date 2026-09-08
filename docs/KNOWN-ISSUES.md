@@ -1,0 +1,82 @@
+# Known issues
+
+## Audio: BLOCKED
+
+The ALC294 codec on subsystem 1043:1ab2 has required a runtime codec workaround on an
+earlier installation. Its exact verb sequence has not yet been recovered in this work.
+No kernel quirk or UCM patch has been justified. Collect clean cold-boot codec, mixer,
+UCM and journal data before changing state. Speaker output and resume remain untested
+on Apex. Do not add guessed model options or an hda-verb service.
+See the [source investigation and command decoder](AUDIO.md).
+
+## Fingerprint: BLOCKED
+
+ELAN enrollment reports `the device is already claimed by another process`.
+An observed host log shows a protocol error during identify-for-enroll before subsequent
+Claim denials. This is a lead for cleanup testing, not a confirmed libfprint diagnosis.
+No ownership fix has been applied. Keep password login and password administration.
+Do not delete enrolled templates or restart the daemon on a timer as a product fix.
+See the [ownership investigation](FINGERPRINT.md).
+
+## Kernel and GPU: NOT TESTED
+
+The Fedora control image does not yet contain a validated proprietary NVIDIA module set.
+CachyOS builds are deliberately blocked until its kernel sources/RPMs and matching
+modules have a reviewed lock. Secure Boot and module signatures require their own tests;
+the build does not alter firmware settings to bypass them.
+
+## Image integration: NOT TESTED
+
+Greenboot counter/fallback behavior, the complete installer suite, live protection and
+Ventoy require image-level acceptance. A control candidate has passed ten offline boots
+and a separate password-login/Wayland rendering case. Those results do not cover the
+remaining failure tests. The live guard is experimental and must not be trusted on the
+internal disk until virtual disk tests demonstrate its behavior.
+
+The live guard currently makes physical USB storage read-only too. A reviewed way to
+unlock only the chosen USB log partition is not implemented. Titanoboa's squashfs
+ownership behavior also needs comparison with the target image, beyond RPM versions.
+
+The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but
+`mcelog.service` failed on the virtual AMD family 25 CPU. Its own support probe returns
+1 for that CPU. The repository adds this probe as an ExecCondition so the daemon runs
+only on supported processors. The corrected candidate booted with no failed units in
+ten offline cycles. This does not establish physical machine-check reporting through
+EDAC or rasdaemon.
+See the [mcelog CPU support implementation](https://github.com/andikleen/mcelog/blob/master/mcelog.c).
+
+Serial logs from the ten-boot Q35 VM contain `watchdog did not stop` during reboot,
+with an emulated ICH9 TCO device present. Two boots also report a clocksource remote-CPU
+read timeout. The guest still reached GDM with the expected digest and no failed units.
+Watchdog and clocksource behavior need further investigation before recovery acceptance;
+these messages have not been classified as harmless or used to draw a hardware conclusion.
+See the [message paths and diagnostic procedure](BOOT-DIAGNOSTICS.md).
+
+## Supply chain and desktop
+
+An earlier control candidate used Graphite override fragments as complete GTK/Shell
+themes, producing a transparent GTK4 window. The current signed OCI and QCOW2 retain
+Adwaita-dark for GTK and compose the Shell override with Fedora's installed base
+resource. A clean VM boot confirmed opaque GTK4, libadwaita and Shell surfaces, but
+GTK3 still mixed a light background with dark controls and unreadable entry text.
+Visual acceptance remains FAIL for that signed image. It lacks the named Adwaita-dark
+GTK3 base. A user-local alias to GTK3's built-in dark resource fixed the diagnostic
+window. The theme RPM now packages that alias, and the image verifier checks its
+resource and hash. Those source changes still need Mock, image and clean VM rebuilds.
+
+The generic installer needs an adapter for the separate tools buildroot and final
+filesystem labeling. The first attempt was cancelled after its generated manifest
+confirmed both omissions. A corrected ISO built and passed artifact signature
+verification, but its first boot exposed Anaconda console and SELinux entry-point
+failures. Source corrections have not yet been rebuilt. Manual diagnostic startup and
+cancellation left both virtual disks unchanged. No clean cancellation or offline
+installation result has passed. See [installer findings](INSTALLER.md).
+
+Development file signatures exist separately from the unfinished bootc update trust
+configuration. Release registry/key selection and positive/negative update tests are
+still required. Exact Fedora RPM repository reconstruction is not implemented.
+
+Lotus packaging, selective Flatpak theme permissions and optional app provisioning are
+not complete. No firstboot network installer is required to reach the baseline desktop.
+OLED appearance and scaling need real-panel screenshots. GNOME behavioral patches and
+Apex Control remain deferred.
