@@ -9,11 +9,14 @@ install -m 0644 /apex-installer-source/installer-iso.yaml /usr/lib/image-builder
 # This file selects the bundled payload but contains no storage or user directives.
 python3 - "$payload" <<'PY'
 from pathlib import Path
+import json
 import sys
 payload = sys.argv[1]
 Path('/usr/share/anaconda/interactive-defaults.ks').write_text(
     f'bootc --source-imgref containers-storage:{payload} --target-imgref {payload}\n')
+Path('/usr/share/apex/installer-payload.json').write_text(json.dumps({'reference': payload}))
 PY
+install -Dm0644 /apex-installer-source/installer-diagnostics.py /usr/libexec/apex/installer-diagnostics.py
 # Anaconda's local installer account exists only in this derived environment.
 useradd --non-unique --uid 0 --gid 0 --no-create-home --home-dir /root \
     --shell /usr/libexec/anaconda/run-anaconda install

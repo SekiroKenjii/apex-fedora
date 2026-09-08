@@ -50,6 +50,12 @@ test-installer disk iso other_disk:
 installer-fixtures:
     python3 tools/apex.py installer-fixtures
 
+installer-logs-prepare:
+    python3 tools/apex.py installer-logs prepare
+
+installer-logs-collect run_directory token:
+    python3 tools/apex.py installer-logs collect --run "{{run_directory}}" --token "{{token}}"
+
 test-resume-installed run_directory:
     python3 tools/apex.py test-resume "{{run_directory}}" --without-iso
 

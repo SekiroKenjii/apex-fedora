@@ -40,6 +40,10 @@ def main():
     resume.add_argument('--without-iso', action='store_true')
     compare = sub.add_parser('test-compare-disks')
     compare.add_argument('run_directory', type=Path)
+    logs = sub.add_parser('installer-logs')
+    logs.add_argument('action', choices=['prepare', 'collect'])
+    logs.add_argument('--run', dest='run_directory', type=Path)
+    logs.add_argument('--token')
     verify = sub.add_parser("verify-artifact")
     verify.add_argument("directory", type=Path)
     verify.add_argument("--trusted-key", required=True, type=Path)
@@ -112,6 +116,19 @@ def main():
         print(json.dumps(vm.resume_test(state, args.run_directory, without_iso=args.without_iso), indent=2))
     elif args.command == 'test-compare-disks':
         print(json.dumps(vm.compare_disks(state, args.run_directory), indent=2))
+    elif args.command == 'installer-logs':
+        from apexlib import installerlogs
+        if args.action == 'prepare':
+            if args.run_directory or args.token:
+                raise Blocked('Prepare uses only the currently running installer VM')
+            result = installerlogs.prepare(state)
+        else:
+            if not args.run_directory or not args.token:
+                raise Blocked('Collect needs the run directory and token from prepare')
+            result = installerlogs.collect(state, args.run_directory, args.token)
+        print(json.dumps(result, indent=2))
+        if args.action == 'collect' and not result['required_logs_complete']:
+            raise Blocked('Capture retained, but required installer logs are missing, truncated or invalid')
     elif args.command == 'test-power-loss':
         vm.power_loss(state)
         print('Disposable test VM terminated for fault injection; no host power action was taken')

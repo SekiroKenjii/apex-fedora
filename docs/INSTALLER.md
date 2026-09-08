@@ -40,6 +40,37 @@ Capture Anaconda, storage and program logs before accepting its cancellation dia
 because cancellation can reboot and discard the live filesystem. Keep the original
 serial log and record any manual login or service changes with the result.
 
+## Keep logs before cancellation
+
+The installer recipe includes a VM-only collector for `/tmp/anaconda.log`, `storage.log`
+and `program.log`. It also records SELinux state, selected unit state, the latest 1,000
+journal entries and virtual disk sizes/serials. It reads these sources without changing
+services or storage. Each log is limited to 2 MiB; missing and truncated logs are reported.
+The collector refuses the host and physical installer sessions.
+
+While the installer VM is running, use `just installer-logs-prepare`. It records the ISO
+checksum and VM identity, then prints a guest command and a capture token. Open the
+installer's rescue login through its console and run that command there. It sends the
+bundle to the VM serial port. It does not require SSH, a NIC or a shared directory.
+
+Before confirming cancellation, run:
+
+```sh
+just installer-logs-collect RUN_DIRECTORY TOKEN
+```
+
+Use the directory and token returned by preparation. Collection verifies chunk order,
+completeness and checksums. An incomplete or damaged transfer fails; repeat preparation
+with a fresh token while the installer is still running. Missing or truncated required
+logs also fail, with the partial evidence retained. Existing captures are not overwritten.
+Neither transfer success nor complete logs mark an installation test as passed.
+
+Captures stay in the private runtime directory. Installer logs can contain account or
+storage details; review and redact them before any publication. This transport has unit
+tests but still needs an end-to-end test using the rebuilt ISO.
+
+## Installed payload checks
+
 The bundled container store can contain both the original compressed manifest and a
 storage-specific manifest for the same configuration ID. Do not infer the installed
 digest from the file named `manifest` alone. Check the image record and the requested

@@ -7,6 +7,6 @@ RUN dnf5 -y --exclude='kernel*' install anaconda anaconda-install-img-deps anaco
 ARG PAYLOAD_REF
 COPY guest/installer-configure.sh guest/installer-iso.yaml guest/installer-logind.conf \
     guest/installer-pam.conf guest/installer-shell.conf guest/installer-pre.conf \
-    guest/installer-start.conf guest/installer-attach.conf /apex-installer-source/
+    guest/installer-start.conf guest/installer-attach.conf guest/installer-diagnostics.py /apex-installer-source/
 RUN \
     bash /apex-installer-source/installer-configure.sh "${PAYLOAD_REF}"
