@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 import re
 import tarfile
-import urllib.parse
-import urllib.request
 
-from .common import ROOT, Blocked, atomic_json, config, run, sha256
+from .common import ROOT, Blocked, atomic_json, regular_file, run, sha256
 
 def download(url: str, destination: Path, expected: str | None = None):
     if not url.startswith("https://"):
@@ -23,60 +20,55 @@ def download(url: str, destination: Path, expected: str | None = None):
     temporary.replace(destination)
 
 
-def resolve_image(ref: str) -> dict:
-    registry, rest = ref.split("/", 1)
-    name, tag = rest.rsplit(":", 1)
-    url = f"https://{registry}/v2/{name}/manifests/{tag}"
-    headers = {"Accept": "application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json"}
-    try:
-        response = urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=45)
-    except urllib.error.HTTPError as exc:
-        if exc.code != 401:
-            raise
-        fields = dict(re.findall(r'(\w+)="([^"]*)"', exc.headers.get("WWW-Authenticate", "")))
-        realm = fields.pop("realm", "")
-        if not realm.startswith("https://"):
-            raise Blocked("Registry authentication did not supply an HTTPS token service")
-        query = urllib.parse.urlencode(fields)
-        token = json.load(urllib.request.urlopen(realm + "?" + query, timeout=45))
-        headers["Authorization"] = "Bearer " + token.get("token", token.get("access_token", ""))
-        response = urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=45)
-    raw = response.read()
-    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
-    advertised = response.headers.get("Docker-Content-Digest")
-    if advertised and advertised != digest:
-        raise Blocked("Registry digest mismatch")
-    return {"reference": f"{registry}/{name}@{digest}", "digest": digest, "verified_boot": False}
+def validate_lock(lock):
+    if not isinstance(lock, dict) or type(lock.get('schema')) is not int or lock['schema'] != 1:
+        raise Blocked('Unsupported source lock schema')
+    for name in ('base', 'image_builder'):
+        image = lock.get(name)
+        if not isinstance(image, dict):
+            raise Blocked(f'Missing locked image: {name}')
+        reference, digest = image.get('reference'), image.get('digest')
+        if not isinstance(digest, str) or not re.fullmatch('sha256:[a-f0-9]{64}', digest):
+            raise Blocked(f'Invalid locked image digest: {name}')
+        if not isinstance(reference, str) or not re.fullmatch(r'[^\s@]+@' + digest, reference):
+            raise Blocked(f'Image reference must match its locked digest: {name}')
+    sources = lock.get('sources')
+    if not isinstance(sources, dict) or not sources:
+        raise Blocked('The source lock needs archive entries')
+    filenames = set()
+    for name, source in sources.items():
+        if not isinstance(name, str) or not isinstance(source, dict):
+            raise Blocked('Invalid source archive entry')
+        checksum, url = source.get('sha256'), source.get('url')
+        if not isinstance(checksum, str) or not re.fullmatch('[a-f0-9]{64}', checksum):
+            raise Blocked(f'Missing or invalid source checksum: {name}')
+        if not isinstance(url, str) or not url.startswith('https://'):
+            raise Blocked(f'Source downloads require HTTPS: {name}')
+        if 'commit' in source and (not isinstance(source['commit'], str) or
+                                   not re.fullmatch('[a-f0-9]{40}|[a-f0-9]{64}', source['commit'])):
+            raise Blocked(f'Source commit must be a full object ID: {name}')
+        filename = source.get('filename', f'{name}.tar.gz')
+        if not isinstance(filename, str) or not re.fullmatch('[A-Za-z0-9_.-]+', filename) or filename in {'.', '..'}:
+            raise Blocked('Source filename must be a plain basename')
+        if filename in filenames:
+            raise Blocked('Source archive filenames must be distinct')
+        filenames.add(filename)
 
 
 def acquire(directory: Path):
     pinned = ROOT / "config/sources.lock.json"
-    if pinned.exists():
+    if not pinned.exists():
+        raise Blocked('Source lock is missing; restore the reviewed config/sources.lock.json')
+    regular_file(pinned, within=ROOT)
+    try:
         lock = json.loads(pinned.read_text())
-        for name, source in lock["sources"].items():
-            filename = source.get("filename", f"{name}.tar.gz")
-            if Path(filename).name != filename:
-                raise Blocked("Source filename must not contain directories")
-            download(source["url"], directory / "sources" / filename, source["sha256"])
-        atomic_json(directory / "sources.lock.json", lock)
-        return lock
-    cfg = config()
-    target = directory / "sources"
-    target.mkdir(parents=True, exist_ok=True)
-    lock = {"schema": 1, "base": resolve_image(cfg["base"]), "image_builder": resolve_image(cfg["image_builder"]), "sources": {}}
-    for name, source in cfg["sources"].items():
-        slug = source["repository"].removeprefix("https://github.com/")
-        url = f"https://codeload.github.com/{slug}/tar.gz/{source['commit']}"
-        path = target / f"{name}.tar.gz"
-        download(url, path)
-        lock["sources"][name] = {**source, "url": url, "sha256": sha256(path)}
-    for name, repository in (("titanoboa", "ublue-os/titanoboa"), ("greenboot-rs", "fedora-iot/greenboot-rs")):
-        req = urllib.request.Request(f"https://api.github.com/repos/{repository}/commits/main", headers={"User-Agent": "apex-build"})
-        commit = json.load(urllib.request.urlopen(req, timeout=45))["sha"]
-        url = f"https://codeload.github.com/{repository}/tar.gz/{commit}"
-        path = target / f"{name}.tar.gz"
-        download(url, path)
-        lock["sources"][name] = {"repository": f"https://github.com/{repository}", "commit": commit, "url": url, "sha256": sha256(path)}
+    except (OSError, ValueError) as exc:
+        raise Blocked('Cannot read the reviewed source lock') from exc
+    # Validate every entry before a network request or a cache replacement.
+    validate_lock(lock)
+    for name, source in lock['sources'].items():
+        filename = source.get('filename', f'{name}.tar.gz')
+        download(source['url'], directory / 'sources' / filename, source['sha256'])
     atomic_json(directory / "sources.lock.json", lock)
     return lock
 

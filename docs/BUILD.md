@@ -41,6 +41,12 @@ The package lists document what was installed; a repository snapshot and a full 
 checksum lock are still needed for exact reconstruction. The current pipeline does
 not claim bit-for-bit reproducibility.
 
+Source acquisition requires the reviewed `config/sources.lock.json`. A missing or
+invalid lock stops the command before any download. Image references must match their
+recorded digests, and every source archive must have a SHA-256 checksum and a distinct
+cache filename. The command does not discover new versions from a rolling tag or branch.
+Review source updates and their checksums in the lockfile before building them.
+
 ## Create artifacts without rebuilding the image
 
 Replace the build ID below with the 32-character ID of a completed image run:
