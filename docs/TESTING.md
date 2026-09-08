@@ -87,6 +87,7 @@ Each fault case starts from a new virtual disk or overlay. Required cases includ
 
 - UEFI offline installation, user creation, ISO removal and installed boot.
 - Installer cancellation with unchanged virtual disks, including a second disk and mock EFI, Windows and Linux regions.
+- Installer payload rejection before storage changes, with both disks unchanged in each fresh fault VM.
 - Ten boots, password login, Wayland and a rendered application window.
 - Offline and interrupted firstboot. Optional app downloads must not block GDM.
 - A to B updates, user data preservation, offline rollback and boot.
@@ -112,6 +113,13 @@ guest has shut down, `just test-compare-disks RUN_DIRECTORY` compares the comple
 guest-visible contents of each overlay with its source using `qemu-img compare`.
 Cancellation requires both disks to remain unchanged. A completed installation requires
 the non-target disk to remain unchanged. Keep the original fixture hashes as well.
+
+`installer.payload-rejection` is separate from detached artifact-signature and update
+tests. It requires ISO-level wrong-key, missing or altered signature, changed manifest,
+corrupted blob and unexpected-source cases. Inject each fault before Anaconda starts,
+retain the guard's failure report and compare both disks after shutdown. Running the
+guard again after a normal installer startup is only a diagnostic, not that acceptance
+case. Unit tests and the builder's synthetic Skopeo fixture do not satisfy this gate.
 
 Prepare those sources with `just installer-fixtures` while the builder is running and
 idle. Formatting and loop mounts happen only inside the builder VM. The output contains

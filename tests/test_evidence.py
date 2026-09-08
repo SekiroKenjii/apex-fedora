@@ -12,6 +12,19 @@ def test_empty_evidence_never_ready(tmp_path):
     assert result["checks"]["hardware"]["audio.speakers"]["status"] == "NOT TESTED"
 
 
+def test_artifact_signature_does_not_satisfy_installer_rejection(tmp_path):
+    proof = tmp_path / 'signature.txt'
+    proof.write_text('Synthetic signature fixture passed')
+    put(tmp_path, {'check': 'signature.reject', 'digest': DIGEST, 'status': 'PASS',
+                   'proof': [{'path': 'signature.txt', 'sha256': sha256(proof)}]})
+    proof.rename(tmp_path / 'evidence/signature.txt')
+    result = evaluate(tmp_path, DIGEST)
+    assert not result['errors']
+    assert result['checks']['build']['signature.reject']['status'] == 'PASS'
+    assert result['checks']['vm']['installer.payload-rejection']['status'] == 'NOT TESTED'
+    assert not result['ready_to_install']
+
+
 def put(tmp_path, record):
     record.setdefault('environment', {'kind': 'build', 'description': 'Unit test fixture'})
     directory = tmp_path / "evidence"
