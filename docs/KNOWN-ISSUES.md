@@ -45,9 +45,9 @@ ten offline cycles. This does not establish physical machine-check reporting thr
 EDAC or rasdaemon.
 See the [mcelog CPU support implementation](https://github.com/andikleen/mcelog/blob/master/mcelog.c).
 
-Serial logs from the ten-boot Q35 VM contain `watchdog did not stop` during reboot,
-with an emulated ICH9 TCO device present. Two boots also report a clocksource remote-CPU
-read timeout. The guest still reached GDM with the expected digest and no failed units.
+The current candidate's ten-boot Q35 run recorded nine `watchdog did not stop` messages
+during reboot, with an emulated ICH9 TCO device present, and ten clocksource remote-CPU
+read timeouts. The guest still reached GDM with the expected digest and no failed units.
 Watchdog and clocksource behavior need further investigation before recovery acceptance;
 these messages have not been classified as harmless or used to draw a hardware conclusion.
 See the [message paths and diagnostic procedure](BOOT-DIAGNOSTICS.md).
@@ -57,20 +57,21 @@ See the [message paths and diagnostic procedure](BOOT-DIAGNOSTICS.md).
 An earlier control candidate used Graphite override fragments as complete GTK/Shell
 themes, producing a transparent GTK4 window. The current signed OCI and QCOW2 retain
 Adwaita-dark for GTK and compose the Shell override with Fedora's installed base
-resource. A clean VM boot confirmed opaque GTK4, libadwaita and Shell surfaces, but
-GTK3 still mixed a light background with dark controls and unreadable entry text.
-Visual acceptance remains FAIL for that signed image. It lacks the named Adwaita-dark
-GTK3 base. A user-local alias to GTK3's built-in dark resource fixed the diagnostic
-window. The theme RPM now packages that alias, and the image verifier checks its
-resource and hash. Those source changes still need Mock, image and clean VM rebuilds.
+resource. GTK3 initially mixed a light background with dark controls because the named
+Adwaita-dark GTK3 base was missing. The rebuilt theme RPM packages an alias to GTK3's
+built-in dark resource, and the image verifier checks its resource and hash. The
+current candidate passed clean VM review of GTK3, libadwaita and Shell surfaces at
+1280x800. Fractional scaling, XWayland, Flatpak and the OLED panel remain untested;
+that limited review is not approval of the final desktop design.
 
 The generic installer needs an adapter for the separate tools buildroot and final
 filesystem labeling. The first attempt was cancelled after its generated manifest
-confirmed both omissions. A corrected ISO built and passed artifact signature
-verification, but its first boot exposed Anaconda console and SELinux entry-point
-failures. Source corrections have not yet been rebuilt. Manual diagnostic startup and
-cancellation left both virtual disks unchanged. No clean cancellation or offline
-installation result has passed. See [installer findings](INSTALLER.md).
+confirmed both omissions. Subsequent builds exposed console/SELinux entry-point
+failures and an unsigned payload rejected after target formatting. The current ISO
+passed clean startup, cancellation with both disks unchanged, offline installation,
+ISO removal and password login. Its preflight verifies the signed compressed payload
+before Anaconda starts. Negative ISO-level payload cases and recovery fault tests
+remain required. See [installer findings](INSTALLER.md) for the tested checksum.
 
 Development file signatures exist separately from the unfinished bootc update trust
 configuration. Release registry/key selection and positive/negative update tests are

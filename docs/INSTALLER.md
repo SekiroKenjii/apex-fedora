@@ -3,7 +3,37 @@
 The installer is a derivative of the frozen Apex OCI image. It is separate from the
 GNOME live trial. Building and signing an ISO does not approve it for a physical disk.
 
-## Previous ISO test result
+## Signed-payload ISO test result
+
+The ISO with SHA-256
+`ee8eeed043d1a64486abdec7e0098497fa161e44300ddd81489f41fce9b902ac`
+booted through UEFI without a NIC and kept SELinux enforcing. Before Anaconda started,
+the guard verified the signature and all 259 payload blobs, totaling 2,828,532,327 bytes.
+That check took 7.594 seconds in the cancellation VM. USB timing remains untested.
+
+The cancellation case selected only the 48 GiB virtual target and a Standard Partition
+layout, then quit before starting installation. QMP observed Anaconda's guest reset;
+the runner stopped that VM before its next boot. Complete disk comparisons found both
+the target and the separate EFI/NTFS/ext4 fixture unchanged. The serial log capture was
+complete.
+
+A fresh VM completed offline installation with no NIC. Anaconda created the selected
+48 GiB target's EFI, `/boot` and ext4 root partitions, deployed the bundled image and
+created the manually entered password-protected administrator. After ISO removal,
+the same virtual disk and private UEFI state booted to GDM. That password opened a
+Wayland session, Ptyxis rendered and accepted input, and password-based sudo worked.
+SELinux remained enforcing. Full comparison found the separate disk unchanged.
+
+`bootc status` reported the original OCI digest
+`sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912`.
+There is no rollback deployment on this first installation. The recorded image
+reference is a development-only localhost reference; it is not an approved update
+source. The target's reject-all update policy remains in place.
+
+Negative pre-partition cases, recovery fault tests and hardware checks remain required.
+No physical installation is approved.
+
+## Previous unsigned-payload ISO result
 
 The rebuilt ISO starts the text installer automatically with SELinux enforcing. A clean
 cancellation test selected only the 48 GiB virtual target, returned to the summary and
@@ -109,7 +139,7 @@ layer conversion that `--preserve-digests` forbids. The tiny copy fixture did no
 that difference. The ISO adapter therefore omits the upstream unpacked-store copy and
 keeps the signed compressed files already embedded in the derived image.
 
-These changes still require a new ISO boot and successful offline installation.
+The clean ISO boot and offline installation described above passed.
 Negative VM cases must show that wrong keys, missing signatures, changed manifests,
 corrupted blobs and unexpected sources stop before either virtual disk is written.
 Record any diagnostic boot arguments or manual startup separately from clean boot.
@@ -138,17 +168,19 @@ References: [container policy](https://github.com/containers/image/blob/main/doc
 The signed `dir:` payload's manifest must retain the selected OCI digest. Require
 `bootc status` after installation to report that same digest. Matching only the image
 configuration ID is insufficient: layer compression can change the manifest without
-changing the configuration ID. No installed boot from the new recipe has been accepted.
+changing the configuration ID. The signed-payload ISO's installed boot retained the
+original manifest digest, as recorded above.
 
 Offline installation, user creation, ISO removal, installed boot and non-target disk
-preservation remain required. The first diagnostic TUI only exposed language, time and storage.
+preservation must be repeated when the installer changes. The first diagnostic TUI
+only exposed language, time and storage.
 The Silverblue profile inherits Workstation's hidden `UserSpoke`; Apex overrides this
 in the installer only. It keeps the root-password screen hidden and exposes manual
 user creation. Image construction validates the effective Anaconda configuration and
-records it in the signed artifact inventory. The rebuilt TUI accepted manual account,
-password and administrator choices, but import failed before the account could be
-tested on an installed system. The private-account QCOW2 does not prove the installer's
-account workflow.
+records it in the signed artifact inventory. The earlier unsigned-payload ISO accepted
+account choices but failed before they could be tested. The current signed-payload ISO
+completed that workflow and passed password login and sudo. The private-account QCOW2
+is a separate test path; it does not prove the installer's account workflow.
 
 Sources: [Silverblue profile](https://github.com/rhinstaller/anaconda/blob/anaconda-44.30/data/profile.d/fedora-silverblue.conf),
 [Workstation profile](https://github.com/rhinstaller/anaconda/blob/anaconda-44.30/data/profile.d/fedora-workstation.conf),
