@@ -50,6 +50,9 @@ test-installer disk iso other_disk:
 installer-fixtures:
     python3 tools/apex.py installer-fixtures
 
+test-installer-trust:
+    python3 tools/apex.py test-installer-trust
+
 installer-logs-prepare:
     python3 tools/apex.py installer-logs prepare
 

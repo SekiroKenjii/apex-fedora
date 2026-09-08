@@ -18,6 +18,43 @@ from .vm import ssh_args
 SOURCE_PATHS = ("Containerfile", "config", "guest", "rpms", "system_files", "live", "tools")
 
 
+def installer_trust(directory: Path):
+    with (directory / 'build.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise Blocked('Wait for the active build before running signature fixtures')
+        connection = ssh_args(directory)
+        run_id = uuid.uuid4().hex
+        export = directory / 'signature-policy-tests' / run_id
+        export.mkdir(parents=True, mode=0o700)
+        remote = f'/var/tmp/apex-trust-{run_id}'
+        script = ROOT / 'guest/test-installer-trust.py'
+        run(connection + [f'mkdir -m 700 {remote}'])
+        scp = ['scp', '-i', str(directory / 'builder_ed25519'), '-P', connection[4],
+               '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
+               '-o', f'UserKnownHostsFile={directory}/known_hosts']
+        run(scp + [script, f'builder@127.0.0.1:{remote}/test.py'])
+        atomic_json(export / 'source.json', {'path': 'guest/test-installer-trust.py', 'sha256': sha256(script)})
+        with (export / 'test.log').open('wb') as log:
+            result = subprocess.run(connection + [f'sudo flock -n /run/apex-build.lock python3 {remote}/test.py {remote}/output'], stdout=log, stderr=subprocess.STDOUT)
+        run(connection + [f'sudo chown -R builder:builder {remote}/output 2>/dev/null || true'])
+        # Copy only the report and public keys. Signing keys and passphrases remain in the VM.
+        names = ('results.json', 'trusted.pub', 'wrong.pub')
+        transfer = subprocess.run(scp + [*[f'builder@127.0.0.1:{remote}/output/{name}' for name in names], str(export)], check=False)
+        if result.returncode or transfer.returncode:
+            raise Blocked(f'Signature fixture failed; inspect {export}/test.log')
+        report = json.loads(regular_file(export / 'results.json', within=export).read_text())
+        expected = {'signed-roundtrip', 'same-store-preflight', 'wrong-key', 'wrong-identity',
+                    'unsigned', 'tampered-signature', 'tampered-manifest', 'unexpected-source'}
+        if report.get('status') != 'PASS' or report.get('cases') != dict.fromkeys(expected, 'PASS'):
+            raise Blocked('Signature fixtures did not complete every required case')
+        for name in ('trusted', 'wrong'):
+            if sha256(regular_file(export / f'{name}.pub', within=export)) != report['public_key_sha256'][name]:
+                raise Blocked('Transferred fixture public key checksum mismatch')
+        return export
+
+
 def installer_fixtures(directory: Path):
     with (directory / 'build.lock').open('a') as lock:
         try:

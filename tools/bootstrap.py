@@ -14,7 +14,7 @@ from apexlib.common import ROOT, Blocked, config, run, state_dir
 
 def boot(parser: argparse.ArgumentParser) -> None:
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("doctor", "hooks", "sources", "report", "readiness", "trust-development-key", "test-power-loss", 'installer-fixtures'):
+    for name in ("doctor", "hooks", "sources", "report", "readiness", "trust-development-key", "test-power-loss", 'installer-fixtures', 'test-installer-trust'):
         sub.add_parser(name)
 
     builder = sub.add_parser("builder")
@@ -98,6 +98,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     elif args.command == 'installer-fixtures':
         from apexlib.pipeline import installer_fixtures
         print(installer_fixtures(state))
+    elif args.command == 'test-installer-trust':
+        from apexlib.pipeline import installer_trust
+        print(installer_trust(state))
     elif args.command == "doctor":
         cfg = config()["builder"]
         tools = {name: shutil.which(name) for name in ("python3", "qemu-system-x86_64", "qemu-img", "ssh", "ssh-keygen", "curl", "uv")}

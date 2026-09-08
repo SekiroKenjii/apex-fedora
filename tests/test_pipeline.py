@@ -56,6 +56,19 @@ def test_fixture_formatter_refuses_host():
     assert 'isolated Fedora builder' in result.stderr
 
 
+def test_signature_fixture_refuses_host():
+    import subprocess
+    import sys
+    result = subprocess.run([sys.executable, ROOT / 'guest/test-installer-trust.py'], capture_output=True, text=True)
+    assert result.returncode != 0
+    assert 'isolated Fedora builder' in result.stderr
+
+
+def test_signature_runner_requires_builder(tmp_path):
+    with pytest.raises(Blocked, match='builder VM'):
+        pipeline.installer_trust(tmp_path)
+
+
 def test_installer_console_uses_pam_and_expected_generator_target():
     setup = (ROOT / 'guest/installer-configure.sh').read_text()
     assert 'ln -sfn /lib/systemd/system/anaconda.target /etc/systemd/system/default.target' in setup

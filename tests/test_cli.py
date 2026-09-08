@@ -20,3 +20,4 @@ def test_cli_runs_as_documented_without_pythonpath(tmp_path, outside):
     help_result = subprocess.run([sys.executable, script, '--help'], cwd=cwd, env=env,
                                  capture_output=True, text=True)
     assert help_result.returncode == 0 and 'installer-logs' in help_result.stdout
+    assert 'test-installer-trust' in help_result.stdout

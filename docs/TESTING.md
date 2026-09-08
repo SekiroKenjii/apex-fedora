@@ -10,6 +10,13 @@ These tests exercise Git guards, signature verification, source exports, VM comm
 construction, resource refusal, evidence handling and preservation of personal CSS.
 They do not establish that an operating-system image boots.
 
+`just test-installer-trust` runs a separate eight-case signature fixture in the idle
+Fedora builder. It uses Skopeo's actual policy engine, not a mocked verifier. Reports
+and public keys stay under `runtime/signature-policy-tests/`; private fixture keys stay
+in the VM. A passing fixture does not approve the Apex installer or update path. See
+[Installer acceptance](INSTALLER.md) for the failed offline import and remaining
+pre-partition trust checks.
+
 ## VM acceptance
 
 Stop the builder first. Keep every test disk under the external runtime directory.
