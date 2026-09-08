@@ -45,7 +45,7 @@ def test_installer_requires_manual_storage_and_enforcing_selinux():
     assert 'inst.ks=' not in boot
     for directive in ('clearpart', 'zerombr', 'autopart', 'ignoredisk', 'reqpart'):
         assert directive not in setup
-    assert '--source-imgref containers-storage:{payload}' in setup
+    assert '--source-imgref dir:/usr/share/apex/payload --target-imgref {source}' in setup
 
 
 def test_fixture_formatter_refuses_host():

@@ -3,7 +3,7 @@
 The installer is a derivative of the frozen Apex OCI image. It is separate from the
 GNOME live trial. Building and signing an ISO does not approve it for a physical disk.
 
-## Current test result
+## Previous ISO test result
 
 The rebuilt ISO starts the text installer automatically with SELinux enforcing. A clean
 cancellation test selected only the 48 GiB virtual target, returned to the summary and
@@ -55,7 +55,10 @@ The installer recipe includes a VM-only collector for `/tmp/anaconda.log`, `stor
 and `program.log`. It also records SELinux state, selected unit state, the latest 1,000
 journal entries and virtual disk sizes/serials. It reads these sources without changing
 services or storage. Each log is limited to 2 MiB; missing and truncated logs are reported.
-The collector refuses the host and physical installer sessions.
+The collector refuses the host and physical installer sessions. It also captures
+`/run/apex/installer-preflight.json` when present. If verification stops Anaconda before
+it starts, its three usual logs may be absent. Report that absence; a complete serial
+transfer does not imply that Anaconda ran.
 
 While the installer VM is running, use `just installer-logs-prepare`. It records the ISO
 checksum and VM identity, then prints a guest command and a capture token. Open the
@@ -83,25 +86,40 @@ Keep the serial log and record any manual login or service changes with the resu
 ## Payload trust must precede storage changes
 
 The ISO's detached artifact signature does not authorize its container payload in
-`bootc`. The current installer inherits Apex's reject-all container policy, but its
-bundled payload has no accepted containers/image signature. This caused the import
-failure after partitioning. Keep that rejection policy until signed payload verification
-is implemented; do not replace it with a global `insecureAcceptAnything` rule.
+`bootc`. The previous ISO inherited Apex's reject-all container policy without an
+accepted payload signature. Its import failed after partitioning.
 
-The next installer must verify the frozen payload, its signature and its expected
-identity before Anaconda can change storage. Verification must survive the image-builder
-copy into the ISO's container store. Negative VM cases must show that missing or invalid
-signatures, an unexpected source and a changed digest stop before either disk is written.
-The installed system's update policy is a separate requirement. Installer-only trust
-must not silently approve future downloads.
+The recipe now signs the frozen OCI archive and retains its compressed blobs in
+`/usr/share/apex/payload`. Installer policy rejects everything except that directory
+with the selected public key and exact signature identity. It does not authorize
+registry downloads. The installed system retains its own reject-all update policy.
+
+Before upstream Anaconda imports or arguments run, a small entry-point guard checks
+the policy, manifest digest, configuration digest and signature. It then reads every
+blob to verify its declared size and SHA-256. Missing files, symlinks, corruption or a
+failed check stop Anaconda. This read can take time on USB; the payload is not copied
+into RAM. The guard retains a report in `/run/apex/installer-preflight.json` and runs
+again on another invocation, rather than trusting a previous PASS file.
+
+Signature verification uses Skopeo's `OpenImage` API, the policy path used by bootc.
+The client requires protocol 0.2.8 and rejects unknown versions, invalid replies and
+failed requests. It closes its local socket and child process on failure. A copy-based
+check proved unsuitable for the real compressed image: the unpacked store needed a
+layer conversion that `--preserve-digests` forbids. The tiny copy fixture did not expose
+that difference. The ISO adapter therefore omits the upstream unpacked-store copy and
+keeps the signed compressed files already embedded in the derived image.
+
+These changes still require a new ISO boot and successful offline installation.
+Negative VM cases must show that wrong keys, missing signatures, changed manifests,
+corrupted blobs and unexpected sources stop before either virtual disk is written.
+Record any diagnostic boot arguments or manual startup separately from clean boot.
 
 Run `just test-installer-trust` with an idle builder to exercise the real Skopeo policy
 engine on a tiny synthetic image. It tests a signed round trip, a verified copy within
 one store, wrong key, wrong identity, missing signature, altered signature, altered
-manifest and an unexpected source. All eight cases passed in the builder. They do not
-prove that the Apex payload survives ISO construction or works from a read-only live
-image store. The same-store test also does not establish the live environment's memory
-requirements.
+manifest and an unexpected source. The runner now also checks each case through
+`OpenImage`. Both sets passed in the builder. They do not prove that the Apex payload
+survives ISO construction or that an installation completes.
 
 Fixture keys and their passphrase remain in a private directory inside the VM. Only
 the result, command log, script checksum and public keys are exported under
@@ -111,16 +129,16 @@ Fixture keys are not release keys.
 
 References: [container policy](https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md),
 [Skopeo copy and signing](https://github.com/containers/skopeo/blob/main/docs/skopeo-copy.1.md),
+[OpenImage verification](https://github.com/containers/skopeo/blob/v1.22.2/cmd/skopeo/proxy.go),
+[proxy protocol](https://github.com/containers/skopeo/blob/v1.22.2/docs-experimental/skopeo-experimental-image-proxy.1.md),
 [osbuild's container-copy stage](https://github.com/osbuild/osbuild/blob/v193/stages/org.osbuild.skopeo).
 
 ## Installed payload checks
 
-The bundled container store can contain both the original compressed manifest and a
-storage-specific manifest for the same configuration ID. Do not infer the installed
-digest from the file named `manifest` alone. Check the image record and the requested
-manifest, then require `bootc status` after installation to match the selected OCI
-digest. The tested bundle retained the original digest, but no installed boot from
-that ISO has been accepted.
+The signed `dir:` payload's manifest must retain the selected OCI digest. Require
+`bootc status` after installation to report that same digest. Matching only the image
+configuration ID is insufficient: layer compression can change the manifest without
+changing the configuration ID. No installed boot from the new recipe has been accepted.
 
 Offline installation, user creation, ISO removal, installed boot and non-target disk
 preservation remain required. The first diagnostic TUI only exposed language, time and storage.

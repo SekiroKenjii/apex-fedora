@@ -7,7 +7,7 @@ import re
 import sys
 
 
-def prepare(manifest, buildroot):
+def prepare(manifest, buildroot, embedded_payload=None):
     result = copy.deepcopy(manifest)
     if result.get('version') != '2':
         raise ValueError('Expected an osbuild version 2 manifest')
@@ -39,6 +39,22 @@ def prepare(manifest, buildroot):
         raise ValueError('Installer manifest lacks explicit enforcement')
     if any(stage.get('type') == 'org.osbuild.selinux' for stage in stages):
         raise ValueError('Upstream installer labeling changed; review the existing stage')
+    if embedded_payload is not None:
+        digest = embedded_payload.get('digest', '')
+        image = embedded_payload.get('image_id', '')
+        if not re.fullmatch('sha256:[a-f0-9]{64}', digest) or not re.fullmatch('sha256:[a-f0-9]{64}', image):
+            raise ValueError('Invalid embedded payload identity')
+        payload_stages = [s for s in stages if s.get('type') == 'org.osbuild.skopeo']
+        if len(payload_stages) != 1:
+            raise ValueError('Expected exactly one upstream payload-copy stage')
+        stage = payload_stages[0]
+        expected = {'type': 'org.osbuild.containers-storage', 'origin': 'org.osbuild.source',
+                    'references': {image: {'name': 'localhost/apex-payload:' + digest[7:]}}}
+        if stage.get('inputs') != {'images': expected} or stage.get('options') != {'destination': {'type': 'containers-storage'}}:
+            raise ValueError('Upstream payload-copy contract changed')
+        # The derived image already contains signed dir: blobs. Recopying an unpacked
+        # store would change their representation and invalidate the signature.
+        stages.remove(stage)
     stages.append({'type': 'org.osbuild.selinux', 'options': {
         'file_contexts': 'etc/selinux/targeted/contexts/files/file_contexts',
         'exclude_paths': ['/sysroot']}})
@@ -46,5 +62,5 @@ def prepare(manifest, buildroot):
 
 
 if __name__ == '__main__':
-    source, destination, buildroot = map(Path, sys.argv[1:])
-    destination.write_text(json.dumps(prepare(json.loads(source.read_text()), json.loads(buildroot.read_text())), indent=2) + '\n')
+    source, destination, buildroot, payload = map(Path, sys.argv[1:])
+    destination.write_text(json.dumps(prepare(json.loads(source.read_text()), json.loads(buildroot.read_text()), json.loads(payload.read_text())), indent=2) + '\n')

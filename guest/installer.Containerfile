@@ -8,6 +8,8 @@ ARG PAYLOAD_REF
 COPY guest/installer-configure.sh guest/installer-iso.yaml guest/installer-logind.conf \
     guest/installer-pam.conf guest/installer-shell.conf guest/installer-pre.conf \
     guest/installer-start.conf guest/installer-attach.conf guest/installer-diagnostics.py \
-    guest/installer-ui.conf /apex-installer-source/
+    guest/installer-ui.conf guest/installer-preflight.py guest/guard-installer-entrypoint.py /apex-installer-source/
+COPY installer-trust/ /usr/share/apex/installer-trust/
+COPY installer-payload/ /usr/share/apex/payload/
 RUN \
     bash /apex-installer-source/installer-configure.sh "${PAYLOAD_REF}"

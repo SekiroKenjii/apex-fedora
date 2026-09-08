@@ -30,6 +30,7 @@ payload_args=()
 disk_args=(--image-size '32 GiB')
 artifact_ref=$tag
 if test "$kind" = installer; then
+    python3 guest/sign-installer-payload.py "${3:?frozen OCI archive required}"
     podman build --security-opt label=disable --pull=never --build-arg "TARGET_IMAGE=$tag" \
         --build-arg "PAYLOAD_REF=$tag" -f guest/installer.Containerfile -t localhost/apex-installer:trial .
     installer_id=$(podman image inspect --format '{{.Id}}' localhost/apex-installer:trial)
@@ -39,6 +40,10 @@ if test "$kind" = installer; then
     podman run --rm "$artifact_ref" rpm -qa --qf '%{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort > output/installer/installer-rpms.txt
     podman run --rm "$artifact_ref" cat /usr/share/anaconda/interactive-defaults.ks > output/installer/interactive-defaults.ks
     podman run --rm "$artifact_ref" cat /usr/share/apex/installer-ui.json > output/installer/user-interface.json
+    podman run --rm "$artifact_ref" cat /usr/share/apex/installer-entrypoint.json > output/installer/entrypoint.json
+    podman run --rm --read-only --network none --entrypoint python3 "$artifact_ref" \
+        -c 'import sys,json; from pathlib import Path; sys.path.insert(0,"/usr/libexec/apex"); import importlib.util; s=importlib.util.spec_from_file_location("preflight","/usr/libexec/apex/installer-preflight.py"); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(json.dumps(m.verify(m.TRUST,Path("/etc/containers/policy.json"))))' \
+        > output/installer/derived-payload-verification.json
     jq -n --arg digest "$digest" '{target_digest: $digest, installer_is_derived: true, automated_storage: false, selinux_required: "Enforcing", boot_test: "NOT TESTED"}' > output/installer/contract.json
     payload_args=(--bootc-installer-payload-ref "$tag")
     disk_args=()
@@ -57,7 +62,7 @@ if test "$kind" = installer; then
         "$builder" --output-dir /output manifest "$image_type" \
         --bootc-ref "$artifact_ref" --bootc-build-ref "$buildroot" --bootc-default-fs ext4 \
         "${payload_args[@]}" --with-sbom > output/installer/upstream-manifest.json
-    python3 guest/label-installer-manifest.py output/installer/upstream-manifest.json output/installer/manifest.json output/installer/buildroot-image.json
+    python3 guest/label-installer-manifest.py output/installer/upstream-manifest.json output/installer/manifest.json output/installer/buildroot-image.json installer-trust/payload.json
     podman run --rm --privileged --security-opt label=disable --entrypoint /bin/bash \
         -v /etc/apex-builder:/run/apex-builder:ro \
         -v /var/lib/containers/storage:/var/lib/containers/storage \

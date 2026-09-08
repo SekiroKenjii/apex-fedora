@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Exercise real containers/image signature checks with disposable VM fixtures."""
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -20,6 +21,9 @@ def main(export=None):
     if virtual.returncode or virtual.stdout.strip() not in {'kvm', 'qemu'}:
         raise RuntimeError('QEMU builder virtualization is required')
     os.umask(0o077)
+    spec = importlib.util.spec_from_file_location('preflight', Path(__file__).with_name('installer-preflight.py'))
+    preflight = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(preflight)
     if export is not None:
         export = Path(export)
         if not re.fullmatch('/var/tmp/apex-trust-[a-f0-9]{32}/output', str(export)) or export.resolve() != export or not export.parent.is_dir():
@@ -28,7 +32,7 @@ def main(export=None):
     output = export or root / 'output'
     output.mkdir()
     report = {'status': 'FAIL', 'scope': 'synthetic image in builder VM, not Apex installer acceptance',
-              'work_directory': str(root), 'cases': {}, 'commands': []}
+              'work_directory': str(root), 'cases': {}, 'proxy_cases': {}, 'commands': []}
 
     def command(args, *, check=True):
         args = list(map(str, args))
@@ -96,10 +100,14 @@ def main(export=None):
         assert hashlib.sha256((root / 'verified-copy/manifest.json').read_bytes()).hexdigest() == digest
         report['manifest_digest'] = 'sha256:' + digest
         report['cases']['signed-roundtrip'] = 'PASS'
+        report['proxy_verification'] = preflight.verified_open('containers-storage:' + verified_tag, trusted_policy)
+        report['proxy_cases']['signed-roundtrip'] = 'PASS'
         command(['skopeo', '--policy', trusted_policy, 'copy', '--preserve-digests',
                  'containers-storage:' + verified_tag,
                  'containers-storage:' + tag.replace('fixture:', 'preflight:')])
         report['cases']['same-store-preflight'] = 'PASS'
+        preflight.verified_open('containers-storage:' + verified_tag, trusted_policy)
+        report['proxy_cases']['same-store-preflight'] = 'PASS'
 
         def reject(name, source, selected_policy, pattern):
             result = command(['skopeo', '--policy', selected_policy, 'copy', '--preserve-digests',
@@ -107,6 +115,14 @@ def main(export=None):
             if result.returncode == 0 or not re.search(pattern, result.stderr, re.IGNORECASE):
                 raise RuntimeError(f'{name} did not produce the expected policy rejection')
             report['cases'][name] = 'PASS'
+            try:
+                preflight.verified_open(source, selected_policy)
+            except RuntimeError as exc:
+                if not re.search(pattern, str(exc), re.IGNORECASE):
+                    raise RuntimeError(f'{name} proxy failure was not the expected policy rejection') from exc
+                report['proxy_cases'][name] = 'PASS'
+            else:
+                raise RuntimeError(f'{name} was incorrectly accepted by OpenImage')
 
         wrong_policy = root / 'wrong-policy.json'
         policy(wrong_policy, signed, key='wrong')

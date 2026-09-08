@@ -11,7 +11,7 @@ construction, resource refusal, evidence handling and preservation of personal C
 They do not establish that an operating-system image boots.
 
 `just test-installer-trust` runs a separate eight-case signature fixture in the idle
-Fedora builder. It uses Skopeo's actual policy engine, not a mocked verifier. Reports
+Fedora builder. It tests both Skopeo copy and the installer's OpenImage verifier. Reports
 and public keys stay under `runtime/signature-policy-tests/`; private fixture keys stay
 in the VM. A passing fixture does not approve the Apex installer or update path. See
 [Installer acceptance](INSTALLER.md) for the failed offline import and remaining

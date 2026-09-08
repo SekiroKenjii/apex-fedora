@@ -35,7 +35,10 @@ def installer_trust(directory: Path):
                '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
                '-o', f'UserKnownHostsFile={directory}/known_hosts']
         run(scp + [script, f'builder@127.0.0.1:{remote}/test.py'])
-        atomic_json(export / 'source.json', {'path': 'guest/test-installer-trust.py', 'sha256': sha256(script)})
+        dependency = ROOT / 'guest/installer-preflight.py'
+        run(scp + [dependency, f'builder@127.0.0.1:{remote}/installer-preflight.py'])
+        atomic_json(export / 'source.json', {'path': 'guest/test-installer-trust.py', 'sha256': sha256(script),
+                                           'dependencies': {'guest/installer-preflight.py': sha256(dependency)}})
         with (export / 'test.log').open('wb') as log:
             result = subprocess.run(connection + [f'sudo flock -n /run/apex-build.lock python3 {remote}/test.py {remote}/output'], stdout=log, stderr=subprocess.STDOUT)
         run(connection + [f'sudo chown -R builder:builder {remote}/output 2>/dev/null || true'])
@@ -47,7 +50,8 @@ def installer_trust(directory: Path):
         report = json.loads(regular_file(export / 'results.json', within=export).read_text())
         expected = {'signed-roundtrip', 'same-store-preflight', 'wrong-key', 'wrong-identity',
                     'unsigned', 'tampered-signature', 'tampered-manifest', 'unexpected-source'}
-        if report.get('status') != 'PASS' or report.get('cases') != dict.fromkeys(expected, 'PASS'):
+        if (report.get('status') != 'PASS' or report.get('cases') != dict.fromkeys(expected, 'PASS')
+                or report.get('proxy_cases') != dict.fromkeys(expected, 'PASS')):
             raise Blocked('Signature fixtures did not complete every required case')
         for name in ('trusted', 'wrong'):
             if sha256(regular_file(export / f'{name}.pub', within=export)) != report['public_key_sha256'][name]:
@@ -167,7 +171,8 @@ def _execute(directory: Path, profile: str, kind: str, build_id: str | None, tes
         atomic_json(export / "target-image.json", frozen)
         run(scp + [export / "target-image.json", f"builder@127.0.0.1:{remote}/target-image.json"])
         payload = f"/var/tmp/apex-{build_id}/output/apex-{profile}.oci.tar"
-        build_command = f"bash guest/import-payload.sh {payload} target-image.json && bash guest/{target} {kind} {image_id} && python3 guest/sign-artifacts.py output target-image.json"
+        archive_arg = f' {payload}' if kind == 'installer' else ''
+        build_command = f"bash guest/import-payload.sh {payload} target-image.json && bash guest/{target} {kind} {image_id}{archive_arg} && python3 guest/sign-artifacts.py output target-image.json"
         if test_access:
             from .testaccess import create
             blueprint = create(export)

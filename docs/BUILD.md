@@ -75,12 +75,17 @@ QCOW2 and installer recipes use the pinned container from
 Disk construction runs in a separate buildroot with filesystem and QEMU tools. Its
 image metadata and RPM list are recorded; those packages are not added to Apex.
 The installer uses `bootc-generic-iso` with a separate Anaconda image derived from the
-frozen target. The target OCI is bundled through `--bootc-installer-payload-ref`; its
-digest does not change. The Anaconda image adds installer packages and a local rescue
+frozen target. The recipe signs its original OCI archive and embeds the compressed
+blobs in `/usr/share/apex/payload` using Skopeo's `dir:` format. The OCI digest does
+not change. The Anaconda image adds installer packages and a local rescue
 account, replaces its initramfs and boots a text installer. It has no automatic
 partitioning or user creation directives. The operator must select storage and confirm
 installation. SELinux enforcing is required, including in the installer environment.
-The build records installer RPMs, its image metadata and the payload contract.
+The build records installer RPMs, image metadata, the payload contract, public key and
+verification results. Its development signing key stays in the Fedora VM, outside
+the build context. Anaconda's entry point verifies the manifest signature and every
+blob checksum before executing upstream code. The installed Apex image keeps its
+reject-all update policy; only the installer trusts this signed local payload.
 
 Image-builder's [ISO contract](https://github.com/osbuild/image-builder/blob/main/doc/20-advanced/20-bootc/10-isos.md)
 describes the required layout and notes that `anaconda-iso` is unavailable in the new
@@ -92,9 +97,12 @@ automatic kickstart arguments or an unexpected upstream labeling stage.
 
 The adapter also selects the inspected, immutable tools buildroot for the `build`
 pipeline. The pinned generic-ISO generator otherwise uses the installer as its build
-environment despite `--bootc-build-ref`. Apex's container policy is left intact in
-both the installed payload and the installer. Only the separate tools environment
-performs image assembly.
+environment despite `--bootc-build-ref`. The generator still receives the frozen
+`--bootc-installer-payload-ref` for contract validation. The adapter removes exactly
+its matching unpacked-store copy stage, since the signed compressed payload is already
+inside the derived image. A missing, duplicated or changed copy stage stops the build.
+Copying the unpacked image again can change layer representation and invalidate its
+signature. Only the separate tools environment performs image assembly.
 
 The reviewed manifest runs through osbuild in the pinned builder container. Its startup
 script follows that builder's SELinux execution setup, inside the Fedora VM. Actual

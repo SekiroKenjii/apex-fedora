@@ -12,10 +12,16 @@ from pathlib import Path
 import json
 import sys
 payload = sys.argv[1]
+trust = json.loads(Path('/usr/share/apex/installer-trust/payload.json').read_text())
+assert trust['identity'] == payload
+source = trust['reference']
 Path('/usr/share/anaconda/interactive-defaults.ks').write_text(
-    f'bootc --source-imgref containers-storage:{payload} --target-imgref {payload}\n')
-Path('/usr/share/apex/installer-payload.json').write_text(json.dumps({'reference': payload}))
+    f'bootc --source-imgref dir:/usr/share/apex/payload --target-imgref {source}\n')
+Path('/usr/share/apex/installer-payload.json').write_text(json.dumps({'reference': payload, 'digest': trust['digest']}))
 PY
+install -Dm0644 /apex-installer-source/installer-preflight.py /usr/libexec/apex/installer-preflight.py
+install -Dm0644 /usr/share/apex/installer-trust/policy.json /etc/containers/policy.json
+python3 /apex-installer-source/guard-installer-entrypoint.py
 install -Dm0644 /apex-installer-source/installer-diagnostics.py /usr/libexec/apex/installer-diagnostics.py
 install -Dm0644 /apex-installer-source/installer-ui.conf /etc/anaconda/conf.d/90-apex-ui.conf
 python3 - <<'PY'

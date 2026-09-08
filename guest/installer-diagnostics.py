@@ -45,6 +45,7 @@ def main(token, serial=False):
         'disks': ['lsblk', '--json', '--bytes', '-o', 'NAME,SIZE,TYPE,RO,SERIAL,MOUNTPOINTS'],
     }
     observations = {}
+    observations['preflight'] = read_log('/run/apex/installer-preflight.json')
     for name, args in commands.items():
         try:
             result = subprocess.run(args, capture_output=True, timeout=15)
