@@ -48,6 +48,26 @@ port 22245 and restricts guest
 outbound traffic. Record the test account and boot-argument differences with results.
 They do not count as a test of an untouched first boot or the installer user workflow.
 
+The runner waits for the active Shell process's startup-complete journal event after
+password login. It uses Escape for the Welcome dialog's Skip action, then opens and
+closes Overview through QMP keyboard input. D-Bus reads confirm both transitions
+before an application is launched. Startup and Overview screenshots are retained.
+A session record or an application launched through SSH cannot replace this input
+check. GNOME defines the startup event in
+[main.js](https://github.com/GNOME/gnome-shell/blob/50.4/js/ui/main.js) and the Skip key in
+[welcomeDialog.js](https://github.com/GNOME/gnome-shell/blob/50.4/js/ui/welcomeDialog.js).
+
+The Shell theme capture also requires a visible change after its shortcut, excluding
+the top bar from the comparison. This rejects an unchanged desktop or a clock tick;
+the PNG still needs review to confirm that the expected menu is visible and readable.
+
+Integration-test cleanup requests `systemctl poweroff` through the guest's private
+SSH connection and waits for that exact VM to exit. The result stays blocked if the
+request fails, the VM changes or shutdown exceeds 45 seconds. No forced termination
+follows a timeout. The general VM stop command sends an ACPI power-key event, whose
+effect depends on the desktop's power-key policy; it is not a guaranteed poweroff
+while a GNOME user session is active.
+
 ```sh
 PYTHONDONTWRITEBYTECODE=1 uv run --no-project --with pytest==9.1.1 pytest -m integration
 ```

@@ -1,14 +1,35 @@
 from pathlib import Path
 
 
-def swatches(path: Path) -> dict:
-    """Find wide adjacent red, green and blue bars in an unmodified QMP PPM."""
+def ppm(path: Path):
     with path.open('rb') as stream:
         assert stream.readline().strip() == b'P6'
         width, height = map(int, stream.readline().split())
+        assert width > 0 and height > 0
         assert stream.readline().strip() == b'255'
         data = stream.read()
     assert len(data) == width * height * 3
+    return width, height, data
+
+
+def surface_change(before: Path, after: Path) -> dict:
+    """Reject an unchanged Shell capture; visual review still identifies the menu."""
+    width, height, first = ppm(before)
+    other_width, other_height, second = ppm(after)
+    assert (width, height) == (other_width, other_height), 'Display size changed during the capture'
+    # Ignore the top bar so a clock tick cannot pass this check.
+    begin = min(40, height) * width * 3
+    changed = sum(max(abs(a-b) for a, b in zip(first[i:i+3], second[i:i+3])) >= 20
+                  for i in range(begin, len(first), 3))
+    minimum = max(5000, width * height // 100)
+    assert changed >= minimum, 'Shell surface did not visibly change after its shortcut'
+    return {'changed_pixels': changed, 'minimum_pixels': minimum,
+            'visual_identification': 'NOT TESTED'}
+
+
+def swatches(path: Path) -> dict:
+    """Find wide adjacent red, green and blue bars in an unmodified QMP PPM."""
+    width, height, data = ppm(path)
     matched = 0
     for y in range(0, height, 4):
         runs = []

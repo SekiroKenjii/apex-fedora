@@ -1,10 +1,41 @@
+import json
 import pytest
 from types import SimpleNamespace
-from apexlib.guesttest import Guest, assert_candidate
+from apexlib.guesttest import Guest, assert_candidate, shell_started, SHELL_STARTED
 from apexlib import guesttest
 from apexlib.common import Blocked
 
 DIGEST = 'sha256:' + 'a' * 64
+
+
+def test_shell_startup_requires_the_active_process_and_message_id():
+    event = {'_PID': '3154', 'MESSAGE_ID': SHELL_STARTED}
+    assert shell_started(json.dumps(event), 3154) == event
+    assert shell_started(json.dumps(event), 1428) is None
+    assert shell_started(json.dumps(event | {'MESSAGE_ID': 'other'}), 3154) is None
+    assert shell_started('-- No entries --\n[]\nnull', 3154) is None
+
+
+@pytest.mark.parametrize('expected', [True, False])
+def test_overview_poll_uses_read_only_state_and_expected_value(monkeypatch, expected):
+    guest = Guest.__new__(Guest)
+    values = iter([f'b {str(not expected).lower()}', f'b {str(expected).lower()}'])
+    calls = []
+    guest.run = lambda command, **_: (calls.append(command) or SimpleNamespace(returncode=0, stdout=next(values)))
+    monkeypatch.setattr(guesttest.time, 'sleep', lambda _: None)
+    guest.wait_overview(expected)
+    assert len(calls) == 2
+    assert all('get-property' in command and 'OverviewActive' in command for command in calls)
+
+
+def test_overview_timeout_does_not_count_as_interactive_desktop(monkeypatch):
+    guest = Guest.__new__(Guest)
+    guest.run = lambda *_, **__: SimpleNamespace(returncode=0, stdout='b false')
+    ticks = iter([0, 0, 16])
+    monkeypatch.setattr(guesttest.time, 'monotonic', lambda: next(ticks))
+    monkeypatch.setattr(guesttest.time, 'sleep', lambda _: None)
+    with pytest.raises(AssertionError, match='Overview did not become'):
+        guest.wait_overview(True)
 
 
 def test_booted_digest_matches_candidate():
@@ -48,3 +79,57 @@ def test_stale_guest_cannot_control_another_vm(tmp_path, monkeypatch, replacemen
     monkeypatch.setattr(guesttest, 'alive', lambda _: replacement)
     with pytest.raises(Blocked, match='stopped or changed'):
         getattr(guest, operation)(tmp_path / 'screen.png' if operation == 'screenshot' else 'ret')
+
+
+def shutdown_guest(tmp_path, monkeypatch, states, returncode=0):
+    guest = Guest.__new__(Guest)
+    guest.directory = guest.artifacts_dir = tmp_path
+    guest.vm_info = {'role': 'test', 'pid': 17}
+    guest.expected_digest = DIGEST
+    calls = []
+    guest.sudo = lambda command: (calls.append(command) or SimpleNamespace(returncode=returncode))
+    state = iter(states)
+    monkeypatch.setattr(guesttest, 'alive', lambda _: next(state))
+    monkeypatch.setattr(guesttest.time, 'sleep', lambda _: None)
+    return guest, calls
+
+
+@pytest.mark.parametrize('returncode', [0, 255])
+def test_shutdown_requires_vm_exit_even_if_ssh_disconnected(tmp_path, monkeypatch, returncode):
+    info = {'role': 'test', 'pid': 17}
+    guest, calls = shutdown_guest(tmp_path, monkeypatch, [info, info, None], returncode)
+    guest.shutdown()
+    assert calls == ['systemctl --no-block poweroff']
+    assert json.loads((tmp_path / 'shutdown.json').read_text())['status'] == 'PASS'
+
+
+@pytest.mark.parametrize('replacement', [None, {'role': 'builder', 'pid': 18}])
+def test_shutdown_refuses_stale_guest_before_power_command(tmp_path, monkeypatch, replacement):
+    guest, calls = shutdown_guest(tmp_path, monkeypatch, [replacement])
+    with pytest.raises(Blocked, match='stopped or changed'):
+        guest.shutdown()
+    assert calls == []
+
+
+def test_shutdown_rejects_vm_replacement_while_waiting(tmp_path, monkeypatch):
+    guest, calls = shutdown_guest(tmp_path, monkeypatch, [
+        {'role': 'test', 'pid': 17}, {'role': 'builder', 'pid': 18}])
+    with pytest.raises(Blocked, match='identity changed'):
+        guest.shutdown()
+    assert len(calls) == 1
+    assert json.loads((tmp_path / 'shutdown.json').read_text())['status'] == 'BLOCKED'
+
+
+def test_shutdown_timeout_never_forces_guest_exit(tmp_path, monkeypatch):
+    guest, calls = shutdown_guest(tmp_path, monkeypatch, [{'role': 'test', 'pid': 17}] * 46)
+    with pytest.raises(Blocked, match='remains running'):
+        guest.shutdown()
+    assert calls == ['systemctl --no-block poweroff']
+    assert json.loads((tmp_path / 'shutdown.json').read_text())['status'] == 'BLOCKED'
+
+
+def test_shutdown_rejected_by_guest_retains_blocked_proof(tmp_path, monkeypatch):
+    guest, _ = shutdown_guest(tmp_path, monkeypatch, [{'role': 'test', 'pid': 17}], returncode=1)
+    with pytest.raises(Blocked, match='rejected shutdown'):
+        guest.shutdown()
+    assert json.loads((tmp_path / 'shutdown.json').read_text())['status'] == 'BLOCKED'

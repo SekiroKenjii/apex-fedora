@@ -24,6 +24,7 @@ def candidate(request):
     directory = state_dir()
     # Refuses to proceed while a builder or another test VM is active.
     vm.start(directory, disk=Path(disk), guest_ssh=True)
+    guest = None
     try:
         password = os.environ.get('APEX_TEST_PASSWORD_FILE')
         guest = Guest(directory, user, Path(key), Path(password) if password else None)
@@ -48,7 +49,10 @@ def candidate(request):
         guest.wait_ready()
         yield guest, output
     finally:
-        vm.stop(directory)
+        if guest is None:
+            vm.stop(directory)
+        else:
+            guest.shutdown()
 
 
 def test_guest_critical_services_and_screen(candidate):

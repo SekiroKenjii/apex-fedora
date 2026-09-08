@@ -9,6 +9,19 @@ import time
 from .common import ROOT, Blocked, atomic_json, regular_file
 from .vm import QMP, alive
 
+SHELL_STARTED = 'f3ea493c22934e26811cd62abe8e203a'
+
+
+def shell_started(text: str, pid: int) -> dict | None:
+    for line in text.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(event, dict) and event.get('MESSAGE_ID') == SHELL_STARTED and event.get('_PID') == str(pid):
+            return event
+    return None
+
 
 def assert_candidate(status: dict, expected: str):
     booted = status.get('status', {}).get('booted') or {}
@@ -61,6 +74,28 @@ class Guest:
     def reboot(self):
         return self.sudo('systemctl reboot')
 
+    def shutdown(self):
+        """Power off this guest without relying on desktop power-key policy."""
+        self.check_vm()
+        result = self.sudo('systemctl --no-block poweroff')
+        proof = {'method': 'guest systemctl poweroff over private SSH',
+                 'digest': self.expected_digest, 'pid': self.vm_info['pid'],
+                 'request_returncode': result.returncode, 'status': 'BLOCKED'}
+        atomic_json(self.artifacts_dir / 'shutdown.json', proof)
+        # SSH may close during shutdown. Only the owned VM exiting proves completion.
+        if result.returncode not in (0, 255):
+            raise Blocked('Guest rejected shutdown; VM and evidence are retained')
+        for _ in range(45):
+            current = alive(self.directory)
+            if current is None:
+                proof['status'] = 'PASS'
+                atomic_json(self.artifacts_dir / 'shutdown.json', proof)
+                return
+            if current != self.vm_info:
+                raise Blocked('VM identity changed while waiting for shutdown')
+            time.sleep(1)
+        raise Blocked('Guest did not power off within 45 seconds; it remains running')
+
     def sudo(self, command):
         if self.password_file:
             secret = json.loads(self.password_file.read_text())['password']
@@ -107,6 +142,46 @@ class Guest:
                     return columns[0]
         return None
 
+    def wait_overview(self, expected: bool):
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            result = self.run('busctl --user get-property org.gnome.Shell /org/gnome/Shell org.gnome.Shell OverviewActive', check=False)
+            if result.returncode == 0 and result.stdout.strip() == f'b {str(expected).lower()}':
+                return
+            time.sleep(.5)
+        raise AssertionError(f'Shell Overview did not become {expected}; retain the console evidence')
+
+    def prepare_desktop(self, output: Path):
+        deadline = time.monotonic() + 90
+        event = None
+        while time.monotonic() < deadline:
+            owner = self.run('busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus GetConnectionUnixProcessID s org.gnome.Shell', check=False)
+            match = re.fullmatch(r'u ([1-9][0-9]*)', owner.stdout.strip())
+            if owner.returncode == 0 and match:
+                pid = int(match[1])
+                journal = self.run(f'journalctl --user -b MESSAGE_ID={SHELL_STARTED} _PID={pid} -n 1 -o json --no-pager')
+                event = shell_started(journal.stdout, pid)
+                if event:
+                    break
+            time.sleep(1)
+        else:
+            raise AssertionError('The active GNOME Shell did not report startup completion')
+        # GNOME 50 opens Welcome in startup-complete; Escape is its Skip action.
+        time.sleep(1)
+        self.screenshot(output / 'shell-startup.png')
+        self.keys('esc')
+        time.sleep(1)
+        self.keys('esc')
+        self.wait_overview(False)
+        self.keys('meta_l')
+        self.wait_overview(True)
+        self.screenshot(output / 'overview.png')
+        self.keys('esc')
+        self.wait_overview(False)
+        atomic_json(output / 'shell-input.json', {
+            'startup': event, 'welcome_action': 'Escape after Shell startup',
+            'overview_keyboard_roundtrip': 'PASS', 'dbus_used_for': 'read-only state verification'})
+
     def password_login_and_render(self, output: Path):
         if not self.password_file:
             raise Blocked('A GUI password test needs the disposable account credentials')
@@ -142,9 +217,7 @@ class Guest:
         else:
             raise AssertionError('No Wayland user session appeared after password entry')
         atomic_json(output / 'login.json', {'method': 'GDM password through QMP', 'user': self.user, 'session': session, 'type': 'wayland'})
-        time.sleep(3)
-        # The fixed GNOME 50 fixture focuses Skip in the first-login welcome dialog.
-        self.keys('ret')
+        self.prepare_desktop(output)
         self.run('install -m 0600 /dev/stdin /var/tmp/apex-render-probe.py', input=(ROOT / 'guest/render-probe.py').read_text())
         self.run('systemd-run --user --unit=apex-render-probe --collect --setenv=GDK_BACKEND=wayland python3 /var/tmp/apex-render-probe.py')
         from .render import swatches
@@ -197,9 +270,13 @@ class Guest:
             self.screenshot(output / f'{mode}.png')
             observations['probes'][mode] = journal
             self.run(f'systemctl --user stop {unit}')
+        self.screenshot(output / 'shell-before.ppm')
         self.keys('meta_l', 's')
         time.sleep(2)
+        self.screenshot(output / 'shell-surface.ppm')
         self.screenshot(output / 'shell-surface.png')
+        from .render import surface_change
+        observations['shell_change'] = surface_change(output / 'shell-before.ppm', output / 'shell-surface.ppm')
         self.keys('esc')
         observations['gtk_theme'] = self.run('gsettings get org.gnome.desktop.interface gtk-theme').stdout.strip()
         observations['shell_theme'] = self.run('gsettings get org.gnome.shell.extensions.user-theme name').stdout.strip()
