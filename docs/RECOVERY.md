@@ -19,6 +19,33 @@ at the same time as testing a new kernel.
 See Ventoy's [usage instructions](https://www.ventoy.net/en/doc_start.html) and
 [partition layout](https://www.ventoy.net/en/doc_disk_layout.html).
 
+## Verify the rescue ISO
+
+Keep the existing USB contents intact during verification. Read the ISO as a regular
+file; do not run an installer, format a partition or update Ventoy for this check.
+Download `SHA256SUMS` and its detached `SHA256SUMS.gpg` from the official release
+directory into a private working directory on the host, outside the repository.
+
+Verify the signing key's full fingerprint against Ubuntu's
+[verification guide](https://ubuntu.com/tutorials/how-to-verify-ubuntu). The guide
+lists the 2012 CD-image key as
+`843938DF228D22F7B3742BC0D94AA3F0EFE21092`. A keyserver lookup or a key bundled with
+the download does not establish trust by itself. If Ubuntu changes its signing key,
+confirm the new fingerprint through its official documentation before accepting it.
+Use a separate GnuPG home so this check does not change the user's personal keyring.
+
+Require a successful detached-signature verification from that key before comparing
+the exact ISO filename and SHA-256. A signature failure, an unexpected signer, a
+missing filename or a checksum mismatch blocks use of the ISO. Save the downloaded
+checksum files, signer fingerprint, verification output and ISO checksum with the
+private test evidence. Do not store this evidence on the USB without a separate
+operator decision to write there.
+
+Record checksum and signature verification separately from physical rescue boot.
+Verification does not prove that Ventoy boots the ISO on this laptop, that the backup
+can be read, or that restoration works. Those checks remain prerequisites for the
+first installation.
+
 ## Failed update after Apex is installed
 
 Use the GRUB menu to select the last confirmed deployment if automatic recovery fails.
