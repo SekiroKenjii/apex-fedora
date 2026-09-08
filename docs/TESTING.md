@@ -34,6 +34,19 @@ Each test VM keeps its overlay, serial log, QEMU command and before/after OVMF V
 its own `runtime/vm-runs` directory. Starting the next test does not overwrite these.
 The virtual display uses virtio-vga without host GPU forwarding or host GL access.
 
+Console text uses explicit key-down/key-up events with 150 ms on each side. A long
+diagnostic command exposed corrupted input with the earlier `send-key` loop. QEMU
+queues delays after each press and release, and drops events when that queue fills.
+Explicit release avoids that queue, but a repeated 992-character command still lost
+three characters in the VM. Its decompression check rejected it before the probe ran.
+Console input is therefore limited to 128 characters per call for short interactions;
+that limit is not a delivery guarantee. Do not split a script into console calls to
+bypass it. Transfer scripts over SSH or a dedicated serial-input channel and verify
+their checksum before execution. Inspect the prompt before entering credentials and
+require the command's result before recording acceptance. Sources:
+[send-key implementation](https://github.com/qemu/qemu/blob/v10.2.1/ui/input-legacy.c),
+[input queue and event handling](https://github.com/qemu/qemu/blob/v10.2.1/ui/input.c).
+
 The opt-in integration tests in `tests/integration/test_guest.py` launch a fresh overlay
 for each case. They probe critical services, ten offline boot cycles and password login
 through GDM on every cycle. Each cycle must create a new Wayland session and visibly

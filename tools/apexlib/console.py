@@ -42,14 +42,28 @@ class Console:
             connection.close()
 
     def keys(self, *codes):
-        self.call('send-key', {'keys': [{'type': 'qcode', 'data': code} for code in codes], 'hold-time': 40})
+        # send-key queues a timed delay after every press and release. Long input
+        # can overflow its bounded queue and lose modifier releases. Send explicit
+        # events and leave time for the emulated keyboard to consume each edge.
+        def events(down):
+            sequence = codes if down else reversed(codes)
+            return {'events': [{'type': 'key', 'data': {
+                'down': down, 'key': {'type': 'qcode', 'data': code}}} for code in sequence]}
+
+        try:
+            self.call('input-send-event', events(True))
+            time.sleep(.15)
+        finally:
+            self.call('input-send-event', events(False))
 
     def text(self, value):
+        if len(value) > 128:
+            raise Blocked('Console text is limited to 128 characters; transfer scripts through verified SSH or serial input')
         sequence = [character_keys(character) for character in value]
         # Validate the complete input before sending its first key. Never log passwords.
         for keys in sequence:
             self.keys(*keys)
-            time.sleep(.08)
+            time.sleep(.15)
 
     def screenshot(self, path: Path):
         if not path.resolve().is_relative_to(Path(self.info['artifacts_dir']).resolve()) or path.is_symlink():
