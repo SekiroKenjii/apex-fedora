@@ -52,3 +52,20 @@ The VM runner collects these values on every tested boot. Reboot completion, tim
 behavior during a simulated hang and GRUB fallback still need separate tests. Keep
 `boot.log-review` blocked until the remaining observations have a documented scope
 and recovery results support that conclusion.
+
+## Mixed compression in the installed initramfs
+
+The Fedora control image's preserved initramfs emits `zstd: unsupported format` when
+dracut 108's `lsinitrd` reads it. After the early CPIO archive, inspection found a
+229,271,073-byte zstd frame, seven padding bytes and a 171-byte gzip frame. The zstd
+body contains 4,900 CPIO entries. The gzip body contains the directory entries and
+`dev/random`, `dev/urandom`, then its trailer. Both compressed bodies reached their
+end markers and their CPIO contents were parsed without extracting files.
+
+The installed `lsinitrd` selects zstd after skipping early CPIO, then feeds the
+remaining stream to that decoder for several listing operations. The gzip member
+explains the decoder warning. The kernel's
+[initramfs format](https://docs.kernel.org/driver-api/early-userspace/buffer-format.html)
+permits compressed archives with different formats and zero padding in one buffer.
+Keep the original initramfs and warning log. This explains this file's layout; it
+does not replace testing the installed boot path or an intentionally broken initramfs.
