@@ -8,6 +8,11 @@ They check staged content, commit messages and outgoing history. They preserve e
 hooks rather than overwrite another policy. Hooks are local safety checks, not server-side
 access control; do not bypass them.
 
+The tool suite runs Git itself against temporary repositories to check rejected
+commits, recovery after unstaging local files and outgoing history. Its push tests
+use a temporary bare repository on disk, with no network destination. Fixture authors
+and Git configuration are isolated from the contributor's settings.
+
 Use one short commit subject, at most 72 characters:
 
 ```text
