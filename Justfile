@@ -89,6 +89,9 @@ update-fixtures build_id:
 test-update action fixture access:
     python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"
 
+test-recovery action fixture access:
+    python3 tools/recovery-vm.py "{{action}}" "{{fixture}}" "{{access}}"
+
 test-fingerprint build_id:
     python3 tools/apex.py test-fingerprint --build "{{build_id}}"
 

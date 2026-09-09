@@ -38,8 +38,12 @@ A separately identified signed A/B fixture now passes offline forward update and
 manual rollback with user data preserved. Bootc rejected wrong-key, unsigned and
 untrusted-source payloads on fresh overlays. These results do not belong to the
 frozen candidate. The installed static GRUB configuration did not pick up the image's
-newline repair, so automatic fallback and its two-attempt limit remain untested.
-Dock theme-node and shutdown warnings also remain open. See [update testing](UPDATES.md).
+newline repair. A diagnostic repair on separate VM overlays enabled GDM-failure
+tests: value 2 allowed three failed boots; one retry produced the required two.
+Automatic rollback and password TTY rescue have fixture evidence, not rebuilt-image
+acceptance. Production GRUB configuration migration remains blocked. Dock theme-node
+and shutdown warnings also remain open. See [update testing](UPDATES.md) and
+[recovery fault tests](RECOVERY-TESTS.md).
 
 Live build `c143b7a293c540dab199b3d3fd8ab806` passed direct UEFI boot, GNOME Wayland
 and visible Ptyxis with SELinux enforcing and no failed units. It corrects the earlier

@@ -80,7 +80,15 @@ untrusted-input cases through bootc. The repaired image fragment did not refresh
 the installed static `grub.cfg`; its old joined token remains present. Test that
 configuration migration before faulting the boot counter. Bootupd's report that
 BIOS/EFI binaries are current is not proof of a current GRUB configuration. See the
-[fixture procedure and results](UPDATES.md). Automatic fallback remains untested.
+[fixture procedure and results](UPDATES.md).
+
+Subsequent fault tests found that the configured value 2 permits three failed boots
+with greenboot 0.16.4. After a VM-only repair of the installed GRUB separator, GDM
+failure caused automatic rollback to A. A fresh overlay using one retry returned to
+A after exactly two failed boots. Password TTY login and password sudo also passed
+after fallback in the original run. The source preset now uses one retry, but no
+rebuilt candidate has been accepted. Production static-configuration migration
+remains blocked. See the [fault procedure and limits](RECOVERY-TESTS.md).
 
 `bootc rollback` selects the previous deployment's boot entry. It does not restore a
 formatted Ubuntu installation, and it does not revert all mutable user data. Read the

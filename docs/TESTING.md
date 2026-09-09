@@ -22,6 +22,11 @@ an installed guest, separately from installer trust. Its pytest adapter performs
 one explicit operation per invocation. Rejection cases require fresh overlays;
 forward update and manual rollback require post-reboot desktop and data checks.
 
+The [GDM recovery fixture](RECOVERY-TESTS.md) records distinct failed boots and the
+actual greenboot rollback. Its opt-in evaluator rejects a three-failure result even
+if rollback succeeds. A VM-only GRUB repair is tracked separately from the unfinished
+production migration; fixture results do not approve a rebuilt or frozen candidate.
+
 `just hardware-snapshot` saves read-only audio and fingerprint observations under
 private runtime storage. It does not enroll a finger, activate fprintd, play audio or
 write codec registers. Missing tools and denied reads remain explicit. The snapshot
