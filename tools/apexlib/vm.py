@@ -91,6 +91,9 @@ def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed
     for extra in extra_disks:
         regular_file(extra, within=directory)
     args = ["qemu-system-x86_64", "-name", f"apex-{role}", "-machine", "q35,accel=kvm", "-cpu", "host", "-smp", str(cpus), "-m", str(memory), "-display", "none", "-vga", "none", "-device", "virtio-vga", "-monitor", "none", "-qmp", f"unix:{directory}/qmp.sock,server=on,wait=off", "-serial", f"file:{artifacts_dir}/{role}-serial.log", "-drive", f"if=pflash,format=raw,readonly=on,file={cfg['firmware_code']}", "-drive", f"if=pflash,format=raw,file={artifacts_dir}/{role}-vars.fd", "-drive", f"if=virtio,format=qcow2,file={disk}"]
+    if role == 'builder':
+        # Guest fstrim can reclaim deleted build data from the file-backed disk.
+        args[-1] += ',discard=unmap'
     if serial_console:
         if role != 'test' or len(os.fsencode(directory / 'serial.sock')) >= 108:
             raise Blocked('Serial input requires a test VM and a short local socket path')

@@ -48,6 +48,7 @@ def test_qemu_uses_only_files_and_local_ports(tmp_path):
     joined = " ".join(args)
     assert "hostfwd=tcp:127.0.0.1:22244-:22" in joined
     assert "-qmp" in args and "-monitor" in args
+    assert f'if=virtio,format=qcow2,file={tmp_path}/disk.qcow2,discard=unmap' in args
     for forbidden in ("vfio", "/dev/nvme", "usb-host", "virtfs", "docker.sock", "-soundhw"):
         assert forbidden not in joined
 
@@ -99,6 +100,7 @@ def test_additional_disks_are_files_with_stable_serials(tmp_path):
     assert f'if=none,id=apex-other-1,format=qcow2,file={tmp_path}/other.qcow2' in args
     assert 'virtio-blk-pci,drive=apex-other-1,serial=apex-other-1' in args
     assert '-nic' in args and 'none' in args
+    assert not any('discard=unmap' in arg for arg in args)
 
 
 def test_additional_disk_injection_and_duplicate_are_rejected(tmp_path):

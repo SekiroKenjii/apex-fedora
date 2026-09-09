@@ -1,5 +1,17 @@
 # Builder storage
 
+The builder drive enables `discard=unmap`, so guest filesystem trim can return
+deleted build blocks to the host. Test drives keep their previous settings.
+This does not delete files on its own or expose a physical disk to the guest.
+See the [QEMU discard option](https://www.qemu.org/docs/master/system/qemu-manpage.html).
+
+After an approved cleanup, retain the candidate OCI, current artifacts, signing
+keys, source locks and the complete backing chain for any retained QCOW2. Keep a
+deletion manifest and the small logs even when an obsolete payload is removed.
+Old artifact bytes may not be reproducible from a rolling RPM repository; record
+that limitation instead of treating a deleted artifact as available evidence.
+Check allocated space with `du`, not the apparent size printed by `ls`.
+
 The builder launch gate requires 180 GiB free on the host. A 160 GiB sparse virtual
 disk can grow as builds write data, even when files are later removed inside the
 guest. Do not lower the gate to start another build or delete candidate evidence to
