@@ -69,6 +69,9 @@ Keep the earlier manually repaired runs as separate diagnostic evidence.
 
 ## Earlier diagnostic path
 
+For the separate early-boot case, use the [isolated initramfs procedure](INITRAMFS-TESTS.md).
+Userspace GDM fallback does not establish recovery when the initramfs cannot run.
+
 Start a fresh installed test overlay with `test-vm --guest-ssh --serial-console`.
 Use the completed signed fixture directory and its private test-access directory
 from [update testing](UPDATES.md). The operations below act only on that running VM:
@@ -142,6 +145,11 @@ fallback and after another offline reboot. The user sentinel, kernel and install
 initramfs hashes stayed unchanged. Both VMs shut down normally. Their original A/B
 backing snapshot was preserved.
 
-Production migration, frozen-candidate recovery, kernel/initramfs failures, required
-service timeouts and physical recovery remain unfinished. These results do not cover
+An [initramfs diagnostic](INITRAMFS-TESTS.md) subsequently reproduced two pre-userspace
+panics and a first manual rescue. Automatic recovery did not complete in the bounded
+window. A test-fixture bootlink defect blocked the next reboot; new shared-path
+injections are now refused. Early-boot recovery acceptance remains unfinished.
+
+Production migration, frozen-candidate recovery, required service timeouts and
+physical recovery also remain unfinished. These results do not cover
 Ubuntu restoration, audio, fingerprint or the laptop's internal-disk boot path.
