@@ -15,7 +15,11 @@ See the [source investigation and command decoder](AUDIO.md).
 ELAN enrollment reports `the device is already claimed by another process`.
 An observed host log shows a protocol error during identify-for-enroll before subsequent
 Claim denials. This is a lead for cleanup testing, not a confirmed libfprint diagnosis.
-No ownership fix has been applied. Keep password login and password administration.
+An experimental GNOME patch preserves cleanup state after `enroll-disconnected`.
+Extracted-handler tests reproduce the lost Stop/Release calls and pass after the
+patch. It has not been packaged or installed, and the physical protocol error remains
+unresolved. See the [trace and patch procedure](HARDWARE-TRACE.md).
+Keep password login and password administration.
 Do not delete enrolled templates or restart the daemon on a timer as a product fix.
 See the [ownership investigation](FINGERPRINT.md).
 

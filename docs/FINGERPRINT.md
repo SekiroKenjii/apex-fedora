@@ -3,6 +3,10 @@
 The ELAN sensor remains a release blocker. No template deletion, daemon restart policy
 or host authentication change has been applied.
 
+A source-level GNOME cleanup defect now has an experimental patch and a reproducer.
+It does not fix the sensor's protocol error. See the
+[ownership trace and patch test](HARDWARE-TRACE.md).
+
 An observed failure reports a protocol error during identify-for-enroll, followed by
 Claim denials. These are different layers: the first is a device operation failure;
 the second is session ownership. Removing the ownership error alone would not establish
@@ -64,3 +68,24 @@ On September 9, all eight cases passed with Fedora `fprintd-1.94.5-5.fc44.x86_64
 The protocol error left the claim owned until the client released it or disconnected;
 both cleanup paths allowed another client to acquire the virtual device. This run
 does not reproduce or resolve the physical ELAN failure.
+
+## Driver branch for 04f3:0c6e
+
+Both reviewed source versions select the image-based `elan` driver with
+`ELAN_ALL_DEV`, not `elanmoc`. The inspected Fedora-side source is upstream 1.94.100.
+The current Ubuntu source is `1:1.95.1+tod1-0ubuntu2`; its Debian patch series does
+not patch `elan.c` or `elan.h`.
+
+In `CAPTURE_READ_DATA`, the driver expects a one-byte pre-scan status of 0x55 before
+requesting an image. An unexpected status reaches `FP_DEVICE_ERROR_PROTO`. The
+0x0c58-specific retry branch in 1.94.100 does not apply to 0x0c6e. Do not copy that
+quirk to this device without a captured status and a justified protocol comparison.
+This branch is a lead, not proof of where the observed hardware failure originated.
+
+The two source files also differ in byte-order and image-normalization handling.
+Those differences occur outside the pre-scan branch and have not been tied to this
+machine's error. No raw fingerprint images or USB captures have been collected.
+
+Sources: [ELAN device table](https://gitlab.freedesktop.org/libfprint/libfprint/-/blob/v1.94.100/libfprint/drivers/elan.h),
+[ELAN capture state machine](https://gitlab.freedesktop.org/libfprint/libfprint/-/blob/v1.94.100/libfprint/drivers/elan.c),
+[exact Ubuntu source manifest](https://archive.ubuntu.com/ubuntu/pool/main/libf/libfprint/libfprint_1.95.1+tod1-0ubuntu2.dsc).

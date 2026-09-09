@@ -45,6 +45,12 @@ def collect(directory):
                                '/sys/class/dmi/id/sys_vendor', '/sys/class/dmi/id/product_name',
                                '/sys/class/dmi/id/board_name', '/sys/module/snd_hda_intel/parameters/model')]
     paths += sorted(Path('/proc/asound').glob('card[0-9]*/codec#*'))
+    # These HDA sysfs files expose configuration, not coefficient-register values.
+    # Reading init_verbs does not reveal all built-in kernel fixups.
+    for codec in sorted(Path('/sys/class/sound').glob('hwC*D*')):
+        paths += [codec / name for name in ('init_pin_configs', 'driver_pin_configs', 'user_pin_configs',
+                                          'init_verbs', 'hints', 'modelname', 'subsystem_id',
+                                          'vendor_id', 'power/runtime_status')]
     for path in paths:
         report['files'][str(path)] = read(path)
     commands = {
@@ -55,6 +61,9 @@ def collect(directory):
         'fingerprint-owner': ['busctl', '--system', 'call', 'org.freedesktop.DBus', '/org/freedesktop/DBus',
                               'org.freedesktop.DBus', 'GetNameOwner', 's', 'net.reactivated.Fprint'],
         'fingerprint-journal': ['journalctl', '-b', '-u', 'fprintd.service', '-n', '400', '-o', 'short-monotonic', '--no-pager'],
+        'audio-kernel-journal': ['journalctl', '-b', '-k', '-g', 'snd_hda|hdaudio|ALC294|audio',
+                                 '-n', '300', '-o', 'short-monotonic', '--no-pager'],
+        'audio-routing': ['pactl', '--format=json', 'list', 'sinks'],
     }
     if shutil.which('rpm') and not shutil.which('dpkg-query'):
         commands['packages'] = ['rpm', '-q', 'kernel-core', 'libfprint', 'fprintd', 'pipewire', 'wireplumber', 'alsa-ucm']

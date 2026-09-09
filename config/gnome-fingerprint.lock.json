@@ -1,0 +1,7 @@
+{
+  "version": "50.4",
+  "source_url": "https://gitlab.gnome.org/GNOME/gnome-control-center/-/raw/50.4/panels/system/users/cc-fingerprint-dialog.c",
+  "source_sha256": "63f49e814caa535fddf3f311ced2f83456427f155769c19e58317dd1c601acb8",
+  "patch": "rpms/patches/gnome-fingerprint-retain-claim.patch",
+  "status": "experimental; not packaged or installed"
+}

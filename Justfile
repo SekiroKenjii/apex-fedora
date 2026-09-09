@@ -10,6 +10,12 @@ doctor:
 hardware-snapshot:
     python3 tools/apex.py hardware-snapshot
 
+observe-fingerprint:
+    bash tools/observe-fingerprint.sh
+
+test-fingerprint-dialog source:
+    python3 tools/test-fingerprint-dialog.py "{{source}}"
+
 hooks:
     python3 tools/apex.py hooks
 

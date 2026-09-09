@@ -1,0 +1,16 @@
+diff --git a/panels/system/users/cc-fingerprint-dialog.c b/panels/system/users/cc-fingerprint-dialog.c
+--- a/panels/system/users/cc-fingerprint-dialog.c
++++ b/panels/system/users/cc-fingerprint-dialog.c
+@@ -769,9 +769,10 @@ handle_enroll_signal (CcFingerprintDialog *self,
+           if (g_str_equal (result, "enroll-disconnected"))
+             {
+               message = _("Fingerprint device disconnected");
+-              remove_dialog_state (self, DIALOG_STATE_DEVICE_CLAIMED |
+-                                         DIALOG_STATE_DEVICE_ENROLLING);
++              /* fprintd also reports protocol errors as enroll-disconnected.
++               * Keep the state needed for EnrollStop and Release. The D-Bus
++               * owner-change handler deals with a vanished daemon. */
+             }
+           else if (g_str_equal (result, "enroll-data-full"))
+             {
+               message = _("Fingerprint device storage is full");

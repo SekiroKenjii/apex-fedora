@@ -14,6 +14,10 @@ installation or change the required release checks.
 - Audio and fingerprint: obtain a clean physical reproduction and fix the component
   responsible. Keep the existing source findings and fake-device results. No guessed
   codec writes or automatic claim release belong in the image.
+  This is the current loop's priority. A GNOME claim-state patch passes extracted
+  handler tests; physical trace and GTK/RPM integration remain open. Audio still
+  needs confirmed boot provenance and audible-output observations. See
+  [the operator procedure](HARDWARE-TRACE.md).
 - Desktop: finish Vietnamese input, Flatpak theme access and existing-user updates,
   then test fractional scaling and the physical OLED panel.
 

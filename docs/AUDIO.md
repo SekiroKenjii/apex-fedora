@@ -116,3 +116,8 @@ and reported EAPD 0x2. The model parameter was unset. Those observations do not 
 that the external amplifier or speakers work, nor do they establish a clean cold boot.
 They do not justify replacing the board-specific investigation with a generic EAPD
 write. The snapshot remains private and is not evidence of Apex hardware acceptance.
+
+The collector also retains HDA sysfs pin configuration, available routing data and
+relevant kernel messages. It does not read vendor coefficient registers or infer
+which fixup ran from an empty `init_verbs` file. Use the
+[baseline procedure](HARDWARE-TRACE.md) to record boot and workaround provenance.
