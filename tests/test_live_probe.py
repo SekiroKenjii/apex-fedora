@@ -40,3 +40,21 @@ def test_truncated_file_is_not_given_a_complete_hash(tmp_path):
     report = probe.text_file(path)
     assert report['truncated'] and report['sha256'] is None
     assert len(report['text']) == 262144
+
+
+def test_missing_label_is_reported_as_error(tmp_path, monkeypatch):
+    path = tmp_path / 'helper'
+    path.write_text('fixture')
+
+    def unavailable(*args, **kwargs):
+        raise OSError('No security label')
+
+    monkeypatch.setattr(probe.os, 'getxattr', unavailable)
+    assert probe.file_metadata(path) == {'error': 'No security label'}
+
+
+def test_probe_collects_flatpak_label_and_live_bootloader_mask():
+    source = (ROOT / 'guest/live-probe.py').read_text()
+    assert "'bootloader-update.service'" in source
+    assert "'flatpak-system-helper.service'" in source
+    assert '/run/rootfsbase/usr/libexec/flatpak-system-helper' in source

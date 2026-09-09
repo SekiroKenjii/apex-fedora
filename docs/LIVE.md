@@ -101,6 +101,16 @@ It refuses physical, non-root and non-live sessions. It does not rerun the guard
 unlock a disk, attempt writes or label the observations as acceptance. Keep its source
 checksum and JSON with the VM's ISO checksum and whole-disk comparison.
 
+`guest/live-write-denial.py` is a separate, mutating test for the disposable QEMU
+fixtures. Transfer it through the same verified serial channel only after reviewing
+the read-only observations. It requires the blank 48 GiB virtio disk and the 4 GiB disk
+with serial `apex-other-1` and three partitions. All five nodes must be read-only,
+unmounted and unused by swap or device-mapper. The test checks device identities,
+then attempts to write back the original first 512 bytes. Only `EPERM` or `EROFS`
+counts as write rejection; an I/O error is blocked, and a successful write fails.
+It stops at the first unsuccessful case. Shut down the VM and compare both complete
+disk images afterward. Its result does not cover hotplug, guard failure or Ventoy.
+
 Physical USB storage is also read-only under the guard. Unlocking only a selected USB
 log partition is not implemented. The independent rescue-ISO boot, backup restore and
 operator steps remain required before touching physical media or the internal disk.

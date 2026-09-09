@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import stat
 import subprocess
 
 
@@ -44,6 +45,17 @@ def block_observations(root=Path('/sys/class/block')):
     return devices
 
 
+def file_metadata(path):
+    try:
+        info = path.lstat()
+        return {'uid': info.st_uid, 'gid': info.st_gid,
+                'mode': oct(stat.S_IMODE(info.st_mode)),
+                'selinux': os.getxattr(path, 'security.selinux', follow_symlinks=False)
+                             .rstrip(b'\0').decode()}
+    except (OSError, UnicodeError) as exc:
+        return {'error': str(exc)}
+
+
 def main():
     virtual = command(['systemd-detect-virt', '--vm'])
     cmdline = Path('/proc/cmdline').read_text()
@@ -58,7 +70,10 @@ def main():
                            '-p', 'Result', '-p', 'ExecMainStatus'],
         'masked-units': ['systemctl', 'show', 'udisks2.service', 'swap.target',
                          'bootc-fetch-apply-updates.service', 'greenboot-healthcheck.service',
+                         'bootloader-update.service',
                          '-p', 'Id', '-p', 'UnitFileState', '-p', 'ActiveState'],
+        'flatpak-helper': ['systemctl', 'show', 'flatpak-system-helper.service',
+                           '-p', 'ActiveState', '-p', 'Result', '-p', 'ExecMainStatus'],
         'failed-units': ['systemctl', '--failed', '--no-legend', '--no-pager'],
         'sessions': ['loginctl', 'list-sessions', '--no-legend'],
         'protection-journal': ['journalctl', '-b', '--no-pager', '-n', '300',
@@ -72,6 +87,9 @@ def main():
     print(json.dumps({'scope': 'Read-only Apex live VM observations',
                       'live_acceptance': 'NOT TESTED', 'write_denial_test': 'NOT TESTED',
                       'commands': observations, 'files': files,
+                      'executable_metadata': {name: file_metadata(Path(name)) for name in (
+                          '/usr/libexec/flatpak-system-helper',
+                          '/run/rootfsbase/usr/libexec/flatpak-system-helper')},
                       'block_devices': block_observations()}, indent=2))
 
 
