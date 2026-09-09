@@ -21,7 +21,11 @@ See the [ownership investigation](FINGERPRINT.md).
 
 ## Kernel and GPU: NOT TESTED
 
-The Fedora control image does not yet contain a validated proprietary NVIDIA module set.
+The Fedora control image does not yet contain a validated NVIDIA module set.
+The [NVIDIA packaging path](NVIDIA.md) now pins open modules and matching vendor
+userspace/firmware. Its Mock build and image integration have not run; storage gates
+keep the builder stopped. Unit checks and a per-application offload launcher do not
+prove that the driver loads or renders on this hardware.
 CachyOS builds are deliberately blocked until its kernel sources/RPMs and matching
 modules have a reviewed lock. Secure Boot and module signatures require their own tests;
 the build does not alter firmware settings to bypass them.

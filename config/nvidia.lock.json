@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "version": "610.57.04",
+  "epoch": "3",
+  "kernel_release": "7.1.13-200.fc44.x86_64",
+  "kernel_devel_evr": "7.1.13-200.fc44",
+  "compiler_evr": "16.2.1-2.fc44",
+  "compiler_text": "gcc (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+  "source": {
+    "commit": "e4a5faa2567f28c8eabe0ebb6422b6d0abcf37eb",
+    "url": "https://codeload.github.com/NVIDIA/open-gpu-kernel-modules/tar.gz/e4a5faa2567f28c8eabe0ebb6422b6d0abcf37eb",
+    "filename": "open-gpu-kernel-modules.tar.gz",
+    "sha256": "7fff4ba80f8295d5bdb5853c81fae9a8c07d8d0ad6de5382f5525725ab9e39ac"
+  },
+  "repository": "https://developer.download.nvidia.com/compute/cuda/repos/fedora44/x86_64/",
+  "signing_key": {
+    "filename": "73CD9B30.pub",
+    "sha256": "9221458f62030a18d5a28eecf44496016ff9c11548492ac2ce428f75c7513cab",
+    "fingerprint": "129994480EC63D2789BC98E490DFED2F73CD9B30"
+  },
+  "packages": [
+    {"name": "nvidia-driver", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "1217bfe811f3cd5050ec35a6d20e858292872a0f95de21cf5ae7c83c134aeb4b"},
+    {"name": "nvidia-driver-common", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "0f3fd59eb588e3620d8b428ff498a0db05486729282b0a14410aa60a824c4b96"},
+    {"name": "nvidia-driver-libs", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "c4310dd57f51c5ebf676030babc2f1db3d43721e024e03a7c6420c403eb48ff0"},
+    {"name": "nvidia-driver-cuda", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "ce024c55c31c4c1fbd147d577688c8074c39dbfb309af6f306a8f2719bef1768"},
+    {"name": "nvidia-driver-cuda-libs", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "68f2b8b9549d503d6969b6b17176fd3180e5111076d378cbb8d4891757418d85"},
+    {"name": "nvidia-kmod-common", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "noarch", "sha256": "ab2b4685655c4513c55858451ac513c7a06f7ed9532083e16173681ffab562f3"},
+    {"name": "nvidia-modprobe", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "45f4741c07f0bfb5e1a3d9e46e25503431989f97709a11ec0468599d1a714630"},
+    {"name": "nvidia-persistenced", "epoch": "3", "version": "610.57.04", "release": "1.fc44", "arch": "x86_64", "sha256": "bfbf812f2b892990e275db9c3cde6db7500b88e10660847c5a27e53822f67278"},
+    {"name": "nvidia-driver-selinux", "epoch": "0", "version": "0.1", "release": "2.fc44", "arch": "noarch", "sha256": "ed503045fdab673363a82e99aab31e64c883585b346343d18dbf3f52628b432c"}
+  ],
+  "modules": ["nvidia", "nvidia_modeset", "nvidia_drm", "nvidia_uvm"],
+  "firmware": ["gsp_ga10x.bin", "gsp_tu10x.bin", "ucodes_ga10x.bin", "ucodes_tu10x.bin"]
+}

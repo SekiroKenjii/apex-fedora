@@ -29,6 +29,11 @@ Set `APEX_STATE_DIR` to use another directory
 outside the repository. Keep this directory private. It holds disks, keys and raw logs.
 The source export uses an explicit allowlist; it does not copy the whole workspace.
 
+To prepare NVIDIA modules for a completed Fedora control build, use
+`just build-nvidia CONTROL_BUILD_ID`. This is a separate Mock/RPM stage; it does not
+change the frozen image. See [NVIDIA packaging](NVIDIA.md) for the locked inputs,
+remaining image-integration work and current storage blocker.
+
 ## Build output
 
 Each run has a unique directory under `runtime/exports`. A completed image run records

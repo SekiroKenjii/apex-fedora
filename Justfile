@@ -37,6 +37,9 @@ builder-finalize compaction_id:
 build profile="fedora":
     python3 tools/apex.py build {{profile}}
 
+build-nvidia build_id:
+    python3 tools/apex.py build-nvidia --build "{{build_id}}"
+
 artifact kind build_id:
     python3 tools/apex.py artifact "{{kind}}" --build "{{build_id}}"
 

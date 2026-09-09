@@ -35,6 +35,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     fingerprint = sub.add_parser('test-fingerprint')
     fingerprint.add_argument('--build', required=True, dest='build_id')
 
+    nvidia = sub.add_parser('build-nvidia')
+    nvidia.add_argument('--build', required=True, dest='build_id')
+
     ventoy = sub.add_parser('ventoy-media')
     for option in ('live-output', 'ubuntu', 'trusted-key', 'checksums', 'signature', 'keyring'):
         ventoy.add_argument('--' + option, required=True, type=Path)
@@ -154,6 +157,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     elif args.command in {"build", "artifact"}:
         from apexlib.pipeline import execute
         execute(state, getattr(args, "profile", "fedora"), getattr(args, "kind", "image"), getattr(args, "build_id", None), test_access=getattr(args, "test_access", False))
+    elif args.command == 'build-nvidia':
+        from apexlib.nvidia import execute
+        print(execute(state, args.build_id))
     elif args.command == "test-vm":
         print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk), serial_console=args.serial_console, usb_test_bus=args.usb_test_bus, boot_usb=args.boot_usb), indent=2))
         print("VM launched. This does not record a successful boot or desktop test.")

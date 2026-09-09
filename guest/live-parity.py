@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import sys
 
-PROTECTED = ('kernel', 'kmod', 'akmod', 'nvidia', 'xorg-x11-drv-nvidia', 'linux-firmware', 'alsa', 'pipewire', 'wireplumber', 'libfprint', 'fprintd', 'gnome', 'mutter', 'gdm', 'pam', 'mesa')
+PROTECTED = ('kernel', 'kmod', 'akmod', 'nvidia', 'libnvidia', 'xorg-x11-drv-nvidia', 'linux-firmware', 'alsa', 'pipewire', 'wireplumber', 'libfprint', 'fprintd', 'gnome', 'mutter', 'gdm', 'pam', 'mesa')
 
 
 def compare(target, live):
