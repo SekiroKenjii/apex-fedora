@@ -56,6 +56,24 @@ Greenboot must be tested to reject a failed boot after two attempts and select t
 known-good deployment. Its userspace checks cannot recover every kernel hang. For a
 hang before userspace, record whether a manual power cycle is needed.
 
+The September 9 installed-QCOW2 probe found greenboot 0.16.4 active, the Apex health
+check successful, `boot_success=1` and no rollback deployment. The generated GRUB
+configuration contains the counter fragment. This confirms integration on a healthy
+boot, not recovery after a fault. Its final line is `save_env boot_success### END ...`
+because the packaged fragment has no trailing newline. GRUB's word rule includes `#`,
+so that joined token is not the intended `boot_success` variable. The image recipe now
+adds the missing separator and records before/after hashes. The frozen candidate is
+unchanged; a new image still needs GRUB environment-persistence and failure tests.
+Also measure the actual number of failed boots: the configuration value alone does
+not prove the two-attempt limit.
+
+Source: [GRUB 2.12 lexer rules](https://github.com/rhboot/grub2/blob/grub-2.12/grub-core/script/yylex.l#L123).
+
+`guest/recovery-probe.py` collects these prerequisites without triggering a reboot,
+rollback or failed service. It refuses physical and non-OSTree sessions. Run it through
+the owned VM's private SSH connection and retain its JSON with the VM's digest and
+script checksum. A missing rollback image blocks the A/B recovery tests.
+
 `bootc rollback` selects the previous deployment's boot entry. It does not restore a
 formatted Ubuntu installation, and it does not revert all mutable user data. Read the
 [bootc upgrade and rollback documentation](https://bootc.dev/bootc/upgrades.html).

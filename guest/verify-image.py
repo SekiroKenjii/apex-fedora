@@ -48,7 +48,9 @@ def main():
         assert '50' in metadata['shell-version'], uuid
     result = subprocess.run(['systemctl', 'is-enabled', 'bootc-fetch-apply-updates.timer'], capture_output=True, text=True)
     assert result.stdout.strip() == 'masked'
-    print(json.dumps({'kernel': kernel, 'gnome': version, 'modules': modules, 'shell_theme': theme, 'gtk3_base': gtk3_base, 'static_checks': 'PASS', 'boot': 'NOT TESTED', 'hardware': 'NOT TESTED'}))
+    fragment = Path('/usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg').read_bytes()
+    assert fragment.endswith(b'\n') and fragment.rstrip(b'\n').splitlines()[-1] == b'save_env boot_success', 'GRUB fragment requires a command separator'
+    print(json.dumps({'kernel': kernel, 'gnome': version, 'modules': modules, 'shell_theme': theme, 'gtk3_base': gtk3_base, 'greenboot_fragment_sha256': hashlib.sha256(fragment).hexdigest(), 'static_checks': 'PASS', 'boot': 'NOT TESTED', 'hardware': 'NOT TESTED'}))
 
 
 if __name__ == '__main__':

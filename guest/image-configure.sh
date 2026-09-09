@@ -33,6 +33,8 @@ install -m 0644 /usr/share/apex/greenboot.conf /etc/greenboot/greenboot.conf
 chmod 0755 /usr/lib/greenboot/check/required.d/20-apex-system.sh
 systemctl enable greenboot-healthcheck.service
 test -f /usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg
+python3 /tmp/apex-guest/fix-grub-fragment.py /usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg \
+    > /usr/share/apex/greenboot-fragment.json
 mkdir -m 0700 /run/apex-verify-user
 XDG_RUNTIME_DIR=/run/apex-verify-user systemd-analyze --user verify /usr/lib/systemd/user/apex-desktop-defaults.service
 mapfile -t kernels < <(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
