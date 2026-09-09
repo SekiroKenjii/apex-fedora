@@ -13,9 +13,11 @@ metadata reader, squashfs writer and verification extractor run in `install_t`; 
 builder stays enforcing. A failed labeling pass or nonempty relabel dry run stops
 assembly. After compression, critical paths are extracted and checked for unchanged
 labels, ownership, modes and content hashes. Artifact signatures cover these reports
-as well as the ISO. Full-image acceptance of this reader correction is still pending.
+as well as the ISO. The rebuilt ISO passed these checks and direct VM boot; see the
+current result below. Ventoy and physical acceptance remain untested.
 
-Build `2cba86b0c51a45138d4d5a35a399f043` completed these checks. Its protected RPMs
+Earlier build `2cba86b0c51a45138d4d5a35a399f043` completed the initial scratch-label
+checks, before the raw-reader and post-extraction correction. Its protected RPMs
 matched the target; a separate comparison found 4,850 identical regular kernel/module
 files, excluding the intentionally different initramfs. These comparisons do not cover
 the missing NVIDIA stack, full firmware contents or hardware behavior.
@@ -64,8 +66,8 @@ Opening the protected virtual devices for writing succeeded, so an open-only tes
 would not establish write protection. Actual `pwrite` attempts on both disks and all
 three partitions returned `EPERM`. Each attempted to write back the same 512 bytes
 already at offset zero. The guest was then shut down normally; complete comparisons
-found both disks unchanged. This covers those fixed virtual devices only. Hotplug,
-guard-failure injection and Ventoy still need separate tests.
+found both disks unchanged. This covers those fixed virtual devices only. The newer
+ISO has a separate failure-latch result below; hotplug and Ventoy remain untested.
 
 Two service failures keep this ISO rejected. `bootloader-update.service` attempted
 `bootupctl update` and failed to find a block device at `/boot` or `/sysroot`. Its
@@ -87,13 +89,49 @@ The source correction puts the readers and packer in `install_t`, adds the Flatp
 helper to required probes and rejects changed metadata after extraction. The small
 round-trip result does not validate a complete rebuilt ISO or Flatpak service startup.
 
-## Remaining acceptance
+## Current direct-boot result
 
-A fresh ISO with both live-service corrections must pass direct UEFI boot, service
-checks and write-denial tests in a VM, including failure injection, before a physical
-trial. Keep the empty optical drive in that test. Repeat the GNOME session, rendering,
-enforcing, mount/swap and whole-disk checks on that same ISO. Run Ventoy acceptance
-separately.
+Build `c143b7a293c540dab199b3d3fd8ab806` contains both corrections and retains target
+OCI digest `sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912`.
+Its ISO SHA-256 is
+`0c08b2d55c116b832686eccb23041e2e778bad09f09a23843145c992a0be6490`.
+All 13 artifact files verified against the independently trusted development key.
+Changed manifest, changed payload, wrong key and bundled-key trust tests rejected
+the invalid input. Protected RPM parity and extracted critical-file metadata passed.
+
+Normal direct UEFI boot in a fresh two-disk VM with no NIC reached liveuser Wayland
+and rendered Ptyxis. The empty optical drive remained present. SELinux was enforcing,
+Flatpak helper was active with `flatpak_helper_exec_t` in both filesystem layers,
+the live bootloader updater was masked and no systemd units had failed. Firmware
+variables were read-only. Neither virtio disk was mounted; no swap was active at the
+final observation. All five disk/partition nodes rejected actual same-byte writes
+with `EPERM`. After normal poweroff, complete comparisons found both disks unchanged.
+`live.direct` is PASS for this ISO. This is not permission to boot it on the laptop.
+
+Two probe issues were corrected during this run. Fedora's `swapon` lacks `--json`,
+so the read-only collector now uses its supported raw table format alongside
+`/proc/swaps`. Virtio exposes its serial on the block node, not `device/serial`.
+The first write test stopped during identity validation before any write attempt;
+the corrected test passed. Original failed captures remain with the private evidence.
+
+## Pre-mount failure latch
+
+A second fresh VM booted the same ISO with `rd.break=pre-mount rd.shell`. The packaged
+dracut script enters this breakpoint before sourcing pre-mount hooks. With root still
+unmounted, invoking the guard on a nonexistent fixture node returned 1 and created
+the failure latch. Resuming boot produced `Apex disk protection failed` and
+`Refusing to continue`, then entered a diagnostic shell.
+
+The guest remained in initramfs, `/sysroot` was not mounted and GDM was unavailable
+and inactive. All five virtio nodes stayed read-only and no swap was active. Normal
+poweroff and complete disk comparisons confirmed no changes. This single failure
+case passed; it does not exercise a failed `BLKROSET`, hotplug or Ventoy boot.
+
+## Remaining acceptance and probe use
+
+Test hotplug and failed locking in separate disposable guests, then run Ventoy
+acceptance. Keep `live.disk-protection` as NOT TESTED until its remaining cases have
+evidence. Repeat affected tests when the ISO changes; retain the empty optical drive.
 
 `guest/live-probe.py` collects mounts, swap, kernel block-device state, service state
 and bounded journal output through the owned VM's verified serial or SSH channel.
@@ -111,6 +149,6 @@ counts as write rejection; an I/O error is blocked, and a successful write fails
 It stops at the first unsuccessful case. Shut down the VM and compare both complete
 disk images afterward. Its result does not cover hotplug, guard failure or Ventoy.
 
-Physical USB storage is also read-only under the guard. Unlocking only a selected USB
+The guard is configured to make USB storage read-only. Unlocking only a selected USB
 log partition is not implemented. The independent rescue-ISO boot, backup restore and
 operator steps remain required before touching physical media or the internal disk.
