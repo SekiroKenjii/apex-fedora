@@ -34,6 +34,13 @@ and a separate password-login/Wayland rendering case. Those results do not cover
 remaining failure tests. The live guard is experimental and must not be trusted on the
 internal disk until virtual disk tests demonstrate its behavior.
 
+A separately identified signed A/B fixture now passes offline forward update and
+manual rollback with user data preserved. Bootc rejected wrong-key, unsigned and
+untrusted-source payloads on fresh overlays. These results do not belong to the
+frozen candidate. The installed static GRUB configuration did not pick up the image's
+newline repair, so automatic fallback and its two-attempt limit remain untested.
+Dock theme-node and shutdown warnings also remain open. See [update testing](UPDATES.md).
+
 Live build `c143b7a293c540dab199b3d3fd8ab806` passed direct UEFI boot, GNOME Wayland
 and visible Ptyxis with SELinux enforcing and no failed units. It corrects the earlier
 Flatpak helper label loss and masks the live-only bootloader updater. Both virtual

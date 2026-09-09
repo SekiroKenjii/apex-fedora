@@ -17,6 +17,11 @@ in the VM. A passing fixture does not approve the Apex installer or update path.
 [Installer acceptance](INSTALLER.md) for the completed signed-payload installation
 and the separate pre-partition rejection checks.
 
+The [offline update fixture](UPDATES.md) tests policy enforcement through bootc in
+an installed guest, separately from installer trust. Its pytest adapter performs
+one explicit operation per invocation. Rejection cases require fresh overlays;
+forward update and manual rollback require post-reboot desktop and data checks.
+
 `just hardware-snapshot` saves read-only audio and fingerprint observations under
 private runtime storage. It does not enroll a finger, activate fprintd, play audio or
 write codec registers. Missing tools and denied reads remain explicit. The snapshot

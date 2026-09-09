@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import uuid
@@ -43,6 +44,14 @@ def main():
     destination.mkdir(mode=0o700)
     proof = {'status': 'FAIL', 'action': args.action, 'fixture': fixture_id,
              'images': fixture['images'], 'vm': guest.vm_info, 'commands': []}
+    proof['source_sha256'] = {}
+    for name in ('tools/update-vm.py', 'tools/apexlib/guesttest.py', 'tools/apexlib/vm.py',
+                 'tools/apexlib/common.py', 'guest/probe.py', 'guest/recovery-probe.py',
+                 'guest/render-probe.py', 'tests/integration/test_update_operation.py'):
+        target = destination / 'source' / name
+        target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        shutil.copyfile(ROOT / name, target)
+        proof['source_sha256'][name] = sha256(target)
     remote = '/var/lib/apex-update-fixture/' + fixture_id
 
     def root(command, *, check=True, timeout=900):
@@ -67,6 +76,10 @@ def main():
         if root('systemd-detect-virt --vm').stdout.strip() not in {'kvm', 'qemu'}:
             raise Blocked('Only an installed QEMU test guest is supported')
         root('test -f /run/ostree-booted')
+        proof['boot_id'] = guest.run('cat /proc/sys/kernel/random/boot_id').stdout.strip()
+        proof['versions'] = guest.run('rpm -q bootc greenboot kernel-core gnome-shell').stdout
+        proof['kernel_inputs'] = root('sh -c ' + shlex.quote(
+            'sha256sum /usr/lib/modules/*/vmlinuz /usr/lib/modules/*/initramfs.img')).stdout
         proof['before'] = status()
         if args.action == 'provision':
             assert_candidate(proof['before'], fixture['parent']['digest'])
@@ -141,7 +154,7 @@ print(json.dumps({{'bootstrap_policy_sha256':digest(target/'bootstrap-policy.jso
                 guest.expected_digest = fixture['images'][version]['digest']
                 assert_candidate(proof['before'], guest.expected_digest)
                 proof['health'] = guest.critical_health()
-                proof['marker'] = json.loads(guest.run('cat /usr/share/apex/recovery-fixture.json').stdout)
+                proof['marker'] = json.loads(root('cat /usr/share/apex/recovery-fixture.json').stdout)
                 if proof['marker']['fixture'] != fixture_id or proof['marker']['version'] != version:
                     raise Blocked('Booted immutable marker mismatch')
                 guest.password_login_and_render(destination)

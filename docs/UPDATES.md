@@ -70,6 +70,56 @@ stage or rollback request does not prove that the next boot succeeds. Keep both
 the request result and the post-reboot check. Inspect screenshots and the retained
 GRUB/greenboot probe, including warnings, before reviewing the loop.
 
+For pytest execution, set `APEX_UPDATE_ACTION`, `APEX_UPDATE_FIXTURE` and
+`APEX_UPDATE_ACCESS`, then run `tests/integration/test_update_operation.py`. This
+uses the same guarded runner and QMP desktop checks. The guest must already be
+running. A failure leaves it available for diagnosis; cleanup and reboot remain
+separate operations. Without those inputs pytest reports SKIP, not acceptance.
+
 Manual rollback does not establish the two-failure GRUB fallback. GDM, initramfs,
 disk-full and interrupted-update faults still require separate fresh-disk tests.
 None of these VM results establishes audio, fingerprint or physical recovery.
+
+## September 9 results
+
+Fixture `98fbb47d0a1247f889ca5ee5bb93dbae` completed these checks with bootc 1.16.10,
+greenboot 0.16.4, GNOME Shell 50.4 and kernel 7.1.13-200.fc44:
+
+- A: `sha256:9fad27723a5b2d14f5f3613f3d280013ff3860e3fb7341cdbaf443b91767d8b8`.
+- B: `sha256:71908eb3653d35062ddcdd41778b27d956e566596ef204bb0a9a4cfa51f5e76d`.
+- The real bootc consumer accepted A and B and recorded `containerPolicy` verification.
+- Wrong-key, unsigned and untrusted-source inputs were rejected in three fresh
+  overlays. Each left deployment state unchanged. The entire A backing disk's
+  checksum remained unchanged after all rejection tests and the forward/rollback run.
+- A to B and manual rollback to A passed. Each tested deployment reached password
+  login, Wayland and a visibly rendered GTK4 window with SELinux enforcing. The
+  boot IDs differed, the user-data checksum matched, and the kernel and initramfs
+  checksums stayed identical. Guests used QEMU restricted networking, with SSH
+  exposed only on localhost.
+
+Ten operation checks passed. One earlier harness failure is retained: the fixture
+marker was root-readable, while the runner attempted a user read. A root read
+confirmed its contents; the corrected runner passed without changing either image.
+The build used ordinary lint and reported 13 passes and one skip for each image,
+with no warning output. Future fixture builds use the project's fatal-warning mode.
+
+The GRUB issue is still open. Both images contain the repaired fragment, but the
+installed `/boot/grub2/grub.cfg` retained the old joined `boot_success### END` token
+after update and rollback. Bootupd reports the installed BIOS/EFI components at
+their latest versions. That status does not establish that the static configuration
+was refreshed. Automatic recovery and the two-attempt limit remain NOT TESTED.
+
+Bootc also printed an unsupported-`dir` local-image lookup diagnostic before both
+successful imports and policy rejections. Version 1.16.10 probes the unified store
+using Podman `image exists`, treating a nonzero result as absence before taking the
+OSTree importer path. This is consistent with the observed nonfatal lookup message;
+the separate OpenImage rejection and unchanged deployment state establish the
+negative results. See [store detection](https://github.com/bootc-dev/bootc/blob/v1.16.10/crates/lib/src/deploy.rs#L518)
+and [existence check](https://github.com/bootc-dev/bootc/blob/v1.16.10/crates/lib/src/podstorage.rs#L384).
+Do not use that lookup message alone as a signature-test result.
+
+Logs still contain dock theme-node warnings and reboot/service-teardown warnings,
+including the previously observed watchdog message. They remain available for
+review; this loop does not pass boot-log acceptance. The frozen candidate's checks
+were not reassigned to the fixture digests, nor were fixture results assigned back
+to the candidate. No physical media or host OS configuration was changed.

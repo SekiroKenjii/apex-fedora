@@ -9,7 +9,6 @@ import re
 import secrets
 import shutil
 import subprocess
-import sys
 import tarfile
 
 
@@ -104,7 +103,7 @@ def main():
                             'rpm', '-qa', '--qf', '%{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n'])
             if '\n'.join(sorted(rpms.splitlines())) + '\n' != baseline:
                 raise RuntimeError('Fixture changed the RPM inventory')
-            command(['podman', 'run', '--rm', '--network', 'none', tag, 'bootc', 'container', 'lint'])
+            command(['podman', 'run', '--rm', '--network', 'none', tag, 'bootc', 'container', 'lint', '--fatal-warnings'])
             signing_policy = root / 'signing-policy.json'
             save(signing_policy, {'default': [{'type': 'reject'}], 'transports': {'containers-storage': {
                 '[overlay@/var/lib/containers/storage]' + tag: [{'type': 'insecureAcceptAnything'}]}}})

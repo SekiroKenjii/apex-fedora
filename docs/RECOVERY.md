@@ -74,6 +74,14 @@ rollback or failed service. It refuses physical and non-OSTree sessions. Run it 
 the owned VM's private SSH connection and retain its JSON with the VM's digest and
 script checksum. A missing rollback image blocks the A/B recovery tests.
 
+The separately signed September 9 A/B fixture now passes trusted offline update,
+manual rollback, password login and user-data preservation. It also rejects three
+untrusted-input cases through bootc. The repaired image fragment did not refresh
+the installed static `grub.cfg`; its old joined token remains present. Test that
+configuration migration before faulting the boot counter. Bootupd's report that
+BIOS/EFI binaries are current is not proof of a current GRUB configuration. See the
+[fixture procedure and results](UPDATES.md). Automatic fallback remains untested.
+
 `bootc rollback` selects the previous deployment's boot entry. It does not restore a
 formatted Ubuntu installation, and it does not revert all mutable user data. Read the
 [bootc upgrade and rollback documentation](https://bootc.dev/bootc/upgrades.html).
