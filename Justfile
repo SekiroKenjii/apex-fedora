@@ -7,6 +7,9 @@ default:
 doctor:
     python3 tools/apex.py doctor
 
+hardware-snapshot:
+    python3 tools/apex.py hardware-snapshot
+
 hooks:
     python3 tools/apex.py hooks
 
@@ -46,6 +49,18 @@ test-vm disk:
 
 test-installer disk iso other_disk:
     python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}"
+
+test-installer-diagnostic disk iso other_disk:
+    python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}" --serial-console
+
+test-installer-fault case:
+    python3 tools/apex.py test-installer-fault "{{case}}"
+
+test-installer-wrong-key public_key:
+    python3 tools/apex.py test-installer-fault wrong-key --wrong-key "{{public_key}}"
+
+test-installer-fault-collect run_directory:
+    python3 tools/apex.py test-installer-fault-collect "{{run_directory}}"
 
 installer-fixtures:
     python3 tools/apex.py installer-fixtures

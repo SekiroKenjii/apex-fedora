@@ -14,7 +14,7 @@ from apexlib.common import ROOT, Blocked, config, run, state_dir
 
 def boot(parser: argparse.ArgumentParser) -> None:
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("doctor", "hooks", "sources", "report", "readiness", "trust-development-key", "test-power-loss", 'installer-fixtures', 'test-installer-trust'):
+    for name in ("doctor", "hooks", "sources", "report", "readiness", "trust-development-key", "test-power-loss", 'installer-fixtures', 'test-installer-trust', 'hardware-snapshot'):
         sub.add_parser(name)
 
     builder = sub.add_parser("builder")
@@ -36,6 +36,7 @@ def boot(parser: argparse.ArgumentParser) -> None:
     test.add_argument("disk", type=Path)
     test.add_argument("--iso", type=Path)
     test.add_argument("--guest-ssh", action="store_true")
+    test.add_argument('--serial-console', action='store_true', help='Enable a private Unix serial socket for disposable guest diagnostics')
     test.add_argument('--extra-disk', action='append', type=Path, default=[])
 
     resume = sub.add_parser('test-resume')
@@ -44,6 +45,13 @@ def boot(parser: argparse.ArgumentParser) -> None:
 
     compare = sub.add_parser('test-compare-disks')
     compare.add_argument('run_directory', type=Path)
+
+    fault = sub.add_parser('test-installer-fault')
+    from apexlib.installerfault import CASES
+    fault.add_argument('case', choices=CASES)
+    fault.add_argument('--wrong-key', type=Path)
+    collect_fault = sub.add_parser('test-installer-fault-collect')
+    collect_fault.add_argument('run_directory', type=Path)
 
     logs = sub.add_parser('installer-logs')
     logs.add_argument('action', choices=['prepare', 'collect'])
@@ -95,6 +103,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     if args.command == 'trust-development-key':
         from apexlib.signatures import trust_builder
         print(json.dumps(trust_builder(state), indent=2))
+    elif args.command == 'hardware-snapshot':
+        from apexlib.hardware import collect
+        print(collect(state))
     elif args.command == 'installer-fixtures':
         from apexlib.pipeline import installer_fixtures
         print(installer_fixtures(state))
@@ -124,12 +135,18 @@ def boot(parser: argparse.ArgumentParser) -> None:
         from apexlib.pipeline import execute
         execute(state, getattr(args, "profile", "fedora"), getattr(args, "kind", "image"), getattr(args, "build_id", None), test_access=getattr(args, "test_access", False))
     elif args.command == "test-vm":
-        print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk)), indent=2))
+        print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk), serial_console=args.serial_console), indent=2))
         print("VM launched. This does not record a successful boot or desktop test.")
     elif args.command == 'test-resume':
         print(json.dumps(vm.resume_test(state, args.run_directory, without_iso=args.without_iso), indent=2))
     elif args.command == 'test-compare-disks':
         print(json.dumps(vm.compare_disks(state, args.run_directory), indent=2))
+    elif args.command == 'test-installer-fault':
+        from apexlib.installerfault import execute
+        print(json.dumps(execute(state, args.case, args.wrong_key), indent=2))
+    elif args.command == 'test-installer-fault-collect':
+        from apexlib.installerfault import collect
+        print(json.dumps(collect(state, args.run_directory), indent=2))
     elif args.command == 'installer-logs':
         from apexlib import installerlogs
         if args.action == 'prepare':

@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import signal
 import socket
+import stat
 import subprocess
 import time
 import uuid
@@ -71,7 +72,7 @@ def validate_disk(path: Path, directory: Path):
         path = path.parent / backing
 
 
-def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed: Path | None = None, port: int | None = None, artifacts_dir: Path | None = None, extra_disks: tuple[Path, ...] = ()) -> list[str]:
+def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed: Path | None = None, port: int | None = None, artifacts_dir: Path | None = None, extra_disks: tuple[Path, ...] = (), *, serial_console: bool = False) -> list[str]:
     cfg = config()["builder"]
     artifacts_dir = artifacts_dir or directory
     if not artifacts_dir.resolve().is_relative_to(directory.resolve()):
@@ -86,6 +87,13 @@ def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed
     for extra in extra_disks:
         regular_file(extra, within=directory)
     args = ["qemu-system-x86_64", "-name", f"apex-{role}", "-machine", "q35,accel=kvm", "-cpu", "host", "-smp", str(cpus), "-m", str(memory), "-display", "none", "-vga", "none", "-device", "virtio-vga", "-monitor", "none", "-qmp", f"unix:{directory}/qmp.sock,server=on,wait=off", "-serial", f"file:{artifacts_dir}/{role}-serial.log", "-drive", f"if=pflash,format=raw,readonly=on,file={cfg['firmware_code']}", "-drive", f"if=pflash,format=raw,file={artifacts_dir}/{role}-vars.fd", "-drive", f"if=virtio,format=qcow2,file={disk}"]
+    if serial_console:
+        if role != 'test' or len(os.fsencode(directory / 'serial.sock')) >= 108:
+            raise Blocked('Serial input requires a test VM and a short local socket path')
+        if directory.stat().st_mode & 0o077:
+            raise Blocked('Serial input requires a private runtime directory (0700)')
+        index = args.index('-serial')
+        args[index:index + 2] = ['-chardev', f'socket,id=apex-serial,path={directory}/serial.sock,server=on,wait=off,logfile={artifacts_dir}/test-serial.log,logappend=on', '-serial', 'chardev:apex-serial']
     if seed:
         regular_file(seed, within=directory)
         args += ["-drive", f"file={seed},format=raw,media=cdrom,readonly=on"]
@@ -172,12 +180,22 @@ def prepare(directory: Path):
         shutil.copyfile(cfg["firmware_vars"], varfile)
 
 
-def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None, guest_ssh: bool = False, extra_disks: tuple[Path, ...] = ()):
+def clear_serial_socket(directory: Path):
+    path = directory / 'serial.sock'
+    if path.exists() or path.is_symlink():
+        if path.is_symlink() or not stat.S_ISSOCK(path.lstat().st_mode) or path.lstat().st_uid != os.getuid():
+            raise Blocked('Preserving unexpected file at the serial socket path')
+        path.unlink()
+
+
+def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None, guest_ssh: bool = False, extra_disks: tuple[Path, ...] = (), serial_console: bool = False):
     with exclusive(directory):
         if alive(directory):
             raise Blocked("Only one Apex VM may run at a time")
         cfg = config()["builder"]
         role = "test" if disk or iso else "builder"
+        if serial_console and role != 'test':
+            raise Blocked('Serial input is restricted to a disposable test VM')
         if iso and not disk:
             raise Blocked('An ISO test requires a file-backed target disk')
         if extra_disks and (role != 'test' or len(extra_disks) > 2):
@@ -210,13 +228,15 @@ def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None,
         qmp = directory / "qmp.sock"
         if qmp.exists():
             qmp.unlink()
-        args = command(directory, disk, role, memory, cfg["cpus"], directory / "seed.iso" if role == "builder" else iso, cfg["ssh_port"] if role == "builder" else (22245 if guest_ssh else None), artifacts_dir, extra_disks)
+        if serial_console:
+            clear_serial_socket(directory)
+        args = command(directory, disk, role, memory, cfg["cpus"], directory / "seed.iso" if role == "builder" else iso, cfg["ssh_port"] if role == "builder" else (22245 if guest_ssh else None), artifacts_dir, extra_disks, serial_console=serial_console)
         if iso:
             args += ['-boot', 'order=d']
         with (artifacts_dir / f"{role}-qemu.log").open("ab") as log:
             proc = subprocess.Popen(args, stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)
         info = {"pid": proc.pid, "role": role, "disk": str(disk), "source_disk": str(source_disk), "artifacts_dir": str(artifacts_dir), "command": args,
-                'iso': str(iso) if iso else None, 'guest_ssh': guest_ssh,
+                'iso': str(iso) if iso else None, 'guest_ssh': guest_ssh, 'serial_console': serial_console,
                 'extra_disks': [str(p) for p in extra_disks], 'source_extra_disks': [str(p) for p in source_extra_disks]}
         atomic_json(directory / "vm.json", info)
         if role == 'test':
@@ -244,7 +264,10 @@ def resume_test(directory: Path, artifacts_dir: Path, *, without_iso: bool = Fal
         resources(directory, 4096, cfg['reserve_mib'], 12)
         iso = None if without_iso or not saved.get('iso') else Path(saved['iso'])
         args = command(directory, disk, 'test', 4096, cfg['cpus'], iso,
-                       22245 if saved.get('guest_ssh') else None, artifacts_dir, extras)
+                       22245 if saved.get('guest_ssh') else None, artifacts_dir, extras,
+                       serial_console=saved.get('serial_console', False))
+        if saved.get('serial_console'):
+            clear_serial_socket(directory)
         if iso:
             args += ['-boot', 'order=d']
         qmp = directory / 'qmp.sock'

@@ -95,3 +95,11 @@ Repeat the source comparison when the candidate kernel changes. Separate the DAC
 path from external amplifier initialization. Treat vendor coefficient meanings not
 documented in source as unknown. Use board documentation or a controlled comparison
 before proposing a scoped quirk. Retest both initialization and resume at low volume.
+
+`just hardware-snapshot` collects codec dumps, mixer controls, package versions and
+the current model parameter without applying settings. In the September 9 Ubuntu
+snapshot, speaker node 0x14 was configured for output, unmuted, connected to DAC 0x02,
+and reported EAPD 0x2. The model parameter was unset. Those observations do not prove
+that the external amplifier or speakers work, nor do they establish a clean cold boot.
+They do not justify replacing the board-specific investigation with a generic EAPD
+write. The snapshot remains private and is not evidence of Apex hardware acceptance.

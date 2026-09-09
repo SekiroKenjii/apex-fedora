@@ -22,3 +22,11 @@ EnrollStatus event, EnrollStop/Release calls and caller disconnection. Test GNOM
 Settings and the command-line client separately before involving GDM or PAM. Then use
 upstream fake devices to exercise that same path and verify on the physical sensor.
 Keep password login available throughout.
+
+`just hardware-snapshot` records service state, package versions, the current boot's
+fprintd journal and whether the daemon owns its D-Bus name. The September 9 Ubuntu
+snapshot found fprintd inactive, no current bus owner and the ELAN device suspended.
+The journal showed an earlier start and normal deactivation, without an enrollment
+attempt. This does not reproduce the reported claim error. A daemon's bus name owner
+is also not the client that claimed the sensor; that client still needs a timed D-Bus
+trace during reproduction. The collector does not activate the daemon or read templates.

@@ -157,6 +157,41 @@ the result, command log, script checksum and public keys are exported under
 policy unchanged and does not mark an installer or update acceptance check as passed.
 Fixture keys are not release keys.
 
+## Reproduce the negative installer cases
+
+Start each case with `just test-installer-diagnostic TARGET ISO OTHER_DISK`. Use the
+48 GiB blank target and 4 GiB sentinel fixture, with no NIC. In the ISO's GRUB editor,
+append these diagnostic arguments to the kernel line:
+
+```text
+systemd.unit=multi-user.target systemd.mask=serial-getty@ttyS0.service systemd.wants=anaconda-shell@ttyS0.service
+```
+
+Keep the existing enforcing argument. Save the edited boot screen and wait for the
+root rescue login. These diagnostic arguments differ from the clean automatic startup
+test. They let the runner change one live payload file before invoking the production
+`/usr/bin/anaconda --text` entry point. Neither the ISO nor a physical disk is modified.
+
+Run `just test-installer-fault CASE` for `missing-signature`, `altered-signature`,
+`changed-manifest`, `corrupt-blob` or `unexpected-source`. For the remaining case, run
+`just test-installer-wrong-key PUBLIC_KEY` with the alternate public key exported by
+`just test-installer-trust`. The wrong-key case updates the test's key checksum and
+scoped policy consistently so rejection must come from the signature verifier.
+It does not weaken policy to accept unsigned content.
+
+The runner requires a fresh boot with unmounted test disks, no previous preflight
+report and no prior Anaconda start. It retains the mutation's original bytes in the
+disposable live session and captures the expected rejection. A corrupt-blob case flips
+one byte without changing file length or the signed manifest. No case proceeds to the
+storage UI. A guest PASS is only the entry-point result.
+
+Power off the diagnostic VM with `just builder-stop`, then run
+`just test-installer-fault-collect RUN_DIRECTORY`. Collection requires the source ISO
+checksum to be unchanged and compares both whole virtual disks with their pristine
+sources. Only then does that individual case pass. Retry failed setup in a new VM;
+never overwrite its earlier transcript or reuse a mutated live session. These results
+do not approve update signatures, automatic rollback or physical installation.
+
 References: [container policy](https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md),
 [Skopeo copy and signing](https://github.com/containers/skopeo/blob/main/docs/skopeo-copy.1.md),
 [OpenImage verification](https://github.com/containers/skopeo/blob/v1.22.2/cmd/skopeo/proxy.go),

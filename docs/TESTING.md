@@ -14,8 +14,13 @@ They do not establish that an operating-system image boots.
 Fedora builder. It tests both Skopeo copy and the installer's OpenImage verifier. Reports
 and public keys stay under `runtime/signature-policy-tests/`; private fixture keys stay
 in the VM. A passing fixture does not approve the Apex installer or update path. See
-[Installer acceptance](INSTALLER.md) for the failed offline import and remaining
-pre-partition trust checks.
+[Installer acceptance](INSTALLER.md) for the completed signed-payload installation
+and the separate pre-partition rejection checks.
+
+`just hardware-snapshot` saves read-only audio and fingerprint observations under
+private runtime storage. It does not enroll a finger, activate fprintd, play audio or
+write codec registers. Missing tools and denied reads remain explicit. The snapshot
+does not establish cold-boot provenance, prior workaround state or hardware acceptance.
 
 ## VM acceptance
 
@@ -46,6 +51,15 @@ their checksum before execution. Inspect the prompt before entering credentials 
 require the command's result before recording acceptance. Sources:
 [send-key implementation](https://github.com/qemu/qemu/blob/v10.2.1/ui/input-legacy.c),
 [input queue and event handling](https://github.com/qemu/qemu/blob/v10.2.1/ui/input.c).
+
+`test-vm --serial-console` adds a Unix serial socket inside private runtime storage.
+It is available only for disposable test VMs, with a peer-PID/UID check and a local
+exclusive-client lock. The channel uses an existing root rescue session; it does not
+change PAM or add a login method to the release image. Python transfers are limited
+to 64 KiB and checked against SHA-256 before compilation. Responses have a fresh token,
+an exit status and bounded waits. A transfer error is not test acceptance. Request hashes
+and private transcripts stay with that VM's evidence. QEMU documents the local socket
+and logfile options in its [character-device reference](https://www.qemu.org/docs/master/system/invocation.html).
 
 The opt-in integration tests in `tests/integration/test_guest.py` launch a fresh overlay
 for each case. They probe critical services, ten offline boot cycles and password login
