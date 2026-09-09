@@ -36,6 +36,9 @@ internal disk until virtual disk tests demonstrate its behavior.
 The live guard currently makes physical USB storage read-only too. A reviewed way to
 unlock only the chosen USB log partition is not implemented. Titanoboa's squashfs
 ownership behavior also needs comparison with the target image, beyond RPM versions.
+The recipe now removes the pinned builder's `-all-root` option and exports a numeric
+ownership/mode listing. This source correction still needs a completed live build and
+boot test.
 
 The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but
 `mcelog.service` failed on the virtual AMD family 25 CPU. Its own support probe returns
@@ -70,8 +73,9 @@ confirmed both omissions. Subsequent builds exposed console/SELinux entry-point
 failures and an unsigned payload rejected after target formatting. The current ISO
 passed clean startup, cancellation with both disks unchanged, offline installation,
 ISO removal and password login. Its preflight verifies the signed compressed payload
-before Anaconda starts. Negative ISO-level payload cases and recovery fault tests
-remain required. See [installer findings](INSTALLER.md) for the tested checksum.
+before Anaconda starts. Six negative ISO-level payload cases also passed, with both
+whole disks unchanged. Recovery fault tests remain required.
+See [installer findings](INSTALLER.md) for the tested checksum.
 
 Development file signatures exist separately from the unfinished bootc update trust
 configuration. Release registry/key selection and positive/negative update tests are

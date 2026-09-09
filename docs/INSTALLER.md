@@ -30,8 +30,15 @@ There is no rollback deployment on this first installation. The recorded image
 reference is a development-only localhost reference; it is not an approved update
 source. The target's reject-all update policy remains in place.
 
-Negative pre-partition cases, recovery fault tests and hardware checks remain required.
-No physical installation is approved.
+All six negative pre-partition cases also passed on this ISO in separate diagnostic
+VM boots: missing signature, altered signature, wrong public key, changed manifest,
+same-size blob corruption and unexpected source. Each invocation stopped before
+upstream Anaconda ran, kept SELinux enforcing and left both whole virtual disks
+unchanged. The wrong-key case reached cryptographic verification; the altered-signature
+case failed signature parsing. These are different rejection paths.
+
+Recovery fault tests and hardware checks remain required. No physical installation
+is approved.
 
 ## Previous unsigned-payload ISO result
 
@@ -139,9 +146,8 @@ layer conversion that `--preserve-digests` forbids. The tiny copy fixture did no
 that difference. The ISO adapter therefore omits the upstream unpacked-store copy and
 keeps the signed compressed files already embedded in the derived image.
 
-The clean ISO boot and offline installation described above passed.
-Negative VM cases must show that wrong keys, missing signatures, changed manifests,
-corrupted blobs and unexpected sources stop before either virtual disk is written.
+The clean ISO boot, offline installation and six negative VM cases described above
+passed. Repeat the rejection cases whenever the installer or trust contract changes.
 Record any diagnostic boot arguments or manual startup separately from clean boot.
 
 Run `just test-installer-trust` with an idle builder to exercise the real Skopeo policy
