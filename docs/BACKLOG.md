@@ -14,9 +14,13 @@ installation or change the required release checks.
 - Audio and fingerprint: obtain a clean physical reproduction and fix the component
   responsible. Keep the existing source findings and fake-device results. No guessed
   codec writes or automatic claim release belong in the image.
-  This is the current loop's priority. A GNOME claim-state patch passes extracted
-  handler tests; physical trace and GTK/RPM integration remain open. Audio still
-  needs confirmed boot provenance and audible-output observations. See
+  This is the current loop's priority. Two physical Ubuntu traces confirm missing
+  cleanup and same-client Claim denials after protocol errors. A GNOME claim-state
+  patch passes extracted-handler tests; distribution review and GTK/RPM integration
+  remain open. Locate the ELAN failure without logging image data. The operator
+  confirms Ubuntu speakers work after the original workaround and restart. Audio
+  still needs a planned clean-baseline comparison, not another workaround. See
+  [the findings](FINGERPRINT.md) and
   [the operator procedure](HARDWARE-TRACE.md).
 - Desktop: finish Vietnamese input, Flatpak theme access and existing-user updates,
   then test fractional scaling and the physical OLED panel.

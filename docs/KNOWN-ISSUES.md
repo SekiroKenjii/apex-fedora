@@ -2,19 +2,24 @@
 
 ## Audio: BLOCKED
 
-The ALC294 codec on subsystem 1043:1ab2 has required a runtime codec workaround on an
-earlier installation. The operator identified its online source, which contains
-several variants; the exact variant used and current boot state remain unconfirmed.
-No kernel quirk or UCM patch has been justified. Collect clean cold-boot codec, mixer,
-UCM and journal data before changing state. Speaker output and resume remain untested
-on Apex. Do not add guessed model options or an hda-verb service.
+The ALC294 codec on subsystem 1043:1ab2 was silent on the first boot into the current
+Ubuntu installation. The operator applied the linked workaround, restarted and
+reports working speaker audio since then through September 9. The exact command
+variant and why its effect persisted remain unverified; current Ubuntu audio is not
+reported broken. No kernel quirk or UCM patch has been justified. A clean cold-boot
+comparison requires separate operator action without disrupting the working system.
+Speaker output and resume remain untested on Apex. Do not add guessed model options
+or an hda-verb service.
 See the [source investigation and command decoder](AUDIO.md).
 
 ## Fingerprint: BLOCKED
 
-ELAN enrollment reports `the device is already claimed by another process`.
-An observed host log shows a protocol error during identify-for-enroll before subsequent
-Claim denials. This is a lead for cleanup testing, not a confirmed libfprint diagnosis.
+Two operator traces on Ubuntu confirm protocol errors followed by Claim denials from
+the same GNOME Settings connection that already owns the device. Neither trace shows
+EnrollStop or Release before the denial. One attempt passed two enrollment stages
+before failing. The journal records protocol errors, not proof of a physical USB
+disconnect, despite the dialog's wording. The source of those errors within the ELAN
+driver remains unknown.
 An experimental GNOME patch preserves cleanup state after `enroll-disconnected`.
 Extracted-handler tests reproduce the lost Stop/Release calls and pass after the
 patch. It has not been packaged or installed, and the physical protocol error remains

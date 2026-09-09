@@ -4,7 +4,8 @@ The ELAN sensor remains a release blocker. No template deletion, daemon restart 
 or host authentication change has been applied.
 
 A source-level GNOME cleanup defect now has an experimental patch and a reproducer.
-It does not fix the sensor's protocol error. See the
+Operator traces also confirm the missing cleanup and same-client Claim denials on
+Ubuntu. The patch does not fix the sensor's protocol error. See the
 [ownership trace and patch test](HARDWARE-TRACE.md).
 
 An observed failure reports a protocol error during identify-for-enroll, followed by
@@ -28,12 +29,50 @@ upstream fake devices to exercise that same path and verify on the physical sens
 Keep password login available throughout.
 
 `just hardware-snapshot` records service state, package versions, the current boot's
-fprintd journal and whether the daemon owns its D-Bus name. The September 9 Ubuntu
-snapshot found fprintd inactive, no current bus owner and the ELAN device suspended.
-The journal showed an earlier start and normal deactivation, without an enrollment
-attempt. This does not reproduce the reported claim error. A daemon's bus name owner
-is also not the client that claimed the sensor; that client still needs a timed D-Bus
-trace during reproduction. The collector does not activate the daemon or read templates.
+fprintd journal and whether the daemon owns its D-Bus name. A daemon's bus name owner
+is not the client that claimed the sensor; use a timed D-Bus trace to identify that
+client. The collector does not activate the daemon or read templates.
+
+## Physical reproduction on Ubuntu, September 9
+
+The operator ran two captures on Ubuntu with kernel `7.0.0-31-generic`, GNOME Settings
+`1:50.3-0ubuntu0.2`, fprintd `1.94.5-4` and libfprint `1:1.95.1+tod1-0ubuntu2`.
+Both traces and the follow-up journal snapshot belong to the same boot. Each trace
+identifies its caller as `gnome-control-center` and records a successful Claim before
+enrollment starts.
+
+| Capture window (UTC) | Enrollment evidence | Claim after the error |
+|---|---|---|
+| 11:52–11:53 | Protocol error during identify-for-enroll; terminal `enroll-disconnected` | Same client denied twice |
+| 11:55–11:56 | Two `enroll-stage-passed` events, then a protocol error during enroll and terminal `enroll-disconnected` | Same client denied once |
+
+Neither trace contains EnrollStop or Release between the enrollment failure and the
+subsequent Claim. The denial is `net.reactivated.Fprint.Error.AlreadyInUse`, and its
+caller is the same D-Bus connection whose earlier Claim succeeded. The second dialog's
+wording, "another process", is misleading in these captured attempts: Settings is
+claiming again while retaining its own session. The observed sequence matches the
+reviewed GNOME flag-clearing branch and the extracted-handler regression.
+
+The journal identifies protocol errors in both attempts. fprintd maps that error to
+`enroll-disconnected`, which GNOME presents as "Fingerprint device disconnected".
+That message does not establish a physical USB disconnection. The two successful
+stages in the second attempt are progress events, not completed enrollment or proof
+that the driver works reliably. They also show that failure is not confined to the
+initial identify-for-enroll operation.
+
+Capture limits matter. The first collector was interrupted after recording the client
+disconnect; its overall status remains INCOMPLETE. The second finished as OBSERVED,
+not PASS, and does not include client disconnect. A later snapshot found fprintd
+inactive after normal deactivation. Daemon sessions changed between the attempts, so
+the second successful Claim is not a same-daemon cleanup regression test. Raw traces,
+process IDs and host journals remain private; no templates or fingerprint images were
+collected by these tools.
+
+No patch has been installed on Ubuntu or included in Apex. Next, validate the GNOME
+patch against distribution sources and the full cleanup lifecycle, and locate the
+ELAN protocol failure with diagnostics that exclude image data. Do not choose a retry
+quirk from these status events alone. Physical Apex enrollment and verify remain
+NOT TESTED; fingerprint support still blocks release.
 
 ## Virtual-device regression tests
 

@@ -3,6 +3,19 @@
 No audio fix is included yet. This investigation reads source and existing observations;
 it has not written codec registers or changed the working host's audio services.
 
+## Reported behavior
+
+The operator clarified the sequence on September 9: after installing the current
+Ubuntu system, they restarted into it and the speakers were silent. They applied the
+linked workaround and restarted again. Speaker audio has worked since then, including
+at the time of this report. No current Ubuntu speaker failure is reported.
+
+This is reported working output after a workaround, not evidence of an Apex driver
+fix. The exact command variant and reason the change survived restart are still
+unverified. A future clean-baseline comparison must distinguish retained codec state,
+persistent configuration and later software changes without assuming any of them.
+Do not disturb the working Ubuntu audio to force that comparison.
+
 ## Command encoding
 
 The ALSA tool uses `HDA_VERB(nid, verb, param)` to pack the ioctl command. That macro
@@ -24,8 +37,8 @@ as the workaround source. Its four-command sequence selects coefficient 0x1b, wr
 0x7f4b, selects 0x0f and writes 0x7774, all on node 0x20. The page includes different
 variants and mixed results. One M7400QC owner reported unwanted beats after the writes
 and sound after an ALSA reload, without establishing which step helped. The operator
-has not identified which variant ran or confirmed the current boot's workaround state.
-This history does not establish a clean baseline or a correct fix.
+has not identified which command variant ran. Their confirmed audio history above
+does not establish a clean baseline or prove that the register values were correct.
 
 Source: [ALSA hda-verb](https://github.com/alsa-project/alsa-tools/blob/03fcd4083ebc6452a1c51efbe8c44fcf6903827a/hda-verb/hda-verb.c#L340)
 and the [hwdep packing definition](https://github.com/torvalds/linux/blob/v6.18/include/sound/hda_hwdep.h#L14).
