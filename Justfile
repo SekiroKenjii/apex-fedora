@@ -56,6 +56,9 @@ test:
     python3 tools/check_static.py
     uv run --no-project --with pytest==9.1.1 pytest
 
+test-elan-diagnostics source:
+    python3 tools/test-elan-diagnostics.py "{{source}}"
+
 test-integration:
     uv run --no-project --with pytest==9.1.1 pytest -m integration
 

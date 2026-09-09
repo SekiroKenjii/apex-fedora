@@ -1,0 +1,108 @@
+diff --git a/libfprint/drivers/elan.c b/libfprint/drivers/elan.c
+--- a/libfprint/drivers/elan.c
++++ b/libfprint/drivers/elan.c
+@@ -86,2 +86,6 @@
+-  GSList         *frames;
+-  /* end state */
++  GSList         *frames;
++  /* Diagnostic scalars only; the event budget lasts for this device object. */
++  gssize          apex_read_length;
++  int             apex_prescan_status;
++  guint           apex_diag_events;
++  /* end state */
+@@ -112,2 +116,4 @@
+-  elandev->num_frames = 0;
+-}
++  elandev->num_frames = 0;
++  elandev->apex_read_length = -1;
++  elandev->apex_prescan_status = -1;
++}
+@@ -342,3 +348,66 @@
+-static void
+-elan_cmd_done (FpiSsm *ssm)
+-{
++/* This opt-in diagnostic never prints transfer buffers or error messages. */
++static gboolean
++apex_elan_diag_enabled (FpDevice *dev)
++{
++  return g_strcmp0 (g_getenv ("APEX_ELAN_STATUS_DIAGNOSTICS"), "1") == 0 &&
++         g_getenv ("FP_DEBUG_TRANSFER") == NULL &&
++         g_getenv ("G_MESSAGES_DEBUG") == NULL &&
++         g_usb_device_get_vid (fpi_device_get_usb_device (dev)) == 0x04f3 &&
++         g_usb_device_get_pid (fpi_device_get_usb_device (dev)) == 0x0c6e;
++}
++
++static void
++apex_elan_emit (FpDevice *dev, FpiSsm *ssm, const char *event,
++                gssize expected, gssize actual, int status, GError *error)
++{
++  FpiDeviceElan *self = FPI_DEVICE_ELAN (dev);
++  const char *command;
++  int domain = 0;
++
++  if (!apex_elan_diag_enabled (dev) || self->apex_diag_events >= 16)
++    return;
++
++  command = self->cmd == &pre_scan_cmd ? "pre-scan" :
++            self->cmd == &get_image_cmd ? "image" : "other";
++  if (error)
++    domain = error->domain == FP_DEVICE_ERROR ? 1 :
++             error->domain == G_USB_DEVICE_ERROR ? 2 :
++             error->domain == G_IO_ERROR ? 3 : 4;
++
++  self->apex_diag_events++;
++  g_message ("apex-elan-v1 event=%s action=%d state=%d command=%s "
++             "expected=%zd actual=%zd status=%d domain=%d code=%d",
++             event, (int) fpi_device_get_current_action (dev),
++             fpi_ssm_get_cur_state (ssm), command, expected, actual,
++             status, domain, error ? error->code : 0);
++}
++
++static void
++apex_elan_trace_transfer (FpiUsbTransfer *transfer, FpDevice *dev, GError *error)
++{
++  FpiDeviceElan *self = FPI_DEVICE_ELAN (dev);
++
++  if (!apex_elan_diag_enabled (dev))
++    return;
++
++  self->apex_read_length = -1;
++  self->apex_prescan_status = -1;
++  if (transfer->endpoint & FPI_USB_ENDPOINT_IN)
++    self->apex_read_length = transfer->actual_length;
++
++  /* Only this command's successful, exact one-byte reply is a status byte.
++   * Image, calibration, short and failed transfers never enter this read. */
++  if (!error && self->cmd == &pre_scan_cmd &&
++      transfer->endpoint == ELAN_EP_CMD_IN &&
++      transfer->length == 1 && transfer->actual_length == 1 &&
++      transfer->buffer != NULL)
++    self->apex_prescan_status = transfer->buffer[0];
++
++  if (error)
++    apex_elan_emit (dev, transfer->ssm, "transfer-error", transfer->length,
++                    transfer->actual_length, -1, error);
++}
++
++static void
++elan_cmd_done (FpiSsm *ssm)
++{
+@@ -353,4 +422,5 @@
+-  FpiSsm *ssm = transfer->ssm;
+-  FpiDeviceElan *self = FPI_DEVICE_ELAN (dev);
+-
+-  G_DEBUG_HERE ();
++  FpiSsm *ssm = transfer->ssm;
++  FpiDeviceElan *self = FPI_DEVICE_ELAN (dev);
++
++  apex_elan_trace_transfer (transfer, dev, error);
++  G_DEBUG_HERE ();
+@@ -572,2 +642,6 @@
+-          else
+-            fpi_ssm_mark_failed (ssm, fpi_device_error_new (FP_DEVICE_ERROR_PROTO));
++          else
++            {
++              apex_elan_emit (dev, ssm, "pre-scan-protocol", 1,
++                              self->apex_read_length, self->apex_prescan_status, NULL);
++              fpi_ssm_mark_failed (ssm, fpi_device_error_new (FP_DEVICE_ERROR_PROTO));
++            }

@@ -65,10 +65,11 @@ the dialog skip its normal EnrollStop/Release cleanup; a later Claim can fail ev
 when the same Settings process still owns the device.
 
 `rpms/patches/gnome-fingerprint-retain-claim.patch` preserves those flags, retaining
-the existing cancellation and close cleanup. The existing D-Bus owner-change path
-still handles daemon disappearance. The patch is experimental and is not included
-in an RPM or image yet. Physical unplug, daemon replacement, GTK integration and
-downstream distribution patches need review before packaging it.
+the existing cancellation and close cleanup. It also ignores repeated Cancel while
+EnrollStop is pending. Without this guard, a second Cancel cancels the Stop request;
+its cancellation callback returns without clearing the stopping/enrolling flags.
+This sequence was reproduced with the extracted handlers and real GCancellable
+objects. The patch is experimental and is not included in an RPM or image yet.
 
 Download the exact source named in `config/gnome-fingerprint.lock.json`, then run:
 
@@ -77,12 +78,41 @@ just test-fingerprint-dialog /path/to/cc-fingerprint-dialog.c
 ```
 
 The runner refuses a checksum mismatch, applies the patch without fuzz and compiles
-three extracted GNOME handlers against test shims. The shims replace widgets and
-D-Bus calls; they cannot touch a sensor. Original handlers skip Stop/Release after
-the disconnected status. Patched handlers retain both calls and the cancellation
-path. Retry, success, another terminal error and an unclaimed dialog are checked
-separately. This does not build GNOME or exercise its full event loop, and it cannot
-establish that physical enrollment succeeds.
+six extracted GNOME handlers against test shims. It uses the source's real state enum
+and GLib cancellation objects; widgets, D-Bus replies and dialog ownership are modeled.
+The twelve scenarios cover the disconnected status, retry/success/other error,
+unclaimed close, owner loss/presence, Stop success/error, repeated Cancel and closing
+while Stop is pending. Callback ordering is controlled by the harness.
+
+Both distribution sources pass the patched expectations and reproduce the original
+cleanup and repeated-Cancel defects. A daemon-loss notification clears the claimed
+flag and requests reacquisition without sending stale close cleanup in the harness.
+That is not a live daemon-replacement test. Full GTK object lifetime, real asynchronous
+D-Bus races, physical unplug and RPM integration remain untested. No test here opens
+the sensor or establishes successful enrollment.
+
+The runner needs a C compiler, pkg-config and GLib/GIO development headers. Full RPM
+builds still belong in the isolated Fedora builder. Do not install development or
+patched driver packages on the working OS just to run these tests.
+
+## Distribution source audit
+
+The Fedora `gnome-control-center-50.4-1.fc44` source RPM contains the upstream archive
+and a spec with no patches. Its dialog matches the previously reviewed source.
+Ubuntu `1:50.3-0ubuntu0.2` has forty patches in its series. One changes the fingerprint
+dialog: `system-users-Keep-fingerprint-add-print-popover-visible-w.patch`. It changes
+popover positioning and scrolling, without altering the cleanup handlers.
+
+The Ubuntu dialog was prepared by applying that patch to the matching source archive.
+Both its C and Blueprint hunks applied without fuzz. The Apex patch then applied with
+the expected line offsets and passed the same handler tests. Prepared-file and package
+hashes are in `config/gnome-fingerprint.lock.json`. The checksum audit binds the review
+to these bytes; source signatures have not been independently validated. Release
+provenance must record that limitation instead of treating the hash check as signature
+verification.
+
+Source packages: [Fedora GNOME source RPM](https://kojipkgs.fedoraproject.org/packages/gnome-control-center/50.4/1.fc44/src/gnome-control-center-50.4-1.fc44.src.rpm),
+[Ubuntu source manifest](https://archive.ubuntu.com/ubuntu/pool/main/g/gnome-control-center/gnome-control-center_50.3-0ubuntu0.2.dsc).
 
 Sources: [GNOME 50.4 dialog](https://gitlab.gnome.org/GNOME/gnome-control-center/-/blob/50.4/panels/system/users/cc-fingerprint-dialog.c),
 [fprintd 1.94.5 error mapping and session handling](https://gitlab.freedesktop.org/libfprint/fprintd/-/blob/v1.94.5/src/device.c).

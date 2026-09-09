@@ -14,3 +14,14 @@ diff --git a/panels/system/users/cc-fingerprint-dialog.c b/panels/system/users/c
            else if (g_str_equal (result, "enroll-data-full"))
              {
                message = _("Fingerprint device storage is full");
+@@ -1413,6 +1414,10 @@
+ static void
+ cancel_button_clicked_cb (CcFingerprintDialog *self)
+ {
++  /* A second Cancel must not cancel the pending EnrollStop call. */
++  if (self->dialog_state & DIALOG_STATE_DEVICE_ENROLL_STOPPING)
++    return;
++
+   if (self->dialog_state & DIALOG_STATE_DEVICE_ENROLLING)
+     {
+       g_cancellable_cancel (self->cancellable);

@@ -16,8 +16,11 @@ installation or change the required release checks.
   codec writes or automatic claim release belong in the image.
   This is the current loop's priority. Two physical Ubuntu traces confirm missing
   cleanup and same-client Claim denials after protocol errors. A GNOME claim-state
-  patch passes extracted-handler tests; distribution review and GTK/RPM integration
-  remain open. Locate the ELAN failure without logging image data. The operator
+  patch now passes twelve handler scenarios on both prepared distribution sources,
+  including repeated Cancel and owner loss. An ELAN diagnostic patch passes twenty
+  metadata/buffer-exclusion scenarios per source. Full GTK/driver builds, RPM/image
+  integration and physical validation remain open. Resolve the builder storage gate
+  before packaging; do not lower its threshold. The operator
   confirms Ubuntu speakers work after the original workaround and restart. Audio
   still needs a planned clean-baseline comparison, not another workaround. See
   [the findings](FINGERPRINT.md) and

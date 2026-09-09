@@ -21,9 +21,12 @@ before failing. The journal records protocol errors, not proof of a physical USB
 disconnect, despite the dialog's wording. The source of those errors within the ELAN
 driver remains unknown.
 An experimental GNOME patch preserves cleanup state after `enroll-disconnected`.
-Extracted-handler tests reproduce the lost Stop/Release calls and pass after the
-patch. It has not been packaged or installed, and the physical protocol error remains
-unresolved. See the [trace and patch procedure](HARDWARE-TRACE.md).
+Extracted-handler tests reproduce the lost Stop/Release calls and repeated-Cancel
+state leak, and pass after the patch on Fedora and Ubuntu source variants. A separate
+ELAN metadata patch passes tests excluding image buffers and error-message bodies
+from its logs. Neither patch has been packaged or installed; full integration and
+the physical protocol error remain unresolved. See the
+[trace and patch procedure](HARDWARE-TRACE.md) and [ELAN diagnostics](ELAN-DIAGNOSTICS.md).
 Keep password login and password administration.
 Do not delete enrolled templates or restart the daemon on a timer as a product fix.
 See the [ownership investigation](FINGERPRINT.md).

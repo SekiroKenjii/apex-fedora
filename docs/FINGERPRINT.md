@@ -68,9 +68,11 @@ the second successful Claim is not a same-daemon cleanup regression test. Raw tr
 process IDs and host journals remain private; no templates or fingerprint images were
 collected by these tools.
 
-No patch has been installed on Ubuntu or included in Apex. Next, validate the GNOME
-patch against distribution sources and the full cleanup lifecycle, and locate the
-ELAN protocol failure with diagnostics that exclude image data. Do not choose a retry
+No patch has been installed on Ubuntu or included in Apex. The GNOME patch now passes
+twelve handler scenarios on the prepared Fedora and Ubuntu sources, including
+repeated Cancel and daemon-owner loss. Full GTK/D-Bus lifecycle validation remains
+open. An opt-in [ELAN metadata patch](ELAN-DIAGNOSTICS.md) passes buffer-exclusion
+tests but has not been built into the complete driver. Do not choose a retry
 quirk from these status events alone. Physical Apex enrollment and verify remain
 NOT TESTED; fingerprint support still blocks release.
 
@@ -124,6 +126,10 @@ This branch is a lead, not proof of where the observed hardware failure originat
 The two source files also differ in byte-order and image-normalization handling.
 Those differences occur outside the pre-scan branch and have not been tied to this
 machine's error. No raw fingerprint images or USB captures have been collected.
+
+The next diagnostic distinguishes an unexpected pre-scan status from an absent or
+zero-length reply. It does not treat the 0c58 retry as a fix for this sensor. See
+[the status-only diagnostic and its limits](ELAN-DIAGNOSTICS.md).
 
 Sources: [ELAN device table](https://gitlab.freedesktop.org/libfprint/libfprint/-/blob/v1.94.100/libfprint/drivers/elan.h),
 [ELAN capture state machine](https://gitlab.freedesktop.org/libfprint/libfprint/-/blob/v1.94.100/libfprint/drivers/elan.c),

@@ -40,6 +40,25 @@ def test_patch_only_preserves_cleanup_state_and_is_not_installed():
     assert 'DIALOG_STATE_DEVICE_CLAIMED' in removed[0]
     assert 'DIALOG_STATE_DEVICE_ENROLLING' in removed[1]
     added = [line for line in patch.splitlines() if line.startswith('+') and not line.startswith('+++')]
-    assert all('/*' in line or line.lstrip('+ ').startswith('*') for line in added)
+    assert 'if (self->dialog_state & DIALOG_STATE_DEVICE_ENROLL_STOPPING)' in patch
+    assert all('/*' in line or line.lstrip('+ ').startswith(('*', 'if ', 'return;')) or line == '+' for line in added)
     assert 'experimental' in lock['status']
     assert 'gnome-fingerprint-retain-claim' not in (ROOT / 'guest/build-rpms.sh').read_text()
+
+
+def test_both_distribution_sources_are_pinned():
+    lock = json.loads((ROOT / 'config/gnome-fingerprint.lock.json').read_text())
+    assert len(lock['reviewed_sources']) == 2
+    assert lock['reviewed_sources'][0]['sha256'] == lock['source_sha256']
+    assert lock['reviewed_sources'][1]['sha256'] != lock['source_sha256']
+    assert all(len(item['package_sha256']) == 64 for item in lock['reviewed_sources'])
+    assert 'not independently validated' in lock['source_trust']
+
+
+def test_lifecycle_scope_keeps_real_cancel_and_fake_bus_explicit():
+    assert {'enroll_stop', 'enroll_stop_cb', 'on_device_owner_changed'} <= set(dialog.HANDLERS)
+    assert {'cancel-twice', 'close-pending', 'daemon-gone', 'stop-error'} <= set(dialog.CASES)
+    template = (ROOT / 'tests/fixtures/fingerprint-dialog-harness.c').read_text()
+    assert '#include <gio/gio.h>' in template
+    assert '#define g_cancellable_cancel' not in template
+    assert 'g_bus_get' not in template
