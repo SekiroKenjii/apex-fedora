@@ -83,6 +83,12 @@ installer-fixtures:
 test-installer-trust:
     python3 tools/apex.py test-installer-trust
 
+update-fixtures build_id:
+    python3 tools/prepare-update-fixture.py "{{build_id}}"
+
+test-update action fixture access:
+    python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"
+
 test-fingerprint build_id:
     python3 tools/apex.py test-fingerprint --build "{{build_id}}"
 
