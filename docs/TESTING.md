@@ -184,6 +184,11 @@ to reproduce the real failure path. A newly invented mock state machine is not p
 that the production driver releases the device. The [fprintd API](https://fprint.freedesktop.org/fprintd-dev/Device.html)
 describes ownership and errors.
 
+`just test-fingerprint BUILD_ID` runs pinned upstream virtual-device cases and the
+protocol-error/cleanup sequence on matching packaged binaries in the builder VM.
+Record those results only as `fingerprint.virtual-cleanup`, separately from the
+physical `fingerprint.claim-cleanup` check. See the [fixture procedure and results](FINGERPRINT.md).
+
 ## Evidence and gate
 
 Keep `candidate.json` and `evidence/` under the runtime directory. A candidate names the

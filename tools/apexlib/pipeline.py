@@ -18,6 +18,57 @@ from .vm import ssh_args
 SOURCE_PATHS = ("Containerfile", "config", "guest", "rpms", "system_files", "live", "tools")
 
 
+def fingerprint_tests(directory: Path, build_id: str):
+    if not re.fullmatch(r'[a-f0-9]{32}', build_id):
+        raise Blocked('Fingerprint tests require a completed image build ID')
+    previous = directory / 'exports' / build_id
+    result = json.loads(regular_file(previous / 'result.json', within=directory).read_text())
+    if result.get('status') != 'PASS' or result.get('kind') != 'image':
+        raise Blocked('Fingerprint tests require a completed image build')
+    frozen = json.loads(regular_file(previous / 'output/image.json', within=directory).read_text())
+    manifest = regular_file(previous / 'output/manifest.json', within=directory)
+    if (frozen['digest'] != 'sha256:' + sha256(manifest)
+            or not re.fullmatch(r'sha256:[a-f0-9]{64}', frozen['image_id'])
+            or json.loads(manifest.read_text()).get('config', {}).get('digest') != frozen['image_id']):
+        raise Blocked('Frozen image identity mismatch')
+    with (directory / 'build.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise Blocked('Wait for the active build before testing fingerprint packages')
+        connection = ssh_args(directory)
+        run_id = uuid.uuid4().hex
+        export = directory / 'fingerprint-tests' / run_id
+        export.mkdir(parents=True, mode=0o700)
+        bundle = export / 'source.tar'
+        atomic_json(export / 'source-manifest.json', export_source(bundle))
+        atomic_json(export / 'target-image.json', frozen)
+        remote = f'/var/tmp/apex-fingerprint-{run_id}'
+        run(connection + [f'mkdir -m 700 {remote}'])
+        scp = ['scp', '-i', str(directory / 'builder_ed25519'), '-P', connection[4],
+               '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
+               '-o', f'UserKnownHostsFile={directory}/known_hosts']
+        run(scp + [bundle, export / 'target-image.json', f'builder@127.0.0.1:{remote}/'])
+        payload = f'/var/tmp/apex-{build_id}/output/apex-{frozen["profile"]}.oci.tar'
+        if frozen['profile'] not in {'fedora', 'cachyos'}:
+            raise Blocked('Unknown frozen image profile')
+        commands = (f'bash guest/import-payload.sh {payload} target-image.json && '
+                    f'bash guest/fingerprint-tests.sh {frozen["image_id"]}')
+        command = f'cd {remote} && tar -xf source.tar && sudo flock -n /run/apex-build.lock bash -c {shlex.quote(commands)}'
+        with (export / 'test.log').open('wb') as log:
+            completed = subprocess.run(connection + [command], stdout=log, stderr=subprocess.STDOUT)
+        transfer = subprocess.run(scp + ['-r', f'builder@127.0.0.1:{remote}/output', str(export)], check=False)
+        atomic_json(export / 'execution.json', {'returncode': completed.returncode,
+                    'transfer_returncode': transfer.returncode, 'digest': frozen['digest'],
+                    'parent_build': build_id, 'hardware_acceptance': 'NOT TESTED'})
+        if completed.returncode or transfer.returncode:
+            raise Blocked(f'Fingerprint fixture did not pass; retained evidence: {export}')
+        report = json.loads(regular_file(export / 'output/fingerprint/results.json', within=export).read_text())
+        if report.get('status') != 'PASS' or report.get('tests_run') != 8 or report.get('skipped'):
+            raise Blocked('Fingerprint fixtures did not complete every case')
+        return export
+
+
 def installer_trust(directory: Path):
     with (directory / 'build.lock').open('a') as lock:
         try:

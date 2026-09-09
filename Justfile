@@ -68,6 +68,9 @@ installer-fixtures:
 test-installer-trust:
     python3 tools/apex.py test-installer-trust
 
+test-fingerprint build_id:
+    python3 tools/apex.py test-fingerprint --build "{{build_id}}"
+
 installer-logs-prepare:
     python3 tools/apex.py installer-logs prepare
 

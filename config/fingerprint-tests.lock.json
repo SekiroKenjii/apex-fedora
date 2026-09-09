@@ -1,0 +1,9 @@
+{
+  "version": "1.94.5",
+  "base_url": "https://gitlab.freedesktop.org/libfprint/fprintd/-/raw/v1.94.5/tests/",
+  "files": {
+    "fprintd.py": "f77030d5ac28a6fbaf3686887ac9b947f665942a34d30f6b56eaa27a62b0157e",
+    "output_checker.py": "92fed6d9b57b529e2e7c852c701fbc8f7c9acf539f0d0c31a62cf268ae5a412f",
+    "dbusmock/polkitd.py": "a6883638d2a550649867df8104a1630b44f7519e43797de9fc2a52e454d68dc0"
+  }
+}

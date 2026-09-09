@@ -32,6 +32,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     artifact.add_argument("--build", required=True, dest="build_id")
     artifact.add_argument("--test-access", action="store_true", help="Add a private test account and SSH boot argument to QCOW2 only")
 
+    fingerprint = sub.add_parser('test-fingerprint')
+    fingerprint.add_argument('--build', required=True, dest='build_id')
+
     test = sub.add_parser("test-vm")
     test.add_argument("disk", type=Path)
     test.add_argument("--iso", type=Path)
@@ -112,6 +115,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     elif args.command == 'test-installer-trust':
         from apexlib.pipeline import installer_trust
         print(installer_trust(state))
+    elif args.command == 'test-fingerprint':
+        from apexlib.pipeline import fingerprint_tests
+        print(fingerprint_tests(state, args.build_id))
     elif args.command == "doctor":
         cfg = config()["builder"]
         tools = {name: shutil.which(name) for name in ("python3", "qemu-system-x86_64", "qemu-img", "ssh", "ssh-keygen", "curl", "uv")}

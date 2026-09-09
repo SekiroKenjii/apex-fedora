@@ -42,6 +42,20 @@ def test_vm_cannot_attest_hardware(tmp_path):
     assert evaluate(tmp_path, DIGEST)['errors']
 
 
+def test_virtual_fingerprint_cleanup_does_not_attest_sensor(tmp_path):
+    directory = tmp_path / 'evidence'
+    directory.mkdir()
+    proof = directory / 'fixture.txt'
+    proof.write_text('Synthetic fixture evidence')
+    put(tmp_path, {'check': 'fingerprint.virtual-cleanup', 'digest': DIGEST, 'status': 'PASS',
+                   'proof': [{'path': 'fixture.txt', 'sha256': sha256(proof)}]})
+    result = evaluate(tmp_path, DIGEST)
+    assert not result['errors']
+    assert result['checks']['build']['fingerprint.virtual-cleanup']['status'] == 'PASS'
+    assert result['checks']['hardware']['fingerprint.claim-cleanup']['status'] == 'NOT TESTED'
+    assert not result['ready_to_install']
+
+
 def test_pass_requires_proof(tmp_path):
     put(tmp_path, {"check": "image.lint", "digest": DIGEST, "status": "PASS"})
     assert evaluate(tmp_path, DIGEST)["errors"]
