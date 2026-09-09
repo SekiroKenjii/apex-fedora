@@ -122,6 +122,10 @@ Each fault case starts from a new virtual disk or overlay. Required cases includ
 - Failed GDM, required services, corrupted initramfs and failure before userspace.
 - Direct live ISO boot, Ventoy boot, no internal writable mounts and no internal swap.
 
+The [virtual Ventoy procedure](VENTOY.md) prepares verified two-ISO media inside the
+builder and boots fresh USB-emulated overlays. It retains separate Apex protection
+and Ubuntu rescue observations, including boot and shutdown warnings.
+
 `python3 tools/apex.py test-power-loss` terminates only an owned disposable test VM,
 using a PID handle. It refuses the builder. This models loss of guest execution and
 RAM, not loss of the physical drive's write cache. Keep that distinction in results.

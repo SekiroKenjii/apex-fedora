@@ -28,8 +28,8 @@ the build does not alter firmware settings to bypass them.
 
 ## Image integration: NOT TESTED
 
-Greenboot counter/fallback behavior, the complete installer suite, live protection and
-Ventoy require image-level acceptance. A control candidate has passed ten offline boots
+Greenboot counter/fallback behavior and the complete installer/update failure suite
+still require image-level acceptance. A control candidate has passed ten offline boots
 and a separate password-login/Wayland rendering case. Those results do not cover the
 remaining failure tests. The live guard is experimental and must not be trusted on the
 internal disk until virtual disk tests demonstrate its behavior.
@@ -41,10 +41,20 @@ disks and their partitions rejected actual write attempts, and complete comparis
 after poweroff found both disks unchanged. A separate pre-mount failure-latch test
 stopped before mounting root or starting the desktop, also leaving both disks unchanged.
 USB hotplug and a kernel-denied lock also passed in separate direct-UEFI VMs, with
-whole disks unchanged. Ventoy, physical storage and the interval before udev finishes
-processing hotplug remain untested. The guard is configured to make USB storage
+whole disks unchanged. Ventoy 1.1.17 normal-mode UEFI boot also passed with visible
+Wayland/Ptyxis, five internal-fixture writes denied and all three virtual disks unchanged.
+Physical storage and the interval before udev finishes processing hotplug remain
+untested. The guard is configured to make USB storage
 read-only; unlocking only a chosen USB log partition is not implemented.
 See the [live build and disk-protection findings](LIVE.md).
+
+The Ventoy run printed `cannot load image`, `you need to load the kernel first` and
+`Invalid ELF header magic` during early boot, then reached the desktop without failed
+systemd units. Their cause and impact remain unconfirmed. Device-mapper's Ventoy
+mappings have writable flags and refer only to the emulated USB data partition in
+this fixture; the ISO is mounted read-only. No write-denial claim covers those mapped
+paths. Keep these limits separate from the passing internal-disk checks. See
+[Ventoy testing](VENTOY.md). Boot log review remains blocked.
 
 The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but
 `mcelog.service` failed on the virtual AMD family 25 CPU. Its own support probe returns

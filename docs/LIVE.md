@@ -14,7 +14,8 @@ builder stays enforcing. A failed labeling pass or nonempty relabel dry run stop
 assembly. After compression, critical paths are extracted and checked for unchanged
 labels, ownership, modes and content hashes. Artifact signatures cover these reports
 as well as the ISO. The rebuilt ISO passed these checks and direct VM boot; see the
-current result below. Ventoy and physical acceptance remain untested.
+current result below. Ventoy 1.1.17 normal-mode VM boot also passed; see
+[virtual multiboot testing](VENTOY.md). Physical acceptance remains untested.
 
 Earlier build `2cba86b0c51a45138d4d5a35a399f043` completed the initial scratch-label
 checks, before the raw-reader and post-extraction correction. Its protected RPMs
@@ -132,7 +133,8 @@ case passed; it does not exercise a failed `BLKROSET`, hotplug or Ventoy boot.
 USB hotplug and a kernel-denied lock now passed in separate disposable guests on this
 same ISO. Together with direct boot and the earlier latch case, `live.disk-protection`
 is PASS for the direct-UEFI VM fixtures. See [fault procedures and results](LIVE-FAULTS.md).
-Ventoy and physical acceptance remain separate. Repeat affected tests when the ISO
+Ventoy has a separate passing VM result in [virtual multiboot testing](VENTOY.md).
+Physical acceptance remains untested. Repeat affected tests when the ISO
 changes; retain the empty optical drive.
 
 `guest/live-probe.py` collects mounts, swap, kernel block-device state, service state
@@ -149,7 +151,8 @@ unmounted and unused by swap or device-mapper. The test checks device identities
 then attempts to write back the original first 512 bytes. Only `EPERM` or `EROFS`
 counts as write rejection; an I/O error is blocked, and a successful write fails.
 It stops at the first unsuccessful case. Shut down the VM and compare both complete
-disk images afterward. Its result does not cover hotplug, guard failure or Ventoy.
+disk images afterward. This probe also passed on the Ventoy boot; by itself it does
+not establish hotplug behavior, guard failure handling or the whole Ventoy workflow.
 
 The guard is configured to make USB storage read-only. Unlocking only a selected USB
 log partition is not implemented. The independent rescue-ISO boot, backup restore and

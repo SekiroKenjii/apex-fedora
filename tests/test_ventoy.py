@@ -110,3 +110,21 @@ def test_ubuntu_requires_signature_and_exact_pinned_iso(tmp_path, monkeypatch, c
             verify_ubuntu(iso, sums, signature, keyring, tmp_path, locked)
     assert '--homedir' in calls[0]
     assert str(tmp_path / 'gpgv') in calls[0]
+
+
+def test_topology_distinguishes_partitions_from_empty_slave_lists(tmp_path):
+    spec = importlib.util.spec_from_file_location('ventoy_probe', ROOT / 'guest/ventoy-probe.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for name, dev in (('sda', '8:0'), ('sda1', '8:1'), ('dm-0', '252:0')):
+        path = tmp_path / name
+        path.mkdir()
+        (path / 'ro').write_text('1\n')
+        (path / 'dev').write_text(dev)
+        if name != 'sda1':
+            (path / 'slaves').mkdir()
+    (tmp_path / 'dm-0/slaves/sda').touch()
+    result = module.block_topology(tmp_path)
+    assert result['sda1']['slaves'] is None
+    assert result['sda']['slaves'] == []
+    assert result['dm-0']['slaves'] == ['sda']

@@ -6,7 +6,7 @@ import uuid
 from .common import ROOT, atomic_json, sha256
 from .serialconsole import SerialConsole
 
-PROBES = {'observe': 'live-probe.py', 'write-denial': 'live-write-denial.py',
+PROBES = {'observe': 'live-probe.py', 'ventoy-observe': 'ventoy-probe.py', 'write-denial': 'live-write-denial.py',
           'usb-write-denial': 'live-usb-probe.py', 'lock-fault': 'live-lock-fault.py'}
 
 
