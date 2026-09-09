@@ -34,11 +34,15 @@ and a separate password-login/Wayland rendering case. Those results do not cover
 remaining failure tests. The live guard is experimental and must not be trusted on the
 internal disk until virtual disk tests demonstrate its behavior.
 
-The live ISO completed filesystem labeling and ownership checks, but direct UEFI boot
-stopped in initramfs because its guard could not open an empty virtual CD drive for
-BLKROGET. Both data disks remained unchanged. A source correction reads the kernel's
-sysfs read-only state; boot acceptance is still pending. The guard also makes physical
-USB storage read-only. Unlocking only a chosen USB log partition is not implemented.
+The corrected live disk guard reached GNOME Wayland and a visible Ptyxis window with
+SELinux enforcing. Kernel write attempts on both virtual disks and their partitions
+were rejected; both whole disks remained unchanged. Live acceptance still fails:
+bootloader-update ran in the overlay environment and Flatpak helper carried an invalid
+label after squashfs assembly. Source corrections mask the live-only bootloader update
+and preserve raw SELinux labels while reading/compressing. A one-file label round trip
+passed, but the complete corrected ISO has not been built or booted. The guard also
+makes physical USB storage read-only. Unlocking only a chosen USB log partition is
+not implemented.
 See the [live build and disk-protection findings](LIVE.md).
 
 The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but

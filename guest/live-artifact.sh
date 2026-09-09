@@ -28,6 +28,7 @@ podman run --rm --privileged --security-opt label=disable --entrypoint /bin/bash
     -v "$PWD/titanoboa-src:/apex-titanoboa:ro" -v "$PWD/output/live:/output" \
     "$builder" /apex-titanoboa/build_iso.sh
 jq -e '.status == "PASS" and .boot_acceptance == "NOT TESTED"' output/live/rootfs-labeling.json
+jq -e '.status == "PASS" and .boot_acceptance == "NOT TESTED"' output/live/squashfs-verification.json
 test -s output/live/squashfs-metadata.txt
 test -s output/live/Apex-Live.iso
 sha256sum output/live/*.iso > output/live/checksums.txt

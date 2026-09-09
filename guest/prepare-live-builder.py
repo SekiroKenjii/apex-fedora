@@ -18,9 +18,7 @@ def adapt(source):
     first, separator, rest = source.partition(b'\n')
     source = first + separator + b'set -e -o pipefail\n' + rest
     result = source.replace(old, (
-        b'python3 /apex-guest/prepare-live-rootfs.py\n'
-        b'mksquashfs /work/live-rootfs /work/iso-root/LiveOS/squashfs.img '
-        b'-noappend -mem 1G -processors 4'))
+        b'bash /apex-guest/assemble-live-squashfs.sh'))
     result += (b'\n# Retain numeric ownership and mode evidence from the produced filesystem.\n'
                b'unsquashfs -lln /work/iso-root/LiveOS/squashfs.img > /output/squashfs-metadata.txt\n')
     return result
@@ -37,6 +35,8 @@ if __name__ == '__main__':
                                   'changes': ['Preserve source UID/GID instead of forcing all files to root',
                                               'Stop on failed preparation or assembly commands',
                                               'Copy to a VM scratch tree and apply the target SELinux policy',
+                                              'Read raw target labels in install_t during squashfs assembly',
+                                              'Verify extracted critical-file labels, ownership and content',
                                               'Limit squashfs workers to four and memory to 1 GiB',
                                               'Export numeric squashfs ownership/mode listing'],
                                   'boot_acceptance': 'NOT TESTED'}, indent=2) + '\n')

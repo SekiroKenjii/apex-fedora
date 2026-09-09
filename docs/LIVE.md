@@ -8,10 +8,12 @@ starting a test VM. No command in this procedure writes USB media or installs on
 
 The pinned Titanoboa adapter copies the deployed tree into a separate VM scratch mount,
 excluding OSTree object storage. It separates hardlinks, preserves numeric owners and
-modes, and labels the copy with the target's compiled SELinux policy. The labeler runs
-in `install_t`; the builder stays enforcing. A failed labeling pass or nonempty relabel
-dry run stops assembly. The squashfs build preserves ownership and exports a numeric
-metadata listing. Artifact signatures cover these reports as well as the ISO.
+modes, and labels the copy with the target's compiled SELinux policy. The labeler,
+metadata reader, squashfs writer and verification extractor run in `install_t`; the
+builder stays enforcing. A failed labeling pass or nonempty relabel dry run stops
+assembly. After compression, critical paths are extracted and checked for unchanged
+labels, ownership, modes and content hashes. Artifact signatures cover these reports
+as well as the ISO. Full-image acceptance of this reader correction is still pending.
 
 Build `2cba86b0c51a45138d4d5a35a399f043` completed these checks. Its protected RPMs
 matched the target; a separate comparison found 4,850 identical regular kernel/module
@@ -48,13 +50,50 @@ Unit tests run the shell control flow against file fixtures, including empty med
 failed locks, missing state, media-change events and firmware-remount failure. They
 do not establish kernel enforcement or live boot acceptance.
 
+## Direct boot and label-reader regression
+
+Build `9c724ad63dc74f1ea540b6c3ceaf27ab` includes the sysfs guard correction. Its ISO
+has SHA-256 `a01038ba7962480cd3810770047465db952616d2311da542da9a2b28f5c1bcf1`.
+All 12 artifact files verified against the independently trusted development key, and
+negative artifact-signature checks passed. Direct UEFI boot with no added arguments
+reached a liveuser Wayland session and a visible Ptyxis window. The guard completed,
+SELinux remained enforcing, efivarfs was read-only and neither virtio disk was mounted
+or used for swap. Only zram swap was present.
+
+Opening the protected virtual devices for writing succeeded, so an open-only test
+would not establish write protection. Actual `pwrite` attempts on both disks and all
+three partitions returned `EPERM`. Each attempted to write back the same 512 bytes
+already at offset zero. The guest was then shut down normally; complete comparisons
+found both disks unchanged. This covers those fixed virtual devices only. Hotplug,
+guard-failure injection and Ventoy still need separate tests.
+
+Two service failures keep this ISO rejected. `bootloader-update.service` attempted
+`bootupctl update` and failed to find a block device at `/boot` or `/sysroot`. Its
+upstream live check does not cover this overlay layout. The live recipe now masks it;
+the installed-image recipe is unchanged. `flatpak-system-helper.service` failed at
+EXEC with permission denied. Its executable was mode 0755 but carried `unlabeled_t`
+in both the squashfs lower tree and the live root. The loaded policy accepted the
+intended `flatpak_helper_exec_t` context.
+
+A builder diagnostic read the same scratch file in two SELinux domains: `spc_t`
+returned `unlabeled_t`, while `install_t` returned the intended raw label. A one-file
+squashfs round trip reproduced the loss with the ordinary packer and preserved the
+label, mode and content hash with the `install_t` packer. Linux returns the raw context
+for a caller with the required MAC administration permission; otherwise it can return
+the current policy's mapped context without reporting an error. See
+[`selinux_inode_getsecurity`](https://github.com/gregkh/linux/blob/81d3924095fd017e473332a9b6dd6dd0e3d9a59b/security/selinux/hooks.c#L3400).
+
+The source correction puts the readers and packer in `install_t`, adds the Flatpak
+helper to required probes and rejects changed metadata after extraction. The small
+round-trip result does not validate a complete rebuilt ISO or Flatpak service startup.
+
 ## Remaining acceptance
 
-A fresh ISO must pass direct UEFI boot and actual write-denial tests in a VM, including
-failure injection, before a physical trial. Keep the empty optical drive in that test;
-removing it would conceal the reproduced failure. Verify the GNOME session, application
-rendering, enforcing state, absence of internal mounts/swap and unchanged whole disks
-after shutdown. Run Ventoy acceptance separately.
+A fresh ISO with both live-service corrections must pass direct UEFI boot, service
+checks and write-denial tests in a VM, including failure injection, before a physical
+trial. Keep the empty optical drive in that test. Repeat the GNOME session, rendering,
+enforcing, mount/swap and whole-disk checks on that same ISO. Run Ventoy acceptance
+separately.
 
 `guest/live-probe.py` collects mounts, swap, kernel block-device state, service state
 and bounded journal output through the owned VM's verified serial or SSH channel.

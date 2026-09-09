@@ -4,6 +4,7 @@ dnf5 install -y dracut-live livesys-scripts grub2-efi-x64-cdboot
 chmod 0755 /usr/lib/dracut/modules.d/01apexprotect/*.sh /usr/libexec/apex/live-*.sh
 systemctl mask udisks2.service swap.target systemd-hibernate.service systemd-hybrid-sleep.service
 systemctl mask bootc-fetch-apply-updates.timer bootc-fetch-apply-updates.service
+systemctl mask bootloader-update.service
 systemctl mask greenboot-healthcheck.service greenboot-set-rollback-trigger.service
 install -m 0644 /usr/lib/dracut/modules.d/01apexprotect/00-apex-live-disk-guard.rules /usr/lib/udev/rules.d/00-apex-live-disk-guard.rules
 dconf update
