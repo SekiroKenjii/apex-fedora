@@ -89,6 +89,9 @@ test-installer-trust:
 update-fixtures build_id:
     python3 tools/prepare-update-fixture.py "{{build_id}}"
 
+recovery-disk fixture:
+    python3 tools/build-recovery-disk.py "{{fixture}}"
+
 test-update action fixture access:
     python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"
 

@@ -25,7 +25,7 @@ def require_rejection(case, returncode, stderr, before, after):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['provision', 'switch-a', 'forward', 'rollback',
+    parser.add_argument('action', choices=['provision', 'provision-a', 'switch-a', 'forward', 'rollback',
                                          'wrong-key', 'unsigned', 'untrusted', 'check-a', 'check-b'])
     parser.add_argument('fixture', type=Path)
     parser.add_argument('access', type=Path)
@@ -81,8 +81,9 @@ def main():
         proof['kernel_inputs'] = root('sh -c ' + shlex.quote(
             'sha256sum /usr/lib/modules/*/vmlinuz /usr/lib/modules/*/initramfs.img')).stdout
         proof['before'] = status()
-        if args.action == 'provision':
-            assert_candidate(proof['before'], fixture['parent']['digest'])
+        if args.action in {'provision', 'provision-a'}:
+            installed_a = args.action == 'provision-a'
+            assert_candidate(proof['before'], fixture['images']['a']['digest'] if installed_a else fixture['parent']['digest'])
             archive = regular_file(args.fixture / 'output/payloads.tar', within=runtime)
             if sha256(archive) != fixture['archive_sha256']:
                 raise Blocked('Payload archive checksum mismatch')
@@ -116,9 +117,13 @@ for name, expected in metadata['files'].items():
 policy = json.loads((target/'policy.json').read_text())
 assert policy['default'] == [{{'type':'reject'}}]
 current = Path('/etc/containers/policy.json')
-assert json.loads(current.read_text()) == {{'default':[{{'type':'reject'}}],'transports':{{}}}}
+if {installed_a!r}:
+    assert digest(current) == {fixture['files']['policy.json']!r}, 'Installed A policy changed'
+else:
+    assert json.loads(current.read_text()) == {{'default':[{{'type':'reject'}}],'transports':{{}}}}
 shutil.copyfile(current,target/'bootstrap-policy.json')
-shutil.copyfile(target/'policy.json',current)
+if not {installed_a!r}:
+    shutil.copyfile(target/'policy.json',current)
 print(json.dumps({{'bootstrap_policy_sha256':digest(target/'bootstrap-policy.json'),
                   'consumer_policy_sha256':digest(current),'files_verified':len(metadata['files'])}}))
 ''')

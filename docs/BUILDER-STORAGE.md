@@ -22,6 +22,8 @@ match exactly. The copy is standalone, and the original base file is left intact
 Conversion stops if host free space falls below 12 GiB. Failed or insufficiently small
 copies remain for inspection; they do not replace the original. Replacement also
 requires enough projected free space to satisfy the unchanged builder launch gate.
+Such a retained copy can occupy nearly as much space as the original. Review it
+before attempting another conversion; cleanup or reuse needs a separate decision.
 
 After validation, the tool flushes the new file and atomically replaces only the
 builder path. Its old QCOW2 byte layout is no longer retained. Guest files, including

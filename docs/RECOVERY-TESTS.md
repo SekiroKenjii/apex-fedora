@@ -46,7 +46,28 @@ not break the recovery deployment too. The observer records boot IDs, image dige
 GDM state and GRUB variables before and after health checks. It never changes the
 counter or requests rollback.
 
-## Run and evaluate
+## Fresh installed acceptance
+
+For a freshly installed fixture, build A/B with `just update-fixtures BUILD_ID`, then
+use `just recovery-disk FIXTURE_DIRECTORY`. The normal image-builder QCOW2 path uses
+the exact A manifest/config IDs, the repaired fragment and one-retry preset already
+packaged in A. Output signatures and disposable login credentials are separate; keep
+the latter private. Verify the artifact signature against the independently trusted
+builder key before booting.
+
+On the new guest, `just test-recovery verify-installed FIXTURE ACCESS` compares the
+complete installed GRUB file with the image's ordered static fragments and checks
+both retry presets against the recorded build hash. This operation is read-only.
+Use `just test-update provision-a FIXTURE ACCESS` to transfer the signed offline
+payloads. It verifies and preserves A's already-installed consumer policy.
+
+Establish known-good A and B with password desktop checks, then roll back to A and
+shut down. Start a fresh overlay of that stopped A/B disk for the failure test. Verify
+the installed configuration again and run arm-gdm, forward, reboot and collect.
+Do not use repair-grub, retry-config or native-migration on this acceptance path.
+Keep the earlier manually repaired runs as separate diagnostic evidence.
+
+## Earlier diagnostic path
 
 Start a fresh installed test overlay with `test-vm --guest-ssh --serial-console`.
 Use the completed signed fixture directory and its private test-access directory
@@ -71,6 +92,8 @@ just test-recovery collect "$fixture" "$access"
 just test-update check-a "$fixture" "$access"
 ```
 
+## Evaluate the retained results
+
 `tests/integration/test_recovery_result.py` reads the retained collection named by
 `APEX_RECOVERY_REPORT` and the fixture's `output/results.json` named by
 `APEX_RECOVERY_FIXTURE`. It requires actual GDM exit-42 events, the production health
@@ -85,6 +108,12 @@ sudo. Keep prompt/result screenshots and authentication records private. SSH suc
 or an existing root rescue shell does not satisfy password TTY acceptance.
 
 ## September 9 results and limits
+
+The fresh-image build commands are implemented, and read-only installed verification
+has unit-test coverage. Rebuilt A/B and QCOW2 acceptance has not run. Offline builder compaction
+passed image checks and complete guest-data comparison, but its storage savings did
+not meet the unchanged startup threshold. The original builder remains in place.
+Do not treat these commands or their unit tests as a new recovery result.
 
 The original configuration failed the two-boot limit with three distinct failed B
 boots. A fresh overlay with one retry returned to A after exactly two failed B boots.

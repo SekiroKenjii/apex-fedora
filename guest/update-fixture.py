@@ -73,6 +73,11 @@ def main():
         context = root / 'context'
         context.mkdir()
         shutil.copyfile(root / 'guest/fix-grub-fragment.py', context / 'fix-grub-fragment.py')
+        retry_preset = root / 'system_files/usr/share/apex/greenboot.conf'
+        if 'GREENBOOT_MAX_BOOT_ATTEMPTS=1\n' not in retry_preset.read_text():
+            raise RuntimeError('Recovery fixture requires the tested one-retry preset')
+        shutil.copyfile(retry_preset, context / 'greenboot.conf')
+        report['greenboot_config_sha256'] = digest(retry_preset)
         save(context / 'policy.json', policy((root / 'trusted.pub').read_bytes(), run_id))
         bundle = root / 'bundle'
         bundle.mkdir()
@@ -92,6 +97,8 @@ def main():
             recipe = f'FROM {parent if version == "a" else tags["a"]}\n'
             if version == 'a':
                 recipe += ('COPY policy.json /etc/containers/policy.json\n'
+                           'COPY greenboot.conf /usr/share/apex/greenboot.conf\n'
+                           'COPY greenboot.conf /etc/greenboot/greenboot.conf\n'
                            'COPY fix-grub-fragment.py /tmp/fix-grub-fragment.py\n'
                            'RUN python3 /tmp/fix-grub-fragment.py /usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg '
                            '> /usr/share/apex/greenboot-fragment.json && rm /tmp/fix-grub-fragment.py\n')
@@ -104,6 +111,13 @@ def main():
             if '\n'.join(sorted(rpms.splitlines())) + '\n' != baseline:
                 raise RuntimeError('Fixture changed the RPM inventory')
             command(['podman', 'run', '--rm', '--network', 'none', tag, 'bootc', 'container', 'lint', '--fatal-warnings'])
+            checks = command(['podman', 'run', '--rm', '--network', 'none', '--read-only', tag,
+                              'sh', '-c', 'set -eu; sha256sum /etc/greenboot/greenboot.conf /usr/share/apex/greenboot.conf '
+                              '/usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg; '
+                              'test "$(tail -c1 /usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg | od -An -tu1 | tr -d " ")" = 10'])
+            if any(line.split()[0] != report['greenboot_config_sha256'] for line in checks.splitlines()[:2]):
+                raise RuntimeError('Packaged recovery preset differs from its source')
+            (output / f'recovery-config-{version}.txt').write_text(checks)
             signing_policy = root / 'signing-policy.json'
             save(signing_policy, {'default': [{'type': 'reject'}], 'transports': {'containers-storage': {
                 '[overlay@/var/lib/containers/storage]' + tag: [{'type': 'insecureAcceptAnything'}]}}})

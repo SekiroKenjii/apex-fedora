@@ -25,7 +25,7 @@ def validate_fixture(fixture):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['inspect', 'native-migration', 'repair-grub', 'arm-gdm', 'retry-config', 'reboot', 'collect'])
+    parser.add_argument('action', choices=['inspect', 'verify-installed', 'native-migration', 'repair-grub', 'arm-gdm', 'retry-config', 'reboot', 'collect'])
     parser.add_argument('fixture', type=Path)
     parser.add_argument('access', type=Path)
     args = parser.parse_args()
@@ -39,7 +39,7 @@ def main():
     destination.mkdir(mode=0o700)
     proof = {'status': 'FAIL', 'scope': 'Recovery fixture only, not frozen candidate acceptance',
              'action': args.action, 'vm': guest.vm_info, 'fixture': fixture['id'], 'commands': []}
-    for name in ('guest/recovery-fixture.py', 'tools/recovery-vm.py'):
+    for name in ('guest/recovery-fixture.py', 'guest/installed-recovery-probe.py', 'tools/recovery-vm.py'):
         target = destination / Path(name).name
         shutil.copyfile(ROOT / name, target)
         proof.setdefault('sources', {})[name] = sha256(target)
@@ -68,6 +68,16 @@ def main():
 
     try:
         guest.wait_ready(timeout=45)
+        if args.action == 'verify-installed':
+            preset = fixture.get('greenboot_config_sha256', '')
+            if not re.fullmatch('[a-f0-9]{64}', preset):
+                raise Blocked('Use a fixture built with a recorded recovery preset')
+            source = (ROOT / 'guest/installed-recovery-probe.py').read_bytes()
+            script = 'import base64;exec(compile(base64.b64decode(' + repr(base64.b64encode(source).decode()) + '),"installed-recovery-probe.py","exec"))'
+            command = 'python3 -c ' + shlex.quote(script) + ' ' + fixture['images']['a']['digest'] + ' ' + preset
+            proof['installed'] = json.loads(root(command))
+            proof['status'] = 'PASS'
+            return
         proof['before'] = inspect()
         a = fixture['images']['a']['digest']
         b = fixture['images']['b']['digest']
