@@ -10,8 +10,16 @@ protect() {
         *) return 1;;
     esac
     [ -b "$device" ] || return 1
-    [ "$(blockdev --getro "$device")" = 1 ] || blockdev --setro "$device"
-    [ "$(blockdev --getro "$device")" = 1 ]
+    # An empty optical drive cannot be opened for BLKROGET. The kernel still
+    # exposes its read-only state in sysfs, for disks and partitions alike.
+    IFS= read -r readonly < "$path/ro" || return 1
+    case "$readonly" in
+        1) return 0;;
+        0) blockdev --setro "$device" || return 1;;
+        *) return 1;;
+    esac
+    IFS= read -r readonly < "$path/ro" || return 1
+    [ "$readonly" = 1 ]
 }
 if [ "${1:-}" = --verify ]; then
     [ ! -e /run/apex-protection-failed ] || exit 1

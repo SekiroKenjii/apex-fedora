@@ -34,12 +34,12 @@ and a separate password-login/Wayland rendering case. Those results do not cover
 remaining failure tests. The live guard is experimental and must not be trusted on the
 internal disk until virtual disk tests demonstrate its behavior.
 
-The live guard currently makes physical USB storage read-only too. A reviewed way to
-unlock only the chosen USB log partition is not implemented. Titanoboa's squashfs
-ownership behavior also needs comparison with the target image, beyond RPM versions.
-The recipe now removes the pinned builder's `-all-root` option and exports a numeric
-ownership/mode listing. This source correction still needs a completed live build and
-boot test.
+The live ISO completed filesystem labeling and ownership checks, but direct UEFI boot
+stopped in initramfs because its guard could not open an empty virtual CD drive for
+BLKROGET. Both data disks remained unchanged. A source correction reads the kernel's
+sysfs read-only state; boot acceptance is still pending. The guard also makes physical
+USB storage read-only. Unlocking only a chosen USB log partition is not implemented.
+See the [live build and disk-protection findings](LIVE.md).
 
 The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but
 `mcelog.service` failed on the virtual AMD family 25 CPU. Its own support probe returns

@@ -164,6 +164,9 @@ VM is active.
 
 ## Physical acceptance
 
+The [live test procedure](LIVE.md) records filesystem assembly, early disk-guard
+failures and the remaining VM checks. A correctly signed ISO can still fail to boot.
+
 Only proceed once VM results justify a live trial. Use the same frozen digest for all
 results. Keep raw logs and sensor state outside Git, with biometric state encrypted.
 
