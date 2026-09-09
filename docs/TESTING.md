@@ -24,8 +24,9 @@ forward update and manual rollback require post-reboot desktop and data checks.
 
 The [GDM recovery fixture](RECOVERY-TESTS.md) records distinct failed boots and the
 actual greenboot rollback. Its opt-in evaluator rejects a three-failure result even
-if rollback succeeds. A VM-only GRUB repair is tracked separately from the unfinished
-production migration; fixture results do not approve a rebuilt or frozen candidate.
+if rollback succeeds. Freshly built A/B and QCOW2 fixtures now pass without a manual
+GRUB repair. Earlier repaired runs and the unfinished production-migration path remain
+separate; none of these fixture results approve the frozen candidate.
 
 `just hardware-snapshot` saves read-only audio and fingerprint observations under
 private runtime storage. It does not enroll a finger, activate fprintd, play audio or

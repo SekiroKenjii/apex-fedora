@@ -109,14 +109,32 @@ or an existing root rescue shell does not satisfy password TTY acceptance.
 
 ## September 9 results and limits
 
-The fresh-image build commands are implemented, and read-only installed verification
-has unit-test coverage. Rebuilt A/B and QCOW2 acceptance has not run. Offline builder compaction
-passed image checks and complete guest-data comparison, but its storage savings did
-not meet the unchanged startup threshold. The original builder remains in place.
-Do not treat these commands or their unit tests as a new recovery result.
+Fresh A/B images and a QCOW2 built from A passed the installed recovery test. Artifact
+verification checked nine files against the independently trusted builder key.
+The newly installed GRUB file matched the complete image-fragment assembly, and both
+retry presets matched their recorded build hash. No manual GRUB repair, configuration
+override or migration command was used on this path. SELinux remained enforcing.
 
-The original configuration failed the two-boot limit with three distinct failed B
-boots. A fresh overlay with one retry returned to A after exactly two failed B boots.
+The healthy VM passed password login, Wayland rendering and user-data checks on A,
+after updating to B, and after an offline rollback to A. A separate fresh overlay
+then reproduced GDM exit 42 on B. Greenboot rejected exactly two distinct B boots,
+with counter observations absent then zero, and automatically returned to healthy A.
+The retained journal passed the integration evaluator. Password login and visible
+GTK4 rendering passed again after fallback. Both VMs shut down normally.
+
+These results belong to signed fixture A `bb9c21422b2b61b3bec5f67bb5ce17c6c4182d41c682704be44ac6a2e937c80e`
+and B `c039d78d2df94352258852d6a5a8ceedb543725208c2116831be6bf51ecc4780`.
+They are not acceptance results for the unchanged frozen candidate. Clocksource
+remote-read timeouts and watchdog-stop warnings remain in the healthy VM's serial
+log; their impact still needs investigation.
+
+Builder storage was recovered by finalizing a retained, fully compared compressed
+copy after the host threshold passed. Guest Btrfs deduplication preserved all fixture
+blob contents and signatures. These storage checks are separate from boot acceptance.
+
+In the earlier diagnostic runs, the original configuration failed the two-boot limit
+with three distinct failed B boots. An overlay with one retry returned to A after
+exactly two failed B boots.
 Both runs used the exact newline diagnostic repair; neither rebuilt the images.
 The two-retry run also passed password TTY login and password sudo after fallback.
 The one-retry run passed password GDM login, Wayland and visible GTK4 rendering after
@@ -124,6 +142,6 @@ fallback and after another offline reboot. The user sentinel, kernel and install
 initramfs hashes stayed unchanged. Both VMs shut down normally. Their original A/B
 backing snapshot was preserved.
 
-Production migration, rebuilt-image acceptance, kernel/initramfs failures, required
+Production migration, frozen-candidate recovery, kernel/initramfs failures, required
 service timeouts and physical recovery remain unfinished. These results do not cover
 Ubuntu restoration, audio, fingerprint or the laptop's internal-disk boot path.

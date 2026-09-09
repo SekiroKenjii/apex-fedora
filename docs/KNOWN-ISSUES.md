@@ -40,9 +40,12 @@ untrusted-source payloads on fresh overlays. These results do not belong to the
 frozen candidate. The installed static GRUB configuration did not pick up the image's
 newline repair. A diagnostic repair on separate VM overlays enabled GDM-failure
 tests: value 2 allowed three failed boots; one retry produced the required two.
-Automatic rollback and password TTY rescue have fixture evidence, not rebuilt-image
-acceptance. Production GRUB configuration migration remains blocked. Dock theme-node
-and shutdown warnings also remain open. See [update testing](UPDATES.md) and
+Fresh A/B images and a newly built QCOW2 now pass installed GRUB verification and
+automatic fallback after two GDM failures without manual repair. Password desktop
+and data checks pass after fallback; TTY evidence remains from the earlier fixture.
+These results do not approve the frozen candidate. Production GRUB configuration
+migration remains blocked. Dock theme-node and shutdown warnings also remain open.
+See [update testing](UPDATES.md) and
 [recovery fault tests](RECOVERY-TESTS.md).
 
 Live build `c143b7a293c540dab199b3d3fd8ab806` passed direct UEFI boot, GNOME Wayland
