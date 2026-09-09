@@ -41,6 +41,12 @@ def boot(parser: argparse.ArgumentParser) -> None:
     test.add_argument("--guest-ssh", action="store_true")
     test.add_argument('--serial-console', action='store_true', help='Enable a private Unix serial socket for disposable guest diagnostics')
     test.add_argument('--extra-disk', action='append', type=Path, default=[])
+    test.add_argument('--usb-test-bus', action='store_true', help='Add an emulated USB controller without host passthrough')
+    hotplug = sub.add_parser('test-hotplug-usb')
+    hotplug.add_argument('source', type=Path)
+    live_check = sub.add_parser('test-live-check')
+    from apexlib.livechecks import PROBES
+    live_check.add_argument('case', choices=PROBES)
 
     resume = sub.add_parser('test-resume')
     resume.add_argument('run_directory', type=Path)
@@ -141,10 +147,15 @@ def boot(parser: argparse.ArgumentParser) -> None:
         from apexlib.pipeline import execute
         execute(state, getattr(args, "profile", "fedora"), getattr(args, "kind", "image"), getattr(args, "build_id", None), test_access=getattr(args, "test_access", False))
     elif args.command == "test-vm":
-        print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk), serial_console=args.serial_console), indent=2))
+        print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk), serial_console=args.serial_console, usb_test_bus=args.usb_test_bus), indent=2))
         print("VM launched. This does not record a successful boot or desktop test.")
     elif args.command == 'test-resume':
         print(json.dumps(vm.resume_test(state, args.run_directory, without_iso=args.without_iso), indent=2))
+    elif args.command == 'test-hotplug-usb':
+        print(json.dumps(vm.hotplug_usb(state, args.source), indent=2))
+    elif args.command == 'test-live-check':
+        from apexlib.livechecks import execute
+        print(execute(state, args.case))
     elif args.command == 'test-compare-disks':
         print(json.dumps(vm.compare_disks(state, args.run_directory), indent=2))
     elif args.command == 'test-installer-fault':

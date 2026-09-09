@@ -53,6 +53,15 @@ test-installer disk iso other_disk:
 test-installer-diagnostic disk iso other_disk:
     python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}" --serial-console
 
+test-live-hotplug disk iso other_disk:
+    python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}" --serial-console --usb-test-bus
+
+test-hotplug-usb source:
+    python3 tools/apex.py test-hotplug-usb "{{source}}"
+
+test-live-check case:
+    python3 tools/apex.py test-live-check "{{case}}"
+
 test-installer-fault case:
     python3 tools/apex.py test-installer-fault "{{case}}"
 

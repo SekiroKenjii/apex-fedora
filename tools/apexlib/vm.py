@@ -72,7 +72,7 @@ def validate_disk(path: Path, directory: Path):
         path = path.parent / backing
 
 
-def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed: Path | None = None, port: int | None = None, artifacts_dir: Path | None = None, extra_disks: tuple[Path, ...] = (), *, serial_console: bool = False) -> list[str]:
+def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed: Path | None = None, port: int | None = None, artifacts_dir: Path | None = None, extra_disks: tuple[Path, ...] = (), *, serial_console: bool = False, usb_test_bus: bool = False) -> list[str]:
     cfg = config()["builder"]
     artifacts_dir = artifacts_dir or directory
     if not artifacts_dir.resolve().is_relative_to(directory.resolve()):
@@ -82,6 +82,8 @@ def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed
     regular_file(artifacts_dir / f"{role}-vars.fd", within=directory)
     if extra_disks and role != 'test':
         raise Blocked('Additional disks are restricted to test VMs')
+    if usb_test_bus and role != 'test':
+        raise Blocked('Emulated USB tests require a disposable VM')
     if len(extra_disks) > 2 or len({disk.resolve(), *(p.resolve() for p in extra_disks)}) != 1 + len(extra_disks):
         raise Blocked('Use at most two distinct additional test disks')
     for extra in extra_disks:
@@ -97,6 +99,8 @@ def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed
     if seed:
         regular_file(seed, within=directory)
         args += ["-drive", f"file={seed},format=raw,media=cdrom,readonly=on"]
+    if usb_test_bus:
+        args += ['-device', 'qemu-xhci,id=apex-usb']
     for index, extra in enumerate(extra_disks, 1):
         args += ['-drive', f'if=none,id=apex-other-{index},format=qcow2,file={extra}',
                  '-device', f'virtio-blk-pci,drive=apex-other-{index},serial=apex-other-{index}']
@@ -188,7 +192,7 @@ def clear_serial_socket(directory: Path):
         path.unlink()
 
 
-def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None, guest_ssh: bool = False, extra_disks: tuple[Path, ...] = (), serial_console: bool = False):
+def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None, guest_ssh: bool = False, extra_disks: tuple[Path, ...] = (), serial_console: bool = False, usb_test_bus: bool = False):
     with exclusive(directory):
         if alive(directory):
             raise Blocked("Only one Apex VM may run at a time")
@@ -196,6 +200,8 @@ def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None,
         role = "test" if disk or iso else "builder"
         if serial_console and role != 'test':
             raise Blocked('Serial input is restricted to a disposable test VM')
+        if usb_test_bus and role != 'test':
+            raise Blocked('Emulated USB tests require a disposable VM')
         if iso and not disk:
             raise Blocked('An ISO test requires a file-backed target disk')
         if extra_disks and (role != 'test' or len(extra_disks) > 2):
@@ -230,13 +236,13 @@ def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None,
             qmp.unlink()
         if serial_console:
             clear_serial_socket(directory)
-        args = command(directory, disk, role, memory, cfg["cpus"], directory / "seed.iso" if role == "builder" else iso, cfg["ssh_port"] if role == "builder" else (22245 if guest_ssh else None), artifacts_dir, extra_disks, serial_console=serial_console)
+        args = command(directory, disk, role, memory, cfg["cpus"], directory / "seed.iso" if role == "builder" else iso, cfg["ssh_port"] if role == "builder" else (22245 if guest_ssh else None), artifacts_dir, extra_disks, serial_console=serial_console, usb_test_bus=usb_test_bus)
         if iso:
             args += ['-boot', 'order=d']
         with (artifacts_dir / f"{role}-qemu.log").open("ab") as log:
             proc = subprocess.Popen(args, stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)
         info = {"pid": proc.pid, "role": role, "disk": str(disk), "source_disk": str(source_disk), "artifacts_dir": str(artifacts_dir), "command": args,
-                'iso': str(iso) if iso else None, 'guest_ssh': guest_ssh, 'serial_console': serial_console,
+                'iso': str(iso) if iso else None, 'guest_ssh': guest_ssh, 'serial_console': serial_console, 'usb_test_bus': usb_test_bus,
                 'extra_disks': [str(p) for p in extra_disks], 'source_extra_disks': [str(p) for p in source_extra_disks]}
         atomic_json(directory / "vm.json", info)
         if role == 'test':
@@ -256,6 +262,8 @@ def resume_test(directory: Path, artifacts_dir: Path, *, without_iso: bool = Fal
         saved = json.loads(regular_file(artifacts_dir / 'vm.json', within=root).read_text())
         if saved['role'] != 'test' or Path(saved['artifacts_dir']).resolve() != artifacts_dir.resolve():
             raise Blocked('Only an existing disposable test run may be resumed')
+        if saved.get('usb_test_bus'):
+            raise Blocked('Start a fresh USB test; resumption would change its hotplug topology')
         disk = regular_file(Path(saved['disk']), within=artifacts_dir)
         extras = tuple(regular_file(Path(p), within=artifacts_dir) for p in saved.get('extra_disks', []))
         for path in (disk, *extras):
@@ -289,6 +297,49 @@ def resume_test(directory: Path, artifacts_dir: Path, *, without_iso: bool = Fal
         if proc.poll() is not None:
             raise Blocked('Resumed QEMU exited; inspect the retained test-qemu.log')
         return alive(directory)
+
+
+def hotplug_usb(directory: Path, source: Path):
+    """Attach one new file overlay through an emulated controller, never usb-host."""
+    with exclusive(directory):
+        info = alive(directory)
+        if not info or info['role'] != 'test' or not info.get('usb_test_bus'):
+            raise Blocked('USB hotplug requires a disposable VM with its emulated test bus')
+        if info.get('hotplug_usb') or len(info.get('extra_disks', [])) >= 2:
+            raise Blocked('Only one USB fixture and two additional disks are allowed')
+        source = regular_file(source, within=directory)
+        validate_disk(source, directory)
+        capture = Path(info['artifacts_dir'])
+        if not capture.resolve().is_relative_to((directory / 'vm-runs').resolve()):
+            raise Blocked('Expected a private test-run directory')
+        overlay = capture / 'hotplug-usb.qcow2'
+        if overlay.exists() or overlay.is_symlink():
+            raise Blocked('Preserving an existing hotplug fixture')
+        run(['qemu-img', 'create', '-f', 'qcow2', '-F', 'qcow2', '-b', source, overlay])
+        requests = [('blockdev-add', {'driver': 'qcow2', 'node-name': 'apex-usb-disk',
+                     'read-only': False, 'file': {'driver': 'file', 'filename': str(overlay)}}),
+                    ('device_add', {'driver': 'usb-storage', 'id': 'apex-usb-fixture',
+                     'bus': 'apex-usb.0', 'drive': 'apex-usb-disk', 'serial': 'apex-usb-fixture'})]
+        report = {'source': str(source), 'overlay': str(overlay), 'requests': requests,
+                  'status': 'INCOMPLETE', 'guest_protection': 'NOT TESTED', 'responses': []}
+        # Register storage before QMP so interrupted/failed attempts still get compared.
+        saved = dict(info, extra_disks=[*info.get('extra_disks', []), str(overlay)],
+                     source_extra_disks=[*info.get('source_extra_disks', []), str(source)],
+                     hotplug_usb={'source': str(source), 'overlay': str(overlay)})
+        atomic_json(directory / 'vm.json', saved)
+        atomic_json(capture / 'vm.json', saved)
+        atomic_json(capture / 'hotplug-request.json', report)
+        connection = QMP(directory / 'qmp.sock')
+        try:
+            for name, arguments in requests:
+                if alive(directory) != saved:
+                    raise Blocked('VM identity changed during hotplug')
+                report['responses'].append(connection.call(name, arguments))
+            report['status'] = 'ATTACHED'
+        finally:
+            connection.close()
+            atomic_json(capture / 'hotplug-request.json', report)
+        return report
 
 
 def compare_disks(directory: Path, artifacts_dir: Path):
