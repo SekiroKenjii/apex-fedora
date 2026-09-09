@@ -2,6 +2,7 @@
 """Build signed recovery fixtures only inside the isolated Fedora builder."""
 import base64
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -148,6 +149,17 @@ def main():
             signature.unlink()
         for signature in (root / 'wrong-signed').glob('signature-*'):
             shutil.copyfile(signature, bundle / 'wrong-key' / signature.name)
+        filesystem = command(['findmnt', '-n', '-o', 'FSTYPE', '-T', str(root)]).strip()
+        report['storage_sharing'] = {'filesystem': filesystem, 'files_removed': 0, 'blobs': 0, 'bytes_submitted': 0}
+        if filesystem == 'btrfs':
+            spec = importlib.util.spec_from_file_location('dedupe_update_blobs', root / 'guest/dedupe-update-blobs.py')
+            helper = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(helper)
+            for blob in sorted((root / 'wrong-signed').iterdir()):
+                if re.fullmatch('[a-f0-9]{64}', blob.name):
+                    shared = helper.share(bundle / 'b' / blob.name, blob)
+                    report['storage_sharing']['blobs'] += 1
+                    report['storage_sharing']['bytes_submitted'] += shared['bytes_submitted']
         report['files'] = {str(p.relative_to(bundle)): digest(p) for p in sorted(bundle.rglob('*')) if p.is_file()}
         save(bundle / 'fixture.json', {k: report[k] for k in ('id', 'parent', 'images', 'files', 'public_key_sha256')})
         with tarfile.open(output / 'payloads.tar', 'w') as archive:

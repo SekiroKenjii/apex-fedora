@@ -66,3 +66,24 @@ Host compaction does not free the guest filesystem. Once the builder starts, ins
 its available space and exact regenerable caches before starting a build. Keep
 signing keys, source locks, outputs and logs. Any cache removal needs its own scoped
 record; do not use a blanket container or filesystem prune.
+
+## Duplicate offline fixture blobs
+
+On the builder's Btrfs filesystem, offline fixture builds share identical data
+extents between B and the temporary wrong-signature copy. File contents and paths
+remain separate; subsequent writes use copy-on-write. The manifest, signatures,
+transport markers and private keys are not deduplication targets. The build records
+how many blobs and aligned bytes were submitted. It keeps the 24 GiB prerequisite.
+
+For an existing completed fixture, run `guest/dedupe-update-blobs.py --fixture ID`
+only inside the idle isolated builder. The helper takes its build lock and first
+tests identical ranges, kernel rejection of different ranges and write isolation
+on generated test files. It checks each complete blob hash before and after the
+operation and preserves inode identity, length, ownership, permissions and link
+count. Unaligned tails are left alone. A partial or failed kernel result stops it.
+No file is removed, and the report records actual free space after synchronization.
+
+The interface is defined in the kernel's
+[file-deduplication UAPI](https://github.com/torvalds/linux/blob/v7.1/include/uapi/linux/fs.h).
+[Btrfs documents copy-on-write and deduplication](https://docs.kernel.org/filesystems/btrfs.html).
+This storage check does not establish image boot or recovery acceptance.
