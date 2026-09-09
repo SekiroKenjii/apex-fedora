@@ -129,9 +129,11 @@ case passed; it does not exercise a failed `BLKROSET`, hotplug or Ventoy boot.
 
 ## Remaining acceptance and probe use
 
-Test hotplug and failed locking in separate disposable guests, then run Ventoy
-acceptance. Keep `live.disk-protection` as NOT TESTED until its remaining cases have
-evidence. Repeat affected tests when the ISO changes; retain the empty optical drive.
+USB hotplug and a kernel-denied lock now passed in separate disposable guests on this
+same ISO. Together with direct boot and the earlier latch case, `live.disk-protection`
+is PASS for the direct-UEFI VM fixtures. See [fault procedures and results](LIVE-FAULTS.md).
+Ventoy and physical acceptance remain separate. Repeat affected tests when the ISO
+changes; retain the empty optical drive.
 
 `guest/live-probe.py` collects mounts, swap, kernel block-device state, service state
 and bounded journal output through the owned VM's verified serial or SSH channel.

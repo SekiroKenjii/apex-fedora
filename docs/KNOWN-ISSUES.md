@@ -40,8 +40,10 @@ Flatpak helper label loss and masks the live-only bootloader updater. Both virtu
 disks and their partitions rejected actual write attempts, and complete comparisons
 after poweroff found both disks unchanged. A separate pre-mount failure-latch test
 stopped before mounting root or starting the desktop, also leaving both disks unchanged.
-Hotplug, failed locking and Ventoy remain untested. The guard is configured to make USB
-storage read-only; unlocking only a chosen USB log partition is not implemented.
+USB hotplug and a kernel-denied lock also passed in separate direct-UEFI VMs, with
+whole disks unchanged. Ventoy, physical storage and the interval before udev finishes
+processing hotplug remain untested. The guard is configured to make USB storage
+read-only; unlocking only a chosen USB log partition is not implemented.
 See the [live build and disk-protection findings](LIVE.md).
 
 The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but
