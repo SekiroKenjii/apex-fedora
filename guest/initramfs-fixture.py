@@ -20,7 +20,7 @@ def checksum(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def parse_entry(text):
+def parse_entry(text, *, allow_fault=False):
     fields = {}
     for line in text.splitlines():
         if not line or line.startswith('#'):
@@ -33,6 +33,8 @@ def parse_entry(text):
         raise ValueError('Review this BLS format before injecting a fault')
     for key in ('linux', 'initrd'):
         value = fields[key]
+        if allow_fault and key == 'initrd' and re.fullmatch(r'/apex-initramfs-fault/[a-f0-9]{32}/bad\.img', value):
+            continue
         if (not value.startswith('/boot/ostree/') or '..' in PurePosixPath(value).parts
                 or re.search(r'\s|[$;]', value)):
             raise ValueError('Expected a single literal boot file')
@@ -67,15 +69,54 @@ def deployment_path(entry):
     return Path('/sysroot/ostree/deploy') / obj['stateroot'] / 'deploy' / f"{obj['checksum']}.{obj['deploySerial']}"
 
 
-def inspect(good, bad):
-    if good == bad or any(not re.fullmatch('sha256:[a-f0-9]{64}', v) for v in (good, bad)):
-        raise ValueError('Two distinct fixture digests are required')
+def require_guest():
     if os.geteuid() or run('systemd-detect-virt', '--vm') not in {'kvm', 'qemu'}:
         raise ValueError('Root inside the disposable QEMU guest is required')
     if not Path('/run/ostree-booted').is_file() or run('getenforce') != 'Enforcing':
         raise ValueError('Expected an enforcing installed guest')
     if os.readlink('/proc/self/ns/mnt') == os.readlink('/proc/1/ns/mnt'):
         raise ValueError('Use a private mount namespace')
+
+
+def rescue_binding(entries):
+    if set(entries) != {'a', 'b'}:
+        raise ValueError('Both deployment mappings are required')
+    safe = entries['a']['fields']['initrd'].startswith('/boot/ostree/')
+    return {'status': 'PASS' if safe else 'BLOCKED', 'safe_to_reboot_a': safe,
+            'scope': 'bootlink binding only, not recovery or boot acceptance',
+            'reason': 'A uses the original initramfs' if safe else
+            'Rollback remapped the fault-bearing BLS entry to A; do not reboot',
+            'entries': entries}
+
+
+def inspect_rescue(good, bad):
+    require_guest()
+    status = json.loads(run('bootc', 'status', '--json'))['status']
+    if (status['booted']['image']['imageDigest'] != good or status.get('staged')
+            or status['rollback']['image']['imageDigest'] != bad):
+        raise ValueError('Expected rescued A and retained B')
+    targets = {'a': deployment_path(status['booted']), 'b': deployment_path(status['rollback'])}
+    entries = {}
+    paths = list(Path('/boot/loader/entries').glob('*.conf'))
+    if len(paths) != 2:
+        raise ValueError('Expected exactly two BLS entries')
+    for path in paths:
+        fields = parse_entry(path.read_text(), allow_fault=True)
+        destination = Path(fields['bootlink']).resolve(strict=True)
+        matches = [v for v, target in targets.items() if destination == target]
+        if len(matches) != 1 or matches[0] in entries:
+            raise ValueError('Ambiguous deployment binding after recovery')
+        marker = json.loads((destination / 'usr/share/apex/recovery-fixture.json').read_text())
+        if marker['version'] != matches[0]:
+            raise ValueError('Rescue marker mismatch')
+        entries[matches[0]] = {'path': str(path.resolve()), 'fields': fields, 'deployment': str(destination)}
+    return rescue_binding(entries)
+
+
+def inspect(good, bad):
+    if good == bad or any(not re.fullmatch('sha256:[a-f0-9]{64}', v) for v in (good, bad)):
+        raise ValueError('Two distinct fixture digests are required')
+    require_guest()
     status = json.loads(run('bootc', 'status', '--json'))
     state = status['status']
     if (state['booted']['image']['imageDigest'] != good or state.get('staged')
@@ -133,6 +174,13 @@ def plan_hash(plan):
     return hashlib.sha256(json.dumps(plan, sort_keys=True).encode()).hexdigest()
 
 
+def require_isolated_bootlinks(entries):
+    a, b = entries['a'], entries['b']
+    if (PurePosixPath(a['fields']['bootlink']).parent == PurePosixPath(b['fields']['bootlink']).parent
+            or a['files']['initrd'] == b['files']['initrd']):
+        raise ValueError('Shared boot identity can retarget the fault onto A after rollback; use a new isolated fixture')
+
+
 def inject(plan, run_id, expected_hash):
     if not re.fullmatch('[a-f0-9]{32}', run_id) or plan_hash(plan) != expected_hash:
         raise ValueError('Reviewed plan is missing or changed')
@@ -145,6 +193,7 @@ def inject(plan, run_id, expected_hash):
     for name, identity in plan['protected'].items():
         if fingerprint(Path(name)) != identity:
             raise ValueError('A protected input changed')
+    require_isolated_bootlinks(plan['entries'])
     proof = Path('/var/lib/apex-initramfs-test') / run_id
     proof.mkdir(parents=True, exist_ok=False, mode=0o700)
     (proof / 'before.json').write_text(json.dumps(plan, indent=2) + '\n')
@@ -191,13 +240,16 @@ def inject(plan, run_id, expected_hash):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['inspect', 'inject'])
+    parser.add_argument('action', choices=['inspect', 'inject', 'verify-rescue'])
     parser.add_argument('good_digest')
     parser.add_argument('bad_digest')
     parser.add_argument('--run-id')
     parser.add_argument('--plan-sha256')
     args = parser.parse_args()
     os.umask(0o077)
+    if args.action == 'verify-rescue':
+        print(json.dumps(inspect_rescue(args.good_digest, args.bad_digest)))
+        raise SystemExit(0)
     # Guard the host before creating a guest lock or report directory.
     plan = inspect(args.good_digest, args.bad_digest)
     with Path('/run/apex-initramfs-fixture.lock').open('a') as lock:

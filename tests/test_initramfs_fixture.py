@@ -102,3 +102,53 @@ def test_root_outside_qemu_is_rejected_before_file_access(monkeypatch, virt):
     monkeypatch.setattr(m, 'run', run)
     with pytest.raises(ValueError, match='Root inside'):
         m.inspect('sha256:' + 'a' * 64, 'sha256:' + 'b' * 64)
+
+
+def test_fault_path_is_only_accepted_for_rescue_inspection():
+    m = module()
+    damaged = m.modified_entry(entry(), '/apex-initramfs-fault/' + 'b' * 32 + '/bad.img')
+    with pytest.raises(ValueError):
+        m.parse_entry(damaged)
+    assert m.parse_entry(damaged, allow_fault=True)['initrd'].endswith('/bad.img')
+
+
+def test_reordered_bootlink_cannot_reuse_initial_safety_result():
+    m = module()
+    healthy = {'fields': m.parse_entry(entry())}
+    damaged = {'fields': m.parse_entry(m.modified_entry(entry(),
+               '/apex-initramfs-fault/' + 'b' * 32 + '/bad.img'), allow_fault=True)}
+    assert m.rescue_binding({'a': healthy, 'b': damaged})['safe_to_reboot_a']
+    result = m.rescue_binding({'a': damaged, 'b': healthy})
+    assert result['status'] == 'BLOCKED'
+    assert not result['safe_to_reboot_a']
+
+
+def test_incomplete_rescue_mapping_cannot_pass():
+    with pytest.raises(ValueError):
+        module().rescue_binding({'a': {'fields': {'initrd': '/boot/ostree/good'}}})
+
+
+def test_rescue_inspection_requires_disposable_guest(monkeypatch):
+    m = module()
+    monkeypatch.setattr(m.os, 'geteuid', lambda: 1000)
+    monkeypatch.setattr(m, 'run', lambda *args: pytest.fail('Host access attempted'))
+    with pytest.raises(ValueError, match='Root inside'):
+        m.inspect_rescue('sha256:' + 'a' * 64, 'sha256:' + 'b' * 64)
+
+
+@pytest.mark.parametrize('shared', ['bootlink', 'initrd', 'neither'])
+def test_new_injections_require_distinct_boot_identities(shared):
+    m = module()
+    a = {'fields': {'bootlink': '/ostree/boot.0/default/' + 'a' * 64 + '/0'},
+         'files': {'initrd': '/boot/ostree/a/initrd'}}
+    b = {'fields': {'bootlink': '/ostree/boot.0/default/' + 'b' * 64 + '/0'},
+         'files': {'initrd': '/boot/ostree/b/initrd'}}
+    if shared == 'bootlink':
+        b['fields']['bootlink'] = a['fields']['bootlink'][:-1] + '1'
+    elif shared == 'initrd':
+        b['files']['initrd'] = a['files']['initrd']
+    if shared == 'neither':
+        m.require_isolated_bootlinks({'a': a, 'b': b})
+    else:
+        with pytest.raises(ValueError, match='Shared boot identity'):
+            m.require_isolated_bootlinks({'a': a, 'b': b})

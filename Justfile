@@ -107,6 +107,9 @@ test-initramfs-inspect fixture access:
 test-initramfs-inject fixture access inspection:
     python3 tools/initramfs-vm.py inject "{{fixture}}" "{{access}}" --inspection "{{inspection}}"
 
+test-initramfs-rescue fixture access:
+    python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"
+
 test-fingerprint build_id:
     python3 tools/apex.py test-fingerprint --build "{{build_id}}"
 

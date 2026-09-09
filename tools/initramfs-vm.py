@@ -16,7 +16,7 @@ from apexlib.guesttest import Guest
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['inspect', 'inject'])
+    parser.add_argument('action', choices=['inspect', 'inject', 'verify-rescue'])
     parser.add_argument('fixture', type=Path)
     parser.add_argument('access', type=Path)
     parser.add_argument('--inspection', type=Path)
@@ -60,6 +60,9 @@ def main():
         if p.returncode:
             raise Blocked('Guest fixture failed; retain ' + str(destination))
         report['guest'] = json.loads(p.stdout)
+        if report['guest'].get('status') == 'BLOCKED':
+            report['status'] = 'BLOCKED'
+            raise Blocked(report['guest']['reason'])
         report['status'] = 'PASS'
     finally:
         atomic_json(destination / 'result.json', report)
