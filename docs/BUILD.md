@@ -6,6 +6,9 @@ Use Linux with KVM access, QEMU, qemu-img, OVMF, OpenSSH, curl, Python 3.11 or n
 OpenSSL and uv. Just is optional. Firmware paths are in `config/project.json`.
 The default builder has four vCPUs, 6 GiB RAM and a sparse 160 GiB disk. The launcher
 also requires a 1.5 GiB host memory reserve and the configured free disk threshold.
+For an existing builder that occupies too much host space, see the offline
+[builder compaction procedure](BUILDER-STORAGE.md). It preserves guest-visible data
+and leaves the 180 GiB startup threshold unchanged.
 
 ```sh
 python3 tools/apex.py hooks

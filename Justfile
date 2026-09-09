@@ -28,6 +28,9 @@ builder-stop:
 builder-status:
     python3 tools/apex.py builder status
 
+builder-compact:
+    python3 tools/compact-builder.py --replace-verified
+
 build profile="fedora":
     python3 tools/apex.py build {{profile}}
 
