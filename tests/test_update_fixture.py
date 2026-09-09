@@ -1,6 +1,7 @@
 import base64
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -58,3 +59,50 @@ def test_rejection_requires_policy_error_and_unchanged_deployments(case, code, e
                                       ('unsigned', 'No signatures'), ('untrusted', 'rejected by policy')])
 def test_expected_consumer_rejections(case, error):
     runner_module().require_rejection(case, 1, error, {'booted': 'a'}, {'booted': 'a'})
+
+
+@pytest.mark.parametrize('after,blocked', [(24 * 1024**3, False),
+                                         (24 * 1024**3 - 1, True), (25 * 1024**3, False)])
+def test_storage_preflight_syncs_before_enforcing_unchanged_limit(monkeypatch, tmp_path, after, blocked):
+    module = fixture_module()
+    events = []
+    available = iter([22 * 1024**3, after])
+
+    def usage(path):
+        assert path == tmp_path
+        events.append('measure')
+        return SimpleNamespace(free=next(available))
+
+    def command(args):
+        assert args == ['sync', '-f', tmp_path]
+        events.append('sync')
+
+    monkeypatch.setattr(module.shutil, 'disk_usage', usage)
+    report = {'status': 'FAIL'}
+    if blocked:
+        with pytest.raises(RuntimeError, match='24 GiB'):
+            module.storage_preflight(tmp_path, report, command)
+        assert report['status'] == 'BLOCKED'
+    else:
+        module.storage_preflight(tmp_path, report, command)
+        assert report['status'] == 'FAIL'  # Build acceptance still needs the remaining steps.
+    assert events == ['measure', 'sync', 'measure']
+    assert report['storage_preflight'] == {
+        'required_bytes': 24 * 1024**3,
+        'available_before_sync': 22 * 1024**3,
+        'available_after_sync': after,
+    }
+
+
+def test_storage_preflight_does_not_continue_when_sync_fails(monkeypatch, tmp_path):
+    module = fixture_module()
+    monkeypatch.setattr(module.shutil, 'disk_usage', lambda _: SimpleNamespace(free=25 * 1024**3))
+
+    def command(_):
+        raise RuntimeError('sync failed')
+
+    report = {'status': 'FAIL'}
+    with pytest.raises(RuntimeError, match='sync failed'):
+        module.storage_preflight(tmp_path, report, command)
+    assert 'available_after_sync' not in report['storage_preflight']
+    assert report['status'] == 'FAIL'

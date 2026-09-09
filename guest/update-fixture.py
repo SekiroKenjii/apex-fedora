@@ -30,6 +30,18 @@ def policy(public_key, run_id):
     return {'default': [{'type': 'reject'}], 'transports': {'dir': scopes}}
 
 
+def storage_preflight(root, report, command):
+    storage = report['storage_preflight'] = {
+        'required_bytes': 24 * 1024**3,
+        'available_before_sync': shutil.disk_usage(root).free,
+    }
+    command(['sync', '-f', root])
+    storage['available_after_sync'] = shutil.disk_usage(root).free
+    if storage['available_after_sync'] < storage['required_bytes']:
+        report['status'] = 'BLOCKED'
+        raise RuntimeError('At least 24 GiB free in the builder is required')
+
+
 def main():
     root = Path.cwd()
     if (os.geteuid() != 0 or Path('/etc/apex-builder').read_text().strip() != 'apex-isolated-builder-v1'
@@ -37,8 +49,6 @@ def main():
         raise RuntimeError('Use an allocated directory in the isolated builder')
     if subprocess.check_output(['systemd-detect-virt', '--vm'], text=True).strip() not in {'kvm', 'qemu'}:
         raise RuntimeError('A QEMU builder is required')
-    if shutil.disk_usage(root).free < 24 * 1024**3:
-        raise RuntimeError('At least 24 GiB free in the builder is required')
     os.umask(0o077)
     run_id = root.name.removeprefix('apex-update-')
     output = root / 'output'
@@ -60,6 +70,7 @@ def main():
         return result.stdout
 
     try:
+        storage_preflight(root, report, command)
         frozen = json.loads((root / 'target-image.json').read_text())
         parent = 'localhost/apex-payload:' + frozen['digest'].removeprefix('sha256:')
         raw = command(['skopeo', 'inspect', '--raw', 'containers-storage:' + parent])

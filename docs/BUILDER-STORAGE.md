@@ -74,6 +74,9 @@ extents between B and the temporary wrong-signature copy. File contents and path
 remain separate; subsequent writes use copy-on-write. The manifest, signatures,
 transport markers and private keys are not deduplication targets. The build records
 how many blobs and aligned bytes were submitted. It keeps the 24 GiB prerequisite.
+The fixture preflight records free space before and after a filesystem sync, then
+checks that threshold. This lets Btrfs finish reclaiming temporary import extents.
+A failed sync or insufficient space stops the build and leaves a result record.
 
 For an existing completed fixture, run `guest/dedupe-update-blobs.py --fixture ID`
 only inside the idle isolated builder. The helper takes its build lock and first
