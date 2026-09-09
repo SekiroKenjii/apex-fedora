@@ -101,6 +101,12 @@ test-update action fixture access:
 test-recovery action fixture access:
     python3 tools/recovery-vm.py "{{action}}" "{{fixture}}" "{{access}}"
 
+test-initramfs-inspect fixture access:
+    python3 tools/initramfs-vm.py inspect "{{fixture}}" "{{access}}"
+
+test-initramfs-inject fixture access inspection:
+    python3 tools/initramfs-vm.py inject "{{fixture}}" "{{access}}" --inspection "{{inspection}}"
+
 test-fingerprint build_id:
     python3 tools/apex.py test-fingerprint --build "{{build_id}}"
 
