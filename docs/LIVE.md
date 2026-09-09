@@ -56,6 +56,12 @@ removing it would conceal the reproduced failure. Verify the GNOME session, appl
 rendering, enforcing state, absence of internal mounts/swap and unchanged whole disks
 after shutdown. Run Ventoy acceptance separately.
 
+`guest/live-probe.py` collects mounts, swap, kernel block-device state, service state
+and bounded journal output through the owned VM's verified serial or SSH channel.
+It refuses physical, non-root and non-live sessions. It does not rerun the guard,
+unlock a disk, attempt writes or label the observations as acceptance. Keep its source
+checksum and JSON with the VM's ISO checksum and whole-disk comparison.
+
 Physical USB storage is also read-only under the guard. Unlocking only a selected USB
 log partition is not implemented. The independent rescue-ISO boot, backup restore and
 operator steps remain required before touching physical media or the internal disk.
