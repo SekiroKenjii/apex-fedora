@@ -5,9 +5,11 @@ test "$(cat /etc/apex-builder)" = apex-isolated-builder-v1
 test "${1:?}" = live
 image=${2:?immutable local image ID required}
 case "$image" in sha256:*) ;; *) exit 2;; esac
+mkdir -p sources
 python3 guest/fetch-sources.py
 mkdir -p output/live titanoboa-src
 tar -xf sources/titanoboa.tar.gz -C titanoboa-src --strip-components=1
+python3 guest/prepare-live-builder.py titanoboa-src/build_iso.sh output/live/builder-adaptation.json
 digest=$(jq -r .digest target-image.json)
 tag="localhost/apex-payload:${digest#sha256:}"
 actual=$(podman image inspect --format '{{.Id}}' "$tag")
