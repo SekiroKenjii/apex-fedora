@@ -12,6 +12,7 @@ systemctl set-default graphical.target
 mapfile -t kernels < <(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
 test "${#kernels[@]}" = 1
 kver=${kernels[0]}
+install -d -m 0700 "$(realpath /root)"
 DRACUT_NO_XATTR=1 dracut --force --zstd --reproducible --no-hostonly --kver "$kver" \
     --omit ostree --add 'dmsquash-live dmsquash-live-autooverlay apexprotect' \
     "/usr/lib/modules/$kver/initramfs.img"

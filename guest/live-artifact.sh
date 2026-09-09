@@ -7,7 +7,7 @@ image=${2:?immutable local image ID required}
 case "$image" in sha256:*) ;; *) exit 2;; esac
 mkdir -p sources
 python3 guest/fetch-sources.py
-mkdir -p output/live titanoboa-src
+mkdir -p output/live titanoboa-src live-work
 tar -xf sources/titanoboa.tar.gz -C titanoboa-src --strip-components=1
 python3 guest/prepare-live-builder.py titanoboa-src/build_iso.sh output/live/builder-adaptation.json
 digest=$(jq -r .digest target-image.json)
@@ -22,8 +22,13 @@ python3 guest/live-parity.py output/live/target-rpms.txt output/live/live-rpms.t
 builder=$(jq -r .image_builder.reference config/sources.lock.json)
 podman pull "$builder"
 podman run --rm --privileged --security-opt label=disable --entrypoint /bin/bash \
-    --mount type=image,source=localhost/apex-live:trial,destination=/rootfs,ro=true \
+    --mount type=image,source=localhost/apex-live:trial,destination=/rootfs,rw=false \
+    -v /etc/apex-builder:/run/apex-builder:ro \
+    -v "$PWD/guest:/apex-guest:ro" -v "$PWD/live-work:/work" \
     -v "$PWD/titanoboa-src:/apex-titanoboa:ro" -v "$PWD/output/live:/output" \
     "$builder" /apex-titanoboa/build_iso.sh
+jq -e '.status == "PASS" and .boot_acceptance == "NOT TESTED"' output/live/rootfs-labeling.json
+test -s output/live/squashfs-metadata.txt
+test -s output/live/Apex-Live.iso
 sha256sum output/live/*.iso > output/live/checksums.txt
 podman image inspect localhost/apex-live:trial > output/live/derived-image.json

@@ -116,6 +116,18 @@ inside the builder VM. Its derived image adds live boot support and disk protect
 It must not change protected kernel, firmware, audio, fingerprint or GNOME packages.
 Package comparison does not replace kernel/module file checks or an actual boot test.
 
+Titanoboa's pinned script is adapted to preserve numeric ownership. A separate scratch
+tree on the VM filesystem receives the live image's targeted SELinux labels before
+squashfs creation. This copy excludes top-level `sysroot` and `ostree`, as Titanoboa
+does, and separates hardlinks so unrelated paths can have different labels.
+A second, non-writing labeling pass and critical-path label checks
+must agree. The source image stays read-only. Squashfs uses at most four workers and
+1 GiB of buffer memory. The build exports the adaptation hashes, labeling report and
+numeric ownership/mode listing; these do not establish live boot acceptance.
+The labeler uses the same `install_exec_t` transition as osbuild, within the builder
+container's mount namespace. This permits target-policy labels absent from the
+builder's policy without disabling SELinux or changing the physical host's policy.
+
 The live image masks disk automount, disk swap, hibernation, automatic updates and
 greenboot. Greenboot belongs to installed deployments; a live trial must not modify
 boot counters on the internal disk.
