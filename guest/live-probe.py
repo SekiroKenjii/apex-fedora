@@ -41,7 +41,7 @@ def block_observations(root=Path('/sys/class/block')):
     for entry in sorted(root.iterdir()):
         devices[entry.name] = {'sysfs_path': str(entry.resolve()),
                               'attributes': {name: text_file(entry / name)
-                                             for name in ('dev', 'ro', 'size', 'partition', 'device/serial')}}
+                                             for name in ('dev', 'ro', 'size', 'partition', 'serial', 'device/serial')}}
     return devices
 
 
@@ -62,7 +62,7 @@ def main():
     require_live_vm(os.geteuid(), virtual, cmdline)
     observations = {label: command(args) for label, args in {
         'mounts': ['findmnt', '--json', '--output', 'TARGET,SOURCE,FSTYPE,OPTIONS,MAJ:MIN'],
-        'swap': ['swapon', '--show', '--json', '--bytes'],
+        'swap': ['swapon', '--show=NAME,TYPE,SIZE,USED,PRIO', '--raw', '--noheadings', '--bytes'],
         'selinux': ['getenforce'],
         'kernel': ['uname', '-r'],
         'critical-units': ['systemctl', 'show', 'gdm.service', 'apex-live-protection.service',

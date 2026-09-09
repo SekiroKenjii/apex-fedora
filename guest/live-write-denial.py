@@ -36,6 +36,11 @@ def validate_inventory(devices, mounted, swaps):
             raise RuntimeError('Fixture is writable, mounted, swapped or not a virtio device')
 
 
+def serial_number(entry):
+    serial = entry / 'serial'
+    return serial.read_text().strip() if serial.is_file() else None
+
+
 def inventory():
     devices = []
     for entry in sorted(Path('/sys/class/block').iterdir()):
@@ -43,7 +48,6 @@ def inventory():
             continue
         resolved = entry.resolve(strict=True)
         partition = entry / 'partition'
-        serial = entry / 'device/serial'
         major, minor = map(int, (entry / 'dev').read_text().strip().split(':'))
         info = (Path('/dev') / entry.name).lstat()
         if not stat.S_ISBLK(info.st_mode) or info.st_rdev != os.makedev(major, minor):
@@ -51,7 +55,7 @@ def inventory():
         devices.append({'name': entry.name, 'dev': f'{major}:{minor}',
                         'rdev': info.st_rdev, 'ro': (entry / 'ro').read_text().strip(),
                         'sectors': int((entry / 'size').read_text()),
-                        'serial': serial.read_text().strip() if serial.exists() else None,
+                        'serial': serial_number(entry),
                         'partition': int(partition.read_text()) if partition.exists() else None,
                         'parent': resolved.parent.name,
                         'holders': sorted(path.name for path in (entry / 'holders').iterdir()),

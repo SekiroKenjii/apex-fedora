@@ -28,6 +28,16 @@ def test_expected_inventory_is_not_whole_protection_acceptance():
     assert probe.validate_inventory(fixtures(), set(), set()) is None
 
 
+def test_virtio_serial_is_on_block_node_not_parent_device(tmp_path):
+    (tmp_path / 'device').mkdir()
+    (tmp_path / 'serial').write_text('apex-other-1')
+    assert probe.serial_number(tmp_path) == 'apex-other-1'
+
+
+def test_missing_serial_is_not_inferred_from_device_name(tmp_path):
+    assert probe.serial_number(tmp_path) is None
+
+
 @pytest.mark.parametrize('field,value', [('name', 'nvme0n1'), ('sectors', 1),
     ('serial', 'unrelated'), ('ro', '0'), ('ro', ''), ('virtio', False), ('holders', ['dm-0'])])
 def test_changed_inventory_refuses_before_opening_devices(field, value):

@@ -58,3 +58,8 @@ def test_probe_collects_flatpak_label_and_live_bootloader_mask():
     assert "'bootloader-update.service'" in source
     assert "'flatpak-system-helper.service'" in source
     assert '/run/rootfsbase/usr/libexec/flatpak-system-helper' in source
+
+
+def test_swap_observation_uses_supported_read_only_table_format():
+    source = (ROOT / 'guest/live-probe.py').read_text()
+    assert "['swapon', '--show=NAME,TYPE,SIZE,USED,PRIO', '--raw', '--noheadings', '--bytes']" in source
