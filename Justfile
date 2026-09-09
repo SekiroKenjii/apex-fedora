@@ -56,6 +56,12 @@ test-installer-diagnostic disk iso other_disk:
 test-live-hotplug disk iso other_disk:
     python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}" --serial-console --usb-test-bus
 
+test-ventoy disk other_disk usb_image:
+    python3 tools/apex.py test-vm "{{disk}}" --extra-disk "{{other_disk}}" --boot-usb "{{usb_image}}" --serial-console
+
+ventoy-media live_output ubuntu trusted_key checksums signature keyring:
+    python3 tools/apex.py ventoy-media --live-output "{{live_output}}" --ubuntu "{{ubuntu}}" --trusted-key "{{trusted_key}}" --checksums "{{checksums}}" --signature "{{signature}}" --keyring "{{keyring}}"
+
 test-hotplug-usb source:
     python3 tools/apex.py test-hotplug-usb "{{source}}"
 

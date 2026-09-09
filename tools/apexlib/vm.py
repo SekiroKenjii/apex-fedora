@@ -72,7 +72,7 @@ def validate_disk(path: Path, directory: Path):
         path = path.parent / backing
 
 
-def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed: Path | None = None, port: int | None = None, artifacts_dir: Path | None = None, extra_disks: tuple[Path, ...] = (), *, serial_console: bool = False, usb_test_bus: bool = False) -> list[str]:
+def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed: Path | None = None, port: int | None = None, artifacts_dir: Path | None = None, extra_disks: tuple[Path, ...] = (), *, serial_console: bool = False, usb_test_bus: bool = False, boot_usb: bool = False) -> list[str]:
     cfg = config()["builder"]
     artifacts_dir = artifacts_dir or directory
     if not artifacts_dir.resolve().is_relative_to(directory.resolve()):
@@ -84,6 +84,8 @@ def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed
         raise Blocked('Additional disks are restricted to test VMs')
     if usb_test_bus and role != 'test':
         raise Blocked('Emulated USB tests require a disposable VM')
+    if boot_usb and (role != 'test' or seed or port or usb_test_bus or len(extra_disks) != 2):
+        raise Blocked('USB boot requires two fixture disks, no CDROM and no hotplug bus')
     if len(extra_disks) > 2 or len({disk.resolve(), *(p.resolve() for p in extra_disks)}) != 1 + len(extra_disks):
         raise Blocked('Use at most two distinct additional test disks')
     for extra in extra_disks:
@@ -99,9 +101,13 @@ def command(directory: Path, disk: Path, role: str, memory: int, cpus: int, seed
     if seed:
         regular_file(seed, within=directory)
         args += ["-drive", f"file={seed},format=raw,media=cdrom,readonly=on"]
-    if usb_test_bus:
+    if usb_test_bus or boot_usb:
         args += ['-device', 'qemu-xhci,id=apex-usb']
     for index, extra in enumerate(extra_disks, 1):
+        if boot_usb and index == 2:
+            args += ['-drive', f'if=none,id=apex-boot-usb,format=qcow2,file={extra}',
+                     '-device', 'usb-storage,bus=apex-usb.0,drive=apex-boot-usb,serial=apex-ventoy-fixture,bootindex=1']
+            continue
         args += ['-drive', f'if=none,id=apex-other-{index},format=qcow2,file={extra}',
                  '-device', f'virtio-blk-pci,drive=apex-other-{index},serial=apex-other-{index}']
     if port:
@@ -192,10 +198,14 @@ def clear_serial_socket(directory: Path):
         path.unlink()
 
 
-def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None, guest_ssh: bool = False, extra_disks: tuple[Path, ...] = (), serial_console: bool = False, usb_test_bus: bool = False):
+def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None, guest_ssh: bool = False, extra_disks: tuple[Path, ...] = (), serial_console: bool = False, usb_test_bus: bool = False, boot_usb: Path | None = None):
     with exclusive(directory):
         if alive(directory):
             raise Blocked("Only one Apex VM may run at a time")
+        if boot_usb:
+            if not disk or iso or usb_test_bus or guest_ssh or len(extra_disks) != 1:
+                raise Blocked('USB boot needs two fixture disks, no ISO, network or hotplug')
+            extra_disks = (*extra_disks, boot_usb)
         cfg = config()["builder"]
         role = "test" if disk or iso else "builder"
         if serial_console and role != 'test':
@@ -236,13 +246,14 @@ def start(directory: Path, *, disk: Path | None = None, iso: Path | None = None,
             qmp.unlink()
         if serial_console:
             clear_serial_socket(directory)
-        args = command(directory, disk, role, memory, cfg["cpus"], directory / "seed.iso" if role == "builder" else iso, cfg["ssh_port"] if role == "builder" else (22245 if guest_ssh else None), artifacts_dir, extra_disks, serial_console=serial_console, usb_test_bus=usb_test_bus)
+        args = command(directory, disk, role, memory, cfg["cpus"], directory / "seed.iso" if role == "builder" else iso, cfg["ssh_port"] if role == "builder" else (22245 if guest_ssh else None), artifacts_dir, extra_disks, serial_console=serial_console, usb_test_bus=usb_test_bus, boot_usb=bool(boot_usb))
         if iso:
             args += ['-boot', 'order=d']
         with (artifacts_dir / f"{role}-qemu.log").open("ab") as log:
             proc = subprocess.Popen(args, stdout=log, stderr=log, stdin=subprocess.DEVNULL, start_new_session=True)
         info = {"pid": proc.pid, "role": role, "disk": str(disk), "source_disk": str(source_disk), "artifacts_dir": str(artifacts_dir), "command": args,
                 'iso': str(iso) if iso else None, 'guest_ssh': guest_ssh, 'serial_console': serial_console, 'usb_test_bus': usb_test_bus,
+                'boot_usb': bool(boot_usb),
                 'extra_disks': [str(p) for p in extra_disks], 'source_extra_disks': [str(p) for p in source_extra_disks]}
         atomic_json(directory / "vm.json", info)
         if role == 'test':
@@ -262,7 +273,7 @@ def resume_test(directory: Path, artifacts_dir: Path, *, without_iso: bool = Fal
         saved = json.loads(regular_file(artifacts_dir / 'vm.json', within=root).read_text())
         if saved['role'] != 'test' or Path(saved['artifacts_dir']).resolve() != artifacts_dir.resolve():
             raise Blocked('Only an existing disposable test run may be resumed')
-        if saved.get('usb_test_bus'):
+        if saved.get('usb_test_bus') or saved.get('boot_usb'):
             raise Blocked('Start a fresh USB test; resumption would change its hotplug topology')
         disk = regular_file(Path(saved['disk']), within=artifacts_dir)
         extras = tuple(regular_file(Path(p), within=artifacts_dir) for p in saved.get('extra_disks', []))

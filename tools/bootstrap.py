@@ -35,6 +35,10 @@ def boot(parser: argparse.ArgumentParser) -> None:
     fingerprint = sub.add_parser('test-fingerprint')
     fingerprint.add_argument('--build', required=True, dest='build_id')
 
+    ventoy = sub.add_parser('ventoy-media')
+    for option in ('live-output', 'ubuntu', 'trusted-key', 'checksums', 'signature', 'keyring'):
+        ventoy.add_argument('--' + option, required=True, type=Path)
+
     test = sub.add_parser("test-vm")
     test.add_argument("disk", type=Path)
     test.add_argument("--iso", type=Path)
@@ -42,6 +46,7 @@ def boot(parser: argparse.ArgumentParser) -> None:
     test.add_argument('--serial-console', action='store_true', help='Enable a private Unix serial socket for disposable guest diagnostics')
     test.add_argument('--extra-disk', action='append', type=Path, default=[])
     test.add_argument('--usb-test-bus', action='store_true', help='Add an emulated USB controller without host passthrough')
+    test.add_argument('--boot-usb', type=Path, help='Boot a fresh QCOW2 overlay as emulated USB with two internal fixtures')
     hotplug = sub.add_parser('test-hotplug-usb')
     hotplug.add_argument('source', type=Path)
     live_check = sub.add_parser('test-live-check')
@@ -124,6 +129,9 @@ def boot(parser: argparse.ArgumentParser) -> None:
     elif args.command == 'test-fingerprint':
         from apexlib.pipeline import fingerprint_tests
         print(fingerprint_tests(state, args.build_id))
+    elif args.command == 'ventoy-media':
+        from apexlib.ventoy import prepare
+        print(prepare(state, args.live_output, args.ubuntu, args.trusted_key, args.checksums, args.signature, args.keyring))
     elif args.command == "doctor":
         cfg = config()["builder"]
         tools = {name: shutil.which(name) for name in ("python3", "qemu-system-x86_64", "qemu-img", "ssh", "ssh-keygen", "curl", "uv")}
@@ -147,7 +155,7 @@ def boot(parser: argparse.ArgumentParser) -> None:
         from apexlib.pipeline import execute
         execute(state, getattr(args, "profile", "fedora"), getattr(args, "kind", "image"), getattr(args, "build_id", None), test_access=getattr(args, "test_access", False))
     elif args.command == "test-vm":
-        print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk), serial_console=args.serial_console, usb_test_bus=args.usb_test_bus), indent=2))
+        print(json.dumps(vm.start(state, disk=args.disk, iso=args.iso, guest_ssh=args.guest_ssh, extra_disks=tuple(args.extra_disk), serial_console=args.serial_console, usb_test_bus=args.usb_test_bus, boot_usb=args.boot_usb), indent=2))
         print("VM launched. This does not record a successful boot or desktop test.")
     elif args.command == 'test-resume':
         print(json.dumps(vm.resume_test(state, args.run_directory, without_iso=args.without_iso), indent=2))
