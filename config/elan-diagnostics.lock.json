@@ -1,5 +1,5 @@
 {
-  "status": "experimental diagnostic only; disabled by default, not packaged or installed",
+  "status": "experimental diagnostic only; disabled by default; Fedora RPM built and tested in VM, not included in Apex",
   "patch": "rpms/patches/libfprint-elan-status-diagnostics.patch",
   "device": "04f3:0c6e",
   "source_trust": "HTTPS and checksum audit; source signatures not independently validated",

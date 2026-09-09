@@ -40,6 +40,9 @@ def run(source_path):
         target = work / 'libfprint/drivers/elan.c'
         target.parent.mkdir(parents=True)
         target.write_bytes(source_path.read_bytes())
+        subprocess.run(['git', 'init', '-q'], cwd=work, check=True)
+        subprocess.run(['git', 'add', '--', 'libfprint/drivers/elan.c'], cwd=work, check=True)
+        subprocess.run(['git', 'apply', '--check', '--index', '-p1', str(patch)], cwd=work, check=True)
         subprocess.run(['patch', '--batch', '--fuzz=0', '--forward', '-p1', '-i', str(patch)], cwd=work, check=True)
         content = target.read_text()
         start = content.index('/* This opt-in diagnostic never prints')
@@ -73,7 +76,7 @@ def run(source_path):
             'source': reviewed['label'], 'source_sha256': source_hash, 'patch_sha256': sha256(patch),
             'compiler': subprocess.check_output(['cc', '--version'], text=True).splitlines()[0],
             'gio_version': subprocess.check_output(['pkg-config', '--modversion', 'gio-2.0'], text=True).strip(),
-            'cases': results, 'reverse_patch': 'PASS', 'full_driver_build': 'NOT TESTED',
+            'cases': results, 'reverse_patch': 'PASS', 'git_apply_index_check': 'PASS', 'full_driver_build': 'NOT TESTED',
             'capture_state_machine': 'NOT TESTED', 'physical_sensor': 'NOT TESTED'}
 
 

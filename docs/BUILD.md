@@ -32,7 +32,12 @@ The source export uses an explicit allowlist; it does not copy the whole workspa
 To prepare NVIDIA modules for a completed Fedora control build, use
 `just build-nvidia CONTROL_BUILD_ID`. This is a separate Mock/RPM stage; it does not
 change the frozen image. See [NVIDIA packaging](NVIDIA.md) for the locked inputs,
-remaining image-integration work and current storage blocker.
+remaining image-integration work.
+
+For the experimental fingerprint packages, use `just build-fingerprint-rpms`.
+This rebuilds the complete locked Fedora source RPMs with the Apex patches in Mock.
+It does not update the image. See [fingerprint packaging](FINGERPRINT-RPMS.md) for
+the source checks, output layout and tests not covered by a successful build.
 
 ## Build output
 

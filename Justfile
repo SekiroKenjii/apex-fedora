@@ -46,6 +46,12 @@ build profile="fedora":
 build-nvidia build_id:
     python3 tools/apex.py build-nvidia --build "{{build_id}}"
 
+build-fingerprint-rpms:
+    python3 tools/build-fingerprint-rpms.py
+
+test-fingerprint-rpms build_id:
+    python3 tools/test-fingerprint-rpms.py "{{build_id}}"
+
 artifact kind build_id:
     python3 tools/apex.py artifact "{{kind}}" --build "{{build_id}}"
 

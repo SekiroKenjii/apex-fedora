@@ -20,5 +20,5 @@
     }
   ],
   "source_trust": "HTTPS and checksum audit only; source signatures not independently validated",
-  "status": "experimental; not packaged or installed"
+  "status": "experimental; Fedora RPM built in VM, not included in Apex; full GTK integration not tested"
 }

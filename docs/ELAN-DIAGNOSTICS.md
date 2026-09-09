@@ -1,8 +1,9 @@
 # ELAN status diagnostics
 
 The experimental patch `rpms/patches/libfprint-elan-status-diagnostics.patch` adds
-metadata logging to the image-based ELAN driver. It has not been built into libfprint,
-installed on Ubuntu or included in Apex. It does not change retries, calibration,
+metadata logging to the image-based ELAN driver. The complete patched libfprint now
+builds as a Fedora RPM and has passed packaged-library tests in the VM. It has not
+been installed on Ubuntu or included in Apex. It does not change retries, calibration,
 timeouts or error handling. The physical protocol failure remains unresolved.
 
 ## What the source establishes
@@ -69,8 +70,9 @@ With a prepared, checksum-matching elan.c and existing C/GIO development tools:
 just test-elan-diagnostics /path/to/elan.c
 ```
 
-The runner refuses root and an unknown source hash. It applies the patch without
-fuzz, extracts its actual helper code and compiles it with fake transfer/device APIs.
+The runner refuses root and an unknown source hash. It checks indexed `git apply`
+compatibility, applies the patch without fuzz, extracts its actual helper code and
+compiles it with fake transfer/device APIs.
 Non-status buffers use an invalid address: an accidental read would crash the test.
 A synthetic error-message marker must not appear in output. The twenty scenarios
 cover opt-in/identity guards, excluded transfers, four status values and the event
@@ -82,9 +84,16 @@ read/logging boundaries, not the complete driver or capture state machine. Sourc
 application and reversal also passed. No physical payload or fingerprint image was
 used, and no enrollment was started by the tests.
 
-Before a physical trial, build and test the complete patched libfprint in the dedicated
-Fedora VM, then prepare a separately identified live candidate. Keep broad debug
+The full Mock rebuild exposed a patch-format issue: Fedora's Git-based prep rejected
+the original context-free hunks. The patch now includes surrounding source lines;
+its behavior is unchanged. Both distribution sources pass the Git and GNU patch
+checks. The rebuilt library passes 42 state-machine and 117 fake-device C cases;
+eight fprintd ownership/protocol cases also pass without skips. These are not sensor
+or full GTK acceptance results. See [packaging and verification](FINGERPRINT-RPMS.md).
+
+Before a physical trial, test the complete dialog and prepare a separately identified
+live candidate in the dedicated Fedora VM. Keep broad debug
 logging disabled, use a bounded metadata capture and obtain operator approval for
 that specific trial. Do not replace Ubuntu libraries or enable a diagnostic service
-on the working installation. The builder is currently blocked by its storage checks;
-there is no diagnostic live artifact ready to boot.
+on the working installation. Storage no longer blocks the builder, but there is no
+diagnostic live artifact ready to boot.

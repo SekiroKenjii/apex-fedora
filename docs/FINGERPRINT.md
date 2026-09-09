@@ -72,9 +72,13 @@ No patch has been installed on Ubuntu or included in Apex. The GNOME patch now p
 twelve handler scenarios on the prepared Fedora and Ubuntu sources, including
 repeated Cancel and daemon-owner loss. Full GTK/D-Bus lifecycle validation remains
 open. An opt-in [ELAN metadata patch](ELAN-DIAGNOSTICS.md) passes buffer-exclusion
-tests but has not been built into the complete driver. Do not choose a retry
+tests and now builds into the complete Fedora driver RPM. Do not choose a retry
 quirk from these status events alone. Physical Apex enrollment and verify remain
 NOT TESTED; fingerprint support still blocks release.
+
+Both experimental RPMs have completed Mock rebuilds. The patched libfprint passed
+159 installed C cases and the eight daemon cases below in the VM, with no skips.
+GNOME's full GTK dialog remains untested. See [RPM build and test](FINGERPRINT-RPMS.md).
 
 ## Virtual-device regression tests
 

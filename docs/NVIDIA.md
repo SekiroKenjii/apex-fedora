@@ -100,7 +100,7 @@ signature-result rejection, mismatched compiler/module metadata, host refusal an
 the launcher. These tests use simulated RPM command results; actual RPM signature
 and Mock build checks have not run yet.
 
-The builder remains stopped. At this checkpoint the host has about 137 GiB free,
-below its 180 GiB startup threshold. The last guest measurement was 14.58 GiB,
-below the 24 GiB build requirement. No threshold was lowered or retained artifact
-deleted to start this build. Audio and fingerprint acceptance remain blocked.
+The builder storage blocker was resolved by an approved cleanup, without lowering
+the host or guest thresholds. Fingerprint RPM work used the recovered space first;
+the NVIDIA Mock build still needs to run. Audio and fingerprint acceptance remain
+blocked.

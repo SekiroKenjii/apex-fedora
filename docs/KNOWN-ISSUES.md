@@ -24,8 +24,10 @@ An experimental GNOME patch preserves cleanup state after `enroll-disconnected`.
 Extracted-handler tests reproduce the lost Stop/Release calls and repeated-Cancel
 state leak, and pass after the patch on Fedora and Ubuntu source variants. A separate
 ELAN metadata patch passes tests excluding image buffers and error-message bodies
-from its logs. Neither patch has been packaged or installed; full integration and
-the physical protocol error remain unresolved. See the
+from its logs. Both patches now build as full Fedora RPMs. The patched library passes
+159 installed C tests and eight fake-device daemon tests in the VM. Neither patch is
+in Apex or installed on Ubuntu; full GTK integration and the physical protocol error
+remain unresolved. See the
 [trace and patch procedure](HARDWARE-TRACE.md) and [ELAN diagnostics](ELAN-DIAGNOSTICS.md).
 Keep password login and password administration.
 Do not delete enrolled templates or restart the daemon on a timer as a product fix.
@@ -35,8 +37,8 @@ See the [ownership investigation](FINGERPRINT.md).
 
 The Fedora control image does not yet contain a validated NVIDIA module set.
 The [NVIDIA packaging path](NVIDIA.md) now pins open modules and matching vendor
-userspace/firmware. Its Mock build and image integration have not run; storage gates
-keep the builder stopped. Unit checks and a per-application offload launcher do not
+userspace/firmware. Its Mock build and image integration have not run. The builder's
+storage blocker is resolved. Unit checks and a per-application offload launcher do not
 prove that the driver loads or renders on this hardware.
 CachyOS builds are deliberately blocked until its kernel sources/RPMs and matching
 modules have a reviewed lock. Secure Boot and module signatures require their own tests;

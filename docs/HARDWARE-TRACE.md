@@ -69,7 +69,8 @@ the existing cancellation and close cleanup. It also ignores repeated Cancel whi
 EnrollStop is pending. Without this guard, a second Cancel cancels the Stop request;
 its cancellation callback returns without clearing the stopping/enrolling flags.
 This sequence was reproduced with the extracted handlers and real GCancellable
-objects. The patch is experimental and is not included in an RPM or image yet.
+objects. The patch is experimental. Its complete GNOME Settings RPM now builds in
+Mock, but it is not included in an Apex image yet.
 
 Download the exact source named in `config/gnome-fingerprint.lock.json`, then run:
 
@@ -88,7 +89,7 @@ Both distribution sources pass the patched expectations and reproduce the origin
 cleanup and repeated-Cancel defects. A daemon-loss notification clears the claimed
 flag and requests reacquisition without sending stale close cleanup in the harness.
 That is not a live daemon-replacement test. Full GTK object lifetime, real asynchronous
-D-Bus races, physical unplug and RPM integration remain untested. No test here opens
+D-Bus races, physical unplug and image integration remain untested. No test here opens
 the sensor or establishes successful enrollment.
 
 The runner needs a C compiler, pkg-config and GLib/GIO development headers. Full RPM

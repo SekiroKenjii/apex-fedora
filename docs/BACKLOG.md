@@ -8,8 +8,8 @@ installation or change the required release checks.
 
 - NVIDIA: build kernel-matched modules before boot, package matching userspace and
   firmware, and provide per-application render offload with AMD driving the display.
-  The [RPM build path and launcher](NVIDIA.md) are implemented. Next: resolve builder
-  storage, run Mock, review vendor boot/suspend configuration and integrate a new
+  The [RPM build path and launcher](NVIDIA.md) are implemented. Next: run Mock,
+  review vendor boot/suspend configuration and integrate a new
   image with checked initramfs and module trust. No GPU-enabled image exists yet.
 - Audio and fingerprint: obtain a clean physical reproduction and fix the component
   responsible. Keep the existing source findings and fake-device results. No guessed
@@ -18,9 +18,10 @@ installation or change the required release checks.
   cleanup and same-client Claim denials after protocol errors. A GNOME claim-state
   patch now passes twelve handler scenarios on both prepared distribution sources,
   including repeated Cancel and owner loss. An ELAN diagnostic patch passes twenty
-  metadata/buffer-exclusion scenarios per source. Full GTK/driver builds, RPM/image
-  integration and physical validation remain open. Resolve the builder storage gate
-  before packaging; do not lower its threshold. The operator
+  metadata/buffer-exclusion scenarios per source. Both complete Fedora RPMs now build
+  in Mock. The packaged library passes 159 C cases and eight daemon cases in the VM.
+  Next: full GTK/D-Bus dialog tests and a new image, followed by live validation.
+  Storage gates are no longer blocking; their thresholds are unchanged. The operator
   confirms Ubuntu speakers work after the original workaround and restart. Audio
   still needs a planned clean-baseline comparison, not another workaround. See
   [the findings](FINGERPRINT.md) and
