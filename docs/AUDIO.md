@@ -17,7 +17,15 @@ the low eight bits of a noncanonical verb overlap the 16-bit parameter.
 
 These are numerical decoding examples, not instructions to write those values. There
 is no evidence that the first parameter is electrically correct for this board.
-The operator's historical command sequence remains unconfirmed.
+
+The operator reports silence after the first Ubuntu installation and identifies
+[this Ask Ubuntu discussion](https://askubuntu.com/questions/1420976/no-audio-on-asus-vivobook-m7400q-with-realtek-alc294)
+as the workaround source. Its four-command sequence selects coefficient 0x1b, writes
+0x7f4b, selects 0x0f and writes 0x7774, all on node 0x20. The page includes different
+variants and mixed results. One M7400QC owner reported unwanted beats after the writes
+and sound after an ALSA reload, without establishing which step helped. The operator
+has not identified which variant ran or confirmed the current boot's workaround state.
+This history does not establish a clean baseline or a correct fix.
 
 Source: [ALSA hda-verb](https://github.com/alsa-project/alsa-tools/blob/03fcd4083ebc6452a1c51efbe8c44fcf6903827a/hda-verb/hda-verb.c#L340)
 and the [hwdep packing definition](https://github.com/torvalds/linux/blob/v6.18/include/sound/hda_hwdep.h#L14).
@@ -41,6 +49,11 @@ Do not assign those patterns to this board without tracing quirk selection.
 `ALC294_FIXUP_ASUS_SPK` writes coefficients 0x40 and 0x0f and chains a headset-mic
 fix. `ALC294_FIXUP_ASUS_HPE` writes 0x0f only. `ALC294_FIXUP_ASUS_COEF_1B` writes 0x4e4b
 and chains another board-specific fix. Those names are not interchangeable recipes.
+The reported sequence's 0x1b value, 0x7f4b, differs from that quirk's 0x4e4b by XOR
+0x3100. The source comment for the quirk describes correcting noisy output after
+Windows by setting bit 10. It does not justify the other changes in 0x7f4b. The
+sequence's 0x0f value does match the Realtek speaker fix described below. Keep those
+two observations separate when designing a board-specific test.
 
 Source: [ALC294 fixups and pin matching](https://github.com/torvalds/linux/blob/df2908090cda368b01ff43709f51890076c56157/sound/hda/codecs/realtek/alc269.c).
 

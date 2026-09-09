@@ -3,7 +3,8 @@
 ## Audio: BLOCKED
 
 The ALC294 codec on subsystem 1043:1ab2 has required a runtime codec workaround on an
-earlier installation. Its exact verb sequence has not yet been recovered in this work.
+earlier installation. The operator identified its online source, which contains
+several variants; the exact variant used and current boot state remain unconfirmed.
 No kernel quirk or UCM patch has been justified. Collect clean cold-boot codec, mixer,
 UCM and journal data before changing state. Speaker output and resume remain untested
 on Apex. Do not add guessed model options or an hda-verb service.
