@@ -11,9 +11,9 @@ completed Fedora control image. The helper verifies the frozen parent manifest,
 exports public build sources and creates a separate fixture ID. It requires 24 GiB
 free inside the builder. No RPM repository refresh occurs.
 
-A adds the existing greenboot fragment separator repair, a fixture marker and an
-offline verification policy. B changes only that marker. Both keep the parent's
-RPM inventory, kernel and driver settings. Build logs, manifests, public key,
+A adds the greenboot fragment separator repair, the tested one-retry preset, a
+fixture marker and an offline verification policy. B changes only that marker. Both
+keep the parent's RPM inventory, kernel and driver settings. Build logs, manifests, public key,
 recipes and archive checksum are exported under `runtime/update-fixtures/ID`.
 Signing keys stay in the builder. Stop it before launching any test guest.
 

@@ -31,6 +31,9 @@ builder-status:
 builder-compact:
     python3 tools/compact-builder.py --replace-verified
 
+builder-finalize compaction_id:
+    python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"
+
 build profile="fedora":
     python3 tools/apex.py build {{profile}}
 

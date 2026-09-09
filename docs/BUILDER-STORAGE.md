@@ -35,3 +35,34 @@ QEMU documents offline image use, compression and comparison in its
 [disk image utility reference](https://www.qemu.org/docs/master/tools/qemu-img.html).
 Comparison establishes guest-visible data equality, not that the OS will boot or
 that a future write cannot exhaust storage. Check resources again before launching.
+
+## Reuse a verified copy
+
+If the copy passed comparison but failed the space requirement, keep it while
+reviewing exact generated caches or duplicate downloads. Do not start another
+conversion. Verify an independent complete copy before removing an ISO cache, and
+record the removed file's checksum and recovery location. Retain candidate images,
+failed-test evidence and the rescue medium.
+
+After the storage prerequisite and replacement are approved, use the retained
+compaction's 32-character ID:
+
+```sh
+just builder-finalize COMPACTION_ID
+```
+
+Finalization holds the build and VM locks. It rechecks the original chain's identity,
+hashes both complete files, checks QCOW2 structure and compares all guest-visible data
+again. The retained copy must be standalone, on the same filesystem, with unchanged
+virtual capacity. A changed file or failed check prevents replacement. The free-space
+threshold is checked before validation and again immediately before replacement.
+
+The original compaction report stays unchanged. A separate `finalize-ID` directory
+records the executed source, validation commands, final hashes and outcome. The new
+file and both containing directories are flushed. Only the approved builder path is
+replaced; its old QCOW2 layout is not kept after success.
+
+Host compaction does not free the guest filesystem. Once the builder starts, inspect
+its available space and exact regenerable caches before starting a build. Keep
+signing keys, source locks, outputs and logs. Any cache removal needs its own scoped
+record; do not use a blanket container or filesystem prune.
