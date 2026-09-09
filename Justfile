@@ -52,6 +52,12 @@ build-fingerprint-rpms:
 test-fingerprint-rpms build_id:
     python3 tools/test-fingerprint-rpms.py "{{build_id}}"
 
+test-fingerprint-gtk build_id:
+    python3 tools/test-fingerprint-gtk.py "{{build_id}}"
+
+build-fingerprint-image parent_build rpm_build gtk_test:
+    python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" "{{gtk_test}}"
+
 artifact kind build_id:
     python3 tools/apex.py artifact "{{kind}}" --build "{{build_id}}"
 

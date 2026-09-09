@@ -32,7 +32,7 @@ def assert_candidate(status: dict, expected: str):
 
 class Guest:
     """Talk only to a running Apex test VM. Never accepts a host address."""
-    def __init__(self, directory: Path, user: str, key: Path, password_file: Path | None = None):
+    def __init__(self, directory: Path, user: str, key: Path, password_file: Path | None = None, *, expected_digest: str | None = None):
         info = alive(directory)
         if not info or info['role'] != 'test':
             raise Blocked('Guest tests require the test VM, not the builder or host')
@@ -44,7 +44,9 @@ class Guest:
         self.directory = directory
         self.vm_info = info
         self.user = user
-        self.expected_digest = json.loads(regular_file(directory / 'candidate.json', within=directory).read_text())['digest']
+        self.expected_digest = expected_digest or json.loads(regular_file(directory / 'candidate.json', within=directory).read_text())['digest']
+        if not re.fullmatch(r'sha256:[a-f0-9]{64}', self.expected_digest):
+            raise Blocked('Guest tests require an explicit immutable OCI digest')
         self.artifacts_dir = Path(info['artifacts_dir'])
         if not self.artifacts_dir.resolve().is_relative_to(directory.resolve()):
             raise Blocked('VM evidence path escapes runtime storage')

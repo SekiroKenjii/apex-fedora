@@ -8,6 +8,20 @@ from apexlib.common import Blocked
 DIGEST = 'sha256:' + 'a' * 64
 
 
+def test_explicit_experiment_does_not_change_candidate(tmp_path, monkeypatch):
+    key = tmp_path / 'key'
+    key.write_text('test fixture')
+    old = json.dumps({'digest': 'sha256:' + 'b' * 64})
+    (tmp_path / 'candidate.json').write_text(old)
+    monkeypatch.setattr(guesttest, 'alive', lambda _: {
+        'role': 'test', 'command': ['hostfwd=tcp:127.0.0.1:22245-:22'], 'artifacts_dir': str(tmp_path)})
+    guest = Guest(tmp_path, 'testuser', key, expected_digest=DIGEST)
+    assert guest.expected_digest == DIGEST
+    assert (tmp_path / 'candidate.json').read_text() == old
+    with pytest.raises(Blocked, match='immutable OCI digest'):
+        Guest(tmp_path, 'testuser', key, expected_digest='latest')
+
+
 def test_shell_startup_requires_the_active_process_and_message_id():
     event = {'_PID': '3154', 'MESSAGE_ID': SHELL_STARTED}
     assert shell_started(json.dumps(event), 3154) == event

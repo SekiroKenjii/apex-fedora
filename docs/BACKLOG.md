@@ -20,7 +20,10 @@ installation or change the required release checks.
   including repeated Cancel and owner loss. An ELAN diagnostic patch passes twenty
   metadata/buffer-exclusion scenarios per source. Both complete Fedora RPMs now build
   in Mock. The packaged library passes 159 C cases and eight daemon cases in the VM.
-  Next: full GTK/D-Bus dialog tests and a new image, followed by live validation.
+  The complete GTK dialog and manager now pass five private D-Bus cases, including
+  repeated Cancel, pending Stop during close and daemon replacement/reopening.
+  Image integration and live validation follow; these results do not establish
+  physical enrollment or resolve the underlying ELAN protocol error.
   Storage gates are no longer blocking; their thresholds are unchanged. The operator
   confirms Ubuntu speakers work after the original workaround and restart. Audio
   still needs a planned clean-baseline comparison, not another workaround. See

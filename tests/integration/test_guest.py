@@ -27,13 +27,16 @@ def candidate(request):
     guest = None
     try:
         password = os.environ.get('APEX_TEST_PASSWORD_FILE')
-        guest = Guest(directory, user, Path(key), Path(password) if password else None)
+        guest = Guest(directory, user, Path(key), Path(password) if password else None,
+                      expected_digest=os.environ.get('APEX_TEST_DIGEST'))
         output = directory / 'vm-tests' / uuid.uuid4().hex
         output.mkdir(parents=True, mode=0o700)
         inputs = {}
         for name in ('tests/integration/test_guest.py', 'tools/apexlib/guesttest.py',
                      'tools/apexlib/vm.py', 'tools/apexlib/common.py', 'tools/apexlib/render.py',
-                     'guest/probe.py', 'guest/render-probe.py', 'guest/theme-probe.py', 'config/project.json', 'pyproject.toml'):
+                     'guest/probe.py', 'guest/render-probe.py', 'guest/theme-probe.py',
+                     'guest/installed-recovery-probe.py', 'system_files/usr/share/apex/greenboot.conf',
+                     'config/project.json', 'pyproject.toml'):
             target = output / 'source' / name
             target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             shutil.copyfile(ROOT / name, target)
@@ -105,6 +108,41 @@ def test_desktop_theme_surfaces(candidate):
     guest.theme_surfaces(output)
     guest.boot_diagnostics(output)
     # The operator must review the PNGs before recording desktop.theme-surfaces PASS.
+
+
+@pytest.mark.skipif(not os.environ.get('APEX_FINGERPRINT_IMAGE_TEST'), reason='NOT TESTED: select the fingerprint experiment explicitly')
+def test_fingerprint_image_desktop_and_recovery_configuration(candidate):
+    guest, output = candidate
+    guest.critical_health()
+    expected = {'libfprint': '1.94.100-1.fc44.apex1',
+                'gnome-control-center': '50.4-1.fc44.apex1',
+                'gnome-control-center-filesystem': '50.4-1.fc44.apex1'}
+    for name, version in expected.items():
+        assert guest.run(f"rpm -q --qf '%{{VERSION}}-%{{RELEASE}}' {name}").stdout == version
+    guest.password_login_and_render(output)
+    guest.run('systemctl --user stop apex-render-probe')
+    source = ROOT / 'guest/installed-recovery-probe.py'
+    guest.run('install -m 0600 /dev/stdin /var/tmp/apex-installed-recovery-probe.py', input=source.read_text())
+    checksum = sha256(ROOT / 'system_files/usr/share/apex/greenboot.conf')
+    result = guest.sudo(f'python3 /var/tmp/apex-installed-recovery-probe.py {guest.expected_digest} {checksum}')
+    atomic_json(output / 'installed-recovery-execution.json', {
+        'source_sha256': sha256(source), 'returncode': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr})
+    assert result.returncode == 0
+    assert json.loads(result.stdout)['status'] == 'PASS'
+    guest.run('systemd-run --user --unit=apex-settings-smoke --collect --setenv=GDK_BACKEND=wayland gnome-control-center system')
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        result = guest.run('busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus GetConnectionUnixProcessID s org.gnome.Settings', check=False)
+        if result.returncode == 0:
+            break
+        time.sleep(1)
+    assert result.returncode == 0
+    time.sleep(3)
+    guest.screenshot(output / 'settings.png')
+    atomic_json(output / 'fingerprint-image.json', {'digest': guest.expected_digest, 'packages': expected,
+        'settings_dbus_pid': result.stdout.strip(), 'journal': guest.run('journalctl --user -u apex-settings-smoke --no-pager').stdout,
+        'hardware': 'NOT TESTED', 'settings_visual_review': 'NOT TESTED', 'recovery_faults': 'NOT TESTED'})
+    guest.boot_diagnostics(output)
 
 
 def test_failed_deployment_rolls_back_within_two_attempts():
