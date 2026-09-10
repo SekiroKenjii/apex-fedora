@@ -41,6 +41,8 @@ ignore = ["N818"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG"]
+# The refusing ports exist to reject every call, so every argument is unused by design.
+"src/apex/registry/discovery.py" = ["ARG"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

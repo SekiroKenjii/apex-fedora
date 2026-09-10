@@ -492,6 +492,67 @@ linter never visits still has to answer to the baseline.
 `golden_change`: none.
 `supersedes`: none.
 
+## P7. The registry
+
+Goal: make adding a unit mean adding a file, without trading an editable list for behaviour
+nobody can find.
+
+7 modules: provenance, registry, graph, discovery, descriptors, decorators, manifest.
+
+### Four properties, each asserted rather than asserted about
+
+**Open, then sealed, and never both.** Reading before the seal raises, because a read during
+import would make import order matter. Registering after it raises, because a unit appearing
+once a command is running is a unit nobody reviewed.
+
+**Import-time action is a defect.** Discovery binds refusing ports, whose every member raises
+when called. A unit that opened a file or ran a program while being imported would do so
+before every guard in the system, so this closes a bypass that runs earlier than anything
+else could catch it.
+
+**Order is derived, not written.** `graph.order` sorts by what each unit reads and writes,
+breaking ties on the identifier so the result is the same whatever order the units arrived
+in. A cycle, a fact nobody writes and a fact two units write are load-time errors that name
+the units involved.
+
+**Adding a unit is a diff.** The manifest records identifier, group, environment, summary,
+module and line for every unit, captured from the declaring frame rather than written by
+hand. A new unit shows up as exactly one added entry.
+
+### The declaration refuses what it cannot honour
+
+A check in the hardware group that declares any environment other than physical is refused at
+declaration, so the rule that currently exists as two separate literal comparisons in two
+functions now exists once, in the type. A check declaring a simulated environment is refused
+outright, since nothing a fake does can satisfy one.
+
+### The ratchet earned its keep again
+
+Adding a per-file exemption for the refusing ports changed the lint configuration, and the
+ratchet refused to compare against a baseline produced under the old one. That is the
+mechanism added in P4 working on its first real occasion. Re-frozen at 132 files and 1096
+findings.
+
+### What P7 does not do
+
+The full catalogue of 62 checks is not registered here. Each needs a summary that says what
+it establishes, and inventing 62 of those would be worse than having none. They arrive in
+P10 with the evidence context, sourced from the recorded descriptions and the test protocol.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Registry modules | 7 |
+| Registry tests | 37 |
+| Suite | 1029 passed, 11 skipped |
+| Strict type check | clean over 56 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: every registry test was written first and observed failing.
+`golden_change`: none.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
