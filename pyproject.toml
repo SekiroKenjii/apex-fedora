@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "apex-build-tools"
 version = "0.2.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 description = "Isolated Fedora image builds and evidence checks"
 
 [project.scripts]
@@ -31,11 +31,13 @@ markers = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 src = ["src", "tools"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RET", "PTH", "ARG", "C4", "TID", "ERA"]
+# The error taxonomy is named for what the caller should do, not for the word "Error".
+ignore = ["N818"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG"]

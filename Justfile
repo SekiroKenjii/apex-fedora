@@ -179,8 +179,16 @@ ratchet-freeze:
 ratchet:
     python3 tools/migration/lint_ratchet.py check
 
+types:
+    uv run --no-project --with mypy==1.18.2 mypy --strict src/apex
+
+lint:
+    uv run --no-project --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture
+
 gate:
     just test
+    just lint
+    just types
     just runtime-verify
     just surface
     just ratchet

@@ -225,6 +225,86 @@ proven equivalent before any rewiring.
 `golden_change`: none. Both entry points produce identical output, so the corpus is unchanged.
 `supersedes`: none.
 
+## P3. The typed kernel
+
+Goal: make safety a type, so a rule cannot be forgotten at a call site.
+
+This is the first phase where the migration rule applies. Every test below was written
+against the new interface and observed failing before the module existed.
+
+### What the layer holds
+
+13 modules, 911 lines, covered by 12 test modules and 796 lines of test.
+
+| Module | Replaces |
+|---|---|
+| `refusals.py` | Refusal identity, so a test matches a code rather than English prose |
+| `errors.py` | One `Blocked` type that reported a typing mistake to the operator as a considered refusal |
+| `identifiers.py` | The same two regular expressions written out in ten files |
+| `verdicts.py` | Four status strings and 34 hand-typed not-tested fields |
+| `quantities.py` | Bare numbers for sizes, ports and modes |
+| `bounded.py` | The literal 262144 at six sites in two spellings, and the serial chunk kept in step by hand |
+| `safepaths.py` | 86 call sites that validated a path and then used the unvalidated original |
+| `secrets.py` | Plaintext credentials read from disk by five modules |
+| `timing.py` | 24 bare sleeps and 13 hand-rolled polling loops |
+| `claims.py` | Environment kinds duplicated between the dispatcher and the evidence module |
+| `commands.py` | Argument lists assembled as strings |
+| `hashing.py` | Sixteen reimplementations of file hashing |
+
+### Properties the tests establish
+
+The verdict lattice is checked for commutativity, associativity, and the property that
+matters: no combination of verdicts raises a set containing no pass to a pass. Not tested is
+the identity element, so folding an empty collection yields not tested rather than success.
+
+`SafePath` refuses a symlink, a path outside the runtime root, a traversal escape, a
+directory, and a path containing a comma. The comma rule is not decoration: a comma
+separates device options, so a comma in a path silently becomes a new option.
+
+`RuntimeRoot` refuses a location outside the permitted bases and a directory that is not
+0700. The current `state_dir()` accepts `/etc` and creates it.
+
+A secret cannot be rendered. Its representation is redacted, converting it to text raises,
+formatting raises, and serialising it raises.
+
+`FileMode` refuses anything above `0o777`. Every mode the project sets is 0600, 0700, 0644 or
+0755, so refusing the setuid, setgid and sticky bits makes an accidental one impossible to
+express rather than merely unlikely.
+
+### The layer rule is enforced, not documented
+
+`tests/architecture/test_dependency_rule.py` parses the real import graph and refuses an
+upward import, an import of an effect module from a pure layer, a relative import beyond one
+level, and any `assert` statement anywhere in the package. All four were tried by hand and
+all four were caught. The assert rule matters because `python -O` deletes the statement, and
+51 load-bearing checks in the old tree depend on one.
+
+### Two decisions worth recording
+
+The Python floor moved from 3.11 to 3.12. The generic syntax the secret type uses needs it,
+and both the host and the target image run 3.14.
+
+The error names do not end in `Error`. The taxonomy is named for what the caller should do,
+so the naming rule that would rename `Refusal` to `RefusalError` is disabled with that reason
+recorded beside it.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Kernel modules | 13 |
+| Kernel tests | 125 |
+| Suite | 840 passed, 15 skipped |
+| Strict type check | clean over 17 files |
+| Lint on new code | clean |
+| Gates green | G1 to G6, plus lint and strict typing |
+
+`migration_red`: every test module under `tests/unit/kernel/` was written first and observed
+failing. The layer rule tests were verified by introducing each violation and observing the
+refusal.
+`golden_change`: none. Nothing the command surface does has changed.
+`supersedes`: none. The old modules remain in place and untouched.
+
 ## Commands
 
 ```sh
@@ -236,5 +316,7 @@ just surface-freeze <dir>   # freeze the operator command surface, once
 just surface                # check the live justfile still covers it
 just ratchet-freeze         # record the per-file lint baseline, once
 just ratchet                # check no file regressed
+just lint                   # style rules over the restructured code
+just types                  # strict type check over the package
 just gate                   # the standing gate for the current phase
 ```
