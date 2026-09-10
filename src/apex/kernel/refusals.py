@@ -37,6 +37,8 @@ class RefusalReason(enum.StrEnum):
     LOCK_HELD = "lock.held"
     ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"
 
+    STAGE_FAILED = "stage.failed"
+
     NO_VERIFIED_RESULT = "evidence.no-verified-result"
     HARDWARE_REQUIRES_PHYSICAL = "evidence.hardware-requires-physical"
     PASS_REQUIRES_PROOF = "evidence.pass-requires-proof"

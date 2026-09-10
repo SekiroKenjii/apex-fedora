@@ -553,6 +553,66 @@ P10 with the evidence context, sourced from the recorded descriptions and the te
 `golden_change`: none.
 `supersedes`: none.
 
+## P8. The pipeline
+
+Goal: express a multi-step operation as a stage set whose order is derived and whose dry run
+cannot lie.
+
+5 modules: facts, effects, stages, plans, runner.
+
+### Four properties, each with a test that fails without it
+
+**The whole plan is preflighted before anything applies.** A run that is going to refuse
+refuses before it has taken a lock, opened a session or started a machine. For a harness
+whose central claim is that nothing improperly touches the host, never starting is a stronger
+guarantee than unwinding cleanly afterwards. The test asserts that the first apply happens
+after the last preflight, and that a refusal at preflight leaves no apply behind it.
+
+**Preflight purity is enforced by substitution.** During preflight the runner hands the stage
+refusing ports, whose every member raises. A stage that runs a program to decide whether it
+is ready fails its own test. This is what makes the plan output a review surface rather than
+a claim.
+
+**Cleanup is a finaliser returned at acquisition.** A stage returns its release with the
+result that acquired the resource, so the unwind order is exactly the reverse of acquisition
+and a cleanup cannot be registered for something never obtained. The runner unwinds on every
+terminal path, including a refusal part way through.
+
+**Nothing is promoted.** When a run stops, the runner takes the union of the checks the
+un-run stages would have attested and reports them as not tested. Refusal to overclaim
+becomes a consequence of control flow rather than a discipline someone maintains.
+
+### Order derives from data, and the digest identifies it
+
+`Plan.of` takes a stage set, never an order. The dependency graph from P7 derives the
+sequence, so inserting a step requires editing no other step. The digest is computed over the
+ordered stages with their reads, writes, effects and attested checks, and it is stable for
+the same set and changes when the set changes.
+
+### Two smells removed before commit
+
+The runner briefly carried a `log_sink` parameter nothing used and a condition ending in
+`and False`. Both are exactly what the house rules forbid, and both were caught by rereading
+rather than by a tool, which is worth recording as a limit of the gates.
+
+`RunContext.facts` and `Plan.stages` shadowed the modules of the same name inside their class
+bodies, so the annotations could not resolve. The type names are imported directly, which the
+house style allows for typing constructs.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Pipeline modules | 5 |
+| Pipeline tests | 20 |
+| Suite | 1050 passed, 10 skipped |
+| Strict type check | clean over 62 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: every pipeline test was written first and observed failing.
+`golden_change`: none.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
