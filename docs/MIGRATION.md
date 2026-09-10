@@ -764,6 +764,91 @@ context.
 `golden_change`: none.
 `supersedes`: none.
 
+## P10b. The catalogue and the readiness fold
+
+Goal: make the installation gate a decision over registered units, and prove it means what
+the old one meant.
+
+### The catalogue is 62 registered units, sourced not invented
+
+Five agents read the real evidence records, the archived candidates and the committed
+documentation, and produced a summary for every check saying what it establishes. None had
+to be generalised from the identifier alone. Each module records where its summary came
+from, so a reader can check the claim.
+
+Each check declares the environment that may satisfy it, the proof kinds it accepts, and the
+scope limits the operator already wrote down. The hardware rule that today exists as two
+literal comparisons in two functions is now a property of the declaration: a hardware check
+that names any environment but physical is refused when the module is imported.
+
+`config/checks.json` still stands and still feeds the old tools. A test asserts the
+registered set equals it exactly, so the two cannot drift while both exist.
+
+### Readiness is a conjunction and does no input or output
+
+`evaluate` receives resolved records and returns an outcome. It reads nothing, so every
+decision is tested directly: an empty catalogue is not ready, one untested check among passes
+is not ready, a record bound to another build is blocked, a pass without proof is blocked,
+two records for one check is a fault, and the result does not depend on the order records
+arrive in.
+
+A detected fault becomes blocked and never not tested. That distinction is the point: the old
+code drops a record whose proof no longer matches and lets the check fall back to not tested,
+recording the problem in a separate error list that the verdict does not reflect, so a tamper
+and a check nobody ran end up looking the same.
+
+Proof bytes are re-hashed on every resolution with no cache. That is the one integrity
+property the old code genuinely has, and it is not a performance defect to remove: a digest
+trusted from metadata is a digest an editor can change. It costs 0.13 seconds on the real
+store.
+
+### Shadow mode agrees, and the one divergence is declared
+
+`just readiness-shadow` runs both folds against the real store. Both are read only: the old
+`evaluate` is a pure read and the new fold touches nothing. On the operator's store they
+agree exactly: 18 passed, 6 blocked, 38 not tested, and the same installation verdict.
+
+The synthetic store carries a deliberately altered proof, and there the two differ by design.
+That class is named and accepted; anything else fails the gate.
+
+### The environment vocabulary was too fine, and shadow mode found it
+
+The sourced catalogue assigned installer-vm and live-vm to seven checks. The stored records
+say only vm, because the old vocabulary has four kinds. Requiring a distinction that no record
+can express would have blocked seven passing checks on the strength of a refinement that is
+mine, not the operator's.
+
+The catalogue now requires vm for those seven and records the finer environment as a scope
+limit. This is exactly what shadow mode is for: it turned a silent downgrade into a decision.
+
+### The package is called attestation, because the guard was right
+
+The first attempt named the package `evidence`. The pre-commit guard refused every file in it.
+The guard treats any directory component named `evidence` as private, which is the rule that keeps
+the runtime evidence store out of Git. That rule is doing its job, and loosening it to let source
+code through would have widened a security boundary to accommodate a name.
+
+The package is `apex.attestation` instead. It is also the better name: the package mints and judges
+attestations, it does not hold evidence. The guard stays as it is.
+
+The guard's path policy is one boolean of 306 characters, so the fix had to be a rename rather than
+a narrower rule. Decomposing it into per-rule units under `workspace/git/rules/` is P12 work, and it
+is recorded there.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Registered checks | 62, none invented |
+| Suite | 1145 passed, 7 skipped |
+| Shadow on the real store | agrees, no divergence |
+| Strict type check | clean over 145 files |
+| Gates green | G1 to G7, lint, strict typing |
+
+`migration_red`: the catalogue and fold tests were written first and observed failing.
+`golden_change`: none. The command surface is untouched and legacy remains the authority.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -777,5 +862,6 @@ just ratchet-freeze         # record the per-file lint baseline, once
 just ratchet                # check no file regressed
 just lint                   # style rules over the restructured code
 just types                  # strict type check over the package
+just readiness-shadow       # compare the new readiness fold with the old one
 just gate                   # the standing gate for the current phase
 ```

@@ -9,14 +9,27 @@ from apex.kernel import claims, errors, identifiers, refusals
 HARDWARE_GROUP = "hardware"
 
 
+PERMITTED_PROOF_KINDS = frozenset({".txt", ".log", ".json", ".png", ".ppm", ".xml"})
+
+
 @dataclasses.dataclass(frozen=True, slots=True)
 class CheckSpec:
     id: identifiers.CheckId
     group: str
     environment: claims.EnvironmentKind
     summary: str
+    accepted_proof_kinds: tuple[str, ...] = ()
+    scope_limits: tuple[str, ...] = ()
+    sourced_from: str = ""
 
     def __post_init__(self) -> None:
+        unknown = set(self.accepted_proof_kinds) - PERMITTED_PROOF_KINDS
+        if unknown:
+            raise errors.Refusal(
+                refusals.RefusalReason.PROOF_KIND_NOT_ACCEPTED,
+                subject=f"{self.id}: {', '.join(sorted(unknown))}",
+                remedy="a proof is text, JSON, an image or a JUnit report, never a template",
+            )
         if not self.summary:
             raise errors.Refusal(
                 refusals.RefusalReason.UNKNOWN_CHECK,

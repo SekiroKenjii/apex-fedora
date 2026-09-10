@@ -27,6 +27,6 @@ class Collector:
     def __init__(self) -> None:
         self.checks: registry.Registry[str, descriptors.CheckSpec] = registry.Registry("check")
 
-    def check(self, spec: descriptors.CheckSpec) -> descriptors.CheckSpec:
-        self.checks.add(str(spec.id), spec, at=_caller())
+    def check(self, spec: descriptors.CheckSpec, *, depth: int = 2) -> descriptors.CheckSpec:
+        self.checks.add(str(spec.id), spec, at=_caller(depth))
         return spec

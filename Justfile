@@ -185,11 +185,15 @@ types:
 lint:
     uv run --no-project --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
 
+readiness-shadow:
+    python3 tools/migration/readiness_shadow.py
+
 gate:
     just test
     just lint
     just types
     just runtime-verify
+    just readiness-shadow
     just surface
     just ratchet
     uv run --no-project --with pytest==9.1.1 pytest -q -m golden

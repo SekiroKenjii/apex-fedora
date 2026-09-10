@@ -23,7 +23,7 @@ LAYERS = {
     "pipeline": 4,
     "config": 5,
     "targeting": 5,
-    "evidence": 6,
+    "attestation": 6,
     "workspace": 6,
     "trust": 6,
     "provisioning": 6,
