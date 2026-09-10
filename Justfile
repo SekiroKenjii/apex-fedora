@@ -167,7 +167,21 @@ golden-freeze scratch:
 golden scratch:
     python3 tools/migration/golden_corpus.py verify --scratch "{{scratch}}"
 
+surface-freeze scratch:
+    python3 tools/migration/surface_contract.py freeze --scratch "{{scratch}}"
+
+surface:
+    python3 tools/migration/surface_contract.py check
+
+ratchet-freeze:
+    python3 tools/migration/lint_ratchet.py freeze
+
+ratchet:
+    python3 tools/migration/lint_ratchet.py check
+
 gate:
     just test
     just runtime-verify
+    just surface
+    just ratchet
     uv run --no-project --with pytest==9.1.1 pytest -q -m golden

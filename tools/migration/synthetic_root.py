@@ -167,9 +167,8 @@ def build(root: Path) -> Path:
         archive / "candidate.json", candidate_document(SUPERSEDED_DIGEST, SUPERSEDED_BUILD_ID)
     )
     write_json(archive / "readiness.json", {"digest": SUPERSEDED_DIGEST, "ready_to_install": False})
-    archived = record_document(
-        dataclasses.replace(RECORDS[1], capture=None, proofs=()), SUPERSEDED_DIGEST, SUPERSEDED_AT, root
-    )
+    plain = dataclasses.replace(RECORDS[1], capture=None, proofs=())
+    archived = record_document(plain, SUPERSEDED_DIGEST, SUPERSEDED_AT, root)
     write_json(archive / "evidence" / f"{RECORDS[1].check}.json", archived)
 
     export = root / "exports" / BUILD_ID

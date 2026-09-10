@@ -19,15 +19,13 @@ import sys
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
+from migration import normalisers, synthetic_root
+
 REPOSITORY = Path(__file__).resolve().parents[2]
 GOLDEN_DIRECTORY = REPOSITORY / "tests" / "golden"
 ENTRY_POINT = REPOSITORY / "tools" / "apex.py"
 TRACER = REPOSITORY / "tools" / "migration" / "effect_trace.py"
 INVOCATION_TIMEOUT = 60
-
-sys.path.insert(0, str(GOLDEN_DIRECTORY))
-import normalisers  # noqa: E402
-
 
 class Tier(enum.StrEnum):
     PURE = "pure"
@@ -60,18 +58,24 @@ REFUSALS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("artifact-missing-build", ("artifact", "qcow2")),
     ("build-unknown-profile", ("build", "gentoo")),
     ("builder-unknown-action", ("builder", "levitate")),
-    ("select-candidate-bad-id", ("select-candidate", "--build", "zzz", "--trusted-key", "/dev/null")),
+    ("select-candidate-bad-id",
+     ("select-candidate", "--build", "zzz", "--trusted-key", "/dev/null")),
     ("select-candidate-missing-key", ("select-candidate", "--build", "0" * 32)),
-    ("verify-artifact-missing-directory", ("verify-artifact", "/nonexistent", "--trusted-key", "/dev/null")),
+    ("verify-artifact-missing-directory",
+     ("verify-artifact", "/nonexistent", "--trusted-key", "/dev/null")),
     ("test-vm-missing-disk", ("test-vm",)),
     ("test-live-check-unknown-case", ("test-live-check", "no-such-probe")),
     ("test-installer-fault-unknown-case", ("test-installer-fault", "no-such-fault")),
     ("installer-logs-prepare-with-run", ("installer-logs", "prepare", "--run", "/tmp/x")),
     ("installer-logs-collect-without-token", ("installer-logs", "collect", "--run", "/tmp/x")),
-    ("record-unknown-check", ("record", "no.such.check", "PASS", "--environment", "vm", "--description", "d")),
-    ("record-hardware-from-vm", ("record", "audio.speakers", "PASS", "--environment", "vm", "--description", "d")),
-    ("record-pass-without-proof", ("record", "boot.ten-cycles", "PASS", "--environment", "vm", "--description", "d")),
-    ("record-invalid-status", ("record", "boot.ten-cycles", "MAYBE", "--environment", "vm", "--description", "d")),
+    ("record-unknown-check",
+     ("record", "no.such.check", "PASS", "--environment", "vm", "--description", "d")),
+    ("record-hardware-from-vm",
+     ("record", "audio.speakers", "PASS", "--environment", "vm", "--description", "d")),
+    ("record-pass-without-proof",
+     ("record", "boot.ten-cycles", "PASS", "--environment", "vm", "--description", "d")),
+    ("record-invalid-status",
+     ("record", "boot.ten-cycles", "MAYBE", "--environment", "vm", "--description", "d")),
     ("decode-coefficient-missing-operands", ("decode-coefficient", "0x20")),
     ("test-fingerprint-missing-build", ("test-fingerprint",)),
     ("build-nvidia-missing-build", ("build-nvidia",)),
@@ -110,7 +114,9 @@ def invocations() -> Iterator[Invocation]:
         )
     yield Invocation("report", Tier.PURE, ("report",))
     yield Invocation("builder-status-absent", Tier.PURE, ("builder", "status"))
-    yield Invocation("commit-msg-valid", Tier.PURE, ("git-hook", "commit-msg", "<subject>"))
+    yield Invocation(
+        "commit-msg-valid", Tier.PURE, ("git-hook", "commit-msg", "<subject>")
+    )
     for slug, _ in INVALID_SUBJECTS:
         yield Invocation(slug, Tier.REFUSAL, ("git-hook", "commit-msg", "<subject>"))
     for slug, arguments in REFUSALS:
@@ -146,7 +152,9 @@ def run(invocation: Invocation, root: Path, scratch: Path) -> dict[str, object]:
         return normalisers.normalise(text, root=str(root), repository=str(REPOSITORY))
 
     trace = json.loads(trace_file.read_text()) if trace_file.is_file() else {"events": []}
-    effects = [json.loads(normalise(json.dumps(event, sort_keys=True))) for event in trace["events"]]
+    effects = [
+        json.loads(normalise(json.dumps(event, sort_keys=True))) for event in trace["events"]
+    ]
     return {
         "slug": invocation.slug,
         "tier": str(invocation.tier),
@@ -179,8 +187,6 @@ def write(results: Sequence[dict[str, object]]) -> None:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    from migration import synthetic_root
-
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["record", "verify"])
     parser.add_argument("--scratch", type=Path, required=True)
@@ -213,5 +219,4 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, str(REPOSITORY / "tools"))
     sys.exit(main())

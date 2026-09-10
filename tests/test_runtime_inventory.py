@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -150,3 +149,12 @@ def test_classify_treats_private_key_material_as_secret() -> None:
     assert inventory.classify(Path("a/host.pem"), 10) is inventory.Tier.SECRET
     assert inventory.classify(Path("a/passphrase.txt"), 10) is inventory.Tier.SECRET
     assert inventory.classify(Path("a/id_ed25519.pub"), 10) is inventory.Tier.DIGEST
+
+
+def test_a_symlink_target_is_recorded_exactly_as_stored(root: Path) -> None:
+    """`Path.readlink` drops a trailing slash. An integrity manifest must not."""
+    (root / "trailing").symlink_to("evidence/")
+
+    entry = entry_for(manifest_of(root), "trailing")
+
+    assert entry["target"] == "evidence/"

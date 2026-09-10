@@ -106,7 +106,12 @@ def collect(root: Path, *, deep: bool) -> list[Entry]:
         mode = stat.S_IMODE(info.st_mode)
         if stat.S_ISLNK(info.st_mode):
             entries.append(
-                Entry(str(relative), Tier.SYMLINK, mode, info.st_size, target=os.readlink(absolute))
+                Entry(
+                    str(relative), Tier.SYMLINK, mode, info.st_size,
+                    # Path.readlink normalises a trailing slash away; the manifest must
+                    # record the target exactly as stored.
+                    target=os.readlink(absolute),  # noqa: PTH115
+                )
             )
             continue
         tier = classify(relative, info.st_size)

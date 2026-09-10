@@ -20,7 +20,7 @@ mechanism, and no row is ever removed.
 | G2 | Golden command output matches the baseline | P1 | Observable output unchanged |
 | G3 | Recorded effect traces match | P1 | argv, file writes and socket connects unchanged |
 | G4 | Runtime inventory matches the P0 manifest | P0 | Nothing under the runtime root was destroyed |
-| G5 | Justfile recipe names and arity cover the frozen surface | P2 | Existing commands still work |
+| G5 | Justfile recipe names and operands cover the frozen surface | P2 | Existing commands still work |
 | G6 | Advisory lint and typing counts did not increase | P2 | New code meets the house style |
 | G7 | Old and new readiness folds agree | P11 | Evidence semantics unchanged while both exist |
 | G8 | Generated assets match the handwritten originals | P19 | The generator reproduces what ships |
@@ -162,6 +162,69 @@ like coverage of checks that were never attempted.
 `golden_change`: the corpus is created here, so there is no prior baseline to change.
 `supersedes`: none.
 
+## P2. Installable package, frozen surface, legacy bridge
+
+Goal: make the new package tree possible without disturbing anything the operator types.
+
+### The surface is frozen against habit, not against the working tree
+
+`generated/justfile.surface.json` records every recipe and its operands as they stood at
+the `pre-restructure` tag: 51 recipes. `just surface` asserts the live
+justfile is a superset, so a later phase may add a recipe but may not rename one, remove one,
+or change the operands an existing one takes. All three cases were checked by making each
+change and observing the refusal.
+
+### The package exists beside the old tools rather than replacing them
+
+`src/apex/` now holds the distribution, with a console script entry point and a legacy bridge
+that dispatches the 30 current subcommands into `tools/apex.py`. The bridge allowlist only
+ever shrinks, which `tests/architecture/test_legacy_bridge.py` enforces against the previous
+commit.
+
+Nothing is rewired yet, because equivalence comes first.
+`tools/migration/entry_point_parity.py` runs 65 invocations through both entry points and
+compares exit code, stdout and stderr. They agree on every one.
+
+### The ratchet holds new code to the house style
+
+`generated/lint-ratchet.json` records findings per file across 132 files. A file in
+the baseline may improve but never regress. A file that is not in the baseline must report
+nothing, so anything written from here on is clean without anyone having to remember. Ruff is
+configured to the project line length of 100 with the rule set named in `docs/STYLE.md`.
+Everything under `src/` and `tools/migration/` reports no finding.
+
+### Two hazards found while doing this
+
+The name `apex` collides. `tools/apex.py` and the new `src/apex/` package cannot both be
+imported as `apex`, and a stale `tools/__pycache__/apex.cpython-314.pyc` kept resolving first
+even after the search path was corrected. The repository sets `PYTHONDONTWRITEBYTECODE` in the
+justfile, so the cache only appears when pytest is invoked directly. P20 removes the collision
+by deleting the old entry point; until then the search path order and a clean cache matter.
+
+A mechanical lint fix changed behaviour. Replacing `os.readlink` with `Path.readlink` to
+satisfy a path rule silently normalised a symlink target from `../../` to `../..`, and the
+runtime gate caught it as a difference in a root that had not changed. The exact stored target
+is restored, the rule is suppressed on that line with the reason written beside it, and
+`tests/test_runtime_inventory.py` now pins the behaviour. This is the failure mode the
+migration rule exists for: a style change that no test was watching.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Frozen recipes | 51 |
+| Bridged subcommands | 30 |
+| Entry point parity | 65 invocations, no difference |
+| Lint baseline | 132 files, 1097 findings |
+| New code findings | 0 |
+| Fast suite | 706 passed, 1 skipped |
+| Gates green | G1, G2, G3, G4, G5, G6 |
+
+`migration_red`: not applicable. Nothing moved; the package was added beside the old tree and
+proven equivalent before any rewiring.
+`golden_change`: none. Both entry points produce identical output, so the corpus is unchanged.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -169,5 +232,9 @@ just runtime-freeze         # record the runtime manifest, once
 just runtime-verify         # compare the current root against it
 just golden-freeze <dir>    # record the command corpus, once
 just golden <dir>           # replay every command and diff
+just surface-freeze <dir>   # freeze the operator command surface, once
+just surface                # check the live justfile still covers it
+just ratchet-freeze         # record the per-file lint baseline, once
+just ratchet                # check no file regressed
 just gate                   # the standing gate for the current phase
 ```
