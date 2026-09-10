@@ -154,3 +154,13 @@ report:
 
 readiness:
     python3 tools/apex.py readiness
+
+runtime-freeze:
+    python3 tools/migration/runtime_inventory.py record
+
+runtime-verify:
+    python3 tools/migration/runtime_inventory.py verify
+
+gate:
+    just test
+    just runtime-verify
