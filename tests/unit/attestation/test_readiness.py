@@ -6,6 +6,10 @@ happen before it, so the decision itself can be tested exhaustively without a fi
 
 from __future__ import annotations
 
+import dataclasses
+
+import pytest
+
 from apex.attestation import readiness
 from apex.kernel import claims, identifiers, refusals, verdicts
 
@@ -219,3 +223,35 @@ def test_the_counts_add_up_to_the_catalogue() -> None:
     )
 
     assert sum(outcome.counts.values()) == len(required)
+
+
+@pytest.mark.parametrize(
+    "verdict",
+    [
+        verdicts.PASSED,
+        verdicts.FAILED,
+        verdicts.BLOCKED,
+        verdicts.NotTested(refusals.RefusalReason.NO_VERIFIED_RESULT),
+    ],
+)
+def test_the_judgement_of_a_record_does_not_depend_on_whether_it_was_imported(
+    verdict: verdicts.Verdict,
+) -> None:
+    """The pin under the claim that importing moves no number.
+
+    It passes against the fold as written, which is the point: it must exist before imported
+    records start flowing, so that teaching `_judge` to read the flag fails loudly instead of
+    quietly moving eighteen, six and thirty-eight.
+    """
+    required = catalogue(("a.one", claims.EnvironmentKind.BUILD))
+    both = [
+        readiness.evaluate(
+            required=required,
+            records=[dataclasses.replace(resolved("a.one", verdict), imported=flag)],
+            candidate=DIGEST,
+        )
+        for flag in (False, True)
+    ]
+
+    assert both[0].verdicts == both[1].verdicts
+    assert both[0].counts == both[1].counts

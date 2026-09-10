@@ -14,6 +14,8 @@ class RefusalReason(enum.StrEnum):
     MALFORMED_IDENTIFIER = "malformed.identifier"
     MALFORMED_PACKAGE_COORDINATE = "malformed.package-coordinate"
     MALFORMED_VERDICT = "malformed.verdict"
+    MALFORMED_STORE_MARK = "malformed.store-mark"
+    MALFORMED_PROOF_REFERENCE = "malformed.proof-reference"
 
     NEGATIVE_QUANTITY = "quantity.negative"
     PORT_OUT_OF_RANGE = "quantity.port-out-of-range"
@@ -55,6 +57,8 @@ class RefusalReason(enum.StrEnum):
     PROOF_ALTERED = "evidence.proof-altered"
     PROOF_IS_EMPTY = "evidence.proof-is-empty"
     STORE_AREA_NOT_PERMITTED = "evidence.store-area-not-permitted"
+    STORE_VERSION_NOT_SUPPORTED = "evidence.store-version-not-supported"
+    LEGACY_IMPORT_NOT_REPROVEN = "evidence.legacy-import-not-reproven"
     RECORD_NOT_BOUND_TO_CANDIDATE = "evidence.record-not-bound-to-candidate"
 
     SHELL_STRING_NOT_ACCEPTED = "command.shell-string-not-accepted"

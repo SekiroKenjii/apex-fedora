@@ -1,62 +1,24 @@
-"""Turn the stored v1 documents into resolved records the fold can decide on.
+"""The shape the shadow gate reads, over the versioned reader beneath it.
 
-Every cited proof is re-hashed here, on every call, with no cache. That is the one integrity
-property the current code genuinely has, and it is not a performance defect to remove: a
-digest trusted from metadata is a digest an editor can change.
+This exists only while the pre-restructure fold is still the authority. Its callers want a
+records-and-candidate pair; the reading carries more than that, including the store version and
+every fault, which is why `just readiness-table` exists beside the shadow. At cutover the
+callers move to `reading.read_store` and this module goes.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from apex.attestation import catalogue, readiness
-from apex.kernel import claims, hashing, identifiers
-from apex.model import runtimestate
-
-
-def _proofs_intact(record: runtimestate.StoredRecord, evidence_root: Path) -> bool:
-    for proof in record.proofs:
-        target = evidence_root / proof.relative_path
-        if target.is_symlink() or not target.is_file():
-            return False
-        if not target.resolve().is_relative_to(evidence_root.resolve()):
-            return False
-        with target.open("rb") as handle:
-            observed = hashing.digest_stream(iter(lambda: handle.read(hashing.READ_CHUNK), b""))
-        if observed != proof.digest:
-            return False
-    return True
-
-
-def resolve(
-    stored: runtimestate.StoredRecord, *, evidence_root: Path, imported: bool = False
-) -> readiness.ResolvedRecord:
-    return readiness.ResolvedRecord(
-        check=stored.check,
-        verdict=stored.verdict,
-        environment=stored.environment,
-        candidate=stored.digest,
-        proofs_intact=_proofs_intact(stored, evidence_root),
-        proof_count=len(stored.proofs),
-        imported=imported,
-    )
+from apex.attestation import catalogue, readiness, reading
+from apex.kernel import claims, identifiers
 
 
 def resolve_store(runtime_root: Path) -> tuple[
     tuple[readiness.ResolvedRecord, ...], identifiers.Digest | None
 ]:
-    evidence_root = runtime_root / "evidence"
-    candidate_document = runtime_root / "candidate.json"
-    candidate = (
-        runtimestate.read_candidate(candidate_document).digest
-        if candidate_document.is_file()
-        else None
-    )
-    records = tuple(
-        resolve(stored, evidence_root=evidence_root)
-        for stored in runtimestate.read_evidence_directory(evidence_root)
-    )
-    return records, candidate
+    found = reading.read_store(runtime_root)
+    return found.records, found.candidate
 
 
 def required_environments() -> dict[str, claims.EnvironmentKind]:

@@ -1,7 +1,8 @@
 """Readers for the documents the pre-restructure tools wrote.
 
-Absence of a schema stamp means version one. Nothing here writes, renames or repairs: the
-stored evidence is the only irreplaceable thing in the project, so it is read where it lies.
+Which version is on disk is decided by `apex.model.storemark`, the only reader of the mark.
+Nothing here writes, renames or repairs: the stored evidence is the only irreplaceable thing
+in the project, so it is read where it lies.
 """
 
 from __future__ import annotations
@@ -13,7 +14,8 @@ from pathlib import Path
 
 from apex.kernel import claims, errors, identifiers, refusals, verdicts
 
-EVIDENCE_HISTORY_DIRECTORY = "history"
+EVIDENCE_DIRECTORY = "evidence"
+CANDIDATE_NAME = "candidate.json"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -78,6 +80,18 @@ def _environment(document: Mapping[str, object], path: Path) -> tuple[claims.Env
     return kind, str(raw.get("description", ""))
 
 
+def _proof_reference(entry: object, path: Path, index: int) -> ProofReference:
+    if not isinstance(entry, dict) or "path" not in entry or "sha256" not in entry:
+        raise errors.Refusal(
+            refusals.RefusalReason.MALFORMED_PROOF_REFERENCE,
+            subject=f"{path.name}: proof entry {index}",
+        )
+    return ProofReference(
+        relative_path=str(entry["path"]),
+        digest=identifiers.Digest.parse(str(entry["sha256"])),
+    )
+
+
 def read_candidate(path: Path) -> StoredCandidate:
     document = _document(path)
     verification = document.get("verification")
@@ -93,11 +107,8 @@ def read_evidence_record(path: Path) -> StoredRecord:
     kind, description = _environment(document, path)
     proofs = document.get("proof")
     references = tuple(
-        ProofReference(
-            relative_path=str(item["path"]),
-            digest=identifiers.Digest.parse(str(item["sha256"])),
-        )
-        for item in (proofs if isinstance(proofs, list) else [])
+        _proof_reference(item, path, index)
+        for index, item in enumerate(proofs if isinstance(proofs, list) else [])
     )
     return StoredRecord(
         check=identifiers.CheckId(str(document.get("check", ""))),
@@ -128,14 +139,14 @@ def read_candidate_history(directory: Path) -> tuple[ArchivedCandidate, ...]:
         return ()
     archives = []
     for archive in sorted(path for path in directory.iterdir() if path.is_dir()):
-        candidate = archive / "candidate.json"
+        candidate = archive / CANDIDATE_NAME
         if not candidate.is_file():
             continue
         archives.append(
             ArchivedCandidate(
                 directory=archive,
                 candidate=read_candidate(candidate),
-                records=read_evidence_directory(archive / "evidence"),
+                records=read_evidence_directory(archive / EVIDENCE_DIRECTORY),
             )
         )
     return tuple(archives)

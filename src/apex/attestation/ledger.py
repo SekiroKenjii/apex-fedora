@@ -46,12 +46,13 @@ RECORD_MODE = quantities.FileMode(0o600)
 class EntryKind(enum.StrEnum):
     """What an entry does to the record it names.
 
-    Only one kind exists today. The field is written anyway, because the chain is append-only
-    and adding a discriminator after entries exist would leave older entries without one. A
-    later kind is a new member; every entry already written stays correctly labelled.
+    A recorded result was produced by the ports that ran the check. An imported one was read
+    out of the store the pre-restructure tools wrote, where no port witnessed anything, and it
+    carries the permanent limits in `attesting.LEGACY_LIMITS` for as long as it exists.
     """
 
     RECORDED = "recorded"
+    IMPORTED = "imported"
 
 
 class Break(enum.StrEnum):

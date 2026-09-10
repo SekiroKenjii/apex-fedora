@@ -162,10 +162,10 @@ runtime-verify:
     python3 tools/migration/runtime_inventory.py verify
 
 golden-freeze scratch:
-    python3 tools/migration/golden_corpus.py record --scratch "{{scratch}}"
+    PYTHONPATH=tools python3 tools/migration/golden_corpus.py record --scratch "{{scratch}}"
 
 golden scratch:
-    python3 tools/migration/golden_corpus.py verify --scratch "{{scratch}}"
+    PYTHONPATH=tools python3 tools/migration/golden_corpus.py verify --scratch "{{scratch}}"
 
 surface-freeze scratch:
     python3 tools/migration/surface_contract.py freeze --scratch "{{scratch}}"
@@ -191,6 +191,12 @@ readiness-shadow:
 verify-chain:
     python3 tools/migration/verify_chain.py
 
+readiness-table:
+    python3 tools/migration/readiness_table.py
+
+readiness-table-strict:
+    python3 tools/migration/readiness_table.py --strict
+
 gate:
     just test
     just lint
@@ -198,6 +204,8 @@ gate:
     just runtime-verify
     just readiness-shadow
     just verify-chain
+    just readiness-table
+    just test-integration
     just surface
     just ratchet
     uv run --no-project --with pytest==9.1.1 pytest -q -m golden

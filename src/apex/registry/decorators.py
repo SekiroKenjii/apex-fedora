@@ -11,7 +11,7 @@ import inspect
 from apex.registry import descriptors, provenance, registry
 
 
-def _caller(depth: int = 2) -> provenance.Provenance:
+def caller(depth: int = 2) -> provenance.Provenance:
     frame = inspect.stack()[depth]
     module = inspect.getmodule(frame.frame)
     return provenance.Provenance(
@@ -28,5 +28,5 @@ class Collector:
         self.checks: registry.Registry[str, descriptors.CheckSpec] = registry.Registry("check")
 
     def check(self, spec: descriptors.CheckSpec, *, depth: int = 2) -> descriptors.CheckSpec:
-        self.checks.add(str(spec.id), spec, at=_caller(depth))
+        self.checks.add(str(spec.id), spec, at=caller(depth))
         return spec

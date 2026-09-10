@@ -152,7 +152,7 @@
    "exit_code": 0,
    "slug": "help-readiness",
    "stderr": "",
-   "stdout": "usage: apex.py readiness [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "stdout": "usage: apex.py readiness [-h] [--strict]\n\noptions:\n  -h, --help  show this help message and exit\n  --strict    Withhold every imported result\n",
    "tier": "pure"
   },
   {

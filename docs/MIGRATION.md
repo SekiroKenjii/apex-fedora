@@ -923,6 +923,96 @@ missing module.
 `golden_change`: none.
 `supersedes`: none.
 
+## P11. The versioned reader and the imported record
+
+### The store version is a registry key, not a branch
+
+`model/storemark.py` reads `<root>/schema.json` once and answers with one of three values:
+unmarked, marked with a version, or unreadable. Absence is a positive answer rather than a
+fallback, so a mark that exists but cannot be parsed can never be handed to the oldest reader.
+
+A reader registers under the marks it claims. `storereaders/v1_reader.py` claims both the absent
+mark and version one. Supporting a later store is one new file in that directory, and two
+architecture tests hold that claim to account: every module there declares exactly one reader,
+and a mark claim constructed anywhere else in the package fails. Both were checked by planting a
+violation and watching them go red.
+
+### Four measured regressions in code already committed
+
+The review that produced this design found these by running the code, not by reading it. Each
+was confirmed by hand, and each guard was verified load-bearing by deleting it and watching the
+matching test fail.
+
+| Defect | What it did |
+|---|---|
+| No per-record isolation | One unreadable document made the whole store return nothing |
+| Symlinked record skipped silently | The check read as absent while the file sat on disk |
+| Proof entry indexed directly | A malformed entry escaped as a bare key error, not a refusal |
+| `candidate or found.candidate` | A store with no candidate reported eighteen passes where the code it replaces refuses every record as unbound |
+
+The last one is the sharpest. The shadow gate returns early when there is no candidate, so it
+could not have caught it. The v1 reader now drops every record and names the fault.
+
+### Strict readiness withholds a claim; it does not erase a finding
+
+The plan says strict treats every imported record as not tested. Read literally that also demotes
+the six blocked records the operator recorded, and blocked is what a detected fault looks like:
+an altered proof, a record bound to another build, a pass with nothing behind it.
+`readiness._judge` exists so a fault cannot look like a check nobody ran, and the literal reading
+undoes that.
+
+So strict narrows to verdicts that permit installation. On the real store it withholds eighteen
+passes and leaves six blocked exactly where the default fold put them: 0 PASS, 6 BLOCKED,
+56 NOT TESTED, not ready.
+
+The guard originally proposed for this was `claims_less`, and it has none. `NOT TESTED` ranks
+below `BLOCKED`, so `claims_less(BLOCKED, NotTested)` is true and the guard passes green on
+exactly the erasure it was offered as proof against. The test that replaced it states the
+property directly: if the default verdict is not a pass, the strict verdict equals it.
+
+### What a reader declares is stamped on what it produces
+
+`StoreReaderSpec` is handed back to its own read function, so a reader stamps its declared kind
+and limits rather than repeating them as constants. `Attestation` refuses three mismatches as
+defects: a kind disagreeing with the record, an imported record missing either permanent limit,
+and a recorded one carrying a legacy limit. A reader that quietly stopped marking records cannot
+construct a value.
+
+The two permanent limits are properties of the v1 format, not of any one record. Its environment
+came from an argument instead of the port that ran the check, and its binding to a candidate was
+never read back. Re-hashing retires neither.
+
+### Nothing was written under the runtime root
+
+`just runtime-verify` reports the same merkle root as at P0 with zero differences. No mark is
+written, no proof object, no chain line. Reading the store creates nothing, and a test compares a
+full path, mode and size inventory before and after to keep it that way.
+
+### The golden recipes were broken before this phase
+
+`just golden` and `just golden-freeze` both failed with a missing module. They only ever worked
+through pytest, which sets the path, and the gate runs the pytest form, so nothing noticed. Both
+recipes now set the path themselves.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Suite | 1238 passed, 7 skipped |
+| Strict type check | clean over 160 files |
+| Real store through the versioned reader | 18 PASS, 6 BLOCKED, 38 NOT TESTED, not ready |
+| Strict on the real store | 6 BLOCKED, 56 NOT TESTED, 18 withheld |
+| Runtime merkle root | unchanged, 0 differences |
+| Gates green | G1 to G7, plus the readiness table and the integration cases |
+
+`migration_red`: the mark, attestation, election and retraction suites were written first and
+observed failing. The reading suite was written after its implementation, so each of its four
+guards was instead proved load-bearing by deletion, which is the stronger check.
+`golden_change`: one slug, `help-readiness`. Its usage line gains `[--strict]` and its options
+block gains one line. No invocation was added or removed, so the tier counts above are unchanged,
+and `help-top-level`, `unknown-subcommand` and `no-subcommand` were confirmed byte identical.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -938,5 +1028,7 @@ just lint                   # style rules over the restructured code
 just types                  # strict type check over the package
 just readiness-shadow       # compare the new readiness fold with the old one
 just verify-chain           # replay the attestation chain and name the first break
+just readiness-table        # read the real store through the versioned reader
+just readiness-table-strict # the same, withholding every imported result
 just gate                   # the standing gate for the current phase
 ```

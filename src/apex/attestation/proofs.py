@@ -13,6 +13,7 @@ from __future__ import annotations
 import dataclasses
 
 from apex.kernel import errors, hashing, identifiers, quantities, refusals, safepaths
+from apex.model import runtimestate
 from apex.ports import files
 from apex.registry import descriptors
 
@@ -21,7 +22,7 @@ LEDGER_DIRECTORY = "ledger"
 CHAIN_NAME = "chain.jsonl"
 HEAD_NAME = "head.json"
 FAN_OUT = 2
-LEGACY_AREA = "evidence"
+LEGACY_AREA = runtimestate.EVIDENCE_DIRECTORY
 DEFAULT_AREA = "attestation"
 OBJECT_MODE = quantities.FileMode(0o600)
 OVERREAD = 1
