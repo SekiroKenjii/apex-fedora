@@ -1,4 +1,5 @@
 {
+ "configuration": "3ca5bc44930db751bf9f5dff3db8e973504b157d8ed1c96ecb75b75b00f09b58",
  "files": {
   "guest/clean-image.py": 3,
   "guest/compose-shell-theme.py": 2,
@@ -95,7 +96,7 @@
   "tests/test_ventoy.py": 9,
   "tests/test_vm.py": 7,
   "tools/apex.py": 3,
-  "tools/apexlib/common.py": 5,
+  "tools/apexlib/common.py": 4,
   "tools/apexlib/console.py": 7,
   "tools/apexlib/evidence.py": 13,
   "tools/apexlib/fprinttrace.py": 17,

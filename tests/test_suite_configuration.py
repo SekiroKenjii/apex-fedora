@@ -11,7 +11,8 @@ import tomllib
 from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[1]
-EXPECTED_INTEGRATION_CASES = 8
+# 8 inherited guest cases, plus 6 added in P4 that read the real evidence store.
+EXPECTED_INTEGRATION_CASES = 14
 EXPECTED_GOLDEN_CASES = 1
 
 

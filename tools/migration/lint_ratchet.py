@@ -9,9 +9,11 @@ in the baseline may improve but never regress.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
+import tomllib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -19,6 +21,14 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 BASELINE = REPOSITORY / "generated" / "lint-ratchet.json"
 TARGETS = ("src", "tools", "guest", "tests", "system_files")
 RUFF = ("uv", "run", "--no-project", "--with", "ruff==0.14.5", "ruff")
+
+
+def configuration_digest() -> str:
+    """A baseline is only meaningful under the configuration that produced it."""
+    document = tomllib.loads((REPOSITORY / "pyproject.toml").read_text())
+    ruff = document.get("tool", {}).get("ruff", {})
+    canonical = json.dumps(ruff, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
 
 
 def counts() -> dict[str, int]:
@@ -39,7 +49,10 @@ def freeze() -> int:
     tally = counts()
     BASELINE.parent.mkdir(parents=True, exist_ok=True)
     with BASELINE.open("w") as handle:
-        json.dump({"files": dict(sorted(tally.items()))}, handle, indent=1, sort_keys=True)
+        json.dump(
+            {"configuration": configuration_digest(), "files": dict(sorted(tally.items()))},
+            handle, indent=1, sort_keys=True,
+        )
         handle.write("\n")
     print(json.dumps({"files": len(tally), "findings": sum(tally.values())}, indent=2))
     return 0
@@ -57,7 +70,17 @@ def regressions(baseline: dict[str, int], observed: dict[str, int]) -> list[str]
 
 
 def check() -> int:
-    baseline = json.loads(BASELINE.read_text())["files"]
+    document = json.loads(BASELINE.read_text())
+    recorded = document.get("configuration")
+    current = configuration_digest()
+    if recorded != current:
+        print(
+            f"The lint configuration changed since the baseline was frozen "
+            f"({recorded} to {current}). Re-freeze it and say why in the phase log.",
+            file=sys.stderr,
+        )
+        return 1
+    baseline = document["files"]
     observed = counts()
     problems = regressions(baseline, observed)
     improved = sum(

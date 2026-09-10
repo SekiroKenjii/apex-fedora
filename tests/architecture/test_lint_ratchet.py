@@ -52,3 +52,16 @@ def test_removing_a_file_entirely_is_allowed() -> None:
 @pytest.mark.skipif(shutil.which("uv") is None, reason="NOT TESTED: uv is absent")
 def test_the_working_tree_has_no_regression() -> None:
     assert lint_ratchet.check() == 0
+
+
+def test_the_baseline_records_the_configuration_that_produced_it() -> None:
+    document = json.loads(lint_ratchet.BASELINE.read_text())
+
+    assert document["configuration"] == lint_ratchet.configuration_digest()
+
+
+def test_the_configuration_digest_covers_the_rule_selection() -> None:
+    first = lint_ratchet.configuration_digest()
+
+    assert len(first) == 64
+    assert first == lint_ratchet.configuration_digest()

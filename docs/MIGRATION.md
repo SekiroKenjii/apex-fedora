@@ -305,6 +305,80 @@ refusal.
 `golden_change`: none. Nothing the command surface does has changed.
 `supersedes`: none. The old modules remain in place and untouched.
 
+## P4. The domain model
+
+Goal: replace the raw dictionaries with types, and read the stored evidence without touching it.
+
+5 modules, 557 lines. Every test was written first and observed failing.
+
+### Host passthrough became inexpressible
+
+`machines.py` holds a closed device union. The current builder assembles a list of strings by
+hand and then searches it for six forbidden substrings, which cannot prove the absence of
+something nobody thought of. Here there is simply no union member that reaches host hardware,
+and the test asserts that no member name contains vfio, usb-host, virtfs, tap or bridge.
+
+Four invariants that live in the middle of the 50-line builder are now properties of the type.
+Firmware code is read only and rendering it writable raises. A disposable machine restricts
+its user network; a builder does not. Extra disks are refused outside a disposable machine,
+capped at two, and refused when repeated or when the same file is also the root disk.
+
+`OwnedTestVm` cannot be constructed for a builder, so a destructive operation that takes that
+type as a parameter has proof of ownership in its signature rather than a check each caller
+may forget. The identity compares four fields rather than a whole document, so adding a field
+to the stored state cannot silently change what a comparison means.
+
+### The stored evidence reads, and nothing was written
+
+`runtimestate.py` parses the version one documents where they lie. Run against the operator's
+real store it reads the candidate, 24 evidence records, 193 proof references, 20 superseded
+records and 3 archived candidates. The tally is 18 passed and 6 blocked, and the catalogue
+holds 62 checks, so the 38 not tested reconcile exactly with the recorded readiness. The
+runtime gate reported no difference afterwards.
+
+Malformed input is refused rather than guessed: a short digest, an unknown status and an
+unknown environment kind each raise with their own reason.
+
+### Three kinds of version value, separated by type
+
+A release profile has no digest field and a pinned artifact has no release field. Both are
+asserted by reading the dataclass annotations, so the separation cannot erode by someone
+adding a convenient field.
+
+The practical consequence is in the test that moves to the next release: it replaces five
+profile fields and asserts the rendered package name changes, with no other code involved.
+
+A constraint may defer to the image with `SameAsImage`, which is how the kernel and compiler
+stop being hand-edited lock fields that a routine erratum invalidates.
+
+Upstream prose carries the release it was validated against and sits beside a structural
+field, so a rewording degrades a proof rather than inverting it.
+
+### A weak gate found and fixed
+
+The lint ratchet compared counts across two different configurations. Adding the naming-rule
+exemption in P3 silenced one finding in an old file, and the ratchet reported an improvement
+that was really a configuration change. The baseline now records a digest of the lint
+configuration and refuses to compare against a different one. Verified by changing the ignore
+list and observing the refusal.
+
+The opt-in case count moved from 8 to 14 because this phase adds six tests that read the real
+store. The suite configuration test caught it, which is what it is for.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Model modules | 5 |
+| Suite | 886 passed, 14 skipped |
+| Real store | 24 records, 3 archives, read only |
+| Strict type check | clean over 22 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: every module under `tests/unit/model/` was written first and observed failing.
+`golden_change`: none.
+`supersedes`: none. The old modules are untouched.
+
 ## Commands
 
 ```sh

@@ -29,6 +29,11 @@ class RefusalReason(enum.StrEnum):
 
     LINE_EXCEEDS_LIMIT = "bounded.line-exceeds-limit"
 
+    DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
+    DUPLICATE_DEVICE = "machine.duplicate-device"
+    TOO_MANY_DEVICES = "machine.too-many-devices"
+    NOT_A_DISPOSABLE_MACHINE = "machine.not-disposable"
+
     NO_VERIFIED_RESULT = "evidence.no-verified-result"
     HARDWARE_REQUIRES_PHYSICAL = "evidence.hardware-requires-physical"
     PASS_REQUIRES_PROOF = "evidence.pass-requires-proof"
