@@ -10,5 +10,8 @@ dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["tools"]
-addopts = "-ra -p no:cacheprovider"
-markers = ["integration: requires file-backed guest artifacts"]
+addopts = "-ra -p no:cacheprovider -m 'not integration and not golden'"
+markers = [
+    "integration: requires file-backed guest artifacts",
+    "golden: replays every command against the captured corpus",
+]

@@ -1,0 +1,984 @@
+{
+ "invocations": [
+  {
+   "arguments": [
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-top-level",
+   "stderr": "",
+   "stdout": "usage: apex.py [-h]\n               {doctor,hooks,sources,report,readiness,trust-development-key,test-power-loss,installer-fixtures,test-installer-trust,hardware-snapshot,builder,git-hook,build,artifact,test-fingerprint,build-nvidia,ventoy-media,test-vm,test-hotplug-usb,test-live-check,test-resume,test-compare-disks,test-installer-fault,test-installer-fault-collect,installer-logs,verify-artifact,test-artifact,decode-coefficient,select-candidate,record} ...\n\nApex isolated build and test tools\n\npositional arguments:\n  {doctor,hooks,sources,report,readiness,trust-development-key,test-power-loss,installer-fixtures,test-installer-trust,hardware-snapshot,builder,git-hook,build,artifact,test-fingerprint,build-nvidia,ventoy-media,test-vm,test-hotplug-usb,test-live-check,test-resume,test-compare-disks,test-installer-fault,test-installer-fault-collect,installer-logs,verify-artifact,test-artifact,decode-coefficient,select-candidate,record}\n\noptions:\n  -h, --help            show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "artifact",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-artifact",
+   "stderr": "",
+   "stdout": "usage: apex.py artifact [-h] --build BUILD_ID [--test-access] {qcow2,installer,live}\n\npositional arguments:\n  {qcow2,installer,live}\n\noptions:\n  -h, --help            show this help message and exit\n  --build BUILD_ID\n  --test-access         Add a private test account and SSH boot argument to QCOW2 only\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "build",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-build",
+   "stderr": "",
+   "stdout": "usage: apex.py build [-h] [{fedora,cachyos}]\n\npositional arguments:\n  {fedora,cachyos}\n\noptions:\n  -h, --help        show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "build-nvidia",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-build-nvidia",
+   "stderr": "",
+   "stdout": "usage: apex.py build-nvidia [-h] --build BUILD_ID\n\noptions:\n  -h, --help        show this help message and exit\n  --build BUILD_ID\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "builder",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-builder",
+   "stderr": "",
+   "stdout": "usage: apex.py builder [-h] {prepare,start,stop,status,ssh}\n\npositional arguments:\n  {prepare,start,stop,status,ssh}\n\noptions:\n  -h, --help            show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "decode-coefficient",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-decode-coefficient",
+   "stderr": "",
+   "stdout": "usage: apex.py decode-coefficient [-h] nid verb parameter\n\npositional arguments:\n  nid\n  verb\n  parameter\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "doctor",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-doctor",
+   "stderr": "",
+   "stdout": "usage: apex.py doctor [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-git-hook",
+   "stderr": "",
+   "stdout": "usage: apex.py git-hook [-h] {pre-commit,commit-msg,pre-push} [arguments ...]\n\npositional arguments:\n  {pre-commit,commit-msg,pre-push}\n  arguments\n\noptions:\n  -h, --help            show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "hardware-snapshot",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-hardware-snapshot",
+   "stderr": "",
+   "stdout": "usage: apex.py hardware-snapshot [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "hooks",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-hooks",
+   "stderr": "",
+   "stdout": "usage: apex.py hooks [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "installer-fixtures",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-installer-fixtures",
+   "stderr": "",
+   "stdout": "usage: apex.py installer-fixtures [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "installer-logs",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-installer-logs",
+   "stderr": "",
+   "stdout": "usage: apex.py installer-logs [-h] [--run RUN_DIRECTORY] [--token TOKEN] {prepare,collect}\n\npositional arguments:\n  {prepare,collect}\n\noptions:\n  -h, --help           show this help message and exit\n  --run RUN_DIRECTORY\n  --token TOKEN\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "readiness",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-readiness",
+   "stderr": "",
+   "stdout": "usage: apex.py readiness [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "record",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-record",
+   "stderr": "",
+   "stdout": "usage: apex.py record [-h] --environment {build,vm,physical,operator} --description DESCRIPTION\n                      [--proof PROOF] [--reason REASON]\n                      check {BLOCKED,FAIL,NOT TESTED,PASS}\n\npositional arguments:\n  check\n  {BLOCKED,FAIL,NOT TESTED,PASS}\n\noptions:\n  -h, --help            show this help message and exit\n  --environment {build,vm,physical,operator}\n  --description DESCRIPTION\n  --proof PROOF\n  --reason REASON\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "report",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-report",
+   "stderr": "",
+   "stdout": "usage: apex.py report [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "select-candidate",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-select-candidate",
+   "stderr": "",
+   "stdout": "usage: apex.py select-candidate [-h] --build BUILD_ID --trusted-key TRUSTED_KEY\n\noptions:\n  -h, --help            show this help message and exit\n  --build BUILD_ID\n  --trusted-key TRUSTED_KEY\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "sources",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-sources",
+   "stderr": "",
+   "stdout": "usage: apex.py sources [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-artifact",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-artifact",
+   "stderr": "",
+   "stdout": "usage: apex.py test-artifact [-h] --trusted-key TRUSTED_KEY directory\n\npositional arguments:\n  directory\n\noptions:\n  -h, --help            show this help message and exit\n  --trusted-key TRUSTED_KEY\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-compare-disks",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-compare-disks",
+   "stderr": "",
+   "stdout": "usage: apex.py test-compare-disks [-h] run_directory\n\npositional arguments:\n  run_directory\n\noptions:\n  -h, --help     show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-fingerprint",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-fingerprint",
+   "stderr": "",
+   "stdout": "usage: apex.py test-fingerprint [-h] --build BUILD_ID\n\noptions:\n  -h, --help        show this help message and exit\n  --build BUILD_ID\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-hotplug-usb",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-hotplug-usb",
+   "stderr": "",
+   "stdout": "usage: apex.py test-hotplug-usb [-h] source\n\npositional arguments:\n  source\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-installer-fault",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-installer-fault",
+   "stderr": "",
+   "stdout": "usage: apex.py test-installer-fault [-h] [--wrong-key WRONG_KEY]\n                                    {missing-signature,altered-signature,wrong-key,changed-manifest,corrupt-blob,unexpected-source}\n\npositional arguments:\n  {missing-signature,altered-signature,wrong-key,changed-manifest,corrupt-blob,unexpected-source}\n\noptions:\n  -h, --help            show this help message and exit\n  --wrong-key WRONG_KEY\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-installer-fault-collect",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-installer-fault-collect",
+   "stderr": "",
+   "stdout": "usage: apex.py test-installer-fault-collect [-h] run_directory\n\npositional arguments:\n  run_directory\n\noptions:\n  -h, --help     show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-installer-trust",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-installer-trust",
+   "stderr": "",
+   "stdout": "usage: apex.py test-installer-trust [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-live-check",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-live-check",
+   "stderr": "",
+   "stdout": "usage: apex.py test-live-check [-h]\n                               {observe,ventoy-observe,write-denial,usb-write-denial,lock-fault}\n\npositional arguments:\n  {observe,ventoy-observe,write-denial,usb-write-denial,lock-fault}\n\noptions:\n  -h, --help            show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-power-loss",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-power-loss",
+   "stderr": "",
+   "stdout": "usage: apex.py test-power-loss [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-resume",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-resume",
+   "stderr": "",
+   "stdout": "usage: apex.py test-resume [-h] [--without-iso] run_directory\n\npositional arguments:\n  run_directory\n\noptions:\n  -h, --help     show this help message and exit\n  --without-iso\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "test-vm",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-test-vm",
+   "stderr": "",
+   "stdout": "usage: apex.py test-vm [-h] [--iso ISO] [--guest-ssh] [--serial-console] [--extra-disk EXTRA_DISK]\n                       [--usb-test-bus] [--boot-usb BOOT_USB]\n                       disk\n\npositional arguments:\n  disk\n\noptions:\n  -h, --help            show this help message and exit\n  --iso ISO\n  --guest-ssh\n  --serial-console      Enable a private Unix serial socket for disposable guest diagnostics\n  --extra-disk EXTRA_DISK\n  --usb-test-bus        Add an emulated USB controller without host passthrough\n  --boot-usb BOOT_USB   Boot a fresh QCOW2 overlay as emulated USB with two internal fixtures\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "trust-development-key",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-trust-development-key",
+   "stderr": "",
+   "stdout": "usage: apex.py trust-development-key [-h]\n\noptions:\n  -h, --help  show this help message and exit\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "ventoy-media",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-ventoy-media",
+   "stderr": "",
+   "stdout": "usage: apex.py ventoy-media [-h] --live-output LIVE_OUTPUT --ubuntu UBUNTU\n                            --trusted-key TRUSTED_KEY --checksums CHECKSUMS --signature SIGNATURE\n                            --keyring KEYRING\n\noptions:\n  -h, --help            show this help message and exit\n  --live-output LIVE_OUTPUT\n  --ubuntu UBUNTU\n  --trusted-key TRUSTED_KEY\n  --checksums CHECKSUMS\n  --signature SIGNATURE\n  --keyring KEYRING\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "verify-artifact",
+    "--help"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "help-verify-artifact",
+   "stderr": "",
+   "stdout": "usage: apex.py verify-artifact [-h] --trusted-key TRUSTED_KEY directory\n\npositional arguments:\n  directory\n\noptions:\n  -h, --help            show this help message and exit\n  --trusted-key TRUSTED_KEY\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "decode-coefficient",
+    "0x20",
+    "0x500",
+    "0x0"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "decode-coefficient-0x500-0x0",
+   "stderr": "",
+   "stdout": "{\n  \"nid\": \"0x20\",\n  \"hwdep_word\": \"0x20050000\",\n  \"canonical_verb\": \"0x500\",\n  \"effective_parameter\": \"0x0000\",\n  \"parameter_changed_by_overlap\": false,\n  \"device_access\": false\n}\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "decode-coefficient",
+    "0x20",
+    "0x400",
+    "0xff"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "decode-coefficient-0x400-0xff",
+   "stderr": "",
+   "stdout": "{\n  \"nid\": \"0x20\",\n  \"hwdep_word\": \"0x200400ff\",\n  \"canonical_verb\": \"0x400\",\n  \"effective_parameter\": \"0x00ff\",\n  \"parameter_changed_by_overlap\": false,\n  \"device_access\": false\n}\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "decode-coefficient",
+    "0x20",
+    "0xc00",
+    "0x11"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "decode-coefficient-0xc00-0x11",
+   "stderr": "",
+   "stdout": "{\n  \"nid\": \"0x20\",\n  \"hwdep_word\": \"0x200c0011\",\n  \"canonical_verb\": \"0xc00\",\n  \"effective_parameter\": \"0x0011\",\n  \"parameter_changed_by_overlap\": false,\n  \"device_access\": false\n}\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "decode-coefficient",
+    "0x14",
+    "0x3",
+    "0x80"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "decode-coefficient-0x3-0x80",
+   "stderr": "BLOCKED: This decoder only accepts coefficient read/write verbs\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "report"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    },
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    },
+    {
+     "kind": "write",
+     "target": "<root>"
+    },
+    {
+     "kind": "write",
+     "target": "<root>/<tmpname>"
+    },
+    {
+     "kind": "rename",
+     "target": "<root>/<tmpname>"
+    }
+   ],
+   "exit_code": 0,
+   "slug": "report",
+   "stderr": "",
+   "stdout": "{\n  \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n  \"ready_to_install\": false,\n  \"errors\": [\n    \"live.direct.json: Evidence file missing or changed for live.direct\"\n  ],\n  \"checks\": {\n    \"build\": {\n      \"image.lint\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"rpm.dependencies\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"kernel.modules\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"nvidia.kernel-match\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"initramfs.installed\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"initramfs.live\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.parity\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.virtual-cleanup\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"signature.accept\": {\n        \"check\": \"signature.accept\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Signed bundle verified against the development key\",\n          \"kind\": \"build\"\n        },\n        \"proof\": [\n          {\n            \"path\": \"<id-0>/0-results.json\",\n            \"sha256\": \"d4dae961be67d1c7e53cc2c5e9612af0751c750abb65ac3199457ea58b0d310a\"\n          }\n        ],\n        \"reason\": \"Development signing only.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"PASS\"\n      },\n      \"signature.reject\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"sources.locked\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"vm\": {\n      \"installer.offline\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installer.cancel\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installer.other-disks\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installer.payload-rejection\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.ten-cycles\": {\n        \"check\": \"boot.ten-cycles\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Ten offline boots of the frozen private QCOW2\",\n          \"kind\": \"vm\"\n        },\n        \"proof\": [\n          {\n            \"path\": \"<id-1>/0-summary.json\",\n            \"sha256\": \"73eb89e2d05e1cd5fc6993b1bf38047ba813f081d3ead9f8d8956b1a97d58a32\"\n          },\n          {\n            \"path\": \"<id-1>/1-application.png\",\n            \"sha256\": \"847c41ea4ad83eb451684c913f9d893e3b19273fed8960a7ae6c811790088c1b\"\n          }\n        ],\n        \"reason\": \"Normal boots only; no claim of failed-deployment recovery.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"PASS\"\n      },\n      \"desktop.password-wayland\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"desktop.theme-surfaces\": {\n        \"check\": \"desktop.theme-surfaces\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Screenshot review found a light GTK3 window\",\n          \"kind\": \"vm\"\n        },\n        \"proof\": [\n          {\n            \"path\": \"<id-2>/0-review.json\",\n            \"sha256\": \"a68fe3d3cfcab940cb30226b04681f2aa8e748e887069c29befbcc26e47af4f5\"\n          }\n        ],\n        \"reason\": \"GTK3 falls back to light Adwaita without the dark alias.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"FAIL\"\n      },\n      \"boot.log-review\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"firstboot.offline\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"firstboot.interrupted\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.forward\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.rollback\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.disk-full\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.interrupted\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.power-loss\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.bad-signature\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.untrusted-source\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.gdm-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.dbus-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.root-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.initramfs-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.pre-userspace-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.grub-counter\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.tty-rescue\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.direct\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.ventoy\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.disk-protection\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"hardware\": {\n      \"coldboot.three-cycles\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"suspend.ten-cycles\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"audio.speakers\": {\n        \"check\": \"audio.speakers\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Prior user report of ALC294 speaker failure on this laptop\",\n          \"kind\": \"physical\"\n        },\n        \"proof\": [],\n        \"reason\": \"The reported fault is unresolved.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"BLOCKED\"\n      },\n      \"audio.microphone\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"audio.headphones\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"audio.resume\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.enroll\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.claim-cleanup\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.lock-unlock\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.reboot\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"gpu.offload\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"gpu.runtime-suspend\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"display.oled-hdmi\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"network.wifi-bluetooth\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"input.webcam-touchpad-fn\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"ubuntu.return-boot\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"recovery\": {\n      \"rescue.usb-boot\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"backup.off-device\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"backup.restore-drill\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"storage.review\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installation.operator-approval\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"git\": {\n      \"git.private-stage\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"git.commit-policy\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"git.outgoing-history\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    }\n  }\n}\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "builder",
+    "status"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 0,
+   "slug": "builder-status-absent",
+   "stderr": "",
+   "stdout": "null\n",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 0,
+   "slug": "commit-msg-valid",
+   "stderr": "",
+   "stdout": "",
+   "tier": "pure"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "commit-msg-too-long",
+   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "commit-msg-unknown-type",
+   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "commit-msg-missing-colon",
+   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "commit-msg-with-body",
+   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "commit-msg-with-co-author",
+   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "git-hook",
+    "commit-msg",
+    "<subject>"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "commit-msg-empty",
+   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "no-such-command"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "unknown-subcommand",
+   "stderr": "usage: apex.py [-h]\n               {doctor,hooks,sources,report,readiness,trust-development-key,test-power-loss,installer-fixtures,test-installer-trust,hardware-snapshot,builder,git-hook,build,artifact,test-fingerprint,build-nvidia,ventoy-media,test-vm,test-hotplug-usb,test-live-check,test-resume,test-compare-disks,test-installer-fault,test-installer-fault-collect,installer-logs,verify-artifact,test-artifact,decode-coefficient,select-candidate,record} ...\napex.py: error: argument command: invalid choice: 'no-such-command' (choose from doctor, hooks, sources, report, readiness, trust-development-key, test-power-loss, installer-fixtures, test-installer-trust, hardware-snapshot, builder, git-hook, build, artifact, test-fingerprint, build-nvidia, ventoy-media, test-vm, test-hotplug-usb, test-live-check, test-resume, test-compare-disks, test-installer-fault, test-installer-fault-collect, installer-logs, verify-artifact, test-artifact, decode-coefficient, select-candidate, record)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "no-subcommand",
+   "stderr": "usage: apex.py [-h]\n               {doctor,hooks,sources,report,readiness,trust-development-key,test-power-loss,installer-fixtures,test-installer-trust,hardware-snapshot,builder,git-hook,build,artifact,test-fingerprint,build-nvidia,ventoy-media,test-vm,test-hotplug-usb,test-live-check,test-resume,test-compare-disks,test-installer-fault,test-installer-fault-collect,installer-logs,verify-artifact,test-artifact,decode-coefficient,select-candidate,record} ...\napex.py: error: the following arguments are required: command\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "artifact"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "artifact-missing-kind",
+   "stderr": "usage: apex.py artifact [-h] --build BUILD_ID [--test-access] {qcow2,installer,live}\napex.py artifact: error: the following arguments are required: kind, --build\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "artifact",
+    "raw",
+    "--build",
+    "00000000000000000000000000000000"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "artifact-unknown-kind",
+   "stderr": "usage: apex.py artifact [-h] --build BUILD_ID [--test-access] {qcow2,installer,live}\napex.py artifact: error: argument kind: invalid choice: 'raw' (choose from qcow2, installer, live)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "artifact",
+    "qcow2"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "artifact-missing-build",
+   "stderr": "usage: apex.py artifact [-h] --build BUILD_ID [--test-access] {qcow2,installer,live}\napex.py artifact: error: the following arguments are required: --build\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "build",
+    "gentoo"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "build-unknown-profile",
+   "stderr": "usage: apex.py build [-h] [{fedora,cachyos}]\napex.py build: error: argument profile: invalid choice: 'gentoo' (choose from fedora, cachyos)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "builder",
+    "levitate"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "builder-unknown-action",
+   "stderr": "usage: apex.py builder [-h] {prepare,start,stop,status,ssh}\napex.py builder: error: argument action: invalid choice: 'levitate' (choose from prepare, start, stop, status, ssh)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "select-candidate",
+    "--build",
+    "zzz",
+    "--trusted-key",
+    "/dev/null"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "select-candidate-bad-id",
+   "stderr": "BLOCKED: Invalid build ID\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "select-candidate",
+    "--build",
+    "00000000000000000000000000000000"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "select-candidate-missing-key",
+   "stderr": "usage: apex.py select-candidate [-h] --build BUILD_ID --trusted-key TRUSTED_KEY\napex.py select-candidate: error: the following arguments are required: --trusted-key\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "verify-artifact",
+    "/nonexistent",
+    "--trusted-key",
+    "/dev/null"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "verify-artifact-missing-directory",
+   "stderr": "BLOCKED: Expected a regular file, not a device or symlink: /dev/null\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-vm"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-vm-missing-disk",
+   "stderr": "usage: apex.py test-vm [-h] [--iso ISO] [--guest-ssh] [--serial-console] [--extra-disk EXTRA_DISK]\n                       [--usb-test-bus] [--boot-usb BOOT_USB]\n                       disk\napex.py test-vm: error: the following arguments are required: disk\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-live-check",
+    "no-such-probe"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-live-check-unknown-case",
+   "stderr": "usage: apex.py test-live-check [-h]\n                               {observe,ventoy-observe,write-denial,usb-write-denial,lock-fault}\napex.py test-live-check: error: argument case: invalid choice: 'no-such-probe' (choose from observe, ventoy-observe, write-denial, usb-write-denial, lock-fault)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-installer-fault",
+    "no-such-fault"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-installer-fault-unknown-case",
+   "stderr": "usage: apex.py test-installer-fault [-h] [--wrong-key WRONG_KEY]\n                                    {missing-signature,altered-signature,wrong-key,changed-manifest,corrupt-blob,unexpected-source}\napex.py test-installer-fault: error: argument case: invalid choice: 'no-such-fault' (choose from missing-signature, altered-signature, wrong-key, changed-manifest, corrupt-blob, unexpected-source)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "installer-logs",
+    "prepare",
+    "--run",
+    "/tmp/x"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "installer-logs-prepare-with-run",
+   "stderr": "BLOCKED: Prepare uses only the currently running installer VM\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "installer-logs",
+    "collect",
+    "--run",
+    "/tmp/x"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "installer-logs-collect-without-token",
+   "stderr": "BLOCKED: Collect needs the run directory and token from prepare\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "record",
+    "no.such.check",
+    "PASS",
+    "--environment",
+    "vm",
+    "--description",
+    "d"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "record-unknown-check",
+   "stderr": "BLOCKED: Unknown required check\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "record",
+    "audio.speakers",
+    "PASS",
+    "--environment",
+    "vm",
+    "--description",
+    "d"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "record-hardware-from-vm",
+   "stderr": "BLOCKED: Hardware evidence cannot be supplied by a VM\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "record",
+    "boot.ten-cycles",
+    "PASS",
+    "--environment",
+    "vm",
+    "--description",
+    "d"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "record-pass-without-proof",
+   "stderr": "BLOCKED: PASS needs proof files\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "record",
+    "boot.ten-cycles",
+    "MAYBE",
+    "--environment",
+    "vm",
+    "--description",
+    "d"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "record-invalid-status",
+   "stderr": "usage: apex.py record [-h] --environment {build,vm,physical,operator} --description DESCRIPTION\n                      [--proof PROOF] [--reason REASON]\n                      check {BLOCKED,FAIL,NOT TESTED,PASS}\napex.py record: error: argument status: invalid choice: 'MAYBE' (choose from BLOCKED, FAIL, NOT TESTED, PASS)\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "decode-coefficient",
+    "0x20"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "decode-coefficient-missing-operands",
+   "stderr": "usage: apex.py decode-coefficient [-h] nid verb parameter\napex.py decode-coefficient: error: the following arguments are required: verb, parameter\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-fingerprint"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-fingerprint-missing-build",
+   "stderr": "usage: apex.py test-fingerprint [-h] --build BUILD_ID\napex.py test-fingerprint: error: the following arguments are required: --build\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "build-nvidia"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "build-nvidia-missing-build",
+   "stderr": "usage: apex.py build-nvidia [-h] --build BUILD_ID\napex.py build-nvidia: error: the following arguments are required: --build\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "ventoy-media",
+    "--ubuntu",
+    "/dev/null"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "ventoy-media-missing-arguments",
+   "stderr": "usage: apex.py ventoy-media [-h] --live-output LIVE_OUTPUT --ubuntu UBUNTU\n                            --trusted-key TRUSTED_KEY --checksums CHECKSUMS --signature SIGNATURE\n                            --keyring KEYRING\napex.py ventoy-media: error: the following arguments are required: --live-output, --trusted-key, --checksums, --signature, --keyring\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-resume"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-resume-missing-run",
+   "stderr": "usage: apex.py test-resume [-h] [--without-iso] run_directory\napex.py test-resume: error: the following arguments are required: run_directory\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-compare-disks"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-compare-disks-missing-run",
+   "stderr": "usage: apex.py test-compare-disks [-h] run_directory\napex.py test-compare-disks: error: the following arguments are required: run_directory\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-hotplug-usb"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-hotplug-usb-missing-source",
+   "stderr": "usage: apex.py test-hotplug-usb [-h] source\napex.py test-hotplug-usb: error: the following arguments are required: source\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "test-artifact",
+    "/nonexistent"
+   ],
+   "effects": [],
+   "exit_code": 2,
+   "slug": "test-artifact-missing-key",
+   "stderr": "usage: apex.py test-artifact [-h] --trusted-key TRUSTED_KEY directory\napex.py test-artifact: error: the following arguments are required: --trusted-key\n",
+   "stdout": "",
+   "tier": "refusal"
+  },
+  {
+   "arguments": [
+    "readiness"
+   ],
+   "effects": [
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    },
+    {
+     "kind": "mkdir",
+     "target": "<root>"
+    },
+    {
+     "kind": "write",
+     "target": "<root>"
+    },
+    {
+     "kind": "write",
+     "target": "<root>/<tmpname>"
+    },
+    {
+     "kind": "rename",
+     "target": "<root>/<tmpname>"
+    }
+   ],
+   "exit_code": 2,
+   "slug": "readiness-blocked",
+   "stderr": "BLOCKED: Installation is blocked; inspect readiness.json for missing evidence\n",
+   "stdout": "{\n  \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n  \"ready_to_install\": false,\n  \"errors\": [\n    \"live.direct.json: Evidence file missing or changed for live.direct\"\n  ],\n  \"checks\": {\n    \"build\": {\n      \"image.lint\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"rpm.dependencies\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"kernel.modules\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"nvidia.kernel-match\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"initramfs.installed\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"initramfs.live\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.parity\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.virtual-cleanup\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"signature.accept\": {\n        \"check\": \"signature.accept\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Signed bundle verified against the development key\",\n          \"kind\": \"build\"\n        },\n        \"proof\": [\n          {\n            \"path\": \"<id-0>/0-results.json\",\n            \"sha256\": \"d4dae961be67d1c7e53cc2c5e9612af0751c750abb65ac3199457ea58b0d310a\"\n          }\n        ],\n        \"reason\": \"Development signing only.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"PASS\"\n      },\n      \"signature.reject\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"sources.locked\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"vm\": {\n      \"installer.offline\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installer.cancel\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installer.other-disks\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installer.payload-rejection\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.ten-cycles\": {\n        \"check\": \"boot.ten-cycles\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Ten offline boots of the frozen private QCOW2\",\n          \"kind\": \"vm\"\n        },\n        \"proof\": [\n          {\n            \"path\": \"<id-1>/0-summary.json\",\n            \"sha256\": \"73eb89e2d05e1cd5fc6993b1bf38047ba813f081d3ead9f8d8956b1a97d58a32\"\n          },\n          {\n            \"path\": \"<id-1>/1-application.png\",\n            \"sha256\": \"847c41ea4ad83eb451684c913f9d893e3b19273fed8960a7ae6c811790088c1b\"\n          }\n        ],\n        \"reason\": \"Normal boots only; no claim of failed-deployment recovery.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"PASS\"\n      },\n      \"desktop.password-wayland\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"desktop.theme-surfaces\": {\n        \"check\": \"desktop.theme-surfaces\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Screenshot review found a light GTK3 window\",\n          \"kind\": \"vm\"\n        },\n        \"proof\": [\n          {\n            \"path\": \"<id-2>/0-review.json\",\n            \"sha256\": \"a68fe3d3cfcab940cb30226b04681f2aa8e748e887069c29befbcc26e47af4f5\"\n          }\n        ],\n        \"reason\": \"GTK3 falls back to light Adwaita without the dark alias.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"FAIL\"\n      },\n      \"boot.log-review\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"firstboot.offline\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"firstboot.interrupted\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.forward\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.rollback\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.disk-full\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.interrupted\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.power-loss\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.bad-signature\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"update.untrusted-source\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.gdm-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.dbus-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.root-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.initramfs-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.pre-userspace-failure\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.grub-counter\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"boot.tty-rescue\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.direct\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.ventoy\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"live.disk-protection\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"hardware\": {\n      \"coldboot.three-cycles\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"suspend.ten-cycles\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"audio.speakers\": {\n        \"check\": \"audio.speakers\",\n        \"digest\": \"sha256:2daf0bc614838352a65af743e2e0efb658e040169dd95e25520eb1334f42c912\",\n        \"environment\": {\n          \"description\": \"Prior user report of ALC294 speaker failure on this laptop\",\n          \"kind\": \"physical\"\n        },\n        \"proof\": [],\n        \"reason\": \"The reported fault is unresolved.\",\n        \"recorded_at\": \"<ts>\",\n        \"status\": \"BLOCKED\"\n      },\n      \"audio.microphone\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"audio.headphones\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"audio.resume\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.enroll\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.claim-cleanup\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.lock-unlock\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"fingerprint.reboot\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"gpu.offload\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"gpu.runtime-suspend\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"display.oled-hdmi\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"network.wifi-bluetooth\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"input.webcam-touchpad-fn\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"ubuntu.return-boot\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"recovery\": {\n      \"rescue.usb-boot\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"backup.off-device\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"backup.restore-drill\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"storage.review\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"installation.operator-approval\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    },\n    \"git\": {\n      \"git.private-stage\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"git.commit-policy\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      },\n      \"git.outgoing-history\": {\n        \"status\": \"NOT TESTED\",\n        \"reason\": \"No verified result\"\n      }\n    }\n  }\n}\n",
+   "tier": "refusal"
+  }
+ ]
+}

@@ -161,6 +161,13 @@ runtime-freeze:
 runtime-verify:
     python3 tools/migration/runtime_inventory.py verify
 
+golden-freeze scratch:
+    python3 tools/migration/golden_corpus.py record --scratch "{{scratch}}"
+
+golden scratch:
+    python3 tools/migration/golden_corpus.py verify --scratch "{{scratch}}"
+
 gate:
     just test
     just runtime-verify
+    uv run --no-project --with pytest==9.1.1 pytest -q -m golden

@@ -95,10 +95,79 @@ not deselect the integration marker, so an ordinary run collects those cases and
 them as skipped rather than as not attempted. P1 deselects the marker by default and turns
 the skip count into an asserted number.
 
+## P1. Characterisation corpus and effect traces
+
+Goal: prove later that behaviour did not change, without needing a virtual machine.
+
+Three tools do the work. `synthetic_root.py` builds a runtime root from fixed identifiers
+and fixed timestamps, so the same input always produces the same bytes. It reproduces the
+stored v1 shapes: a candidate with its verification block, evidence records that pass, fail
+and block, a record whose proof digest deliberately no longer matches, a superseded record
+under `evidence/history/`, an archived candidate under `candidate-history/`, an export
+result and a trust anchor. Building it twice gives the same inventory Merkle root.
+
+`golden_corpus.py` runs a declared list of invocations against that root and records the
+exit code, stdout and stderr after declared normalisation. `effect_trace.py` runs each
+invocation under an interpreter audit hook and records what it actually did: processes
+spawned, files opened for writing, renames, copies, directory creation and socket connects.
+The hook observes the real interpreter, so the code under test needed no change.
+
+| Tier | Invocations | Content |
+|---|---|---|
+| `pure` | 37 | Help for every subcommand, coefficient decoding, the report, an absent builder, a valid commit subject |
+| `refusal` | 35 | Missing and invalid arguments, an unknown subcommand, six rejected commit subjects, the environment and proof rules, a blocked readiness gate |
+
+62 of 72 invocations perform no side effect at all. The corpus is stable:
+recording once and verifying twice from separate scratch directories reports no difference.
+
+### Normalisation is declared
+
+`tests/golden/normalisers.py` maps timestamps, 32-character hexadecimal identifiers,
+temporary paths, temporary file names, durations, the Python minor version and host memory
+and free-space integers to fixed tokens. A field not on that list must be stable. A field
+that appears or disappears is a difference and needs an explicit `golden_change`.
+
+### What the effect traces already show
+
+Two behaviours were pinned rather than fixed, because changing them belongs to a later phase
+and changing them silently is what this corpus exists to prevent.
+
+Seven refusing commands create the runtime root before they refuse. `state_dir()` calls
+`mkdir(parents=True, exist_ok=True)` unconditionally, so pointing the state directory
+somewhere new and running a command that will be rejected still creates that directory. The
+target architecture runs the whole preflight before any effect, which removes this.
+
+`readiness` writes `readiness.json` and then exits non-zero. It is a query that persists
+derived state. The target recomputes derived data rather than storing it.
+
+`tests/test_golden_corpus.py` asserts both, so a change to either is a deliberate edit.
+
+### Suite honesty
+
+The default pytest options now deselect the `integration` and `golden` markers, and
+`tests/test_suite_configuration.py` fixes the number of opt-in cases at 8 and 1. Before this
+change every run collected the integration suite and reported 8 skips, so a green run looked
+like coverage of checks that were never attempted.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Invocations captured | 72 |
+| Corpus | `tests/golden/commands.json` |
+| Fast suite | 688 passed, 9 deselected |
+| Gates green | G1, G2, G3, G4 |
+
+`migration_red`: not applicable. P1 adds tools and captures existing behaviour.
+`golden_change`: the corpus is created here, so there is no prior baseline to change.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
-just runtime-freeze    # record the manifest, once
-just runtime-verify    # compare the current root against it
-just gate              # the standing gate for the current phase
+just runtime-freeze         # record the runtime manifest, once
+just runtime-verify         # compare the current root against it
+just golden-freeze <dir>    # record the command corpus, once
+just golden <dir>           # replay every command and diff
+just gate                   # the standing gate for the current phase
 ```
