@@ -1,6 +1,8 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 export PYTHONDONTWRITEBYTECODE := "1"
 
+python := env_var_or_default("APEX_PYTHON", "3.14.4")
+
 default:
     @just --list
 
@@ -65,14 +67,14 @@ test-disk build_id:
     python3 tools/apex.py artifact qcow2 --build "{{build_id}}" --test-access
 
 test:
-    python3 tools/check_static.py
-    uv run --no-project --with pytest==9.1.1 pytest
+    uv run --no-project --python {{python}} python tools/check_static.py
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest
 
 test-elan-diagnostics source:
     python3 tools/test-elan-diagnostics.py "{{source}}"
 
 test-integration:
-    uv run --no-project --with pytest==9.1.1 pytest -m integration
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -m integration
 
 test-vm disk:
     python3 tools/apex.py test-vm "{{disk}}"
@@ -154,3 +156,62 @@ report:
 
 readiness:
     python3 tools/apex.py readiness
+
+runtime-freeze:
+    uv run --no-project --python {{python}} python tools/migration/runtime_inventory.py record
+
+runtime-verify:
+    uv run --no-project --python {{python}} python tools/migration/runtime_inventory.py verify
+
+golden-freeze scratch:
+    PYTHONPATH=tools uv run --no-project --python {{python}} python tools/migration/golden_corpus.py record --scratch "{{scratch}}"
+
+golden scratch:
+    PYTHONPATH=tools uv run --no-project --python {{python}} python tools/migration/golden_corpus.py verify --scratch "{{scratch}}"
+
+surface-freeze scratch:
+    uv run --no-project --python {{python}} python tools/migration/surface_contract.py freeze --scratch "{{scratch}}"
+
+surface:
+    uv run --no-project --python {{python}} python tools/migration/surface_contract.py check
+
+ratchet-freeze:
+    uv run --no-project --python {{python}} python tools/migration/lint_ratchet.py freeze
+
+ratchet:
+    uv run --no-project --python {{python}} python tools/migration/lint_ratchet.py check
+
+types:
+    uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
+
+lint:
+    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
+
+readiness-shadow:
+    uv run --no-project --python {{python}} python tools/migration/readiness_shadow.py
+
+verify-chain:
+    uv run --no-project --python {{python}} python tools/migration/verify_chain.py
+
+guard-shadow:
+    uv run --no-project --python {{python}} python tools/migration/guard_shadow.py --self-test
+
+readiness-table:
+    uv run --no-project --python {{python}} python tools/migration/readiness_table.py
+
+readiness-table-strict:
+    uv run --no-project --python {{python}} python tools/migration/readiness_table.py --strict
+
+gate:
+    just test
+    just lint
+    just types
+    just runtime-verify
+    just readiness-shadow
+    just verify-chain
+    just readiness-table
+    just guard-shadow
+    just test-integration
+    just surface
+    just ratchet
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -q -m golden

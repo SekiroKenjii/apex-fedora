@@ -1,14 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "apex-build-tools"
-version = "0.1.0"
-requires-python = ">=3.11"
+version = "0.2.0"
+requires-python = ">=3.14"
 description = "Isolated Fedora image builds and evidence checks"
+
+[project.scripts]
+apex = "apex.cli.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tools"]
-addopts = "-ra -p no:cacheprovider"
-markers = ["integration: requires file-backed guest artifacts"]
+pythonpath = ["src", "tools"]
+addopts = "-ra -p no:cacheprovider -m 'not integration and not golden'"
+markers = [
+    "integration: requires file-backed guest artifacts",
+    "golden: replays every command against the captured corpus",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tools"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RET", "PTH", "ARG", "C4", "TID", "ERA"]
+# The error taxonomy is named for what the caller should do, not for the word "Error".
+ignore = ["N818"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ARG"]
+# The refusing ports exist to reject every call, so every argument is unused by design.
+"src/apex/registry/discovery.py" = ["ARG"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"

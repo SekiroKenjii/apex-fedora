@@ -1,0 +1,95 @@
+"""Every deliberate refusal has an identity.
+
+Tests match a code. Prose may be reworded without breaking anything, and a differently
+worded correct rejection cannot pass as a false negative.
+"""
+
+from __future__ import annotations
+
+import enum
+
+
+class RefusalReason(enum.StrEnum):
+    MALFORMED_DIGEST = "malformed.digest"
+    MALFORMED_IDENTIFIER = "malformed.identifier"
+    MALFORMED_PACKAGE_COORDINATE = "malformed.package-coordinate"
+    MALFORMED_VERDICT = "malformed.verdict"
+    MALFORMED_STORE_MARK = "malformed.store-mark"
+    MALFORMED_TREE_ROW = "malformed.tree-row"
+    MALFORMED_PROOF_REFERENCE = "malformed.proof-reference"
+
+    NEGATIVE_QUANTITY = "quantity.negative"
+    PORT_OUT_OF_RANGE = "quantity.port-out-of-range"
+    MODE_OUT_OF_RANGE = "quantity.mode-out-of-range"
+    LIMIT_NOT_POSITIVE = "quantity.limit-not-positive"
+
+    PATH_OUTSIDE_RUNTIME_ROOT = "path.outside-runtime-root"
+    PATH_NOT_A_REGULAR_FILE = "path.not-a-regular-file"
+    PATH_IS_A_SYMLINK = "path.is-a-symlink"
+    PATH_CONTAINS_OPTION_SEPARATOR = "path.contains-option-separator"
+    RUNTIME_ROOT_NOT_PERMITTED = "path.runtime-root-not-permitted"
+    RUNTIME_ROOT_NOT_PRIVATE = "path.runtime-root-not-private"
+
+    LINE_EXCEEDS_LIMIT = "bounded.line-exceeds-limit"
+
+    DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
+    DUPLICATE_DEVICE = "machine.duplicate-device"
+    TOO_MANY_DEVICES = "machine.too-many-devices"
+    NOT_A_DISPOSABLE_MACHINE = "machine.not-disposable"
+
+    LOCK_HELD = "lock.held"
+    ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"
+
+    STAGE_FAILED = "stage.failed"
+
+    UNKNOWN_SETTING = "settings.unknown"
+    INCONSISTENT_SETTINGS = "settings.inconsistent"
+
+    NO_VERIFIED_RESULT = "evidence.no-verified-result"
+    HARDWARE_REQUIRES_PHYSICAL = "evidence.hardware-requires-physical"
+    PASS_REQUIRES_PROOF = "evidence.pass-requires-proof"
+    UNKNOWN_CHECK = "evidence.unknown-check"
+    DUPLICATE_EVIDENCE = "evidence.duplicate"
+    STALE_EVIDENCE = "evidence.stale-or-unbound"
+    PROOF_KIND_NOT_ACCEPTED = "evidence.proof-kind-not-accepted"
+    SIMULATED_ENVIRONMENT = "evidence.simulated-environment"
+    ENVIRONMENT_NOT_WITNESSED = "evidence.environment-not-witnessed"
+    RETRACTED_BY_OPERATOR = "evidence.retracted-by-operator"
+    PROOF_ALTERED = "evidence.proof-altered"
+    PROOF_IS_EMPTY = "evidence.proof-is-empty"
+    STORE_AREA_NOT_PERMITTED = "evidence.store-area-not-permitted"
+    STORE_VERSION_NOT_SUPPORTED = "evidence.store-version-not-supported"
+    LEGACY_IMPORT_NOT_REPROVEN = "evidence.legacy-import-not-reproven"
+    RECORD_NOT_BOUND_TO_CANDIDATE = "evidence.record-not-bound-to-candidate"
+
+    SHELL_STRING_NOT_ACCEPTED = "command.shell-string-not-accepted"
+    DEADLINE_REQUIRED = "command.deadline-required"
+
+    SECRET_NOT_RENDERABLE = "secret.not-renderable"
+
+    VENDOR_ATTRIBUTION_PRESENT = "style.vendor-attribution-present"
+
+    REPOSITORY_ABSOLUTE_PATH = "repository.absolute-path"
+    REPOSITORY_PATH_ESCAPES = "repository.path-escapes"
+    REPOSITORY_PRIVATE_DOCUMENT = "repository.private-document"
+    REPOSITORY_ENVIRONMENT_FILE = "repository.environment-file"
+    REPOSITORY_PRIVATE_DIRECTORY = "repository.private-directory"
+    REPOSITORY_PRIVATE_ARTIFACT = "repository.private-artifact"
+    REPOSITORY_CREDENTIAL_DOCUMENT = "repository.credential-document"
+    REPOSITORY_PASSPHRASE_FILE = "repository.passphrase-file"
+    REPOSITORY_PRIVATE_KEY_NAME = "repository.private-key-name"
+    REPOSITORY_TOKEN_DOCUMENT = "repository.token-document"
+    REPOSITORY_BLOB_TOO_LARGE = "repository.blob-too-large"
+    REPOSITORY_BLOB_NOT_UTF8 = "repository.blob-not-utf8"
+    REPOSITORY_BLOB_CONTAINS_NUL = "repository.blob-contains-nul"
+    REPOSITORY_SECRET_MATERIAL = "repository.secret-material"
+    REPOSITORY_LOCAL_ONLY_CONTENT = "repository.local-only-content"
+    REPOSITORY_INDEX_UNMERGED = "repository.index-unmerged"
+    REPOSITORY_HISTORY_NOT_FETCHED = "repository.history-not-fetched"
+    REPOSITORY_UPDATE_LINE_MALFORMED = "repository.update-line-malformed"
+
+    COMMIT_SUBJECT_MALFORMED = "commit.subject-malformed"
+    COMMIT_SUBJECT_TOO_LONG = "commit.subject-too-long"
+    COMMIT_HAS_BODY = "commit.has-body"
+    COMMIT_CARRIAGE_RETURN = "commit.carriage-return"
+    PROFILE_NOT_REVIEWED = "target.profile-not-reviewed"

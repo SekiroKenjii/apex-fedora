@@ -1,6 +1,8 @@
 from pathlib import Path
 import json
 import subprocess
+import os
+
 import pytest
 from apexlib.common import Blocked, regular_file
 from apexlib import vm
@@ -78,6 +80,10 @@ def test_power_loss_refuses_builder_or_absent_vm(tmp_path, monkeypatch, state):
         vm.power_loss(tmp_path)
 
 
+@pytest.mark.skipif(
+    not hasattr(os, 'pidfd_open'),
+    reason='NOT TESTED: this interpreter has no pidfd_open, so the guarded path cannot run',
+)
 def test_power_loss_uses_pid_handle_only_for_owned_test(tmp_path, monkeypatch):
     capture = tmp_path / 'vm-runs/fixture'
     capture.mkdir(parents=True)

@@ -1,0 +1,469 @@
+{
+ "recipes": [
+  {
+   "name": "artifact",
+   "parameters": [
+    {
+     "name": "kind",
+     "required": true
+    },
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "build",
+   "parameters": [
+    {
+     "name": "profile",
+     "required": false
+    }
+   ]
+  },
+  {
+   "name": "build-fingerprint-image",
+   "parameters": [
+    {
+     "name": "parent_build",
+     "required": true
+    },
+    {
+     "name": "rpm_build",
+     "required": true
+    },
+    {
+     "name": "gtk_test",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "build-fingerprint-rpms",
+   "parameters": []
+  },
+  {
+   "name": "build-nvidia",
+   "parameters": [
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "builder-compact",
+   "parameters": []
+  },
+  {
+   "name": "builder-finalize",
+   "parameters": [
+    {
+     "name": "compaction_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "builder-prepare",
+   "parameters": []
+  },
+  {
+   "name": "builder-start",
+   "parameters": []
+  },
+  {
+   "name": "builder-status",
+   "parameters": []
+  },
+  {
+   "name": "builder-stop",
+   "parameters": []
+  },
+  {
+   "name": "default",
+   "parameters": []
+  },
+  {
+   "name": "doctor",
+   "parameters": []
+  },
+  {
+   "name": "hardware-snapshot",
+   "parameters": []
+  },
+  {
+   "name": "hooks",
+   "parameters": []
+  },
+  {
+   "name": "installer-fixtures",
+   "parameters": []
+  },
+  {
+   "name": "installer-logs-collect",
+   "parameters": [
+    {
+     "name": "run_directory",
+     "required": true
+    },
+    {
+     "name": "token",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "installer-logs-prepare",
+   "parameters": []
+  },
+  {
+   "name": "observe-fingerprint",
+   "parameters": []
+  },
+  {
+   "name": "readiness",
+   "parameters": []
+  },
+  {
+   "name": "recovery-disk",
+   "parameters": [
+    {
+     "name": "fixture",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "report",
+   "parameters": []
+  },
+  {
+   "name": "sources",
+   "parameters": []
+  },
+  {
+   "name": "test",
+   "parameters": []
+  },
+  {
+   "name": "test-compare-disks",
+   "parameters": [
+    {
+     "name": "run_directory",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-disk",
+   "parameters": [
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-elan-diagnostics",
+   "parameters": [
+    {
+     "name": "source",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-fingerprint",
+   "parameters": [
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-fingerprint-dialog",
+   "parameters": [
+    {
+     "name": "source",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-fingerprint-gtk",
+   "parameters": [
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-fingerprint-rpms",
+   "parameters": [
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-hotplug-usb",
+   "parameters": [
+    {
+     "name": "source",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-initramfs-inject",
+   "parameters": [
+    {
+     "name": "fixture",
+     "required": true
+    },
+    {
+     "name": "access",
+     "required": true
+    },
+    {
+     "name": "inspection",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-initramfs-inspect",
+   "parameters": [
+    {
+     "name": "fixture",
+     "required": true
+    },
+    {
+     "name": "access",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-initramfs-rescue",
+   "parameters": [
+    {
+     "name": "fixture",
+     "required": true
+    },
+    {
+     "name": "access",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-installer",
+   "parameters": [
+    {
+     "name": "disk",
+     "required": true
+    },
+    {
+     "name": "iso",
+     "required": true
+    },
+    {
+     "name": "other_disk",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-installer-diagnostic",
+   "parameters": [
+    {
+     "name": "disk",
+     "required": true
+    },
+    {
+     "name": "iso",
+     "required": true
+    },
+    {
+     "name": "other_disk",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-installer-fault",
+   "parameters": [
+    {
+     "name": "case",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-installer-fault-collect",
+   "parameters": [
+    {
+     "name": "run_directory",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-installer-trust",
+   "parameters": []
+  },
+  {
+   "name": "test-installer-wrong-key",
+   "parameters": [
+    {
+     "name": "public_key",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-integration",
+   "parameters": []
+  },
+  {
+   "name": "test-live-check",
+   "parameters": [
+    {
+     "name": "case",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-live-hotplug",
+   "parameters": [
+    {
+     "name": "disk",
+     "required": true
+    },
+    {
+     "name": "iso",
+     "required": true
+    },
+    {
+     "name": "other_disk",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-recovery",
+   "parameters": [
+    {
+     "name": "action",
+     "required": true
+    },
+    {
+     "name": "fixture",
+     "required": true
+    },
+    {
+     "name": "access",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-resume-installed",
+   "parameters": [
+    {
+     "name": "run_directory",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-update",
+   "parameters": [
+    {
+     "name": "action",
+     "required": true
+    },
+    {
+     "name": "fixture",
+     "required": true
+    },
+    {
+     "name": "access",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-ventoy",
+   "parameters": [
+    {
+     "name": "disk",
+     "required": true
+    },
+    {
+     "name": "other_disk",
+     "required": true
+    },
+    {
+     "name": "usb_image",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "test-vm",
+   "parameters": [
+    {
+     "name": "disk",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "update-fixtures",
+   "parameters": [
+    {
+     "name": "build_id",
+     "required": true
+    }
+   ]
+  },
+  {
+   "name": "ventoy-media",
+   "parameters": [
+    {
+     "name": "live_output",
+     "required": true
+    },
+    {
+     "name": "ubuntu",
+     "required": true
+    },
+    {
+     "name": "trusted_key",
+     "required": true
+    },
+    {
+     "name": "checksums",
+     "required": true
+    },
+    {
+     "name": "signature",
+     "required": true
+    },
+    {
+     "name": "keyring",
+     "required": true
+    }
+   ]
+  }
+ ],
+ "revision": "pre-restructure"
+}

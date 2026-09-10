@@ -15,7 +15,10 @@ from apexlib.common import ROOT, Blocked, config, run, state_dir
 def boot(parser: argparse.ArgumentParser) -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("doctor", "hooks", "sources", "report", "readiness", "trust-development-key", "test-power-loss", 'installer-fixtures', 'test-installer-trust', 'hardware-snapshot'):
-        sub.add_parser(name)
+        added = sub.add_parser(name)
+        if name == "readiness":
+            added.add_argument("--strict", action="store_true",
+                               help="Withhold every imported result")
 
     builder = sub.add_parser("builder")
     builder.add_argument("action", choices=["prepare", "start", "stop", "status", "ssh"])
@@ -216,8 +219,19 @@ def boot(parser: argparse.ArgumentParser) -> None:
     elif args.command == 'record':
         result = evidence.record(state, args.check, args.status, args.environment, args.description, args.proof, args.reason)
         print(json.dumps({'recorded': args.check, 'ready_to_install': result['ready_to_install']}, indent=2))
+    elif args.command == "readiness" and args.strict:
+        from apexlib.strictview import strict_view
+        view = strict_view(state)
+        print(view.text, end='')
+        if view.refusal:
+            raise Blocked(view.refusal)
     else:
         result = evidence.report(state)
         print(json.dumps(result, indent=2))
         if args.command == "readiness" and not result["ready_to_install"]:
             raise Blocked("Installation is blocked; inspect readiness.json for missing evidence")
+        if args.command == "readiness":
+            from apexlib.strictview import readiness_refusal
+            refusal = readiness_refusal(state)
+            if refusal:
+                raise Blocked(refusal)

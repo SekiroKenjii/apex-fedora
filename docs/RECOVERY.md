@@ -103,3 +103,22 @@ If those cannot be established, stop and preserve the disk for recovery.
 
 There is no previous Apex deployment during the first installation. That risk is handled
 by tested external restoration, not by bootc rollback.
+
+## If the attestation chain reports a break
+
+The chain of recorded results is append-only. Each entry commits to the entry before it, so
+an edited, deleted or reordered entry shows up as a break at a named sequence.
+
+```sh
+just verify-chain
+```
+
+A break tells you the chain no longer matches what was written. It does not tell you who
+changed it. The key that signs each link sits beside the chain under the same account, so
+anyone who can edit the chain can re-sign it. This detects an accidental rewrite, a damaged
+file, and an edit made by something without the key. It is not proof against the person
+operating the machine, and nothing in this project should be read as claiming otherwise.
+
+When the chain reports a break, treat every result at or after that sequence as untested and
+run those checks again. Do not repair the file by hand. The record of what was verified is
+worth less than the ability to tell when it stopped being trustworthy.
