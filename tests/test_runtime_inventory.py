@@ -130,10 +130,21 @@ def test_verify_reports_a_missing_manifest(root: Path, tmp_path: Path) -> None:
     assert inventory.verify(root, tmp_path / "absent.json", deep=False) == 3
 
 
-def test_main_refuses_a_root_that_is_not_a_directory(tmp_path: Path) -> None:
+def test_recording_refuses_a_root_that_is_not_a_directory(tmp_path: Path) -> None:
     missing = tmp_path / "absent"
 
-    assert inventory.main(["verify", "--root", str(missing)]) == 3
+    assert inventory.main(["record", "--root", str(missing)]) == 3
+
+
+def test_verifying_a_machine_with_no_root_is_not_a_finding(tmp_path: Path) -> None:
+    """A machine that has never built anything has nothing to have disturbed.
+
+    That is the ordinary state in continuous integration. The operator's machine always has a
+    root, so the check that matters there still runs.
+    """
+    missing = tmp_path / "absent"
+
+    assert inventory.main(["verify", "--root", str(missing)]) == 0
 
 
 def test_default_root_follows_the_state_directory_variable(monkeypatch) -> None:

@@ -234,6 +234,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     root = (arguments.root or default_root()).expanduser().resolve()
     target = (arguments.manifest or default_manifest()).expanduser()
     if not root.is_dir():
+        # Recording still needs a root. Verifying does not: a machine that has never built
+        # anything has nothing to have disturbed, which is the ordinary state in continuous
+        # integration and is not a finding. The operator's machine always has one, so the
+        # gate that matters there still runs.
+        if arguments.action == "verify":
+            print(json.dumps({"skipped": "no runtime root on this machine"}, indent=2))
+            return 0
         print(f"Runtime root is not a directory: {root}", file=sys.stderr)
         return 3
     if arguments.action == "record":

@@ -1,6 +1,8 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 export PYTHONDONTWRITEBYTECODE := "1"
 
+python := env_var_or_default("APEX_PYTHON", "3.14")
+
 default:
     @just --list
 
@@ -66,13 +68,13 @@ test-disk build_id:
 
 test:
     python3 tools/check_static.py
-    uv run --no-project --with pytest==9.1.1 pytest
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest
 
 test-elan-diagnostics source:
     python3 tools/test-elan-diagnostics.py "{{source}}"
 
 test-integration:
-    uv run --no-project --with pytest==9.1.1 pytest -m integration
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -m integration
 
 test-vm disk:
     python3 tools/apex.py test-vm "{{disk}}"
@@ -180,10 +182,10 @@ ratchet:
     python3 tools/migration/lint_ratchet.py check
 
 types:
-    uv run --no-project --with mypy==1.18.2 mypy --strict src/apex
+    uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
 
 lint:
-    uv run --no-project --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
+    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
 
 readiness-shadow:
     python3 tools/migration/readiness_shadow.py
@@ -212,4 +214,4 @@ gate:
     just test-integration
     just surface
     just ratchet
-    uv run --no-project --with pytest==9.1.1 pytest -q -m golden
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -q -m golden

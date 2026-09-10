@@ -1,0 +1,65 @@
+name: Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A superseded run proves nothing about the commit that replaced it.
+concurrency:
+  group: gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      # One interpreter, named here and in the Justfile, because two of the gates are
+      # interpreter specific: the command corpus records argparse output, which is rendered
+      # differently by different versions, and one test needs a build that exposes
+      # pidfd_open. A sweep across versions would report those as project failures.
+      APEX_PYTHON: '3.14'
+      PYTHON_VERSION: '3.14'
+    steps:
+      - name: Check out the whole history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          # The repository rules are proved against every path this history has ever held, so
+          # a shallow clone would quietly shrink the corpus that proof rests on.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: '0.11.28'
+
+      - name: Install just
+        uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b
+        with:
+          just-version: '1.45.0'
+
+      - name: Install the virtual disk tool the disk tests need
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends qemu-utils
+
+      - name: Report the interpreters in use
+        run: |
+          python3 --version
+          uv run --no-project --python "${APEX_PYTHON}" python --version
+
+      - name: Run the gate
+        run: just gate

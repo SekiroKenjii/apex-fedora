@@ -1154,6 +1154,43 @@ and watching it fail.
 `golden_change`: none. No hook behaviour changed, so no recorded output moved.
 `supersedes`: none.
 
+## Continuous integration
+
+### The gate is the same one a developer runs
+
+The previous workflow ran three checks: the pre-commit guard, the test suite and a syntax pass.
+None of the eight gates this restructure built ran anywhere but on the operator's machine, so a
+pull request could be green while the lint ratchet, the readiness shadow, the surface contract and
+the guard equivalence had never been looked at.
+
+It now runs `just gate`. The one change that made that possible: verifying the runtime inventory
+skips on a machine that has no runtime root. A machine that has never built anything has nothing
+to have disturbed, which is the ordinary state in continuous integration and is not a finding.
+Recording a manifest still refuses, because that genuinely needs a root.
+
+### The interpreter is pinned, because it was silently deciding results
+
+The suite ran on whichever build the tool runner happened to prefer, and that answer changed
+underneath this work. Three interpreters were available here and they are not interchangeable:
+two of them do not expose `pidfd_open` at all, which one test needs, and the frozen command
+corpus records argparse output that different versions render differently.
+
+`just` now names the interpreter, defaulting to the version the project declares and reading
+`APEX_PYTHON` so a run can be aimed elsewhere deliberately. A gate that passes because of which
+build was picked that morning is not a gate.
+
+The test that needs `pidfd_open` now skips where the interpreter lacks it rather than failing.
+The production path still calls it unconditionally, so on such a build the power-loss fault would
+raise rather than refuse. That is recorded, not fixed here: the right behaviour is to refuse, and
+it belongs to the phase that owns the machine context.
+
+### What else the workflow gained
+
+The whole history is fetched, because the repository rules are proved against every path this
+history has ever held and a shallow clone would quietly shrink that corpus. Superseded runs are
+cancelled. Every action is pinned to a commit rather than a tag. The job carries a timeout, and it
+runs on pushes to the long-lived branches as well as on pull requests.
+
 ## Commands
 
 ```sh
