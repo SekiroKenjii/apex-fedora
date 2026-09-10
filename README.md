@@ -47,5 +47,3 @@ unit test or image build does not override this gate.
 - [Recovery, including first installation](docs/RECOVERY.md)
 - [Known issues](docs/KNOWN-ISSUES.md)
 - [Contribution and Git rules](CONTRIBUTING.md)
-
-No agent account or private notes are needed to build the project.
