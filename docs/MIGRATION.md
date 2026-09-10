@@ -1175,9 +1175,18 @@ underneath this work. Three interpreters were available here and they are not in
 two of them do not expose `pidfd_open` at all, which one test needs, and the frozen command
 corpus records argparse output that different versions render differently.
 
-`just` now names the interpreter, defaulting to the version the project declares and reading
-`APEX_PYTHON` so a run can be aimed elsewhere deliberately. A gate that passes because of which
-build was picked that morning is not a gate.
+`just` now names the interpreter down to the patch and reads `APEX_PYTHON`, and every gated step
+runs on it rather than on whatever `python3` resolves to. A gate that passes because of which build
+was picked that morning is not a gate.
+
+The patch matters, which the first run on a hosted runner demonstrated: argparse's phrasing for an
+invalid choice moved between 3.14.4 and 3.14.7, and the command corpus records argparse's phrasing.
+Naming only the minor version left the resolver free to pick a different patch on another machine,
+and it did.
+
+That failure also showed the corpus reporting only which field had changed and never what it now
+said, which is undiagnosable anywhere except the machine the corpus was frozen on. It now prints
+the first differing line from each side.
 
 The test that needs `pidfd_open` now skips where the interpreter lacks it rather than failing.
 The production path still calls it unconditionally, so on such a build the power-loss fault would

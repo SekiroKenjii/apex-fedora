@@ -186,6 +186,17 @@ def write(results: Sequence[dict[str, object]]) -> None:
         handle.write("\n")
 
 
+def _first_differing_lines(expected: object, observed: object) -> list[str]:
+    before = str(expected).splitlines() or [str(expected)]
+    after = str(observed).splitlines() or [str(observed)]
+    for index in range(max(len(before), len(after))):
+        old_line = before[index] if index < len(before) else "<absent>"
+        new_line = after[index] if index < len(after) else "<absent>"
+        if old_line != new_line:
+            return [f"expected: {old_line[:200]}", f"observed: {new_line[:200]}"]
+    return []
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["record", "verify"])
@@ -207,7 +218,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     expected = json.loads((GOLDEN_DIRECTORY / "commands.json").read_text())["invocations"]
     differences = [
-        {"slug": new["slug"], "field": field}
+        {"slug": new["slug"], "field": field, "expected": old[field], "observed": new[field]}
         for old, new in zip(expected, results, strict=True)
         for field in ("exit_code", "stdout", "stderr", "effects")
         if old[field] != new[field]
@@ -215,6 +226,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(json.dumps({"compared": len(results), "differences": len(differences)}, indent=2))
     for difference in differences:
         print(f"  {difference['slug']}: {difference['field']} changed", file=sys.stderr)
+        for line in _first_differing_lines(difference["expected"], difference["observed"]):
+            print(f"    {line}", file=sys.stderr)
     return 1 if differences else 0
 
 
