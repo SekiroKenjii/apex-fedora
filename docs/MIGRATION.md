@@ -613,6 +613,71 @@ house style allows for typing constructs.
 `golden_change`: none.
 `supersedes`: none.
 
+## P9. Settings and targeting
+
+Goal: one typed settings tree, assembled once, and the first real release profile.
+
+### There is no function that reads configuration at the point of use
+
+`project.json` is re-parsed at all nine of its call sites today, four of them inside one
+function, and `checks.json` is re-read once per record inside the loop that validates against
+it, which opens a window where the catalogue can change mid-evaluation. The loader assembles
+the tree once, validates the whole of it, and freezes it.
+
+`explain` answers which layer supplied a value. The question "why is the test machine 4096
+MiB" currently has nowhere to look.
+
+### An undeclared variable in the namespace is a hard error
+
+A sweep found 24 distinct `APEX_` variables in use. One belongs to host settings; the rest
+are read by guest programs through their own request. Both sets are declared, so a typo in
+the host one is refused by name rather than silently doing nothing, and a guest variable is
+recognised as a guest concern rather than mistaken for a typo.
+
+That distinction is worth stating: the rule is not that every variable must be a setting, it
+is that no variable may be unaccounted for.
+
+### The numbers that were scattered
+
+| Value | Was | Now |
+|---|---|---|
+| Builder ssh port | one configured value | `defaults.BUILDER_SSH_PORT` |
+| Guest ssh port | four uncoordinated literals | `defaults.GUEST_SSH_PORT` |
+| Capture limit | six sites, two spellings | `defaults.CAPTURE_LIMIT` |
+| Serial chunk | maintained separately in encoder and decoder | `defaults.SERIAL_CHUNK` |
+| Boot and shutdown waits | bare sleeps and hand-rolled loops | named wait policies |
+
+### The first release profile is one file
+
+`fedora44_release.py` holds what was chosen: the major, the dist tag, the mock root, the EFI
+vendor directory. It holds no digest, and the type has no field that could. Rendering a
+package name from it produces `greenboot-0.16.4-0.fc44.x86_64.rpm` and, with the vendor
+suffix, `libfprint-1.94.100-1.fc44.apex1.x86_64.rpm`, both of which appear as hand-written
+literals in the current tree.
+
+`cachyos_release.py` is declared and deliberately unsupported, carrying the reason. Deleting
+it would discard the recorded reason it is blocked and reintroduce a branch the day a second
+kernel lineage appears.
+
+### The assert rule earned its keep
+
+The loader briefly narrowed a type with `assert isinstance(...)`. The layer gate refused the
+commit, naming the file and line. The check became a real refusal with a reason, which is
+what it should have been: a malformed settings file is a condition to report, not an
+assumption to state.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Suite | 1073 passed, 8 skipped |
+| Strict type check | clean over 71 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: every settings and targeting test was written first and observed failing.
+`golden_change`: none.
+`supersedes`: none. `config/project.json` still stands and still feeds the old tools.
+
 ## Commands
 
 ```sh

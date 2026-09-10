@@ -39,6 +39,9 @@ class RefusalReason(enum.StrEnum):
 
     STAGE_FAILED = "stage.failed"
 
+    UNKNOWN_SETTING = "settings.unknown"
+    INCONSISTENT_SETTINGS = "settings.inconsistent"
+
     NO_VERIFIED_RESULT = "evidence.no-verified-result"
     HARDWARE_REQUIRES_PHYSICAL = "evidence.hardware-requires-physical"
     PASS_REQUIRES_PROOF = "evidence.pass-requires-proof"
