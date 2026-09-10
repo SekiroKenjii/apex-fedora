@@ -1,0 +1,24 @@
+{
+  "version": "50.4",
+  "source_url": "https://gitlab.gnome.org/GNOME/gnome-control-center/-/raw/50.4/panels/system/users/cc-fingerprint-dialog.c",
+  "source_sha256": "63f49e814caa535fddf3f311ced2f83456427f155769c19e58317dd1c601acb8",
+  "patch": "rpms/patches/gnome-fingerprint-retain-claim.patch",
+  "reviewed_sources": [
+    {
+      "label": "Fedora 50.4-1.fc44; no downstream patches",
+      "sha256": "63f49e814caa535fddf3f311ced2f83456427f155769c19e58317dd1c601acb8",
+      "package_url": "https://kojipkgs.fedoraproject.org/packages/gnome-control-center/50.4/1.fc44/src/gnome-control-center-50.4-1.fc44.src.rpm",
+      "package_sha256": "0f36a87b3fa4ee951def25bb5a684e7f64f5e9318001e001481062f7958f7fdc"
+    },
+    {
+      "label": "Ubuntu 1:50.3-0ubuntu0.2 after the downstream popover patch",
+      "sha256": "61830391e9599f9cd9cd5d8e1e99a39ad3f0b888cf659455c2eb40bb0ef8f8bb",
+      "package_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnome-control-center/gnome-control-center_50.3-0ubuntu0.2.dsc",
+      "package_sha256": "5492fede7a7499080ef0b7f375c32c24894bad43504199229a1a68d564ab5562",
+      "orig_sha256": "06eebb0fd3056c4d8d78bbd3754c96108f381d70b760da423c5024946944287c",
+      "debian_sha256": "1a3f03ee31cad2a2652727919ce50ef41a3a71278ae565051444e765ea38150b"
+    }
+  ],
+  "source_trust": "HTTPS and checksum audit only; source signatures not independently validated",
+  "status": "experimental; Fedora RPM built in VM, not included in Apex; full GTK integration not tested"
+}

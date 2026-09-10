@@ -1,0 +1,16 @@
+label: Apex-Installer
+kernel_args:
+  - inst.stage2=hd:LABEL=Apex-Installer
+  - console=ttyS0,115200
+  - console=tty0
+  - inst.text
+  - enforcing=1
+  - rd.systemd.gpt_auto=0
+  - systemd.gpt_auto=0
+  - noresume
+grub2:
+  timeout: 10
+  entries:
+    - name: Apex installer (manual disk selection)
+      linux: /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Apex-Installer console=ttyS0,115200 console=tty0 inst.text enforcing=1 rd.systemd.gpt_auto=0 systemd.gpt_auto=0 noresume
+      initrd: /images/pxeboot/initrd.img

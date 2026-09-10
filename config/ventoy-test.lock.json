@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "ventoy": {
+    "version": "1.1.17",
+    "commit": "7cbdc5cf69935bcf1f085ae67f40e70ea7e74bae",
+    "url": "https://github.com/ventoy/Ventoy/releases/download/v1.1.17/ventoy-1.1.17-linux.tar.gz",
+    "sha256": "7fb4ed08cef6a6b4d39dd19260d8c80291a78dfdf9af7d461571e23cbbc43805",
+    "checksum_url": "https://github.com/ventoy/Ventoy/releases/download/v1.1.17/sha256.txt",
+    "checksum_sha256": "f67e280506fcf7a97793ae2d2dc3ccca59ad1e2021d4816d73ea8d5a268eeec6"
+  },
+  "ubuntu": {
+    "filename": "ubuntu-26.04-desktop-amd64.iso",
+    "url": "https://releases.ubuntu.com/26.04/ubuntu-26.04-desktop-amd64.iso",
+    "sha256": "487f87faaf547ea30e0aba4d5b53346292571256b25333a978db1692bcee9dd2",
+    "bytes": 6518974464,
+    "checksums_url": "https://releases.ubuntu.com/26.04/SHA256SUMS",
+    "signature_url": "https://releases.ubuntu.com/26.04/SHA256SUMS.gpg",
+    "signer": "843938DF228D22F7B3742BC0D94AA3F0EFE21092"
+  }
+}

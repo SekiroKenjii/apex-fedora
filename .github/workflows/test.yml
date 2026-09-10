@@ -1,0 +1,27 @@
+name: Tool tests
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tooling:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install virtual disk test tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends qemu-utils
+      - name: Install test dependency
+        run: python3 -m pip install pytest==9.1.1
+      - name: Check tracked source
+        run: python3 tools/apex.py git-hook pre-commit
+      - name: Run unit tests
+        run: python3 -m pytest
+      - name: Check source syntax
+        run: python3 tools/check_static.py

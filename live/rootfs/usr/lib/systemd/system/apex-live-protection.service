@@ -1,0 +1,15 @@
+[Unit]
+Description=Verify live disk protection before starting the desktop
+Before=gdm.service display-manager.service
+After=systemd-udev-settle.service local-fs.target
+Wants=systemd-udev-settle.service
+OnFailure=emergency.target
+OnFailureJobMode=isolate
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/apex/live-protection-check.sh
+RemainAfterExit=yes
+
+[Install]
+RequiredBy=gdm.service

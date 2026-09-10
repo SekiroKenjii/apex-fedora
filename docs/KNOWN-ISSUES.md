@@ -1,0 +1,135 @@
+# Known issues
+
+## Audio: BLOCKED
+
+The ALC294 codec on subsystem 1043:1ab2 was silent on the first boot into the current
+Ubuntu installation. The operator applied the linked workaround, restarted and
+reports working speaker audio since then through September 9. The exact command
+variant and why its effect persisted remain unverified; current Ubuntu audio is not
+reported broken. No kernel quirk or UCM patch has been justified. A clean cold-boot
+comparison requires separate operator action without disrupting the working system.
+Speaker output and resume remain untested on Apex. Do not add guessed model options
+or an hda-verb service.
+See the [source investigation and command decoder](AUDIO.md).
+
+## Fingerprint: BLOCKED
+
+Two operator traces on Ubuntu confirm protocol errors followed by Claim denials from
+the same GNOME Settings connection that already owns the device. Neither trace shows
+EnrollStop or Release before the denial. One attempt passed two enrollment stages
+before failing. The journal records protocol errors, not proof of a physical USB
+disconnect, despite the dialog's wording. The source of those errors within the ELAN
+driver remains unknown.
+An experimental GNOME patch preserves cleanup state after `enroll-disconnected`.
+Extracted-handler tests reproduce the lost Stop/Release calls and repeated-Cancel
+state leak, and pass after the patch on Fedora and Ubuntu source variants. A separate
+ELAN metadata patch passes tests excluding image buffers and error-message bodies
+from its logs. Both patches now build as full Fedora RPMs. The patched library passes
+159 installed C tests and eight fake-device daemon tests in the VM. Neither patch is
+in Apex or installed on Ubuntu; full GTK integration and the physical protocol error
+remain unresolved. See the
+[trace and patch procedure](HARDWARE-TRACE.md) and [ELAN diagnostics](ELAN-DIAGNOSTICS.md).
+Keep password login and password administration.
+Do not delete enrolled templates or restart the daemon on a timer as a product fix.
+See the [ownership investigation](FINGERPRINT.md).
+
+## Kernel and GPU: NOT TESTED
+
+The Fedora control image does not yet contain a validated NVIDIA module set.
+The [NVIDIA packaging path](NVIDIA.md) now pins open modules and matching vendor
+userspace/firmware. Its Mock build and image integration have not run. The builder's
+storage blocker is resolved. Unit checks and a per-application offload launcher do not
+prove that the driver loads or renders on this hardware.
+CachyOS builds are deliberately blocked until its kernel sources/RPMs and matching
+modules have a reviewed lock. Secure Boot and module signatures require their own tests;
+the build does not alter firmware settings to bypass them.
+
+## Image integration: NOT TESTED
+
+Greenboot counter/fallback behavior and the complete installer/update failure suite
+still require image-level acceptance. A control candidate has passed ten offline boots
+and a separate password-login/Wayland rendering case. Those results do not cover the
+remaining failure tests. The live guard is experimental and must not be trusted on the
+internal disk until virtual disk tests demonstrate its behavior.
+
+A separately identified signed A/B fixture now passes offline forward update and
+manual rollback with user data preserved. Bootc rejected wrong-key, unsigned and
+untrusted-source payloads on fresh overlays. These results do not belong to the
+frozen candidate. The installed static GRUB configuration did not pick up the image's
+newline repair. A diagnostic repair on separate VM overlays enabled GDM-failure
+tests: value 2 allowed three failed boots; one retry produced the required two.
+Fresh A/B images and a newly built QCOW2 now pass installed GRUB verification and
+automatic fallback after two GDM failures without manual repair. Password desktop
+and data checks pass after fallback; TTY evidence remains from the earlier fixture.
+These results do not approve the frozen candidate. Production GRUB configuration
+migration remains blocked. Dock theme-node and shutdown warnings also remain open.
+See [update testing](UPDATES.md) and
+[recovery fault tests](RECOVERY-TESTS.md).
+
+Live build `c143b7a293c540dab199b3d3fd8ab806` passed direct UEFI boot, GNOME Wayland
+and visible Ptyxis with SELinux enforcing and no failed units. It corrects the earlier
+Flatpak helper label loss and masks the live-only bootloader updater. Both virtual
+disks and their partitions rejected actual write attempts, and complete comparisons
+after poweroff found both disks unchanged. A separate pre-mount failure-latch test
+stopped before mounting root or starting the desktop, also leaving both disks unchanged.
+USB hotplug and a kernel-denied lock also passed in separate direct-UEFI VMs, with
+whole disks unchanged. Ventoy 1.1.17 normal-mode UEFI boot also passed with visible
+Wayland/Ptyxis, five internal-fixture writes denied and all three virtual disks unchanged.
+Physical storage and the interval before udev finishes processing hotplug remain
+untested. The guard is configured to make USB storage
+read-only; unlocking only a chosen USB log partition is not implemented.
+See the [live build and disk-protection findings](LIVE.md).
+
+The Ventoy run printed `cannot load image`, `you need to load the kernel first` and
+`Invalid ELF header magic` during early boot, then reached the desktop without failed
+systemd units. Their cause and impact remain unconfirmed. Device-mapper's Ventoy
+mappings have writable flags and refer only to the emulated USB data partition in
+this fixture; the ISO is mounted read-only. No write-denial claim covers those mapped
+paths. Keep these limits separate from the passing internal-disk checks. See
+[Ventoy testing](VENTOY.md). Boot log review remains blocked.
+
+The first QCOW2 boot reached GDM with SELinux enforcing and the expected digest, but
+`mcelog.service` failed on the virtual AMD family 25 CPU. Its own support probe returns
+1 for that CPU. The repository adds this probe as an ExecCondition so the daemon runs
+only on supported processors. The corrected candidate booted with no failed units in
+ten offline cycles. This does not establish physical machine-check reporting through
+EDAC or rasdaemon.
+See the [mcelog CPU support implementation](https://github.com/andikleen/mcelog/blob/master/mcelog.c).
+
+The current candidate's ten-boot Q35 run recorded nine `watchdog did not stop` messages
+during reboot, with an emulated ICH9 TCO device present, and ten clocksource remote-CPU
+read timeouts. The guest still reached GDM with the expected digest and no failed units.
+Watchdog and clocksource behavior need further investigation before recovery acceptance;
+these messages have not been classified as harmless or used to draw a hardware conclusion.
+See the [message paths and diagnostic procedure](BOOT-DIAGNOSTICS.md).
+
+## Supply chain and desktop
+
+An earlier control candidate used Graphite override fragments as complete GTK/Shell
+themes, producing a transparent GTK4 window. The current signed OCI and QCOW2 retain
+Adwaita-dark for GTK and compose the Shell override with Fedora's installed base
+resource. GTK3 initially mixed a light background with dark controls because the named
+Adwaita-dark GTK3 base was missing. The rebuilt theme RPM packages an alias to GTK3's
+built-in dark resource, and the image verifier checks its resource and hash. The
+current candidate passed clean VM review of GTK3, libadwaita and Shell surfaces at
+1280x800. Fractional scaling, XWayland, Flatpak and the OLED panel remain untested;
+that limited review is not approval of the final desktop design.
+
+The generic installer needs an adapter for the separate tools buildroot and final
+filesystem labeling. The first attempt was cancelled after its generated manifest
+confirmed both omissions. Subsequent builds exposed console/SELinux entry-point
+failures and an unsigned payload rejected after target formatting. The current ISO
+passed clean startup, cancellation with both disks unchanged, offline installation,
+ISO removal and password login. Its preflight verifies the signed compressed payload
+before Anaconda starts. Six negative ISO-level payload cases also passed, with both
+whole disks unchanged. Recovery fault tests remain required.
+See [installer findings](INSTALLER.md) for the tested checksum.
+
+Development file signatures exist separately from the unfinished bootc update trust
+configuration. Release registry/key selection and positive/negative update tests are
+still required. Exact Fedora RPM repository reconstruction is not implemented.
+
+Lotus packaging, selective Flatpak theme permissions and optional app provisioning are
+not complete. No firstboot network installer is required to reach the baseline desktop.
+OLED appearance and scaling need real-panel screenshots. GNOME behavioral patches and
+Apex Control remain deferred.

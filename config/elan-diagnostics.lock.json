@@ -1,0 +1,21 @@
+{
+  "status": "experimental diagnostic only; disabled by default; Fedora RPM built and tested in VM, not included in Apex",
+  "patch": "rpms/patches/libfprint-elan-status-diagnostics.patch",
+  "device": "04f3:0c6e",
+  "source_trust": "HTTPS and checksum audit; source signatures not independently validated",
+  "sources": [
+    {
+      "label": "Fedora libfprint 1.94.100-1.fc44; no downstream patches",
+      "sha256": "b6e02523b760836374ad8a51ea523f68ea6a2a2d05d88d58f484c06688e3307b",
+      "package_url": "https://kojipkgs.fedoraproject.org/packages/libfprint/1.94.100/1.fc44/src/libfprint-1.94.100-1.fc44.src.rpm",
+      "package_sha256": "bf003e0535ca03626110077f747e3dedb6eb9130d83309d75f3d21743edc9089",
+      "archive_sha256": "edc90e02f330a7595ceaf37f2c6ec32ed43541347fe936d3273b0bb2524fd19c"
+    },
+    {
+      "label": "Ubuntu libfprint 1:1.95.1+tod1-0ubuntu2; elan.c unpatched downstream",
+      "sha256": "7c4648606cf49bc7b8269a24d4237844175f02c92dd37e382ed726fd5f9a2be4",
+      "package_url": "https://archive.ubuntu.com/ubuntu/pool/main/libf/libfprint/libfprint_1.95.1+tod1-0ubuntu2.dsc",
+      "archive_sha256": "b04c55ce1b1f0bcf97ca6e9e3dfbcad931ac2e8f87c29548c93d1aa69d9f6c60"
+    }
+  ]
+}

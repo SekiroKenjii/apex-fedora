@@ -1,0 +1,5 @@
+ARG TARGET_IMAGE
+FROM ${TARGET_IMAGE}
+COPY live/rootfs /
+COPY live/configure.sh /tmp/apex-live-configure.sh
+RUN bash /tmp/apex-live-configure.sh && rm /tmp/apex-live-configure.sh
