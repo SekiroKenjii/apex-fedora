@@ -379,6 +379,59 @@ store. The suite configuration test caught it, which is what it is for.
 `golden_change`: none.
 `supersedes`: none. The old modules are untouched.
 
+## P5. Ports, fakes and the contract suite
+
+Goal: put the outside world behind protocols, and keep the doubles honest.
+
+Four ports so far, each with a real adapter and a fake: process, file system, clock and
+identity. 5 protocol modules, 4 real adapters, 4 fakes.
+
+### One specification, two implementations
+
+`tests/contract/` holds the behaviour, and each test runs twice, once against the real
+adapter and once against the fake. That is what stops a fake drifting into agreeing with
+nothing. Fifty five cases pass on both sides.
+
+The process contract is where the safety property lives. A shell metacharacter passed as an
+argument comes back as text rather than being interpreted. An absent program raises a port
+failure rather than returning a status. A run that exceeds its deadline raises rather than
+hanging. The deadline is a required keyword on the signature, so the 285 call sites that run
+without one cannot be written against this port at all.
+
+The file system contract requires the mode on every write. Today the runtime documents land
+at 0600 by accident of how a temporary file is created, so the property holds only until
+someone changes the helper. Here it is declared and asserted on both adapters.
+
+### The environment is proven by whichever adapter ran
+
+Every adapter declares the environment it attests to. A real one says build; every fake says
+simulated. `HostPorts.environment` is the meet of its members, and simulation dominates, so a
+bundle holding one fake anywhere attests only simulation.
+
+`require_attestable()` refuses a simulated bundle. The consequence is the one the product
+needs: a unit test can construct the entire system and run a whole pipeline, and still be
+structurally unable to authorise a recorded result.
+
+The first implementation of that rule tested adapter module names as strings. That was
+replaced, because a rule enforced by inspecting where a class happens to live is not a rule.
+An architecture test now asserts every adapter declares an environment and that real and fake
+declare opposite kinds.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Ports | 4, each with both adapters |
+| Contract cases | 55, run on both sides |
+| Suite | 947 passed, 12 skipped |
+| Strict type check | clean over 39 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: the contract suite and the port bundle tests were written first and observed
+failing.
+`golden_change`: none.
+`supersedes`: none. Twenty ports remain, and they arrive with the context that needs them.
+
 ## Commands
 
 ```sh

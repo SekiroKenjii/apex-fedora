@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+from collections.abc import Iterable
 
 from apex.kernel import errors, refusals
 
@@ -26,6 +27,17 @@ class EnvironmentKind(enum.StrEnum):
         if self is EnvironmentKind.SIMULATED:
             return False
         return self is required
+
+
+def meet(kinds: Iterable[EnvironmentKind]) -> EnvironmentKind:
+    """The weakest environment in a bundle. Simulation dominates everything."""
+    observed = list(kinds)
+    if not observed or any(kind is EnvironmentKind.SIMULATED for kind in observed):
+        return EnvironmentKind.SIMULATED
+    first = observed[0]
+    if any(kind is not first for kind in observed):
+        raise errors.InternalDefect(f"a bundle mixes environments: {sorted(set(observed))}")
+    return first
 
 
 class ScopeLimit(enum.StrEnum):
