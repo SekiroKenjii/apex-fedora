@@ -432,6 +432,66 @@ failing.
 `golden_change`: none.
 `supersedes`: none. Twenty ports remain, and they arrive with the context that needs them.
 
+## P6. Locking, archiving and digesting
+
+Goal: finish the ports that need no guest, and make each one carry a property the current
+code gets wrong.
+
+Three more ports, each with both adapters and a shared contract: 7 of the planned twenty
+four are now done. The contract suite stands at 93 cases.
+
+### A lock that says who holds it
+
+The current code holds two incompatible behaviours under one name. The machine lock takes an
+exclusive flock and blocks until the holder goes away, with no budget and no message. The
+remote build lock refuses at once. Neither writes down who holds it, so a refusal cannot say
+and a wait cannot be diagnosed.
+
+`AcquisitionPolicy` makes the choice explicit: immediate, or wait for a stated budget. Either
+way the holder is recorded in the lock file and a refusal names it. The contract asserts that
+a contended lock refuses with the holder in the message, and that a bounded wait gives up
+rather than hanging.
+
+### An archive that reads each file once
+
+`export_source` reads every source file twice, once to write it into the tar and once again
+to hash it, on every build. The port hashes the bytes it already holds, and the contract
+asserts the read count equals the file count. Determinism is asserted directly: bundling the
+same tree twice gives the same root, and changing one byte changes it.
+
+Symlinks and non-regular entries are refused rather than followed.
+
+### A cache that cannot become an integrity decision
+
+The digest cache is keyed on device, inode, size and modification time, never on the path, so
+a rename cannot serve a stale answer. The contract asserts the property that keeps this an
+optimisation: a cold cache produces the same digest as a warm one.
+
+### A gap in the gate, found by the gate
+
+The lint recipe covered four directories and `tests/contract` was not among them, so the new
+contract tests were unlinted while the recipe reported success. The lint ratchet caught it,
+because those files are not in the baseline and therefore must be clean. The recipe now
+covers them.
+
+That is the second time a gate has been saved by another gate rather than by review. It is
+also the argument for the ratchet being per file rather than per directory: a directory the
+linter never visits still has to answer to the baseline.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Ports done | 7 of 24 |
+| Contract cases | 93, run on both adapters |
+| Suite | 991 passed, 12 skipped |
+| Strict type check | clean over 48 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: each contract module was written first and observed failing.
+`golden_change`: none.
+`supersedes`: none.
+
 ## Commands
 
 ```sh

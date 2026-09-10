@@ -183,7 +183,7 @@ types:
     uv run --no-project --with mypy==1.18.2 mypy --strict src/apex
 
 lint:
-    uv run --no-project --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture
+    uv run --no-project --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
 
 gate:
     just test

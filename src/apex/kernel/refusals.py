@@ -34,6 +34,9 @@ class RefusalReason(enum.StrEnum):
     TOO_MANY_DEVICES = "machine.too-many-devices"
     NOT_A_DISPOSABLE_MACHINE = "machine.not-disposable"
 
+    LOCK_HELD = "lock.held"
+    ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"
+
     NO_VERIFIED_RESULT = "evidence.no-verified-result"
     HARDWARE_REQUIRES_PHYSICAL = "evidence.hardware-requires-physical"
     PASS_REQUIRES_PROOF = "evidence.pass-requires-proof"

@@ -11,8 +11,24 @@ from pathlib import Path
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_files, fake_ids, fake_process
-from apex.adapters.real import real_clock, real_files, real_ids, real_process
+from apex.adapters.fakes import (
+    fake_archives,
+    fake_clock,
+    fake_digesting,
+    fake_files,
+    fake_ids,
+    fake_locking,
+    fake_process,
+)
+from apex.adapters.real import (
+    real_archives,
+    real_clock,
+    real_digesting,
+    real_files,
+    real_ids,
+    real_locking,
+    real_process,
+)
 from apex.kernel import safepaths
 
 
@@ -53,3 +69,27 @@ def clocks(request: pytest.FixtureRequest) -> Iterator[object]:
         yield real_clock.SystemClock()
     else:
         yield fake_clock.ManualClock()
+
+
+@pytest.fixture(params=["real", "fake"])
+def locks(request: pytest.FixtureRequest, root: safepaths.RuntimeRoot) -> Iterator[object]:
+    if request.param == "real":
+        yield real_locking.FileLocks(root)
+    else:
+        yield fake_locking.MemoryLocks()
+
+
+@pytest.fixture(params=["real", "fake"])
+def archives(request: pytest.FixtureRequest) -> Iterator[object]:
+    if request.param == "real":
+        yield real_archives.TarArchives()
+    else:
+        yield fake_archives.MemoryArchives()
+
+
+@pytest.fixture(params=["real", "fake"])
+def digests(request: pytest.FixtureRequest) -> Iterator[object]:
+    if request.param == "real":
+        yield real_digesting.CachedDigests()
+    else:
+        yield fake_digesting.CountingDigests()
