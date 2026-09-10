@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import dataclasses
-import json
 from collections.abc import Sequence
 from typing import Any, Self
 
-from apex.kernel import hashing, identifiers
+from apex.kernel import encoding, hashing, identifiers
 from apex.pipeline.facts import FactKey
 from apex.pipeline.stages import Stage
 from apex.registry import graph
@@ -48,21 +47,17 @@ class Plan:
 
 
 def _digest(name: str, ordered: Sequence[Stage]) -> identifiers.Digest:
-    canonical = json.dumps(
-        {
-            "name": name,
-            "stages": [
-                {
-                    "id": str(item.id),
-                    "reads": sorted(key.name for key in item.reads),
-                    "writes": sorted(key.name for key in item.writes),
-                    "effects": sorted(str(effect) for effect in item.effects),
-                    "attests": sorted(str(check) for check in item.attests),
-                }
-                for item in ordered
-            ],
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    return hashing.digest_bytes(canonical.encode())
+    document: encoding.Document = {
+        "name": name,
+        "stages": [
+            {
+                "id": str(item.id),
+                "reads": sorted(key.name for key in item.reads),
+                "writes": sorted(key.name for key in item.writes),
+                "effects": sorted(str(effect) for effect in item.effects),
+                "attests": sorted(str(check) for check in item.attests),
+            }
+            for item in ordered
+        ],
+    }
+    return hashing.digest_bytes(encoding.canonical(document))

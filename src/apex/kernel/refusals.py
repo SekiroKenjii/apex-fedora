@@ -53,6 +53,8 @@ class RefusalReason(enum.StrEnum):
     ENVIRONMENT_NOT_WITNESSED = "evidence.environment-not-witnessed"
     RETRACTED_BY_OPERATOR = "evidence.retracted-by-operator"
     PROOF_ALTERED = "evidence.proof-altered"
+    PROOF_IS_EMPTY = "evidence.proof-is-empty"
+    STORE_AREA_NOT_PERMITTED = "evidence.store-area-not-permitted"
     RECORD_NOT_BOUND_TO_CANDIDATE = "evidence.record-not-bound-to-candidate"
 
     SHELL_STRING_NOT_ACCEPTED = "command.shell-string-not-accepted"

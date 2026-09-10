@@ -188,12 +188,16 @@ lint:
 readiness-shadow:
     python3 tools/migration/readiness_shadow.py
 
+verify-chain:
+    python3 tools/migration/verify_chain.py
+
 gate:
     just test
     just lint
     just types
     just runtime-verify
     just readiness-shadow
+    just verify-chain
     just surface
     just ratchet
     uv run --no-project --with pytest==9.1.1 pytest -q -m golden

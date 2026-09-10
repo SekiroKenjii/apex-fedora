@@ -849,6 +849,80 @@ is recorded there.
 `golden_change`: none. The command surface is untouched and legacy remains the authority.
 `supersedes`: none.
 
+## P10c. The proof store and the chain
+
+### A proof is named by what it contains
+
+The v1 store names a proof by a path chosen when the record is written. Anyone who can write
+that path can change what a passing record cites without touching the record. In the new store
+the name is the digest, under `objects/<first two characters>/<digest>`, so altering the bytes
+moves the object and the citation stops resolving.
+
+The measured effect on the current store: 295 proof files hold 226 distinct digests, so content
+addressing removes 22 per cent of the bytes. One screenshot is stored nine times.
+
+### Bounding a read at the recorded length hides an append
+
+The first version read each object with a limit equal to its recorded length. A test caught what
+that does. Appending bytes to an object leaves the first `n` bytes unchanged, the read truncates
+to exactly those bytes, and the digest matches. The load passes while every other reader of that
+file sees the appended content.
+
+The read now asks for one byte more than the record claims and refuses any length that is not
+the recorded one. Still bounded, and growth is detected.
+
+### The chain commits to itself, and the head catches a dropped tail
+
+Each link is the digest of the previous link and the canonical rendering of the entry, so an
+edit, a deletion or a reorder breaks the chain at a sequence the report names. Dropping entries
+off the end leaves a shorter chain that is internally consistent, so a separate head record
+carries the latest sequence and link, and a chain shorter than its head is a break.
+
+Verified on a real filesystem: editing one verdict reports a link mismatch at sequence one, and
+deleting the middle entry reports a sequence out of order at sequence two.
+
+### What the message authentication code is worth
+
+The key sits beside the chain, under the same account that can edit the chain. It detects an
+edit made without the key and a file damaged by something else. It is not proof against the
+person operating the machine. `docs/RECOVERY.md` says so in those words, and no text in this
+project may say more.
+
+The code signs the link rather than the entry, and the link already commits to the entry, so a
+forger who edits an entry must recompute the link, and recomputing the link does not produce the
+tag. Both paths have a test.
+
+### Replay never reads a cached digest
+
+The digest port caches on the stat tuple, which is right for an immutable object store and wrong
+for anything a verifier decides on. An architecture test refuses that import anywhere in the
+attestation package, so the two cannot be confused when the cache lands in the workspace phase.
+
+### One canonical rendering
+
+Two places were about to hash their own JSON. `kernel/encoding.py` now holds the single
+byte-stable rendering, and the plan digest was moved onto it.
+
+### The entry kind has one member
+
+Only recorded results exist today, so that is the only member declared. The field is written
+regardless: the chain is append-only, and adding a discriminator after entries exist would leave
+older entries without one.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Suite | 1175 passed, 7 skipped |
+| Strict type check | clean over 148 files |
+| Chain on the real root | empty, replayed, intact |
+| Gates green | G1 to G7, lint, strict typing, chain replay |
+
+`migration_red`: the proof store and ledger suites were written first and observed failing on a
+missing module.
+`golden_change`: none.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -863,5 +937,6 @@ just ratchet                # check no file regressed
 just lint                   # style rules over the restructured code
 just types                  # strict type check over the package
 just readiness-shadow       # compare the new readiness fold with the old one
+just verify-chain           # replay the attestation chain and name the first break
 just gate                   # the standing gate for the current phase
 ```

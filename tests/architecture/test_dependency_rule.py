@@ -146,3 +146,21 @@ def test_every_declared_layer_that_exists_has_a_docstring(package: str) -> None:
         pytest.skip(f"NOT TESTED: {package} is not built yet")
 
     assert ast.get_docstring(ast.parse(module.read_text()))
+
+
+def test_integrity_paths_never_reach_for_a_cached_digest() -> None:
+    """Replay re-hashes. A digest read from a cache is a digest an editor can arrange.
+
+    The cache is keyed on the stat tuple, which is right for the immutable object store and
+    wrong for anything a verifier decides on. Keeping the port out of this package is what
+    stops the two from being confused later.
+    """
+    offenders = []
+    for path, tree in modules():
+        if package_of(path) != "attestation":
+            continue
+        for name in imported_names(tree):
+            if name.endswith("digesting"):
+                offenders.append(f"{path.name} imports {name}")
+
+    assert offenders == []
