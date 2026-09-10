@@ -50,6 +50,7 @@ class RefusalReason(enum.StrEnum):
     STALE_EVIDENCE = "evidence.stale-or-unbound"
     PROOF_KIND_NOT_ACCEPTED = "evidence.proof-kind-not-accepted"
     SIMULATED_ENVIRONMENT = "evidence.simulated-environment"
+    ENVIRONMENT_NOT_WITNESSED = "evidence.environment-not-witnessed"
 
     SHELL_STRING_NOT_ACCEPTED = "command.shell-string-not-accepted"
     DEADLINE_REQUIRED = "command.deadline-required"

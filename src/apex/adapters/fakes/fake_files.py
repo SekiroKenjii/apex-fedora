@@ -16,9 +16,11 @@ class StoredFile:
 class MemoryFiles:
     environment = claims.EnvironmentKind.SIMULATED
 
-    def __init__(self) -> None:
+    def __init__(self, *, fail_after: int | None = None) -> None:
         self._files: dict[str, StoredFile] = {}
         self.writes: list[str] = []
+        self.appended = 0
+        self.fail_after = fail_after
 
     def read_bytes(self, path: safepaths.SafePath, *, limit: int) -> bytes:
         stored = self._files.get(str(path))
@@ -32,6 +34,16 @@ class MemoryFiles:
         self._files[str(path)] = StoredFile(payload, mode)
         self.writes.append(str(path))
         return hashing.digest_bytes(payload)
+
+    def append_line(
+        self, path: safepaths.SafePath, payload: bytes, *, mode: quantities.FileMode
+    ) -> None:
+        if self.fail_after is not None and self.appended >= self.fail_after:
+            raise errors.PortFailure(port="files", cause="the device is full")
+        existing = self._files.get(str(path))
+        body = (existing.payload if existing else b"") + payload + b"\n"
+        self._files[str(path)] = StoredFile(body, existing.mode if existing else mode)
+        self.appended += 1
 
     def exists(self, path: safepaths.SafePath) -> bool:
         return str(path) in self._files

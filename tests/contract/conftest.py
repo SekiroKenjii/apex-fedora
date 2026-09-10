@@ -19,6 +19,7 @@ from apex.adapters.fakes import (
     fake_ids,
     fake_locking,
     fake_process,
+    fake_wallclock,
 )
 from apex.adapters.real import (
     real_archives,
@@ -28,6 +29,7 @@ from apex.adapters.real import (
     real_ids,
     real_locking,
     real_process,
+    real_wallclock,
 )
 from apex.kernel import safepaths
 
@@ -93,3 +95,11 @@ def digests(request: pytest.FixtureRequest) -> Iterator[object]:
         yield real_digesting.CachedDigests()
     else:
         yield fake_digesting.CountingDigests()
+
+
+@pytest.fixture(params=["real", "fake"])
+def wall_clocks(request: pytest.FixtureRequest) -> Iterator[object]:
+    if request.param == "real":
+        yield real_wallclock.SystemWallClock()
+    else:
+        yield fake_wallclock.FixedWallClock()

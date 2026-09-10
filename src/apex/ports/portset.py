@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from apex.kernel import claims, errors, refusals
+from apex.kernel import claims
 from apex.ports import clock, files, ids, process
 
 
@@ -27,13 +27,13 @@ class HostPorts:
             for member in (self.processes, self.files, self.clock, self.identities)
         )
 
-    def require_attestable(self) -> claims.EnvironmentKind:
-        """Refuse to let a simulated bundle authorise a recorded result."""
-        kind = self.environment
-        if kind is claims.EnvironmentKind.SIMULATED:
-            raise errors.Refusal(
-                refusals.RefusalReason.SIMULATED_ENVIRONMENT,
-                subject="a bundle holding a fake adapter",
-                remedy="only a bundle of real adapters may authorise a recorded result",
-            )
-        return kind
+    def require_attestable(
+        self, *, expected: claims.EnvironmentKind | None = None
+    ) -> claims.EnvironmentKind:
+        """Refuse unless this bundle witnesses an environment on the allowlist.
+
+        Every adapter here runs on the host, so this bundle can only ever witness a build
+        environment. Asking it to prove a virtual machine or a physical laptop is refused
+        rather than answered, because a class attribute is a declaration and not a proof.
+        """
+        return claims.require_attestable(self.environment, expected=expected)

@@ -678,6 +678,92 @@ assumption to state.
 `golden_change`: none.
 `supersedes`: none. `config/project.json` still stands and still feeds the old tools.
 
+## P10a. Corrections the adversarial review found in the committed foundation
+
+Before building the evidence core, eleven agents attacked the design and the code it would
+rest on. Three lenses: forging a pass, overclaiming, and losing the irreplaceable data. They
+returned thirteen fatal findings, six of which were defects in code already committed rather
+than in the proposed design. Those six were verified by hand against the source and fixed
+here. The evidence core follows in the next commit.
+
+### Readiness cannot be a lattice rollup
+
+`verdicts.meet` has not tested as its identity, which is correct for combining what one run
+observed and wrong for deciding whether every check passed. Folding a catalogue of 62 where
+38 were never run reports the verdict of the 24 that were, so `meet(PASS, NOT TESTED)` is
+PASS and a readiness gate built on it would report ready with 38 checks untouched.
+
+Worse, retraction would raise it: superseding a blocked result with not tested lifts a group
+from blocked to pass, which is the opposite of what withdrawing a result should mean.
+
+`verdicts.require_all` is a conjunction over every check and returns false for an empty set.
+`verdicts.claims_less` orders verdicts by how much they assert, which is a different order
+from the lattice, and a test asserts the two disagree on exactly the case that matters.
+
+### An allowlist, not a denylist of one value
+
+`HostPorts.require_attestable` rejected simulation and returned whatever else it found. That
+is a denylist with one entry. It is now an allowlist, and it accepts an expected kind: asking
+a bundle of host adapters to prove a physical laptop is refused rather than answered.
+
+The deeper point is recorded rather than papered over. Every real adapter declares a build
+environment because every one of them runs on the host. A class attribute is a declaration,
+not a proof, so a check that requires a virtual machine or a physical machine cannot be
+satisfied by this bundle at all, and now says so.
+
+### Two clocks, because they answer different questions
+
+`ClockPort.now` returns a monotonic reading and measures waiting. It cannot produce a
+`recorded_at`, and a monotonic float written into a record as a timestamp would be
+meaningless after a reboot. `WallClockPort` is separate, renders the same shape the stored
+records already use, and nothing that decides anything reads it: ordering comes from the
+sequence number, so a clock that jumps cannot reorder evidence.
+
+### Adopting a root is still a check
+
+`RuntimeRoot.adopt` accepted any path. It exists so a test and the composition root can hand
+in a directory they made, but a root accepted without checking makes every containment rule
+below it optional. It now refuses a symlink, a file, an absent path and any mode other than
+0700. No existing caller changed, which means they were all already correct.
+
+### An append-only log needs an append
+
+`FileSystemPort` had four operations and none of them could add a line durably. A chain built
+out of read-modify-write is not append-only. `append_line` opens with `O_APPEND`, fsyncs the
+file, and fsyncs the directory when the file is created. The fake can be told to fail after a
+given number of appends, so the disk-full path is testable.
+
+### Two findings recorded for the evidence core rather than fixed here
+
+The legacy `select-candidate` renames the whole `evidence/` directory into
+`candidate-history/`. Any new store placed inside it would be swept away by one legacy
+candidate selection, so the new store goes beside the old tree and never inside it.
+
+Rotated evidence is not private. `shutil.copyfile` at `evidence.py:121` writes the history
+copy with no mode, so 20 files under `evidence/history` and 12 under `candidate-history` are
+group-writable and world-readable while the 24 current records and 275 proof files are 0600.
+The parent directories are 0700, so this is a policy violation rather than an active leak,
+and it becomes a leak the moment a directory mode changes.
+
+### The catalogue is sourced
+
+All 62 check summaries were sourced from the real evidence records, the archived candidates
+and the committed documentation. None had to be invented. They land with the evidence
+context.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Fatal findings in committed code | 6, all verified and fixed |
+| Suite | 1115 passed, 8 skipped |
+| Strict type check | clean over 74 files |
+| Gates green | G1 to G6, lint, strict typing |
+
+`migration_red`: every correction was written as a failing test first.
+`golden_change`: none.
+`supersedes`: none.
+
 ## Commands
 
 ```sh

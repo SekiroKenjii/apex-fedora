@@ -51,8 +51,29 @@ class RuntimeRoot:
 
     @classmethod
     def adopt(cls, path: Path) -> Self:
-        """Accept an already-verified directory. Used by tests and by the composition root."""
-        return cls(path.resolve())
+        """Accept a directory the caller already created, after checking it is private.
+
+        This exists so a test and the composition root can hand in a directory they made
+        themselves. It still checks, because a root accepted without checking would make
+        every containment rule below it optional.
+        """
+        if path.is_symlink():
+            raise errors.Refusal(
+                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(path)
+            )
+        resolved = path.resolve()
+        if not resolved.is_dir():
+            raise errors.Refusal(
+                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(path)
+            )
+        observed = stat.S_IMODE(resolved.stat().st_mode)
+        if observed != PRIVATE_DIRECTORY_MODE.value:
+            raise errors.Refusal(
+                refusals.RefusalReason.RUNTIME_ROOT_NOT_PRIVATE,
+                subject=f"{resolved} is {observed:04o}",
+                remedy="the runtime root must be 0700",
+            )
+        return cls(resolved)
 
     def child(self, relative: str) -> SafePath:
         target = (self.path / relative).resolve()

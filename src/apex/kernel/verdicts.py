@@ -69,6 +69,27 @@ def meet(left: Verdict, right: Verdict) -> Verdict:
     return left if _SEVERITY[left.stored_name] >= _SEVERITY[right.stored_name] else right
 
 
+# How much a verdict CLAIMS, which is not how much it dominates a meet. Not tested claims
+# least; a pass claims most. Retracting a result therefore claims less even though the meet
+# would keep the old value.
+_CLAIMED = {"NOT TESTED": 0, "BLOCKED": 1, "FAIL": 1, "PASS": 3}
+
+
+def claims_less(old: Verdict, new: Verdict) -> bool:
+    """Whether replacing `old` with `new` asserts strictly less than before."""
+    return _CLAIMED[new.stored_name] < _CLAIMED[old.stored_name]
+
+
+def require_all(verdicts: Iterable[Verdict]) -> bool:
+    """Whether every verdict permits installation. An empty set does not.
+
+    Readiness is a conjunction over the whole catalogue, never a fold: `meet` has not tested
+    as its identity, so a rollup of 24 results and 38 absences reports the 24.
+    """
+    observed = list(verdicts)
+    return bool(observed) and all(item.permits_installation for item in observed)
+
+
 def fold(verdicts: Iterable[Verdict], *, reason: refusals.RefusalReason) -> Verdict:
     seed: Verdict = NotTested(reason)
     return functools.reduce(meet, verdicts, seed)

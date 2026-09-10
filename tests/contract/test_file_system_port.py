@@ -79,3 +79,35 @@ def test_an_absent_file_does_not_exist(
     files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
 ) -> None:
     assert not files.exists(target(root, "absent.json"))
+
+
+def test_appending_creates_the_file_with_its_declared_mode(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    path = target(root, "chain.jsonl")
+
+    files.append_line(path, b'{"sequence": 0}', mode=quantities.FileMode(0o600))
+
+    assert files.mode_of(path) == quantities.FileMode(0o600)
+
+
+def test_appending_adds_a_line_and_keeps_the_earlier_ones(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    path = target(root, "chain.jsonl")
+
+    files.append_line(path, b"first", mode=quantities.FileMode(0o600))
+    files.append_line(path, b"second", mode=quantities.FileMode(0o600))
+
+    assert files.read_bytes(path, limit=100) == b"first\nsecond\n"
+
+
+def test_appending_never_rewrites_what_is_already_there(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    path = target(root, "chain.jsonl")
+    files.append_line(path, b"kept", mode=quantities.FileMode(0o600))
+
+    files.append_line(path, b"added", mode=quantities.FileMode(0o600))
+
+    assert files.read_bytes(path, limit=100).startswith(b"kept\n")

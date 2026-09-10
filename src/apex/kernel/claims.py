@@ -40,6 +40,30 @@ def meet(kinds: Iterable[EnvironmentKind]) -> EnvironmentKind:
     return first
 
 
+ATTESTABLE = frozenset(
+    kind for kind in EnvironmentKind if kind is not EnvironmentKind.SIMULATED
+)
+
+
+def require_attestable(
+    kind: EnvironmentKind, *, expected: EnvironmentKind | None = None
+) -> EnvironmentKind:
+    """Refuse anything not on the allowlist, and anything that is not what was asked for."""
+    if kind not in ATTESTABLE:
+        raise errors.Refusal(
+            refusals.RefusalReason.SIMULATED_ENVIRONMENT,
+            subject=str(kind),
+            remedy="only a bundle of real adapters may authorise a recorded result",
+        )
+    if expected is not None and kind is not expected:
+        raise errors.Refusal(
+            refusals.RefusalReason.ENVIRONMENT_NOT_WITNESSED,
+            subject=f"the bundle witnesses {kind}, not {expected}",
+            remedy="run the check through ports that execute in the environment it requires",
+        )
+    return kind
+
+
 class ScopeLimit(enum.StrEnum):
     PHYSICAL_HARDWARE = "physical-hardware"
     FAILED_DEPLOYMENT_RECOVERY = "failed-deployment-recovery"
