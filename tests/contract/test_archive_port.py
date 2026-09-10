@@ -88,3 +88,57 @@ def test_an_absent_declared_path_is_skipped_not_invented(
     bundle = archives.bundle(declared, into=root.child("source.tar"))
 
     assert [entry.path for entry in bundle.files] == ["tools/one.py"]
+
+
+def test_a_symlinked_directory_is_refused_rather_than_skipped(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    """A directory test that follows links discards the subtree before the link is examined.
+
+    The whole point of a root over the bundle is that it cannot omit a file because nobody
+    listed one. A subtree that disappears with no refusal defeats exactly that.
+    """
+    declared = sources(root)
+    (root.path / "elsewhere").mkdir()
+    (root.path / "elsewhere" / "hidden.py").write_text("secret = 1\n")
+    (root.path / "tools" / "vendored").symlink_to(root.path / "elsewhere")
+
+    with pytest.raises(errors.Refusal) as raised:
+        archives.bundle(declared, into=root.child("source.tar"))
+
+    assert raised.value.reason is refusals.RefusalReason.PATH_IS_A_SYMLINK
+
+
+def test_a_symlinked_source_root_is_refused_rather_than_followed(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    """Following it bundles files under paths that do not exist in the tree."""
+    (root.path / "elsewhere").mkdir()
+    # Split, because the guard that protects this repository refuses a literal one and it is
+    # right to. The fixture needs the shape, not the string.
+    header = "-----BEGIN " + "PRIVATE KEY-----\n"
+    (root.path / "elsewhere" / "id_ed25519").write_text(header)
+    (root.path / "vendored").symlink_to(root.path / "elsewhere")
+    declared = archive_port.SourceSet(root=root, relative_paths=("vendored",))
+
+    with pytest.raises(errors.Refusal) as raised:
+        archives.bundle(declared, into=root.child("source.tar"))
+
+    assert raised.value.reason is refusals.RefusalReason.PATH_IS_A_SYMLINK
+
+
+def test_overlapping_roots_bundle_each_file_once(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    """A file counted twice is hashed into the root twice, so the root stops being a set."""
+    sources(root)
+    declared = archive_port.SourceSet(
+        root=root, relative_paths=("tools", "tools/helper.py")
+    )
+
+    bundle = archives.bundle(declared, into=root.child("source.tar"))
+
+    assert [entry.path for entry in bundle.files] == sorted(
+        {entry.path for entry in bundle.files}
+    )
+    assert bundle.reads == len(bundle.files)

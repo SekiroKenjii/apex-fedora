@@ -38,8 +38,10 @@ class FileLocks:
         path = self._path(scope).path
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         handle = path.open("a+")
+        taken = False
         try:
             self._take(handle, scope, policy)
+            taken = True
             identity = f"process {os.getpid()}"
             handle.seek(0)
             handle.truncate()
@@ -47,11 +49,15 @@ class FileLocks:
             handle.flush()
             yield locking.LockLease(scope=scope, holder=identity)
         finally:
-            with contextlib.suppress(OSError):
-                handle.seek(0)
-                handle.truncate()
-                handle.flush()
-                fcntl.flock(handle, fcntl.LOCK_UN)
+            # The lock is advisory, so a process that only opened the file can still truncate
+            # it. Clearing the record on the path where nothing was taken erases the identity
+            # the real holder wrote, and every refusal after the first stops naming anyone.
+            if taken:
+                with contextlib.suppress(OSError):
+                    handle.seek(0)
+                    handle.truncate()
+                    handle.flush()
+                    fcntl.flock(handle, fcntl.LOCK_UN)
             handle.close()
 
     def _take(

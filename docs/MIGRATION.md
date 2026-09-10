@@ -1013,6 +1013,55 @@ block gains one line. No invocation was added or removed, so the tier counts abo
 and `help-top-level`, `unknown-subcommand` and `no-subcommand` were confirmed byte identical.
 `supersedes`: none.
 
+## P12a. Three defects in the shipped adapters
+
+The workspace design review ran the adapters rather than reading them, and found three faults in
+code committed earlier in this restructure. All three are reproduced below and each fix is pinned by
+a contract test that was red before it.
+
+### A bundle could silently omit a subtree
+
+`_candidates` filtered on `not path.is_dir()`, and that test follows a link. A symlinked directory
+was therefore discarded before anything examined the link, and `rglob` does not descend into one, so
+the whole subtree left the bundle with no refusal. Measured on a tree holding
+`tools/vendored -> ../elsewhere`: the bundle contained `tools/common.py` alone, and a private key
+under the link was simply gone. The bundler this replaces refuses that tree outright.
+
+That is precisely the omission a root over the bundle is supposed to make impossible, so it defeated
+the reason the root exists.
+
+### A symlinked source root was followed instead of refused
+
+Declaring the link itself as a root bundled `tools/vendored/id_ed25519` and `tools/vendored/render.py`
+under paths that do not exist in the tree. A private key entered the bundle under a fabricated name.
+
+### Overlapping roots hashed a file twice
+
+Declaring both `tools` and `tools/helper.py` produced two entries for one file and two reads, so the
+root described a multiset rather than a set of files.
+
+### The walk now exists once
+
+All three defects were present in both bundlers, in duplicated code. The walk moved to
+`adapters/sourcewalk.py`: it refuses a symlinked root, returns a symlink rather than filtering it so
+the caller refuses it by the rule it already has, and returns each file once.
+
+### A refused lock acquirer erased the holder
+
+`FileLocks.acquire` released in an unconditional `finally`, including on the path where acquisition
+had failed. The lock is advisory, so a process that merely opened the file truncated the identity the
+real holder had written. Measured across three processes against one holder: the first refusal named
+`process 330101`, the second and third said `another process` while that holder still held.
+
+The module docstring says the lock writes the holder so a refusal can name it, and after one refusal
+it could not. The release is now guarded on having taken the lock.
+
+`migration_red`: four contract cases, all observed failing first. The three archive cases failed on
+both adapters; the lock case failed on the real one only, which is why the contract suite had not
+caught it.
+`golden_change`: none.
+`supersedes`: none.
+
 ## Commands
 
 ```sh

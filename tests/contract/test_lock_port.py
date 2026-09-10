@@ -77,3 +77,22 @@ def test_a_lock_is_reusable_after_release(locks: locking_port.LockPort) -> None:
 
     with locks.acquire(scope(), immediate()) as second:
         assert second.holder
+
+
+def test_a_refused_acquirer_does_not_erase_the_holder(locks: locking_port.LockPort) -> None:
+    """Releasing on the path where nothing was taken clears a record someone else wrote.
+
+    The lock is advisory, so a process that merely opened the file can truncate it. The first
+    refusal then names the holder and every refusal after it says nothing, which is the one
+    thing this port exists to avoid.
+    """
+    scope = locking_port.LockScope("build")
+
+    with locks.acquire(scope, locking_port.AcquisitionPolicy.immediate()) as lease:
+        for _ in range(3):
+            with (
+                pytest.raises(errors.Refusal),
+                locks.acquire(scope, locking_port.AcquisitionPolicy.immediate()),
+            ):
+                pass
+            assert locks.holder(scope) == lease.holder
