@@ -1062,6 +1062,98 @@ caught it.
 `golden_change`: none.
 `supersedes`: none.
 
+## P12. The repository rules, and the proof that they are no weaker
+
+### This phase changes no authority
+
+`tools/apexlib/gitguard.py` is not edited, not imported from, not repointed and not deleted.
+Neither is the entry point or the dispatch. The guard that runs on every commit today is the same
+one that ran before this phase, and it stays the authority until a later phase can show the
+preconditions are met.
+
+That is the deliberate call. The guard is a working control: it refused a real commit during this
+restructure, which is why one package here is named `attestation` rather than `evidence`. Landing
+the rules and the proof without the switch is a complete phase. Landing the switch on top of three
+unsolved problems is not, and there are three: `tools/` cannot import the new package at all,
+because the name `apex` already resolves to `tools/apex.py`; the new refusal type is not in the
+exception tuple the entry point catches, so it would reach the operator as a traceback; and the
+lint ratchet has no headroom on any of the three files a switch must edit.
+
+### The 306-character boolean is now eighteen rules
+
+Six rules transcribe the path expression, three the shape checks, five the content checks, and
+four refuse things the guard permits today. Five more cover the commit subject. Each is one file
+holding one rule and its policy as a typed field, and each carries where it came from: a rule that
+restates an existing refusal, or one that adds a new one and says why.
+
+That distinction is what removes the central list of blessed exceptions. Adding a deliberate new
+refusal is one new file.
+
+### The relation, and what it is checked over
+
+`just guard-shadow` compares the rules with the guard on 1714 rows and 2526 messages, and asserts
+different things of the two configurations.
+
+The transcribing rules must agree in **both** directions. They claim only to restate what already
+exists, so a difference either way is a transcription error. Measured: zero, on paths, on modes, on
+content and on messages.
+
+The full rule set must never permit what the guard refuses. It may refuse more, but only where a
+rule that declares itself an addition is the one that fired. Measured: zero weakenings, 45
+strengthenings, every one attributed.
+
+The corpus is the whole repository history and index, plus every shape the guard can tell apart,
+generated from the guard's own constants rather than from the new rules. A name dropped during
+transcription would otherwise drop its own test case with it.
+
+### The oracle was checked by breaking things
+
+Dropping two names from one rule reports 18 weakenings and names them. Widening one rule with case
+folding instead of lowering reports six differences in the other direction, on paths carrying the
+long s and similar characters. The self-test removes each transcribing rule in turn and requires
+the corpus to notice; nothing is undetectable.
+
+### Four secrets this project writes were not covered
+
+Measured against the real guard: `credentials.json`, `passphrase`, `builder_ed25519` and a bare
+`token` all pass it today, and the builder key exists in the runtime root. Only `id_ed25519` was
+covered. Four rules close that, and each is attributed as an addition rather than smuggled into a
+transcription.
+
+The two generic key names stay in the private-document rule rather than moving to the new one.
+Moving them would make them permitted in exactly the configuration meant to prove nothing was
+dropped.
+
+### Two corrections found while building the proof
+
+Lowering, not case folding. Ten characters fold into ASCII where they do not lower, so folding
+would refuse paths the guard permits. That is still a difference, and the oracle treats it as one.
+
+A rule that never decides alone is not automatically dead. The body rule can never be the only
+reason a message is refused, because the subject pattern cannot match across a newline, so it is
+subsumed on the verdict and still changes what the operator is told. The coverage check therefore
+asks whether removing a rule changes what is reported, not whether it ever fires alone. The
+co-author rule turned out to be able to decide alone after all, on a one-line subject that happens
+to contain the trailer, and the corpus was missing that shape.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Suite | 1315 passed, 6 skipped |
+| Strict type check | clean over 194 files |
+| Weakenings | 0 |
+| Transcription differences | 0 over rows and messages |
+| Strengthenings | 45, all attributed to a declared addition |
+| Runtime merkle root | unchanged, 0 differences |
+| Authority | unchanged; the old guard still runs every hook |
+
+`migration_red`: the row parser, the rule boundaries, the message rules and both architecture rules
+were written first and observed failing. The context order rule was checked by planting an import
+and watching it fail.
+`golden_change`: none. No hook behaviour changed, so no recorded output moved.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -1079,5 +1171,6 @@ just readiness-shadow       # compare the new readiness fold with the old one
 just verify-chain           # replay the attestation chain and name the first break
 just readiness-table        # read the real store through the versioned reader
 just readiness-table-strict # the same, withholding every imported result
+just guard-shadow           # compare the repository rules with the guard they replace
 just gate                   # the standing gate for the current phase
 ```

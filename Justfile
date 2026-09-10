@@ -191,6 +191,9 @@ readiness-shadow:
 verify-chain:
     python3 tools/migration/verify_chain.py
 
+guard-shadow:
+    python3 tools/migration/guard_shadow.py --self-test
+
 readiness-table:
     python3 tools/migration/readiness_table.py
 
@@ -205,6 +208,7 @@ gate:
     just readiness-shadow
     just verify-chain
     just readiness-table
+    just guard-shadow
     just test-integration
     just surface
     just ratchet

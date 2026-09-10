@@ -93,6 +93,10 @@ class CheckId(_DottedName):
     """Names one required evidence check."""
 
 
+class RuleId(_DottedName):
+    """Names one repository rule."""
+
+
 class StageId(_DottedName):
     """Names one pipeline stage."""
 
