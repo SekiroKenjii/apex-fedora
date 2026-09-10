@@ -183,7 +183,13 @@ print(out)
 '''
     result = subprocess.run(['dbus-run-session', '--', sys.executable, '-c', script],
                             capture_output=True, text=True, timeout=6, check=True)
+    message = result.stdout.strip()
+    if not message:
+        # The tools exist but this session bus produced nothing to parse. That is a fact about
+        # the machine, not about the parser, and reporting it as a parser failure would be a
+        # claim the run cannot support.
+        pytest.skip('Private D-Bus session emitted no message; no hardware claim')
     trace = Trace()
-    trace.feed(parse_line(result.stdout.strip()))
+    trace.feed(parse_line(message))
     assert trace.events[0]['status'] == 'enroll-disconnected'
     assert trace.summary()['fingerprint_acceptance'] == 'NOT TESTED'

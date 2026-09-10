@@ -51,10 +51,13 @@ jobs:
         with:
           just-version: '1.45.0'
 
-      - name: Install the virtual disk tool the disk tests need
+      - name: Install the host facilities the tests read
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends qemu-utils
+          # qemu-utils backs the disk tests; ovmf provides the UEFI firmware whose presence
+          # the machine command validates before it will build an argument list.
+          sudo apt-get install --yes --no-install-recommends qemu-utils ovmf
+          test -f /usr/share/OVMF/OVMF_CODE_4M.fd
 
       - name: Report the interpreters in use
         run: |
