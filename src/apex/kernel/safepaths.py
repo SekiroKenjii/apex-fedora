@@ -38,7 +38,7 @@ class RuntimeRoot:
             )
         if not resolved.is_dir():
             raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(resolved)
+                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(resolved)
             )
         observed = stat.S_IMODE(resolved.stat().st_mode)
         if observed != PRIVATE_DIRECTORY_MODE.value:
@@ -64,7 +64,7 @@ class RuntimeRoot:
         resolved = path.resolve()
         if not resolved.is_dir():
             raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(path)
+                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path)
             )
         observed = stat.S_IMODE(resolved.stat().st_mode)
         if observed != PRIVATE_DIRECTORY_MODE.value:
@@ -119,9 +119,23 @@ class SafePath:
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class PrivateDir:
+class SourceRoot:
+    """A directory sources are read from. Nothing is written below it, so any mode will do."""
+
     path: Path
-    mode: quantities.FileMode = PRIVATE_DIRECTORY_MODE
+
+    @classmethod
+    def adopt(cls, path: Path) -> Self:
+        if path.is_symlink():
+            raise errors.Refusal(
+                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(path)
+            )
+        resolved = path.resolve()
+        if not resolved.is_dir():
+            raise errors.Refusal(
+                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path)
+            )
+        return cls(resolved)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

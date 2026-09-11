@@ -96,6 +96,31 @@ def test_push_checks_commit_body(repo):
         gitguard.inspect_outgoing(repo, f'refs/heads/main {sha} refs/heads/main {"0"*40}\n')
 
 
+def test_push_skips_commits_a_remote_already_holds(repo):
+    (repo / 'code.txt').write_text('code')
+    git(repo, 'add', 'code.txt')
+    git(repo, 'commit', '-qm', 'Merge pull request #2 from someone/branch')
+    git(repo, 'update-ref', 'refs/remotes/origin/main', 'HEAD')
+    (repo / 'more.txt').write_text('more')
+    git(repo, 'add', 'more.txt')
+    git(repo, 'commit', '-qm', 'feat: add more')
+    sha = git(repo, 'rev-parse', 'HEAD')
+    gitguard.inspect_outgoing(repo, f'refs/heads/topic {sha} refs/heads/topic {"0"*40}\n')
+
+
+def test_push_still_checks_a_new_commit_after_one_a_remote_holds(repo):
+    (repo / 'code.txt').write_text('code')
+    git(repo, 'add', 'code.txt')
+    git(repo, 'commit', '-qm', 'feat: add code')
+    git(repo, 'update-ref', 'refs/remotes/origin/main', 'HEAD')
+    (repo / 'more.txt').write_text('more')
+    git(repo, 'add', 'more.txt')
+    git(repo, 'commit', '-qm', 'feat: add more\n\nDetailed body')
+    sha = git(repo, 'rev-parse', 'HEAD')
+    with pytest.raises(Blocked):
+        gitguard.inspect_outgoing(repo, f'refs/heads/topic {sha} refs/heads/topic {"0"*40}\n')
+
+
 def install_executable_hooks(repo):
     # Both trees, because a hook now reaches the repository rules and would otherwise fail to
     # import them in the fixture while working everywhere else.

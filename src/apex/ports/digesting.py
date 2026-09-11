@@ -9,7 +9,6 @@ from apex.kernel import claims, identifiers, safepaths
 
 class DigestPort(Protocol):
     environment: claims.EnvironmentKind
-    reads: int
 
     def file(self, path: safepaths.SafePath) -> identifiers.Digest: ...
 

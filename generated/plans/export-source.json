@@ -1,0 +1,57 @@
+{
+ "digest": "59536620d31774823b21b65802ca66b1e25b79ab491c2d710bbe5f27a796e575",
+ "name": "export-source",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "source.locate",
+   "reads": [
+    "repository"
+   ],
+   "writes": [
+    "source.set"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "reads-host",
+    "writes-runtime"
+   ],
+   "id": "source.bundle",
+   "reads": [
+    "run.id",
+    "runtime.root",
+    "source.set"
+   ],
+   "writes": [
+    "source.bundle"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "source.manifest",
+   "reads": [
+    "run.id",
+    "runtime.root",
+    "source.bundle"
+   ],
+   "writes": [
+    "source.manifest"
+   ]
+  }
+ ]
+}

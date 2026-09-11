@@ -2,15 +2,24 @@
 
 A stage receives one of these and nothing else. The environment it may attest to is the
 weakest of its members, so a single fake anywhere makes the whole bundle unable to authorise
-a result.
+a result. The same bundle shape, with every member refusing, is what a stage holds while it
+plans, so planning cannot reach anything apply could not.
 """
 
 from __future__ import annotations
 
 import dataclasses
+from typing import Protocol, Self
 
 from apex.kernel import claims
-from apex.ports import clock, files, ids, process
+from apex.ports import archives, clock, digesting, files, ids, locking, planning, process
+
+
+class PortBundle(Protocol):
+    @property
+    def environment(self) -> claims.EnvironmentKind: ...
+
+    def for_planning(self) -> Self: ...
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -19,12 +28,34 @@ class HostPorts:
     files: files.FileSystemPort
     clock: clock.ClockPort
     identities: ids.IdentityPort
+    locks: locking.LockPort
+    digests: digesting.DigestPort
+    archives: archives.ArchivePort
 
     @property
     def environment(self) -> claims.EnvironmentKind:
         return claims.meet(
             member.environment
-            for member in (self.processes, self.files, self.clock, self.identities)
+            for member in (
+                self.processes,
+                self.files,
+                self.clock,
+                self.identities,
+                self.locks,
+                self.digests,
+                self.archives,
+            )
+        )
+
+    def for_planning(self) -> Self:
+        return type(self)(
+            processes=planning.Refusing("processes"),
+            files=planning.Refusing("files"),
+            clock=planning.Refusing("clock"),
+            identities=planning.Refusing("identities"),
+            locks=planning.Refusing("locks"),
+            digests=planning.Refusing("digests"),
+            archives=planning.Refusing("archives"),
         )
 
     def require_attestable(

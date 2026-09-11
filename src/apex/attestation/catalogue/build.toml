@@ -1,0 +1,129 @@
+[[check]]
+id = "fingerprint.virtual-cleanup"
+environment = "build"
+summary = "Establishes that fprintd releases a claimed virtual device after an explicit stop or release and after client disconnect following a protocol error, and refuses a second claim while the first client."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "Record description: \"no physical sensor test\".",
+    "docs/FINGERPRINT.md: \"Even a complete pass covers only the fake-device daemon contract.",
+    "docs/FINGERPRINT.md: \"This run does not reproduce or resolve the physical ELAN failure.\"",
+]
+sourced_from = "runtime:evidence/fingerprint.virtual-cleanup.json ..."
+
+[[check]]
+id = "image.lint"
+environment = "build"
+summary = "Establishes that the built bootc container passes bootc container lint with fatal warnings in the isolated Fedora builder, where 13 checks passed and one upstream check was skipped rather than passed."
+accepted_proof_kinds = [".json", ".log"]
+scope_limits = [
+    "The upstream skip is explicitly not counted as a passed check (record reason).",
+    "Lint of the container only; it does not establish that the image boots.",
+]
+sourced_from = "runtime:evidence/image.lint.json ..."
+
+[[check]]
+id = "initramfs.installed"
+environment = "build-container"
+summary = "Establishes that the installed image keeps Fedora's initramfs for its single kernel, that the file is non-empty and hashed, and that its lsinitrd listing shows ostree support."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "guest/image-configure.sh: the control profile does not change kernel, modules or early-boot configuration, so this establishes preservation, not a.",
+    "docs/BOOT-DIAGNOSTICS.md, \"Mixed compression in the installed initramfs\": the layout analysis \"does not replace testing the installed boot path or an.",
+    "verify-image.py records boot: NOT TESTED and hardware: NOT TESTED alongside these static checks.",
+]
+sourced_from = "guest/image-configure.sh lines 45-48 ..."
+
+[[check]]
+id = "initramfs.live"
+environment = "build-container"
+summary = "Establishes that the live derivative regenerates its initramfs for its single kernel with dmsquash-live, the auto-overlay and the apexprotect module, and that the apex- live-disk-guard rule appears in."
+accepted_proof_kinds = [".json", ".txt"]
+scope_limits = [
+    "docs/LIVE.md: the guard's unit tests \"do not establish kernel enforcement or live boot acceptance\"; presence in the initramfs is not boot behaviour.",
+    "docs/LIVE.md: the live initramfs is intentionally different from the installed one, so this establishes nothing about installed-boot parity.",
+    "docs/LIVE.md: physical acceptance remains untested; live.direct, live.ventoy and live.disk-protection are separate checks.",
+]
+sourced_from = "live/configure.sh lines 17-21 (dracut --force --zstd --reproducible --no-hostonly --omit ostree --add 'dmsquash-live dmsquash-live-autooverlay ..."
+
+[[check]]
+id = "kernel.modules"
+environment = "build-container"
+summary = "Establishes that the image carries exactly one installed kernel with a vmlinuz, and that amdgpu, snd_hda_intel, nvme, usb_storage, virtio_blk and dm_crypt are either built into that kernel or resolve."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "verify-image.py docstring: \"Static image checks, separate from boot and hardware acceptance\"; its own output records boot: NOT TESTED and hardware.",
+    "docs/ARCHITECTURE.md: vermagic, firmware, module loading, HDMI and runtime suspension require separate checks, so a matching vermagic is not a claim.",
+    "docs/ARCHITECTURE.md: later optimisation must keep storage, encryption, USB, VM and rescue support that may not appear in lsmod.",
+]
+sourced_from = "guest/verify-image.py, main(): the single-kernel assertion, the module tuple ('amdgpu', 'snd_hda_intel', 'nvme', 'usb_storage', 'virtio_blk' ..."
+
+[[check]]
+id = "live.parity"
+environment = "build"
+summary = "Establishes that the live derivative's installed RPM set differs from the frozen target in no kernel, kmod, akmod, NVIDIA, firmware, ALSA, PipeWire, WirePlumber, libfprint, fprintd, GNOME, Mutter."
+accepted_proof_kinds = [".json", ".txt"]
+scope_limits = [
+    "guest/live-parity.py returns kernel_binary_parity: \"NOT TESTED\" in every result; package-name/EVR parity is not binary parity.",
+    "docs/LIVE.md: the file comparisons exclude the intentionally different initramfs and \"do not cover the missing NVIDIA stack, full firmware contents.",
+    "Non-protected package differences are reported but do not fail the check.",
+]
+sourced_from = "guest/live-parity.py, the PROTECTED tuple and compare() which fails on any protected or firmware ..."
+
+[[check]]
+id = "nvidia.kernel-match"
+environment = "build"
+summary = "Establishes that NVIDIA kernel modules and their matching userspace packages, built for the candidate's own kernel, are present in the candidate's package inventory."
+accepted_proof_kinds = [".txt"]
+scope_limits = [
+    "Record is explicitly \"not a hardware test\" (candidate-history description); it is a package inventory check, not GPU behaviour.",
+    "docs/NVIDIA.md: a successful rpm-build result leaves image integration, initramfs, Secure Boot and hardware checks NOT TESTED, and does not select a.",
+    "docs/NVIDIA.md: module signing and the Secure Boot trust path remain unresolved; RPM, OCI and kernel module signatures cover different boundaries.",
+]
+sourced_from = "runtime:evidence/nvidia.kernel-match.json, environment.description (\"Fedora kernel control image inventory\") and reason (\"Matching NVIDIA kernel and ..."
+
+[[check]]
+id = "rpm.dependencies"
+environment = "build"
+summary = "Establishes that the four custom RPMs rebuilt in Mock install into the image and that dnf5 check resolves every dependency in the resulting container."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "\"hardware behavior is separate\" (record reason): successful dependency resolution makes no hardware claim.",
+    "docs/ARCHITECTURE.md: a driver package is not accepted merely because its installation succeeds.",
+]
+sourced_from = "runtime:evidence/rpm.dependencies.json, environment.description (\"Four Mock rebuilds followed by image installation and dnf5 check\") and ..."
+
+[[check]]
+id = "signature.accept"
+environment = "build"
+summary = "Establishes that the detached artifact signature over a completed OCI and QCOW2 bundle verifies against a development public key that was retrieved and checked independently of the artifact directory."
+accepted_proof_kinds = [".json"]
+scope_limits = [
+    "Record reason: \"Detached artifact signatures only. Bootc update trust and negative update tests remain untested.\"",
+    "docs/BUILD.md: \"This is development signing\"; the exported public key is for out-of-band review, not automatic trust establishment, and a matching.",
+    "docs/BUILD.md: signed OCI update acceptance must be demonstrated separately inside a booted guest.",
+]
+sourced_from = "runtime:evidence/signature.accept.json ..."
+
+[[check]]
+id = "signature.reject"
+environment = "build"
+summary = "Establishes that artifact verification rejects a changed manifest, a changed payload, a wrong key and a bundled key offered as its own trust root, run against a completed artifact without altering."
+accepted_proof_kinds = [".json"]
+scope_limits = [
+    "Record reason: \"Detached artifact signatures only. Bootc update trust and negative update tests remain untested.\"",
+    "docs/TESTING.md: installer.payload-rejection is separate from detached artifact-signature and update tests.",
+    "docs/BUILD.md: the target's container policy still rejects all sources; do not weaken the policy to make an update test pass.",
+]
+sourced_from = "runtime:evidence/signature.reject.json ..."
+
+[[check]]
+id = "sources.locked"
+environment = "build"
+summary = "Establishes that every build input, including the base image, the image-builder container, source commits and downloaded archives, is pinned by digest or SHA-256 in config/sources.lock.json so the."
+accepted_proof_kinds = [".json", ".txt"]
+scope_limits = [
+    "Record reason: complete RPM repository snapshots and buildroot locks are still missing.",
+    "docs/BUILD.md: \"The current pipeline does not claim bit-for-bit reproducibility\"; package lists document what was installed but are not a repository.",
+    "runtime:candidate- history/4a24fbbec73d49ca9e7604cf9e965419/evidence/sources.locked.json: NVIDIA and CachyOS source locks are also incomplete.",
+]
+sourced_from = "runtime:evidence/sources.locked.json, environment.description (\"Current source pins and resolved package inventory\") and ..."

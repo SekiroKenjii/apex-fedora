@@ -47,8 +47,8 @@ def test_a_wait_policy_names_its_budget_and_its_backoff() -> None:
     assert policy.description
 
 
-def test_a_policy_without_a_description_is_refused() -> None:
-    with pytest.raises(errors.Refusal):
+def test_a_policy_without_a_description_is_a_declaration_fault() -> None:
+    with pytest.raises(errors.RegistrationError):
         timing.WaitPolicy(
             deadline=timing.Deadline(timing.Elapsed(1)),
             backoff=timing.Backoff.exponential(

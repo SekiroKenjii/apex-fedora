@@ -1,8 +1,7 @@
 """Named exclusion scopes with an explicit acquisition policy.
 
-The current code holds two incompatible behaviours under one name: the machine lock blocks
-until the holder goes away, and the remote build lock refuses at once. Neither records who
-holds it, so a refusal cannot say.
+Whether an acquisition waits or refuses at once is a value the caller passes, never a property
+of the scope. Every lease records its holder, so a refusal can name who holds the scope.
 """
 
 from __future__ import annotations

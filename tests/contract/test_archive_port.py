@@ -12,45 +12,61 @@ def sources(root: safepaths.RuntimeRoot) -> archive_port.SourceSet:
     (root.path / "tools").mkdir()
     (root.path / "tools" / "run.sh").write_text("#!/bin/sh\necho hi\n")
     (root.path / "tools" / "helper.py").write_text("value = 1\n")
-    return archive_port.SourceSet(root=root, relative_paths=("tools",))
+    return archive_port.SourceSet(
+        root=safepaths.SourceRoot.adopt(root.path), relative_paths=("tools",)
+    )
+
+
+def refuse_helpers(candidate: archive_port.BundleCandidate) -> None:
+    if candidate.path.endswith("helper.py"):
+        raise errors.Refusal(
+            refusals.RefusalReason.REPOSITORY_PRIVATE_DOCUMENT, subject=candidate.path
+        )
 
 
 def test_bundling_produces_a_root_over_every_file(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:
-    bundle = archives.bundle(sources(root), into=root.child("source.tar"))
+    bundle = archives.bundle(
+        sources(root), into=root.child("source.tar"), screen=archive_port.admit_all
+    )
 
     assert len(bundle.files) == 2
     assert bundle.merkle_root
+    assert bundle.archive_digest
 
 
-def test_bundling_twice_produces_the_same_root(
+def test_bundling_twice_produces_the_same_root_and_archive_digest(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:
     declared = sources(root)
 
-    first = archives.bundle(declared, into=root.child("a.tar"))
-    second = archives.bundle(declared, into=root.child("b.tar"))
+    first = archives.bundle(declared, into=root.child("a.tar"), screen=archive_port.admit_all)
+    second = archives.bundle(declared, into=root.child("b.tar"), screen=archive_port.admit_all)
 
     assert first.merkle_root == second.merkle_root
+    assert first.archive_digest == second.archive_digest
 
 
 def test_changing_one_file_changes_the_root(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:
     declared = sources(root)
-    before = archives.bundle(declared, into=root.child("a.tar"))
+    before = archives.bundle(declared, into=root.child("a.tar"), screen=archive_port.admit_all)
 
     (root.path / "tools" / "helper.py").write_text("value = 2\n")
-    after = archives.bundle(declared, into=root.child("b.tar"))
+    after = archives.bundle(declared, into=root.child("b.tar"), screen=archive_port.admit_all)
 
     assert before.merkle_root != after.merkle_root
+    assert before.archive_digest != after.archive_digest
 
 
 def test_a_shell_script_keeps_an_executable_mode(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:
-    bundle = archives.bundle(sources(root), into=root.child("source.tar"))
+    bundle = archives.bundle(
+        sources(root), into=root.child("source.tar"), screen=archive_port.admit_all
+    )
     modes = {entry.path: entry.mode.value for entry in bundle.files}
 
     assert modes["tools/run.sh"] == 0o755
@@ -64,7 +80,7 @@ def test_a_symlink_in_the_source_set_is_refused(
     (root.path / "tools" / "link.py").symlink_to(root.path / "tools" / "helper.py")
 
     with pytest.raises(errors.Refusal) as raised:
-        archives.bundle(declared, into=root.child("source.tar"))
+        archives.bundle(declared, into=root.child("source.tar"), screen=archive_port.admit_all)
 
     assert raised.value.reason is refusals.RefusalReason.PATH_IS_A_SYMLINK
 
@@ -72,8 +88,9 @@ def test_a_symlink_in_the_source_set_is_refused(
 def test_every_file_is_read_exactly_once(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:
-    """The current bundler reads each file twice: once to write, once to hash."""
-    bundle = archives.bundle(sources(root), into=root.child("source.tar"))
+    bundle = archives.bundle(
+        sources(root), into=root.child("source.tar"), screen=archive_port.admit_all
+    )
 
     assert bundle.reads == len(bundle.files)
 
@@ -81,11 +98,13 @@ def test_every_file_is_read_exactly_once(
 def test_an_absent_declared_path_is_skipped_not_invented(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:
-    declared = archive_port.SourceSet(root=root, relative_paths=("tools", "absent"))
+    declared = archive_port.SourceSet(
+        root=safepaths.SourceRoot.adopt(root.path), relative_paths=("tools", "absent")
+    )
     (root.path / "tools").mkdir()
     (root.path / "tools" / "one.py").write_text("x = 1\n")
 
-    bundle = archives.bundle(declared, into=root.child("source.tar"))
+    bundle = archives.bundle(declared, into=root.child("source.tar"), screen=archive_port.admit_all)
 
     assert [entry.path for entry in bundle.files] == ["tools/one.py"]
 
@@ -104,7 +123,7 @@ def test_a_symlinked_directory_is_refused_rather_than_skipped(
     (root.path / "tools" / "vendored").symlink_to(root.path / "elsewhere")
 
     with pytest.raises(errors.Refusal) as raised:
-        archives.bundle(declared, into=root.child("source.tar"))
+        archives.bundle(declared, into=root.child("source.tar"), screen=archive_port.admit_all)
 
     assert raised.value.reason is refusals.RefusalReason.PATH_IS_A_SYMLINK
 
@@ -119,10 +138,12 @@ def test_a_symlinked_source_root_is_refused_rather_than_followed(
     header = "-----BEGIN " + "PRIVATE KEY-----\n"
     (root.path / "elsewhere" / "id_ed25519").write_text(header)
     (root.path / "vendored").symlink_to(root.path / "elsewhere")
-    declared = archive_port.SourceSet(root=root, relative_paths=("vendored",))
+    declared = archive_port.SourceSet(
+        root=safepaths.SourceRoot.adopt(root.path), relative_paths=("vendored",)
+    )
 
     with pytest.raises(errors.Refusal) as raised:
-        archives.bundle(declared, into=root.child("source.tar"))
+        archives.bundle(declared, into=root.child("source.tar"), screen=archive_port.admit_all)
 
     assert raised.value.reason is refusals.RefusalReason.PATH_IS_A_SYMLINK
 
@@ -133,12 +154,52 @@ def test_overlapping_roots_bundle_each_file_once(
     """A file counted twice is hashed into the root twice, so the root stops being a set."""
     sources(root)
     declared = archive_port.SourceSet(
-        root=root, relative_paths=("tools", "tools/helper.py")
+        root=safepaths.SourceRoot.adopt(root.path), relative_paths=("tools", "tools/helper.py")
     )
 
-    bundle = archives.bundle(declared, into=root.child("source.tar"))
+    bundle = archives.bundle(declared, into=root.child("source.tar"), screen=archive_port.admit_all)
 
     assert [entry.path for entry in bundle.files] == sorted(
         {entry.path for entry in bundle.files}
     )
     assert bundle.reads == len(bundle.files)
+
+
+def test_a_written_archive_is_private_to_its_owner(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    target = root.child("nested/source.tar")
+
+    archives.bundle(sources(root), into=target, screen=archive_port.admit_all)
+
+    if target.path.exists():
+        assert target.path.stat().st_mode & 0o077 == 0
+        assert target.path.parent.stat().st_mode & 0o077 == 0
+
+
+def test_a_screen_refusal_stops_the_bundle_and_leaves_no_archive(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    target = root.child("source.tar")
+
+    with pytest.raises(errors.Refusal) as raised:
+        archives.bundle(sources(root), into=target, screen=refuse_helpers)
+
+    assert raised.value.reason is refusals.RefusalReason.REPOSITORY_PRIVATE_DOCUMENT
+    assert not target.path.exists()
+
+
+def test_the_screen_sees_every_candidate_with_its_bytes(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    seen: list[tuple[str, int, bytes]] = []
+
+    def record(candidate: archive_port.BundleCandidate) -> None:
+        seen.append((candidate.path, candidate.mode.value, candidate.payload))
+
+    archives.bundle(sources(root), into=root.child("source.tar"), screen=record)
+
+    assert sorted(seen) == [
+        ("tools/helper.py", 0o644, b"value = 1\n"),
+        ("tools/run.sh", 0o755, b"#!/bin/sh\necho hi\n"),
+    ]

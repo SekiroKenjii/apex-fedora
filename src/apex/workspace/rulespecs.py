@@ -1,8 +1,7 @@
 """What a rule is: a declaration, a subject it reads, and the findings it returns.
 
 A rule returns findings rather than raising, so one pass reports everything wrong with a subject
-instead of only the first thing. The guard being replaced raises on the first failure, which is
-why a message carrying both a body and a co-author trailer is reported today as a body alone.
+instead of only the first thing found.
 
 Rules are pure. They receive a value and return findings, and nothing in this module reads a
 file, runs a program or holds state between calls.

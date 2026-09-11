@@ -92,7 +92,7 @@ def test_an_unreviewed_profile_declares_why_it_is_refused() -> None:
 
 
 def test_a_supported_profile_may_not_also_declare_a_refusal() -> None:
-    with pytest.raises(errors.Refusal):
+    with pytest.raises(errors.RegistrationError):
         dataclasses.replace(FEDORA_44, refusal=refusals.RefusalReason.PROFILE_NOT_REVIEWED)
 
 

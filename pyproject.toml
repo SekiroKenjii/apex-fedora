@@ -17,6 +17,9 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"apex.attestation.catalogue" = ["*.toml"]
+
 [dependency-groups]
 dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]
 
@@ -35,14 +38,21 @@ target-version = "py312"
 src = ["src", "tools"]
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RET", "PTH", "ARG", "C4", "TID", "ERA"]
+select = [
+    "E", "W", "F", "I", "N", "UP", "B", "SIM", "RET", "PTH", "ARG", "C4", "TID", "ERA",
+    "C90", "PLR0915",
+]
 # The error taxonomy is named for what the caller should do, not for the word "Error".
 ignore = ["N818"]
 
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.pylint]
+max-statements = 40
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG"]
-# The refusing ports exist to reject every call, so every argument is unused by design.
-"src/apex/registry/discovery.py" = ["ARG"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from apex.adapters.fakes import fake_files, fake_wallclock
+from apex.adapters.fakes import fake_clock, fake_files
 from apex.attestation import ledger, proofs
 from apex.kernel import claims, errors, identifiers, refusals, safepaths, secrets, verdicts
 
@@ -64,7 +64,7 @@ def chain(
         location=location,
         filesystem=filesystem,
         signer=signer(),
-        wallclock=fake_wallclock.FixedWallClock(),
+        clock=fake_clock.ManualClock(),
     )
 
 
@@ -245,7 +245,7 @@ def test_a_second_ledger_continues_the_chain_rather_than_restarting_it(
         location=location,
         filesystem=filesystem,
         signer=signer(),
-        wallclock=fake_wallclock.FixedWallClock(),
+        clock=fake_clock.ManualClock(),
     )
     first.append(event("build.one"))
     first.append(event("build.two"))
@@ -254,7 +254,7 @@ def test_a_second_ledger_continues_the_chain_rather_than_restarting_it(
         location=location,
         filesystem=filesystem,
         signer=signer(),
-        wallclock=fake_wallclock.FixedWallClock(),
+        clock=fake_clock.ManualClock(),
     )
     sealed = resumed.append(event("build.three"))
 
@@ -278,7 +278,7 @@ def test_an_unreadable_head_stops_the_chain_from_being_continued(
             location=location,
             filesystem=filesystem,
             signer=signer(),
-            wallclock=fake_wallclock.FixedWallClock(),
+            clock=fake_clock.ManualClock(),
         )
 
     assert raised.value.reason is refusals.RefusalReason.STALE_EVIDENCE

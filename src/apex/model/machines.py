@@ -1,8 +1,7 @@
 """Virtual machine description.
 
-Every device is a member of a closed union, and no member reaches host hardware. The
-current builder assembles a list of strings and then searches it for six forbidden
-substrings; a substring search cannot prove the absence of something it did not think of.
+Every device is a member of a closed union, and no member reaches host hardware. Passthrough
+is not forbidden by a search for its name; it has no member to be spelt with.
 """
 
 from __future__ import annotations

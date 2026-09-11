@@ -11,7 +11,7 @@ happen before the fold, so every decision can be tested exhaustively without a f
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from apex.kernel import claims, identifiers, refusals
 from apex.kernel.verdicts import BLOCKED, PASSED, NotTested, Verdict, require_all
@@ -39,6 +39,13 @@ class Outcome:
 
     def verdict_of(self, check: str) -> Verdict:
         return self.verdicts[check]
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class _Stated:
+    verdicts: dict[str, Verdict]
+    faults: tuple[str, ...]
+    standing_on_imported: bool
 
 
 def _blocked(
@@ -79,12 +86,9 @@ def _judge(
     return record.verdict, None
 
 
-def evaluate(
-    *,
-    required: Mapping[str, claims.EnvironmentKind],
-    records: Sequence[ResolvedRecord],
-    candidate: identifiers.Digest | None,
-) -> Outcome:
+def _one_record_per_known_check(
+    records: Sequence[ResolvedRecord], *, required: Mapping[str, claims.EnvironmentKind]
+) -> tuple[dict[str, ResolvedRecord], tuple[str, ...]]:
     faults: list[str] = []
     seen: dict[str, ResolvedRecord] = {}
     for record in records:
@@ -92,22 +96,28 @@ def evaluate(
         if name not in required:
             faults.append(
                 _blocked(
-                    refusals.RefusalReason.UNKNOWN_CHECK,
-                    record.check,
-                    "is not in the catalogue",
+                    refusals.RefusalReason.UNKNOWN_CHECK, record.check, "is not in the catalogue"
                 )
             )
-            continue
-        if name in seen:
+        elif name in seen:
             faults.append(
                 _blocked(
                     refusals.RefusalReason.DUPLICATE_EVIDENCE, record.check, "has two records"
                 )
             )
-            continue
-        seen[name] = record
+        else:
+            seen[name] = record
+    return seen, tuple(faults)
 
+
+def _state_every_check(
+    required: Mapping[str, claims.EnvironmentKind],
+    seen: Mapping[str, ResolvedRecord],
+    *,
+    candidate: identifiers.Digest | None,
+) -> _Stated:
     stated: dict[str, Verdict] = {}
+    faults: list[str] = []
     standing_on_imported = False
     for name, environment in required.items():
         found = seen.get(name)
@@ -115,24 +125,41 @@ def evaluate(
             stated[name] = NotTested(refusals.RefusalReason.NO_VERIFIED_RESULT)
             continue
         verdict, fault = _judge(
-            found,
-            required_environment=environment,
-            candidate=candidate or found.candidate,
+            found, required_environment=environment, candidate=candidate or found.candidate
         )
         stated[name] = verdict
         if fault is not None:
             faults.append(fault)
         if found.imported and verdict.permits_installation:
             standing_on_imported = True
+    return _Stated(verdicts=stated, faults=tuple(faults), standing_on_imported=standing_on_imported)
 
+
+def _counts(verdicts: Iterable[Verdict]) -> dict[str, int]:
     counts: dict[str, int] = {}
-    for verdict in stated.values():
+    for verdict in verdicts:
         counts[verdict.stored_name] = counts.get(verdict.stored_name, 0) + 1
+    return counts
 
+
+def evaluate(
+    *,
+    required: Mapping[str, claims.EnvironmentKind],
+    records: Sequence[ResolvedRecord],
+    candidate: identifiers.Digest | None,
+) -> Outcome:
+    seen, reading_faults = _one_record_per_known_check(records, required=required)
+    stated = _state_every_check(required, seen, candidate=candidate)
+    faults = reading_faults + stated.faults
     ready = (
         candidate is not None
         and not faults
-        and not standing_on_imported
-        and require_all(stated.values())
+        and not stated.standing_on_imported
+        and require_all(stated.verdicts.values())
     )
-    return Outcome(ready=ready, verdicts=stated, counts=counts, faults=tuple(faults))
+    return Outcome(
+        ready=ready,
+        verdicts=stated.verdicts,
+        counts=_counts(stated.verdicts.values()),
+        faults=faults,
+    )

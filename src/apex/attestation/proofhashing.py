@@ -1,8 +1,7 @@
 """Turn one stored document into a resolved record, re-hashing every proof it cites.
 
-The re-hash happens on every call with no cache. That is the one integrity property the
-pre-restructure code genuinely has, and it is not a performance defect to remove: a digest
-trusted from metadata is a digest an editor can change.
+The re-hash happens on every call with no cache. A digest trusted from metadata is a digest an
+editor can change, so the cost of reading the bytes again is the price of the answer.
 
 `imported` is a required keyword. A default here would be the single character that silently
 unmarks every record in the store.

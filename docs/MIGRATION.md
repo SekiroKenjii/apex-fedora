@@ -1293,6 +1293,126 @@ identical; no invocation added or removed, so the tier counts stay at 37 and 35.
 identity of the rule that refused, where before one sentence stood for four different rules.
 `supersedes`: none.
 
+## P14. House style, quality gates, and the first recipe on the pipeline
+
+Goal: write down the rules the tree is held to, measure what the plan only promised, and give
+the pipeline a real consumer before any new port is built.
+
+Eight commits, each green on the whole gate, on `work/phase-14-style-gates`.
+
+### The rules exist now
+
+`docs/STYLE.md` states every rule the code under `src/` follows and names how each is held:
+a ruff rule, an architecture test, or review. `tests/architecture/test_style_rules.py` holds the
+ones a test can: a docstring on every module, no prose that narrates the code being replaced,
+module basenames unique within a layer, name imports limited to a declared list, version
+literals confined to the release profiles, `print` confined to rendering, and a comment budget.
+Twelve docstrings narrated the older tree and were rewritten to describe what stands.
+
+Module names may now carry underscores and are unique by dotted name. The earlier rule, a
+basename unique across the whole tree, had produced names chosen for not colliding rather than
+for saying what the module holds.
+
+A content rule, `repository.vendor-attribution`, refuses any tracked file that names an
+external organisation outside the one package coordinate that legitimately carries one. It is
+an addition and says so; the guard shadow shows three strengthenings from it and no weakening.
+
+### Measured, not promised
+
+Ruff now enforces a cyclomatic complexity of 8 and 40 statements per function. It found three
+functions over the threshold, not the seven an earlier syntax-tree estimate reported; all three
+were split. The lint ratchet was re-frozen twice for the configuration changes, and the count
+over the older tree rose from 1 096 to 1 173 because the new rules see it too.
+
+Dead code is checked with vulture at confidence 80 on every gate run. At confidence 60 the
+report is dominated by model fields and enum members whose consumers are the contexts not yet
+built, so that level is recorded as a review to run after P19 rather than a gate.
+
+Two budgets are tests: no module over 400 lines, a line budget per package, and no module
+outside the kernel imported by more than 40 others. The kernel is the shared vocabulary and is
+exempt by name.
+
+### The catalogue is data
+
+The 62 check declarations are five TOML files, one per group, read and validated when the
+registry seals. A malformed table is a `RegistrationError` before anything runs. The readiness
+shadow over the real store is unchanged at 18 passed, 6 blocked, 38 not tested. Provenance
+records the file and the line of each `id`.
+
+Forty eight `sourced_from` citations had been cut mid-word by the tool that sourced them. They
+are trimmed to a word boundary and marked as excerpts, and a test refuses any summary or scope
+limit that does not end a sentence. Several scope limits were cut at a fixed width and closed
+with a period by the same tool; they read as sentences and this test cannot tell. P23
+re-sources them when it re-attests the physical checks.
+
+### The bundle of ports is typed
+
+`RunContext`, `Stage` and `Plan` take the bundle type as a parameter, and `runner.run` requires
+a bundle. The refusing double is one class, `ports.planning.Refusing`, which answers any method
+name a protocol declares by raising; a port that grows a method cannot leave a gap in it. A
+test calls every declared method of every port through the double and expects the refusal.
+`HostPorts.for_planning()` returns the same shape with every member refusing, so a stage plans
+against the bundle it will later act with. `HostPorts` now carries the lock, digest and archive
+ports beside the first four.
+
+`WallClockPort` folded into `ClockPort` as `stamp()`. The ledger takes a clock. The manual
+clock renders a fixed origin moved by however far a test advanced it, so a stamp is
+reproducible and still changes when time passes.
+
+### Refusals name what they found
+
+A runtime root that is not a directory is refused as `path.not-a-directory`, not as "not a
+regular file". An unknown hook kind is `hook.kind-unknown`, not a settings fault. A check
+declaration, a release profile or a wait policy that contradicts itself is a
+`RegistrationError`, which is what a declaration fault is, rather than a `Refusal` aimed at the
+operator. One enum member with no producer, `command.deadline-required`, was removed.
+
+### The first recipe
+
+`composition/recipes/export_source_recipe.py` exports the repository as a screened source
+bundle with a manifest, on four stages ordered by their facts: mint a run identifier, locate
+the sources, bundle them, write the manifest. The archive port takes a required screen, and
+the screen is the repository rules, so a file the hooks would refuse cannot reach the builder
+by another door. The port removes a partial archive on refusal, writes the archive at mode
+0600 under a 0700 directory, and reports the archive digest itself, so the manifest stage needs
+no digest port.
+
+A `SourceRoot` type names a directory sources are read from; unlike a `RuntimeRoot` it accepts
+any mode, because nothing is written below it. The derived plan is frozen at
+`generated/plans/export-source.json` and checked on every gate run, so a change to the stage
+graph is a diff a reviewer reads.
+
+`tests/contract/test_export_source_parity.py` runs the recipe on real adapters over this
+repository and compares every bundled path and digest with the older `export_source`. They
+agree on all of them. The archives differ in entry order, because the recipe sorts every path
+once and the older export sorts within each declared root; the file set and every digest are
+the same. The command surface is untouched: `build` still calls the older export, and the
+recipe stands beside it until P18 moves the remote run.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 141 files, 7 183 lines |
+| Fast suite | 1 387 passed, 5 skipped |
+| Strict type check | clean over 141 files |
+| Lint ratchet | 132 files, 1 173 findings, re-frozen for the new rules |
+| Guard shadow | 48 strengthenings, all attributed, no weakening |
+| Readiness shadow | 18 passed, 6 blocked, 38 not tested, no disagreement |
+| Golden plans | 1 |
+| Gates green | G1 to G7, G10 |
+
+`migration_red`: the style rule test was written first and observed failing on twelve
+docstrings. The reason-code tests were written first and observed failing eight ways. The clock
+port tests were written first and observed failing in the ledger and the contract suite. The
+catalogue, the typed bundle and the export recipe were written with their tests rather than
+after them; the parity test failed twice on real defects, a missing parent directory and an
+archive left group-readable, before it passed.
+`golden_change`: none. No command's output moved.
+`supersedes`: `test_wall_clock_port.py` by the stamp tests in `test_clock_port.py`; the
+refusing-port tests in `test_discovery.py` by `tests/unit/ports/test_planning.py`; the
+one-module-per-check test by the one-file-per-group test in `test_catalogue.py`.
+
 ## Commands
 
 ```sh
@@ -1306,6 +1426,9 @@ just ratchet-freeze         # record the per-file lint baseline, once
 just ratchet                # check no file regressed
 just lint                   # style rules over the restructured code
 just types                  # strict type check over the package
+just deadcode               # unused code at vulture confidence 80
+just plans-freeze           # record every recipe's derived plan, once per change
+just plans                  # check the frozen plans still match the derived ones
 just readiness-shadow       # compare the new readiness fold with the old one
 just verify-chain           # replay the attestation chain and name the first break
 just readiness-table        # read the real store through the versioned reader

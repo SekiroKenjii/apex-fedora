@@ -1,10 +1,14 @@
-"""Frozen declarations. A unit says what it is; it does not do anything."""
+"""Frozen declarations. A unit says what it is; it does not do anything.
+
+A declaration that contradicts itself is a fault in the unit, found before anything runs, so
+it is a `RegistrationError` and never a refusal aimed at the operator.
+"""
 
 from __future__ import annotations
 
 import dataclasses
 
-from apex.kernel import claims, errors, identifiers, refusals
+from apex.kernel import claims, errors, identifiers
 
 HARDWARE_GROUP = "hardware"
 
@@ -25,26 +29,17 @@ class CheckSpec:
     def __post_init__(self) -> None:
         unknown = set(self.accepted_proof_kinds) - PERMITTED_PROOF_KINDS
         if unknown:
-            raise errors.Refusal(
-                refusals.RefusalReason.PROOF_KIND_NOT_ACCEPTED,
-                subject=f"{self.id}: {', '.join(sorted(unknown))}",
-                remedy="a proof is text, JSON, an image or a JUnit report, never a template",
+            raise errors.RegistrationError(
+                f"{self.id}: proof kinds {', '.join(sorted(unknown))} are not permitted; "
+                "a proof is text, JSON, an image or a JUnit report, never a template"
             )
         if not self.summary:
-            raise errors.Refusal(
-                refusals.RefusalReason.UNKNOWN_CHECK,
-                subject=str(self.id),
-                remedy="say what the check establishes",
-            )
+            raise errors.RegistrationError(f"{self.id}: say what the check establishes")
         if self.environment is claims.EnvironmentKind.SIMULATED:
-            raise errors.Refusal(
-                refusals.RefusalReason.SIMULATED_ENVIRONMENT,
-                subject=str(self.id),
-                remedy="a check cannot be satisfied by a simulated run",
+            raise errors.RegistrationError(
+                f"{self.id}: a check cannot be satisfied by a simulated run"
             )
         if self.group == HARDWARE_GROUP and self.environment is not claims.EnvironmentKind.PHYSICAL:
-            raise errors.Refusal(
-                refusals.RefusalReason.HARDWARE_REQUIRES_PHYSICAL,
-                subject=str(self.id),
-                remedy="hardware evidence comes from the machine, never from a virtual one",
+            raise errors.RegistrationError(
+                f"{self.id}: hardware evidence comes from the machine, never from a virtual one"
             )

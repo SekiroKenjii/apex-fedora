@@ -254,6 +254,11 @@ def payload_classes() -> dict[str, bytes]:
         "undecodable": b"\xff\xfe\xfd",
         "local-only": b"<!-- apex-" + b"local-only -->\n",
         "oversize": b"x" * OVERSIZE,
+        # The organisation name is assembled so this file does not refuse itself. One form is
+        # the bare name, which the added rule refuses; the other is the one package coordinate
+        # it permits, which must stay permitted by both guards.
+        "vendor-name": b"published by " + b"Goo" + b"gle" + b"\n",
+        "vendor-coordinate": b"dnf install " + b"goo" + b"gle" + b"-noto-sans-cjk-fonts\n",
     }
 
 

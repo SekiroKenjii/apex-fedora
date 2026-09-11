@@ -1,8 +1,7 @@
 """Reading and writing files.
 
-The mode is a required keyword on every write. Today the runtime documents land at 0600 by
-accident of how a temporary file is created, which means the property holds until someone
-changes the helper.
+The mode is a required keyword on every write, so the permission a runtime document lands with
+is a decision at the call site rather than a side effect of how the file was created.
 """
 
 from __future__ import annotations

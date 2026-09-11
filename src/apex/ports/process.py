@@ -1,7 +1,7 @@
 """Running a program.
 
 The signature is the enforcement. There is no shell parameter, arguments arrive as a vector,
-and a deadline is required, so the 285 call sites that run without one become inexpressible.
+and a deadline is a required keyword, so a run without a bound cannot be written.
 """
 
 from __future__ import annotations

@@ -38,7 +38,7 @@ def run(argv: Sequence[str], standard_input: str, footer: str) -> int:
     kind = hookkinds.lookup(argv[0]) if argv else None
     if kind is None:
         raise errors.PreconditionUnmet(
-            refusals.RefusalReason.UNKNOWN_SETTING,
+            refusals.RefusalReason.HOOK_KIND_UNKNOWN,
             subject=f"{argv[0] if argv else '(none)'} is not a hook the rules answer",
         )
     request = hookspecs.HookRequest(

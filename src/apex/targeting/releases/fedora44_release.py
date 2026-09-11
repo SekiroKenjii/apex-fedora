@@ -1,4 +1,4 @@
-"""Fedora 44, the release this image is currently built from.
+"""Fedora 44, the release the image is built from.
 
 Every value here was chosen. Nothing observed from an image and no reviewed hash belongs in
 this file, and the type has no field that could hold one.

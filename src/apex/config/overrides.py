@@ -1,7 +1,7 @@
 """Environment variables this program accepts, declared one by one.
 
-A variable in the namespace that is not declared is a hard error, which catches the typo
-class that currently changes nothing and reports nothing.
+A variable in the namespace that is not declared is a hard error, so a misspelt override is
+refused by name instead of changing nothing in silence.
 """
 
 from __future__ import annotations

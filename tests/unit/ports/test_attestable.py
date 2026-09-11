@@ -4,31 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_files, fake_ids, fake_process
-from apex.adapters.real import real_clock, real_files, real_ids, real_process
 from apex.kernel import claims, errors, refusals
 from apex.ports import portset
 
 
-def real_bundle() -> portset.HostPorts:
-    return portset.HostPorts(
-        processes=real_process.SubprocessRunner(),
-        files=real_files.LocalFiles(),
-        clock=real_clock.SystemClock(),
-        identities=real_ids.RandomIdentities(),
-    )
-
-
-def test_simulated_is_not_attestable() -> None:
-    bundle = portset.HostPorts(
-        processes=fake_process.ScriptedProcess(),
-        files=fake_files.MemoryFiles(),
-        clock=fake_clock.ManualClock(),
-        identities=fake_ids.SequenceIdentities(),
-    )
-
+def test_simulated_is_not_attestable(ports_of_fakes: portset.HostPorts) -> None:
     with pytest.raises(errors.Refusal) as raised:
-        bundle.require_attestable()
+        ports_of_fakes.require_attestable()
 
     assert raised.value.reason is refusals.RefusalReason.SIMULATED_ENVIRONMENT
 
@@ -48,13 +30,17 @@ def test_a_kind_outside_the_allowlist_is_refused_even_if_it_is_not_simulated() -
         claims.require_attestable(None)  # type: ignore[arg-type]
 
 
-def test_the_host_bundle_attests_only_a_build_environment() -> None:
+def test_the_host_bundle_attests_only_a_build_environment(
+    ports_of_reals: portset.HostPorts,
+) -> None:
     """Every real adapter here runs on the host, so nothing in this bundle can prove a VM."""
-    assert real_bundle().require_attestable() is claims.EnvironmentKind.BUILD
+    assert ports_of_reals.require_attestable() is claims.EnvironmentKind.BUILD
 
 
-def test_the_bundle_cannot_be_asked_to_prove_an_environment_it_does_not_hold() -> None:
+def test_the_bundle_cannot_be_asked_to_prove_an_environment_it_does_not_hold(
+    ports_of_reals: portset.HostPorts,
+) -> None:
     with pytest.raises(errors.Refusal) as raised:
-        real_bundle().require_attestable(expected=claims.EnvironmentKind.PHYSICAL)
+        ports_of_reals.require_attestable(expected=claims.EnvironmentKind.PHYSICAL)
 
     assert raised.value.reason is refusals.RefusalReason.ENVIRONMENT_NOT_WITNESSED

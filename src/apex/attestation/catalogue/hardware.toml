@@ -1,0 +1,190 @@
+[[check]]
+id = "audio.headphones"
+environment = "physical"
+summary = "Establishes that the headphone jack outputs audio and that muting behaves correctly on the candidate on real hardware, without a runtime codec workaround."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "The checklist item \"mute\" is not a separate id in config/checks.json.",
+    "HARDWARE-TRACE.md, \"Audio baseline\": the operator must \"State whether ordinary audio is audible through the built-in speakers, headphones or.",
+    "No record exists for this id.",
+]
+sourced_from = "docs/TESTING.md, section \"Physical acceptance\", bullet 2: \"Low-volume left/right speakers, microphone, headphone jack, mute and post-resume audio. ..."
+
+[[check]]
+id = "audio.microphone"
+environment = "physical"
+summary = "Establishes that the internal microphone captures audio on the candidate on real hardware, without a runtime codec workaround."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "The source is one enumerating bullet; it names the microphone as a physical acceptance item but says nothing about the criterion beyond \"No runtime.",
+    "AUDIO.md, \"ASUS fixups and this board\": the observed firmware pin defaults place the microphone at 0x12, which differs from the inspected ASUS.",
+    "TESTING.md, \"Tool tests\": `just hardware-snapshot` \"does not enroll a finger, activate fprintd, play audio or write codec registers\" and \"does not.",
+]
+sourced_from = "docs/TESTING.md, section \"Physical acceptance\", bullet 2: \"Low-volume left/right speakers, microphone, headphone jack, mute and post-resume audio. ..."
+
+[[check]]
+id = "audio.resume"
+environment = "physical"
+summary = "Establishes that audio still works at low volume after suspend and resume on the candidate, covering codec re-initialization and register-cache restore rather than a single playback attempt after."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "AUDIO.md, \"Initialization and resume\": \"A proposed fix must account for this order and for runtime power management, not merely make one playback.",
+    "KNOWN-ISSUES.md, \"Audio: BLOCKED\": \"Speaker output and resume remain untested on Apex.\"",
+    "TESTING.md, \"Physical acceptance\": \"No runtime codec workaround\" applies to the whole audio bullet, so a post-resume hda-verb replay does not satisfy.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 2 (\"post-resume audio\")"
+
+[[check]]
+id = "audio.speakers"
+environment = "physical"
+summary = "Establishes that the built-in left and right speakers produce audible low-volume output on a clean cold boot of the candidate, from a source-level fix rather than a runtime hda-verb workaround."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "Record's environment.description: \"Prior user report of ALC294 speaker failure on this laptop; this candidate has not been tested on hardware\".",
+    "HARDWARE-TRACE.md, \"Audio baseline\": \"A visible sink, unmuted controls and a valid route do not establish speaker output.\"",
+    "AUDIO.md, \"Next evidence\": the September 9 snapshot showing node 0x14 unmuted, routed to DAC 0x02 with EAPD 0x2 does \"not prove that the external.",
+]
+sourced_from = "runtime:evidence/audio.speakers.json, fields \"reason\" (\"Reproduce on a clean cold boot and validate a source-level fix without runtime hda-verb ..."
+
+[[check]]
+id = "coldboot.three-cycles"
+environment = "physical"
+summary = "Establishes that the candidate completes three full cold boots on the real machine, on both battery and AC power, with the operator recording an actual power-down rather than a restart."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "HARDWARE-TRACE.md, \"Audio baseline\": \"Kernel uptime cannot distinguish a cold boot from a restart\", so the power state is an operator statement, not.",
+    "HARDWARE-TRACE.md: \"A clean cold-boot trial requires an agreed time and operator action.\"",
+    "TESTING.md, \"Physical acceptance\": the whole group is gated on \"Only proceed once VM results justify a live trial\", and no VM boot result substitutes.",
+]
+sourced_from = "docs/TESTING.md, section \"Physical acceptance\", first bullet: \"Three cold boots and ten suspend/resume cycles, with battery and AC power.\" Cold-boot ..."
+
+[[check]]
+id = "display.oled-hdmi"
+environment = "physical"
+summary = "Establishes that the internal OLED panel renders correctly at 175% and 200% scaling under Wayland, XWayland and Flatpak, and that HDMI output works, using real-panel screenshots."
+accepted_proof_kinds = [".json", ".png", ".txt"]
+scope_limits = [
+    "KNOWN-ISSUES.md, \"Supply chain and desktop\": the candidate's clean VM review of GTK3, libadwaita and Shell surfaces was at 1280x800, and \"Fractional.",
+    "The passing VM check `desktop.theme-surfaces` is a separate id in the vm group and does not carry over to the physical panel.",
+    "TESTING.md, \"VM acceptance\": \"The virtual display uses virtio-vga without host GPU forwarding or host GL access\", so no VM screenshot can attest this.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullets 4 and 5 (\"NVIDIA offload, HDMI ...\""
+
+[[check]]
+id = "fingerprint.claim-cleanup"
+environment = "physical"
+summary = "Establishes that the physical sensor's D-Bus claim is actually released after a protocol error or cancellation so a later Claim succeeds, tested independently through GNOME Settings and through the."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "TESTING.md, \"Physical acceptance\": `just test-fingerprint` results are recorded \"only as `fingerprint.virtual-cleanup`, separately from the physical.",
+    "HARDWARE-TRACE.md, \"Capture fingerprint ownership\": \"`OBSERVED` means metadata was captured, not a test pass\"; \"Client disconnect alone does not.",
+    "FINGERPRINT.md, \"Physical reproduction on Ubuntu, September 9\": \"Daemon sessions changed between the attempts, so the second successful Claim is not.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 3 (\"Test GUI and CLI claim cleanup independently.\") and the \"Physical acceptance\" paragraph naming ..."
+
+[[check]]
+id = "fingerprint.enroll"
+environment = "physical"
+summary = "Establishes that a finger enrolls and verifies on the physical ELAN sensor, including cancel and re-enrol, with actual Claim and Release ownership traced through the failure path."
+accepted_proof_kinds = [".json", ".log", ".png", ".txt"]
+scope_limits = [
+    "Record's environment.description: \"Prior user report that enrollment says the device is already claimed by another process; no current candidate.",
+    "FINGERPRINT.md, \"Physical reproduction on Ubuntu, September 9\": the two `enroll-stage-passed` events \"are progress events, not completed enrollment.",
+    "FINGERPRINT.md: \"An observed failure reports a protocol error during identify- for-enroll, followed by Claim denials. These are different layers ...",
+]
+sourced_from = "runtime:evidence/fingerprint.enroll.json, fields \"reason\" (\"Trace actual Claim/Release ownership and validate enrollment and cleanup on the real ..."
+
+[[check]]
+id = "fingerprint.lock-unlock"
+environment = "physical"
+summary = "Establishes that an enrolled fingerprint unlocks the screen on the physical machine, with password login and password administration still available."
+accepted_proof_kinds = [".json", ".log", ".png", ".txt"]
+scope_limits = [
+    "The source is one clause in an enumerating bullet; nothing in the docs elaborates the lock/unlock criterion further.",
+    "FINGERPRINT.md, \"Virtual-device regression tests\": \"Physical ELAN behavior, GNOME Settings, GDM/PAM and suspend still need their own evidence.\"",
+    "FINGERPRINT.md: \"Test GNOME Settings and the command-line client separately before involving GDM or PAM\", so this check sits downstream of enroll and.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 3 (\"... lock/unlock and reboot verification\")"
+
+[[check]]
+id = "fingerprint.reboot"
+environment = "physical"
+summary = "Establishes that enrolled fingerprints still verify after a reboot of the physical machine."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "The source is two words in an enumerating bullet (\"reboot verification\"); no document elaborates what persistence is being checked, so the summary.",
+    "TESTING.md, \"Physical acceptance\": biometric state must be kept \"outside Git, with biometric state encrypted\", and evidence.py refuses any proof that.",
+    "No record exists for this id.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 3: \"Fingerprint enroll, verify, cancel, enroll again, lock/unlock and reboot verification.\""
+
+[[check]]
+id = "gpu.offload"
+environment = "physical"
+summary = "Establishes that a single application renders on the NVIDIA GPU through per- application PRIME offload on the real machine while AMD keeps driving the display."
+accepted_proof_kinds = [".json", ".log", ".png", ".txt"]
+scope_limits = [
+    "NVIDIA.md, \"Per-application offload\": `apex-gpu run` \"does not change GNOME's environment, Xorg configuration or the display GPU\", and \"Flatpak.",
+    "NVIDIA.md, \"Next image-integration step\": \"A VM without hardware passthrough cannot pass these hardware cases\", and \"Then run VM boot/regression.",
+    "NVIDIA.md, \"Build the RPM set\": \"A successful `rpm-build` result leaves image integration, initramfs, Secure Boot and hardware checks `NOT TESTED`.\"",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 4 (\"NVIDIA offload, HDMI and return to runtime suspend\")"
+
+[[check]]
+id = "gpu.runtime-suspend"
+environment = "physical"
+summary = "Establishes that the discrete GPU returns to runtime suspend after the offloaded application is closed, observed without repeatedly querying NVIDIA management tools during the sleep measurement."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "NVIDIA.md, \"Per-application offload\": `apex-gpu status` \"reads PCI sysfs attributes.",
+    "NVIDIA.md, \"Next image-integration step\": vendor modprobe/udev/dracut/suspend configuration \"presence is not approval to enable a persistence daemon.",
+    "TESTING.md pairs this with an idle-power concern; the sleep measurement is disturbed by the act of polling, so a polled reading is not acceptable.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 4 (\"... return to runtime suspend. Do not continuously poll nvidia-smi during a sleep measurement.\")"
+
+[[check]]
+id = "input.webcam-touchpad-fn"
+environment = "physical"
+summary = "Establishes that the webcam, touchpad and Fn keys work on the physical machine."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "The only source is three component names inside one comma-separated bullet.",
+    "Nothing in the docs narrows the accepted proof kinds for this check, so the full set allowed by tools/apexlib/evidence.py is listed unchanged.",
+    "No record exists for this id.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 5: \"OLED at 175% and 200%, Wayland, XWayland, Flatpak, Wi-Fi, Bluetooth, webcam, touchpad and Fn keys.\""
+
+[[check]]
+id = "network.wifi-bluetooth"
+environment = "physical"
+summary = "Establishes that Wi-Fi and Bluetooth work on the physical machine."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "The only source is this component name inside one comma-separated bullet.",
+    "Nothing in the docs narrows the accepted proof kinds for this check, so the full set allowed by tools/apexlib/evidence.py is listed unchanged.",
+    "No record exists for this id.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 5: \"OLED at 175% and 200%, Wayland, XWayland, Flatpak, Wi-Fi, Bluetooth, webcam, touchpad and Fn keys.\""
+
+[[check]]
+id = "suspend.ten-cycles"
+environment = "physical"
+summary = "Establishes that the machine completes ten suspend and resume cycles on the real hardware, on both battery and AC power."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "The source bullet names only the cycle count and the two power sources; it does not say which subsystems must be re-checked after each resume.",
+    "No record exists for this id, so nothing here is the operator's own recorded wording.",
+]
+sourced_from = "docs/TESTING.md, section \"Physical acceptance\", first bullet: \"Three cold boots and ten suspend/resume cycles, with battery and AC power.\""
+
+[[check]]
+id = "ubuntu.return-boot"
+environment = "physical"
+summary = "Establishes that the machine boots back into the existing Ubuntu installation after each physical trial, with its filesystems and boot configuration intact."
+accepted_proof_kinds = [".json", ".log", ".png", ".txt"]
+scope_limits = [
+    "RECOVERY.md, \"Failed update after Apex is installed\": \"`bootc rollback` selects the previous deployment's boot entry.",
+    "RECOVERY.md, opening: \"Do not replace the working system while any installation gate is incomplete.\" This check attests the return to Ubuntu after.",
+    "LIVE.md: \"Physical acceptance remains untested\", and the live disk-protection guard \"is experimental and must not be trusted on the internal disk.",
+]
+sourced_from = "docs/TESTING.md, \"Physical acceptance\" bullet 6: \"Return to Ubuntu after each trial with its filesystems and boot configuration intact.\""

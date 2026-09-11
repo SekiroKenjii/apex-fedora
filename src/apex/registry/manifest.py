@@ -1,7 +1,7 @@
 """Serialise the sealed registries so adding a unit stays a reviewable diff.
 
-Without this, an eleven registry architecture takes away the answer grep currently gives to
-"what can this program do, and where is that written".
+With every unit registered by dropping in a file, this document is where "what can this
+program do, and where is that written" is answered in one place.
 """
 
 from __future__ import annotations

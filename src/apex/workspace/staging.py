@@ -3,8 +3,8 @@
 Two formats, one shape. The index lists a stage number that a tree listing does not, and an
 unmerged row carries a stage above zero, which is a conflict rather than a thing to inspect.
 
-A name that is not text is refused here with a reason. The code this replaces lets the decoding
-error escape untyped, so the operator sees a refusal with nothing behind it.
+A name that is not text is refused here with a reason, so the operator never sees a bare
+decoding error standing in for a refusal.
 """
 
 from __future__ import annotations
