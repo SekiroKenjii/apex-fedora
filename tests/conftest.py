@@ -8,10 +8,12 @@ from apex.adapters.fakes import (
     fake_archives,
     fake_clock,
     fake_digesting,
+    fake_downloading,
     fake_files,
     fake_ids,
     fake_locking,
     fake_process,
+    fake_signing,
 )
 from apex.ports import portset
 
@@ -25,6 +27,8 @@ def fake_bundle() -> portset.HostPorts:
         locks=fake_locking.MemoryLocks(),
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
+        signing=fake_signing.FakeSigner(),
+        downloads=fake_downloading.OfflineFetcher({}),
     )
 
 

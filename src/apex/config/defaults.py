@@ -22,6 +22,11 @@ SOURCE_ARCHIVE_NAME = "source.tar"
 SOURCE_MANIFEST_NAME = "source-manifest.json"
 RECORD_MODE = quantities.FileMode(0o600)
 
+SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
+DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
+DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)
+DOWNLOAD_RETRIES = 2
+
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class BuilderDefaults:

@@ -24,6 +24,9 @@ class RefusalReason(enum.StrEnum):
     URL_NOT_HTTPS = "locator.url-not-https"
     FILENAME_NOT_PLAIN = "locator.filename-not-plain"
 
+    DOWNLOAD_CHECKSUM_MISMATCH = "download.checksum-mismatch"
+    NETWORK_NOT_PERMITTED = "download.network-not-permitted"
+
     LOCK_SCHEMA_UNSUPPORTED = "lock.schema-unsupported"
     LOCK_IMAGE_MISSING = "lock.image-missing"
     LOCK_IMAGE_DIGEST_MALFORMED = "lock.image-digest-malformed"

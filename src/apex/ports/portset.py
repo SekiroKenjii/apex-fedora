@@ -12,7 +12,18 @@ import dataclasses
 from typing import Protocol, Self
 
 from apex.kernel import claims
-from apex.ports import archives, clock, digesting, files, ids, locking, planning, process
+from apex.ports import (
+    archives,
+    clock,
+    digesting,
+    downloading,
+    files,
+    ids,
+    locking,
+    planning,
+    process,
+    signing,
+)
 
 
 class PortBundle(Protocol):
@@ -31,6 +42,8 @@ class HostPorts:
     locks: locking.LockPort
     digests: digesting.DigestPort
     archives: archives.ArchivePort
+    signing: signing.SigningPort
+    downloads: downloading.DownloadPort
 
     @property
     def environment(self) -> claims.EnvironmentKind:
@@ -44,6 +57,8 @@ class HostPorts:
                 self.locks,
                 self.digests,
                 self.archives,
+                self.signing,
+                self.downloads,
             )
         )
 
@@ -56,6 +71,8 @@ class HostPorts:
             locks=planning.Refusing("locks"),
             digests=planning.Refusing("digests"),
             archives=planning.Refusing("archives"),
+            signing=planning.Refusing("signing"),
+            downloads=planning.Refusing("downloads"),
         )
 
     def require_attestable(
