@@ -25,6 +25,7 @@ class RefusalReason(enum.StrEnum):
 
     PATH_OUTSIDE_RUNTIME_ROOT = "path.outside-runtime-root"
     PATH_NOT_A_REGULAR_FILE = "path.not-a-regular-file"
+    PATH_NOT_A_DIRECTORY = "path.not-a-directory"
     PATH_IS_A_SYMLINK = "path.is-a-symlink"
     PATH_CONTAINS_OPTION_SEPARATOR = "path.contains-option-separator"
     RUNTIME_ROOT_NOT_PERMITTED = "path.runtime-root-not-permitted"
@@ -63,7 +64,6 @@ class RefusalReason(enum.StrEnum):
     RECORD_NOT_BOUND_TO_CANDIDATE = "evidence.record-not-bound-to-candidate"
 
     SHELL_STRING_NOT_ACCEPTED = "command.shell-string-not-accepted"
-    DEADLINE_REQUIRED = "command.deadline-required"
 
     SECRET_NOT_RENDERABLE = "secret.not-renderable"
 
@@ -90,6 +90,7 @@ class RefusalReason(enum.StrEnum):
 
     HOOK_ARGUMENT_MISSING = "hook.argument-missing"
     HOOK_RULES_NOT_LOADED = "hook.rules-not-loaded"
+    HOOK_KIND_UNKNOWN = "hook.kind-unknown"
 
     COMMIT_SUBJECT_MALFORMED = "commit.subject-malformed"
     COMMIT_SUBJECT_TOO_LONG = "commit.subject-too-long"

@@ -38,7 +38,7 @@ class RuntimeRoot:
             )
         if not resolved.is_dir():
             raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(resolved)
+                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(resolved)
             )
         observed = stat.S_IMODE(resolved.stat().st_mode)
         if observed != PRIVATE_DIRECTORY_MODE.value:
@@ -64,7 +64,7 @@ class RuntimeRoot:
         resolved = path.resolve()
         if not resolved.is_dir():
             raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(path)
+                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path)
             )
         observed = stat.S_IMODE(resolved.stat().st_mode)
         if observed != PRIVATE_DIRECTORY_MODE.value:

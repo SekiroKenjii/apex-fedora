@@ -84,10 +84,8 @@ class ReleaseProfile:
 
     def __post_init__(self) -> None:
         if self.supported and self.refusal is not None:
-            raise errors.Refusal(
-                refusals.RefusalReason.PROFILE_NOT_REVIEWED,
-                subject=str(self.id),
-                remedy="a supported profile cannot also declare why it is refused",
+            raise errors.RegistrationError(
+                f"{self.id}: a supported profile cannot also declare why it is refused"
             )
 
     def render_nevra(

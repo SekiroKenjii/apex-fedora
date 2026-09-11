@@ -55,8 +55,6 @@ class WaitPolicy:
 
     def __post_init__(self) -> None:
         if not self.description:
-            raise errors.Refusal(
-                refusals.RefusalReason.DEADLINE_REQUIRED,
-                subject="WaitPolicy",
-                remedy="say what condition is being waited for",
+            raise errors.RegistrationError(
+                "WaitPolicy: say what condition is being waited for"
             )

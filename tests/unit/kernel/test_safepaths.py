@@ -58,6 +58,21 @@ def test_a_directory_is_not_a_regular_file(root: safepaths.RuntimeRoot) -> None:
     assert raised.value.reason is refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE
 
 
+def test_a_file_offered_as_a_runtime_root_is_refused_as_not_a_directory(
+    root: safepaths.RuntimeRoot,
+) -> None:
+    plain = root.path / "plain.json"
+    plain.write_bytes(b"{}")
+
+    with pytest.raises(errors.Refusal) as resolved:
+        safepaths.RuntimeRoot.resolve(plain, permitted=[root.path])
+    with pytest.raises(errors.Refusal) as adopted:
+        safepaths.RuntimeRoot.adopt(plain)
+
+    assert resolved.value.reason is refusals.RefusalReason.PATH_NOT_A_DIRECTORY
+    assert adopted.value.reason is refusals.RefusalReason.PATH_NOT_A_DIRECTORY
+
+
 def test_a_traversal_escape_is_refused(root: safepaths.RuntimeRoot) -> None:
     with pytest.raises(errors.Refusal):
         safepaths.SafePath.regular_file(root.path / ".." / "escape", within=root)

@@ -52,7 +52,7 @@ def test_two_declarations_of_one_identifier_are_refused() -> None:
 
 
 def test_a_hardware_check_must_require_a_physical_environment() -> None:
-    with pytest.raises(errors.Refusal):
+    with pytest.raises(errors.RegistrationError):
         descriptors.CheckSpec(
             id=identifiers.CheckId("audio.speakers"),
             group="hardware",
@@ -73,7 +73,7 @@ def test_a_hardware_check_declaring_physical_is_accepted() -> None:
 
 
 def test_a_check_declaring_a_simulated_environment_is_refused() -> None:
-    with pytest.raises(errors.Refusal):
+    with pytest.raises(errors.RegistrationError):
         descriptors.CheckSpec(
             id=identifiers.CheckId("boot.ten-cycles"),
             group="vm",
@@ -83,7 +83,7 @@ def test_a_check_declaring_a_simulated_environment_is_refused() -> None:
 
 
 def test_a_check_without_a_summary_is_refused() -> None:
-    with pytest.raises(errors.Refusal):
+    with pytest.raises(errors.RegistrationError):
         descriptors.CheckSpec(
             id=identifiers.CheckId("boot.ten-cycles"),
             group="vm",
