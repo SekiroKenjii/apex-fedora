@@ -31,7 +31,7 @@ from apex.kernel import (
     secrets,
     verdicts,
 )
-from apex.ports import files, wallclock
+from apex.ports import clock, files
 
 GENESIS = identifiers.Digest("0" * 64)
 BEFORE_FIRST = -1
@@ -202,12 +202,12 @@ class Ledger:
         location: proofs.StoreLocation,
         filesystem: files.FileSystemPort,
         signer: ChainSigner,
-        wallclock: wallclock.WallClockPort,
+        clock: clock.ClockPort,
     ) -> None:
         self._location = location
         self._files = filesystem
         self._signer = signer
-        self._wallclock = wallclock
+        self._clock = clock
         self._head = _stored_head(location, filesystem) or EMPTY
 
     def head(self) -> Head:
@@ -218,7 +218,7 @@ class Ledger:
         claims.require_attestable(event.environment)
         entry = Entry(
             sequence=self._head.sequence + 1,
-            stamp=self._wallclock.stamp().rendered,
+            stamp=self._clock.stamp().rendered,
             event=event,
         )
         link = link_after(self._head.link, entry)
