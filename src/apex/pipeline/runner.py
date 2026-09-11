@@ -8,12 +8,11 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
-from typing import Any
 
 from apex.kernel import errors, identifiers, refusals
 from apex.pipeline import plans, stages
 from apex.pipeline.facts import FactMap
-from apex.registry import discovery
+from apex.ports import portset
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -27,10 +26,10 @@ class Outcome:
 
 
 @dataclasses.dataclass(slots=True)
-class _Progress:
+class _Progress[P]:
     """What one run has done so far. Mutable on purpose: it is the run's only ledger."""
 
-    context: stages.RunContext
+    context: stages.RunContext[P]
     finalisers: list[stages.Finaliser] = dataclasses.field(default_factory=list)
     completed: set[str] = dataclasses.field(default_factory=set)
     attested: set[identifiers.CheckId] = dataclasses.field(default_factory=set)
@@ -39,7 +38,9 @@ class _Progress:
         return tuple(sorted(self.attested, key=str))
 
 
-def _unreached(plan: plans.Plan, completed: set[str]) -> tuple[identifiers.CheckId, ...]:
+def _unreached[P](
+    plan: plans.Plan[P], completed: set[str]
+) -> tuple[identifiers.CheckId, ...]:
     pending: set[identifiers.CheckId] = set()
     for stage in plan.stages:
         if str(stage.id) not in completed:
@@ -47,25 +48,20 @@ def _unreached(plan: plans.Plan, completed: set[str]) -> tuple[identifiers.Check
     return tuple(sorted(pending, key=str))
 
 
-def planning_ports() -> discovery.RefusingPorts:
-    """During planning a stage may compute, never act."""
-    return discovery.RefusingPorts()
-
-
-def run(plan: plans.Plan, *, ports: Any = None) -> Outcome:
-    verdicts = _preflight(plan)
+def run[P: portset.PortBundle](plan: plans.Plan[P], *, ports: P) -> Outcome:
+    verdicts = _preflight(plan, planning=ports.for_planning())
     refused = _first_refusal(plan, verdicts)
     if refused is not None:
         return refused
     return _apply(plan, verdicts, ports=ports)
 
 
-def _preflight(plan: plans.Plan) -> list[stages.Preflight]:
-    planning = stages.RunContext(facts=FactMap(), ports=planning_ports())
+def _preflight[P](plan: plans.Plan[P], *, planning: P) -> list[stages.Preflight]:
+    context = stages.RunContext(facts=FactMap(), ports=planning)
     verdicts: list[stages.Preflight] = []
     for stage in plan.stages:
         try:
-            verdicts.append(stage.preflight(planning))
+            verdicts.append(stage.preflight(context))
         except errors.InternalDefect as defect:
             raise errors.InternalDefect(
                 f"{stage.id} acted during preflight: {defect}"
@@ -73,7 +69,9 @@ def _preflight(plan: plans.Plan) -> list[stages.Preflight]:
     return verdicts
 
 
-def _first_refusal(plan: plans.Plan, verdicts: list[stages.Preflight]) -> Outcome | None:
+def _first_refusal[P](
+    plan: plans.Plan[P], verdicts: list[stages.Preflight]
+) -> Outcome | None:
     for stage, verdict in zip(plan.stages, verdicts, strict=True):
         if isinstance(verdict, stages.RefuseBecause):
             return Outcome(
@@ -87,7 +85,7 @@ def _first_refusal(plan: plans.Plan, verdicts: list[stages.Preflight]) -> Outcom
     return None
 
 
-def _apply(plan: plans.Plan, verdicts: list[stages.Preflight], *, ports: Any) -> Outcome:
+def _apply[P](plan: plans.Plan[P], verdicts: list[stages.Preflight], *, ports: P) -> Outcome:
     progress = _Progress(context=stages.RunContext(facts=FactMap(), ports=ports))
     stopped: Outcome | None = None
     try:
@@ -109,7 +107,9 @@ def _apply(plan: plans.Plan, verdicts: list[stages.Preflight], *, ports: Any) ->
     )
 
 
-def _step(plan: plans.Plan, stage: stages.Stage, progress: _Progress) -> Outcome | None:
+def _step[P](
+    plan: plans.Plan[P], stage: stages.Stage[P], progress: _Progress[P]
+) -> Outcome | None:
     result = stage.apply(progress.context)
     if isinstance(result, stages.Advance):
         progress.context = progress.context.with_facts(result.facts, by=stage.id)

@@ -1,7 +1,8 @@
 """The stage contract.
 
 `apply` never raises to control the flow. It returns a closed union, so a caller that forgets
-a case is a type error rather than an unhandled path.
+a case is a type error rather than an unhandled path. The bundle of ports a stage sees is a
+type parameter, so a stage written for the host bundle cannot be run with the agent's.
 """
 
 from __future__ import annotations
@@ -68,36 +69,33 @@ type StageResult = Advance | Skip | Refuse | Fail
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class RunContext:
+class RunContext[P]:
     facts: FactMap
-    ports: Any = None
+    ports: P
 
     def with_facts(
         self, produced: Mapping[FactKey[Any], Any], *, by: identifiers.StageId
-    ) -> RunContext:
+    ) -> RunContext[P]:
         updated = self.facts
         for key, value in produced.items():
             updated = updated.with_fact(key, value, produced_by=by)
         return RunContext(facts=updated, ports=self.ports)
 
-    def with_ports(self, ports: Any) -> RunContext:
-        return RunContext(facts=self.facts, ports=ports)
 
-
-class Stage(Protocol):
+class Stage[P](Protocol):
     id: identifiers.StageId
     reads: tuple[FactKey[Any], ...]
     writes: tuple[FactKey[Any], ...]
     attests: frozenset[identifiers.CheckId]
     effects: frozenset[effects.Effect]
 
-    def preflight(self, context: RunContext) -> Preflight: ...
+    def preflight(self, context: RunContext[P]) -> Preflight: ...
 
-    def apply(self, context: RunContext) -> StageResult: ...
+    def apply(self, context: RunContext[P]) -> StageResult: ...
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class SimpleStage:
+class SimpleStage[P]:
     """A stage assembled from two callables. Used by tests and by small units."""
 
     id: identifiers.StageId
@@ -105,5 +103,5 @@ class SimpleStage:
     writes: tuple[FactKey[Any], ...]
     attests: frozenset[identifiers.CheckId]
     effects: frozenset[effects.Effect]
-    preflight: Callable[[RunContext], Preflight]
-    apply: Callable[[RunContext], StageResult]
+    preflight: Callable[[RunContext[P]], Preflight]
+    apply: Callable[[RunContext[P]], StageResult]

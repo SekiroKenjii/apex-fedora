@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import Any, Self
+from typing import Any
 
 from apex.kernel import encoding, hashing, identifiers
 from apex.pipeline.facts import FactKey
@@ -13,9 +13,9 @@ from apex.registry import graph
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class Plan:
+class Plan[P]:
     name: str
-    stages: tuple[Stage, ...]
+    stages: tuple[Stage[P], ...]
     order: tuple[identifiers.StageId, ...]
     digest: identifiers.Digest
 
@@ -23,10 +23,10 @@ class Plan:
     def of(
         cls,
         name: str,
-        declared: Sequence[Stage],
+        declared: Sequence[Stage[P]],
         *,
         seeds: frozenset[FactKey[Any]] = frozenset(),
-    ) -> Self:
+    ) -> Plan[P]:
         nodes = [
             graph.Node(
                 id=str(item.id),
@@ -46,7 +46,7 @@ class Plan:
         )
 
 
-def _digest(name: str, ordered: Sequence[Stage]) -> identifiers.Digest:
+def _digest(name: str, ordered: Sequence[Stage[Any]]) -> identifiers.Digest:
     document: encoding.Document = {
         "name": name,
         "stages": [

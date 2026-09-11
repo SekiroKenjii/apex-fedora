@@ -6,6 +6,7 @@ import dataclasses
 
 from apex.kernel import identifiers, refusals
 from apex.pipeline import effects, facts, plans, runner, stages
+from apex.ports import portset
 
 TOKEN = facts.FactKey[str]("token")
 ARTIFACT = facts.FactKey[str]("artifact")
@@ -27,12 +28,12 @@ def stage(
     outcome: str = "advance",
     attests: frozenset[str] = frozenset(),
     acquires: bool = False,
-) -> stages.Stage:
+) -> stages.Stage[portset.HostPorts]:
     def run_preflight(context: object) -> stages.Preflight:
         log.events.append(f"preflight:{name}")
         return preflight or stages.Ready()
 
-    def apply(context: stages.RunContext) -> stages.StageResult:
+    def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         log.events.append(f"apply:{name}")
         finaliser = None
         if acquires:
@@ -56,7 +57,7 @@ def stage(
     )
 
 
-def test_every_stage_is_preflighted_before_any_stage_applies() -> None:
+def test_every_stage_is_preflighted_before_any_stage_applies(ports: portset.HostPorts) -> None:
     log = Recorder()
     plan = plans.Plan.of(
         "demo",
@@ -66,14 +67,14 @@ def test_every_stage_is_preflighted_before_any_stage_applies() -> None:
         ],
     )
 
-    runner.run(plan)
+    runner.run(plan, ports=ports)
 
     preflights = [item for item in log.events if item.startswith("preflight:")]
     applies = [item for item in log.events if item.startswith("apply:")]
     assert log.events.index(applies[0]) > log.events.index(preflights[-1])
 
 
-def test_a_refusal_at_preflight_means_nothing_is_applied() -> None:
+def test_a_refusal_at_preflight_means_nothing_is_applied(ports: portset.HostPorts) -> None:
     log = Recorder()
     plan = plans.Plan.of(
         "demo",
@@ -89,7 +90,7 @@ def test_a_refusal_at_preflight_means_nothing_is_applied() -> None:
         ],
     )
 
-    outcome = runner.run(plan)
+    outcome = runner.run(plan, ports=ports)
 
     assert not outcome.succeeded
     assert not [item for item in log.events if item.startswith("apply:")]
@@ -109,7 +110,7 @@ def test_the_derived_order_follows_the_data_not_the_listing() -> None:
     assert [str(item) for item in plan.order] == ["acquire", "build", "collect"]
 
 
-def test_finalisers_unwind_in_reverse_order_of_acquisition() -> None:
+def test_finalisers_unwind_in_reverse_order_of_acquisition(ports: portset.HostPorts) -> None:
     log = Recorder()
     plan = plans.Plan.of(
         "demo",
@@ -119,13 +120,15 @@ def test_finalisers_unwind_in_reverse_order_of_acquisition() -> None:
         ],
     )
 
-    runner.run(plan)
+    runner.run(plan, ports=ports)
 
     releases = [item for item in log.events if item.startswith("release:")]
     assert releases == ["release:inner", "release:outer"]
 
 
-def test_a_refusal_part_way_through_still_unwinds_what_was_acquired() -> None:
+def test_a_refusal_part_way_through_still_unwinds_what_was_acquired(
+    ports: portset.HostPorts,
+) -> None:
     log = Recorder()
     plan = plans.Plan.of(
         "demo",
@@ -135,13 +138,15 @@ def test_a_refusal_part_way_through_still_unwinds_what_was_acquired() -> None:
         ],
     )
 
-    outcome = runner.run(plan)
+    outcome = runner.run(plan, ports=ports)
 
     assert not outcome.succeeded
     assert "release:acquire" in log.events
 
 
-def test_a_run_that_stops_records_not_tested_for_every_unreached_check() -> None:
+def test_a_run_that_stops_records_not_tested_for_every_unreached_check(
+    ports: portset.HostPorts,
+) -> None:
     log = Recorder()
     plan = plans.Plan.of(
         "demo",
@@ -151,16 +156,16 @@ def test_a_run_that_stops_records_not_tested_for_every_unreached_check() -> None
         ],
     )
 
-    outcome = runner.run(plan)
+    outcome = runner.run(plan, ports=ports)
 
     assert [str(item) for item in outcome.not_tested] == ["image.lint"]
 
 
-def test_a_successful_run_reports_the_facts_it_produced() -> None:
+def test_a_successful_run_reports_the_facts_it_produced(ports: portset.HostPorts) -> None:
     log = Recorder()
     plan = plans.Plan.of("demo", [stage("only", writes=(TOKEN,), log=log)])
 
-    outcome = runner.run(plan)
+    outcome = runner.run(plan, ports=ports)
 
     assert outcome.succeeded
     assert outcome.facts[TOKEN] == "only"
