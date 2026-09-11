@@ -1,12 +1,11 @@
 """Running the rules over a subject and collecting everything they find.
 
-Every rule sees every subject it applies to, so one pass reports all of it. The guard being
-replaced raises on the first failure, which is why a message carrying both a body and a
-co-author trailer is reported today as a body alone.
+Every rule sees every subject it applies to, so one pass reports all of it: a message carrying
+both a body and a co-author trailer is reported as both, not as the first one found.
 
 The rule set is a parameter rather than a lookup, so a caller can run the transcribed rules
-alone and compare that against the guard being replaced. Nothing here caches: a verdict belongs
-to a row, and two rows sharing one object still differ by the path they sit at.
+alone and compare that against the guard they transcribe. Nothing here caches: a verdict
+belongs to a row, and two rows sharing one object still differ by the path they sit at.
 """
 
 from __future__ import annotations

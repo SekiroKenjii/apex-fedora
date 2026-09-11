@@ -1,7 +1,7 @@
 """Write a tar whose bytes depend only on the files it contains.
 
-Each file is read once. The bytes are hashed while they are being written, which is what
-removes the second read the current bundler performs on every source file on every build.
+Each file is read once: the bytes are hashed while they are being written, and the contract
+suite asserts the read count equals the file count.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Errors typed by what the caller should do about them.
 
-A single exception type cannot distinguish a considered refusal from a typing mistake, so
-the current tools report both to the operator as `BLOCKED`. These do not.
+A single exception type cannot distinguish a considered refusal from a typing mistake. These
+can, and each carries the exit code that tells the operator which one happened.
 """
 
 from __future__ import annotations

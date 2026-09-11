@@ -1,7 +1,7 @@
 """Source that is not text.
 
-Every input the build reads today is text, so opaque data must not arrive under a new name
-without someone deciding to accept it.
+Every input the build reads is text, so opaque data must not arrive under a new name without
+someone deciding to accept it.
 """
 
 from __future__ import annotations

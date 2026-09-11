@@ -1,7 +1,7 @@
 """Validated identity values.
 
-Each parses at construction, so a value that exists is a value that was checked. This
-replaces the same two regular expressions written out in ten files.
+Each parses at construction, so a value that exists is a value that was checked, and the
+pattern it was checked against lives in one place.
 """
 
 from __future__ import annotations

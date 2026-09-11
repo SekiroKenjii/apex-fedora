@@ -1,7 +1,7 @@
 """The one place a number lives.
 
-Values recorded here were measured from the working tree, not chosen. The comment beside a
-value says where it was scattered before, so the duplication is visible while it is removed.
+A timeout, a port, a size or a budget is declared here and read through `Settings`. A value
+that is observed from an image or derived from a release profile does not belong here.
 """
 
 from __future__ import annotations
@@ -10,13 +10,10 @@ import dataclasses
 
 from apex.kernel import bounded, quantities, timing
 
-# Two ports, previously one configured value and four uncoordinated literals.
 BUILDER_SSH_PORT = quantities.TcpPort(22244)
 GUEST_SSH_PORT = quantities.TcpPort(22245)
 
-# Six sites in two spellings.
 CAPTURE_LIMIT = bounded.Limit(262144)
-# Maintained independently in the encoder and the decoder.
 SERIAL_CHUNK = bounded.Limit(768)
 
 
@@ -69,7 +66,7 @@ SHUTDOWN = timing.WaitPolicy(
     description="the guest process exits",
 )
 
-# How many rules this phase shipped: thirteen entry, five content, five message. A registry that
-# loads fewer permits whatever the missing rules would have refused, and says nothing about it,
-# which is the one failure of a guard that looks exactly like success.
-REPOSITORY_RULE_FLOOR = (13, 5, 5)
+# Entry, content and message rules shipped so far. A registry that loads fewer permits whatever
+# the missing rules would have refused, and says nothing about it, which is the one failure of
+# a guard that looks exactly like success.
+REPOSITORY_RULE_FLOOR = (13, 6, 5)
