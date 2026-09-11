@@ -16,10 +16,10 @@ class SigningPort(Protocol):
     environment: claims.EnvironmentKind
 
     def verify(
-        self, *, payload: bytes, signature: bytes, public_key: safepaths.SafePath
+        self, *, payload: bytes, signature: bytes, public_key: safepaths.RegularFile
     ) -> bool: ...
 
-    def sign(self, *, payload: bytes, private_key: safepaths.SafePath) -> bytes: ...
+    def sign(self, *, payload: bytes, private_key: safepaths.RegularFile) -> bytes: ...
 
     def generate_key_pair(
         self, *, private_into: safepaths.SafePath, public_into: safepaths.SafePath

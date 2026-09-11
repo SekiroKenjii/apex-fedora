@@ -45,7 +45,7 @@ class OpensslSigner:
         private_into.path.chmod(parts.PRIVATE_FILE.value)
         _succeed(["pkey", "-in", str(private_into), "-pubout", "-out", str(public_into)])
 
-    def sign(self, *, payload: bytes, private_key: safepaths.SafePath) -> bytes:
+    def sign(self, *, payload: bytes, private_key: safepaths.RegularFile) -> bytes:
         with tempfile.TemporaryDirectory() as scratch:
             document = Path(scratch) / "payload"
             signature = Path(scratch) / "signature"
@@ -57,7 +57,7 @@ class OpensslSigner:
             return signature.read_bytes()
 
     def verify(
-        self, *, payload: bytes, signature: bytes, public_key: safepaths.SafePath
+        self, *, payload: bytes, signature: bytes, public_key: safepaths.RegularFile
     ) -> bool:
         if not public_key.path.is_file():
             raise errors.PortFailure(port="signing", cause=f"{public_key}: no such key")

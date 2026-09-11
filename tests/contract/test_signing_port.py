@@ -15,11 +15,11 @@ PAYLOAD = (
 
 def key_pair(
     signers: signing_port.SigningPort, root: safepaths.RuntimeRoot, name: str = "signing"
-) -> tuple[safepaths.SafePath, safepaths.SafePath]:
+) -> tuple[safepaths.RegularFile, safepaths.RegularFile]:
     private = root.child(f"{name}.key")
     public = root.child(f"{name}.pub")
     signers.generate_key_pair(private_into=private, public_into=public)
-    return private, public
+    return safepaths.RegularFile.adopt(private.path), safepaths.RegularFile.adopt(public.path)
 
 
 def test_a_signature_verifies_with_the_matching_public_key(
@@ -71,8 +71,11 @@ def test_generated_key_material_is_private(
 def test_a_missing_key_is_a_port_failure_not_a_rejection(
     signers: signing_port.SigningPort, root: safepaths.RuntimeRoot
 ) -> None:
+    _, public = key_pair(signers, root, "gone")
+    public.path.unlink()
+
     with pytest.raises(errors.PortFailure):
-        signers.verify(payload=PAYLOAD, signature=b"x", public_key=root.child("absent.pub"))
+        signers.verify(payload=PAYLOAD, signature=b"x", public_key=public)
 
 
 def test_the_rejecting_signer_refuses_everything(root: safepaths.RuntimeRoot) -> None:

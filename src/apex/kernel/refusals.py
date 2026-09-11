@@ -27,6 +27,15 @@ class RefusalReason(enum.StrEnum):
     DOWNLOAD_CHECKSUM_MISMATCH = "download.checksum-mismatch"
     NETWORK_NOT_PERMITTED = "download.network-not-permitted"
 
+    TRUST_ANCHOR_FROM_BUNDLE = "trust.anchor-from-bundle"
+    SIGNATURE_REJECTED = "trust.signature-rejected"
+    BUNDLE_CONTENT_UNSIGNED = "trust.bundle-content-unsigned"
+    ARTIFACT_CHECKSUM_MISMATCH = "trust.artifact-checksum-mismatch"
+    SIGNED_DIGEST_MISMATCH = "trust.signed-digest-mismatch"
+    IMAGE_METADATA_MISMATCH = "trust.image-metadata-mismatch"
+    NEGATIVE_ACCEPTED = "trust.negative-accepted"
+    NEGATIVE_WRONG_REASON = "trust.negative-wrong-reason"
+
     LOCK_SCHEMA_UNSUPPORTED = "lock.schema-unsupported"
     LOCK_IMAGE_MISSING = "lock.image-missing"
     LOCK_IMAGE_DIGEST_MALFORMED = "lock.image-digest-malformed"

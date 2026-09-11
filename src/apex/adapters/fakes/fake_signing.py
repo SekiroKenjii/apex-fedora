@@ -33,11 +33,11 @@ class FakeSigner:
         private_into.path.chmod(parts.PRIVATE_FILE.value)
         public_into.path.write_text(f"{PUBLIC_PREFIX}{secret}")
 
-    def sign(self, *, payload: bytes, private_key: safepaths.SafePath) -> bytes:
+    def sign(self, *, payload: bytes, private_key: safepaths.RegularFile) -> bytes:
         return _tag(_secret(private_key, PRIVATE_PREFIX), payload)
 
     def verify(
-        self, *, payload: bytes, signature: bytes, public_key: safepaths.SafePath
+        self, *, payload: bytes, signature: bytes, public_key: safepaths.RegularFile
     ) -> bool:
         expected = _tag(_secret(public_key, PUBLIC_PREFIX), payload)
         return hmac.compare_digest(expected, signature)
@@ -51,13 +51,13 @@ class RejectingSigner(FakeSigner):
         *,
         payload: bytes,  # noqa: ARG002
         signature: bytes,  # noqa: ARG002
-        public_key: safepaths.SafePath,
+        public_key: safepaths.RegularFile,
     ) -> bool:
         _secret(public_key, PUBLIC_PREFIX)
         return False
 
 
-def _secret(key: safepaths.SafePath, prefix: str) -> str:
+def _secret(key: safepaths.RegularFile, prefix: str) -> str:
     if not key.path.is_file():
         raise errors.PortFailure(port="signing", cause=f"{key}: no such key")
     text = key.path.read_text()
@@ -68,3 +68,18 @@ def _secret(key: safepaths.SafePath, prefix: str) -> str:
 
 def _tag(secret: str, payload: bytes) -> bytes:
     return hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest().encode()
+
+
+class AcceptingSigner(FakeSigner):
+    """Every verification succeeds. Exists so the exercise can be shown to catch a verifier
+    that accepts what it should refuse."""
+
+    def verify(
+        self,
+        *,
+        payload: bytes,  # noqa: ARG002
+        signature: bytes,  # noqa: ARG002
+        public_key: safepaths.RegularFile,
+    ) -> bool:
+        _secret(public_key, PUBLIC_PREFIX)
+        return True

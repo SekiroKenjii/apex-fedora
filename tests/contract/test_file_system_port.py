@@ -111,3 +111,38 @@ def test_appending_never_rewrites_what_is_already_there(
     files.append_line(path, b"added", mode=quantities.FileMode(0o600))
 
     assert files.read_bytes(path, limit=100).startswith(b"kept\n")
+
+
+def test_listing_a_tree_reports_every_entry_with_its_kind(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    files.write_atomic(root.child("bundle/a.txt"), b"a", mode=quantities.FileMode(0o600))
+    files.write_atomic(root.child("bundle/nested/b.txt"), b"b", mode=quantities.FileMode(0o600))
+
+    listed = {entry.relative: entry.kind for entry in files.list_tree(root.child("bundle"))}
+
+    assert listed == {
+        "a.txt": files_port.EntryKind.REGULAR,
+        "nested": files_port.EntryKind.DIRECTORY,
+        "nested/b.txt": files_port.EntryKind.REGULAR,
+    }
+
+
+def test_listing_an_absent_directory_is_a_port_failure(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    with pytest.raises(errors.PortFailure):
+        files.list_tree(root.child("absent"))
+
+
+def test_a_symlink_in_the_tree_is_reported_not_followed(root: safepaths.RuntimeRoot) -> None:
+    from apex.adapters.real import real_files
+
+    (root.path / "bundle").mkdir()
+    (root.path / "bundle" / "a.txt").write_text("a")
+    (root.path / "bundle" / "link").symlink_to(root.path / "bundle" / "a.txt")
+
+    entries = real_files.LocalFiles().list_tree(root.child("bundle"))
+    listed = {entry.relative: entry.kind for entry in entries}
+
+    assert listed["link"] is files_port.EntryKind.SYMLINK
