@@ -10,19 +10,23 @@ from apex.adapters.fakes import (
     fake_archives,
     fake_clock,
     fake_digesting,
+    fake_downloading,
     fake_files,
     fake_ids,
     fake_locking,
     fake_process,
+    fake_signing,
 )
 from apex.adapters.real import (
     real_archives,
     real_clock,
     real_digesting,
+    real_downloading,
     real_files,
     real_ids,
     real_locking,
     real_process,
+    real_signing,
 )
 from apex.kernel import safepaths
 from apex.ports import portset
@@ -38,6 +42,8 @@ def ports_of_fakes() -> portset.HostPorts:
         locks=fake_locking.MemoryLocks(),
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
+        signing=fake_signing.FakeSigner(),
+        downloads=fake_downloading.OfflineFetcher({}),
     )
 
 
@@ -53,4 +59,6 @@ def ports_of_reals(tmp_path: Path) -> portset.HostPorts:
         locks=real_locking.FileLocks(safepaths.RuntimeRoot.adopt(base)),
         digests=real_digesting.CachedDigests(),
         archives=real_archives.TarArchives(),
+        signing=real_signing.OpensslSigner(),
+        downloads=real_downloading.CurlDownloads(),
     )

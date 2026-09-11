@@ -119,6 +119,36 @@ class SafePath:
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
+class RegularFile:
+    """A regular, non-symlink file the caller may read from anywhere on the host.
+
+    A trust anchor is the operator's key wherever they keep it; a source file is in the
+    checkout. Neither lives under the runtime root, and neither is ever written through.
+    """
+
+    path: Path
+
+    @classmethod
+    def adopt(cls, candidate: Path) -> Self:
+        if candidate.is_symlink():
+            raise errors.Refusal(
+                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(candidate)
+            )
+        resolved = candidate.resolve()
+        if not resolved.is_file():
+            raise errors.Refusal(
+                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(candidate)
+            )
+        return cls(resolved)
+
+    def __str__(self) -> str:
+        return str(self.path)
+
+    def __fspath__(self) -> str:
+        return str(self.path)
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
 class SourceRoot:
     """A directory sources are read from. Nothing is written below it, so any mode will do."""
 

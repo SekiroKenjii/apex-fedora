@@ -6,9 +6,24 @@ is a decision at the call site rather than a side effect of how the file was cre
 
 from __future__ import annotations
 
+import dataclasses
+import enum
 from typing import Protocol
 
 from apex.kernel import claims, identifiers, quantities, safepaths
+
+
+class EntryKind(enum.StrEnum):
+    REGULAR = "regular"
+    DIRECTORY = "directory"
+    SYMLINK = "symlink"
+    OTHER = "other"
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class TreeEntry:
+    relative: str
+    kind: EntryKind
 
 
 class FileSystemPort(Protocol):
@@ -33,3 +48,7 @@ class FileSystemPort(Protocol):
     def exists(self, path: safepaths.SafePath) -> bool: ...
 
     def mode_of(self, path: safepaths.SafePath) -> quantities.FileMode: ...
+
+    def list_tree(self, directory: safepaths.SafePath) -> tuple[TreeEntry, ...]:
+        """Every entry below a directory, symlinks reported as symlinks and never followed."""
+        ...

@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 
 from apex.kernel import bounded, claims, errors, hashing, identifiers, quantities, safepaths
+from apex.ports import files
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -18,6 +19,7 @@ class MemoryFiles:
 
     def __init__(self, *, fail_after: int | None = None) -> None:
         self._files: dict[str, StoredFile] = {}
+        self.directories: set[str] = set()
         self.writes: list[str] = []
         self.appended = 0
         self.fail_after = fail_after
@@ -53,3 +55,20 @@ class MemoryFiles:
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         return stored.mode
+
+    def list_tree(self, directory: safepaths.SafePath) -> tuple[files.TreeEntry, ...]:
+        prefix = str(directory).rstrip("/") + "/"
+        found: dict[str, files.EntryKind] = {}
+        for stored in self._files:
+            if not stored.startswith(prefix):
+                continue
+            relative = stored[len(prefix):]
+            parts = relative.split("/")
+            for depth in range(1, len(parts)):
+                found.setdefault("/".join(parts[:depth]), files.EntryKind.DIRECTORY)
+            found[relative] = files.EntryKind.REGULAR
+        if not found and str(directory) not in self.directories:
+            raise errors.PortFailure(port="files", cause=f"{directory}: not a directory")
+        return tuple(
+            files.TreeEntry(relative=name, kind=kind) for name, kind in sorted(found.items())
+        )

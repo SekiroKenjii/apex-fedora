@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 from apex.kernel import bounded, claims, errors, hashing, identifiers, quantities, safepaths
+from apex.ports import files
 
 
 class LocalFiles:
@@ -72,3 +73,24 @@ class LocalFiles:
 
     def mode_of(self, path: safepaths.SafePath) -> quantities.FileMode:
         return quantities.FileMode(path.path.stat().st_mode & 0o777)
+
+    def list_tree(self, directory: safepaths.SafePath) -> tuple[files.TreeEntry, ...]:
+        base = directory.path
+        if not base.is_dir():
+            raise errors.PortFailure(port="files", cause=f"{directory}: not a directory")
+        entries = []
+        for path in sorted(base.rglob("*")):
+            entries.append(
+                files.TreeEntry(relative=str(path.relative_to(base)), kind=_kind_of(path))
+            )
+        return tuple(entries)
+
+
+def _kind_of(path: Path) -> files.EntryKind:
+    if path.is_symlink():
+        return files.EntryKind.SYMLINK
+    if path.is_dir():
+        return files.EntryKind.DIRECTORY
+    if path.is_file():
+        return files.EntryKind.REGULAR
+    return files.EntryKind.OTHER

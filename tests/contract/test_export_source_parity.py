@@ -13,10 +13,12 @@ from apex.adapters.real import (
     real_archives,
     real_clock,
     real_digesting,
+    real_downloading,
     real_files,
     real_ids,
     real_locking,
     real_process,
+    real_signing,
 )
 from apex.composition import keys
 from apex.composition.recipes import export_source_recipe
@@ -36,6 +38,8 @@ def real_bundle(root: safepaths.RuntimeRoot) -> portset.HostPorts:
         locks=real_locking.FileLocks(root),
         digests=real_digesting.CachedDigests(),
         archives=real_archives.TarArchives(),
+        signing=real_signing.OpensslSigner(),
+        downloads=real_downloading.CurlDownloads(),
     )
 
 
