@@ -88,6 +88,9 @@ class RefusalReason(enum.StrEnum):
     REPOSITORY_HISTORY_NOT_FETCHED = "repository.history-not-fetched"
     REPOSITORY_UPDATE_LINE_MALFORMED = "repository.update-line-malformed"
 
+    HOOK_ARGUMENT_MISSING = "hook.argument-missing"
+    HOOK_RULES_NOT_LOADED = "hook.rules-not-loaded"
+
     COMMIT_SUBJECT_MALFORMED = "commit.subject-malformed"
     COMMIT_SUBJECT_TOO_LONG = "commit.subject-too-long"
     COMMIT_HAS_BODY = "commit.has-body"
