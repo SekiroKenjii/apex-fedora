@@ -68,3 +68,8 @@ SHUTDOWN = timing.WaitPolicy(
     ),
     description="the guest process exits",
 )
+
+# How many rules this phase shipped: thirteen entry, five content, five message. A registry that
+# loads fewer permits whatever the missing rules would have refused, and says nothing about it,
+# which is the one failure of a guard that looks exactly like success.
+REPOSITORY_RULE_FLOOR = (13, 5, 5)

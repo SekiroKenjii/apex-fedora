@@ -498,7 +498,7 @@
    "effects": [],
    "exit_code": 2,
    "slug": "commit-msg-too-long",
-   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stderr": "BLOCKED: commit.subject-too-long: the subject is 92 characters; say it in seventy two characters or fewer\nIf this refusal is wrong, set APEX_GUARD=legacy and run the same command again to ask the previous guard instead.\n",
    "stdout": "",
    "tier": "refusal"
   },
@@ -511,7 +511,7 @@
    "effects": [],
    "exit_code": 2,
    "slug": "commit-msg-unknown-type",
-   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stderr": "BLOCKED: commit.subject-malformed: improve(audio): initialize the amplifier; write type(scope): description, with a permitted type\nIf this refusal is wrong, set APEX_GUARD=legacy and run the same command again to ask the previous guard instead.\n",
    "stdout": "",
    "tier": "refusal"
   },
@@ -524,7 +524,7 @@
    "effects": [],
    "exit_code": 2,
    "slug": "commit-msg-missing-colon",
-   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stderr": "BLOCKED: commit.subject-malformed: fix(audio) initialize the amplifier; write type(scope): description, with a permitted type\nIf this refusal is wrong, set APEX_GUARD=legacy and run the same command again to ask the previous guard instead.\n",
    "stdout": "",
    "tier": "refusal"
   },
@@ -537,7 +537,7 @@
    "effects": [],
    "exit_code": 2,
    "slug": "commit-msg-with-body",
-   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stderr": "BLOCKED: 2 rules refuse this commit message\n  commit.has-body: the message carries more than one line; put the detail in the pull request or the issue\n  commit.subject-malformed: fix(audio): initialize the amplifier\\n\\nA body is not allowed.; write type(scope): description, with a permitted type\nIf this refusal is wrong, set APEX_GUARD=legacy and run the same command again to ask the previous guard instead.\n",
    "stdout": "",
    "tier": "refusal"
   },
@@ -550,7 +550,7 @@
    "effects": [],
    "exit_code": 2,
    "slug": "commit-msg-with-co-author",
-   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stderr": "BLOCKED: 3 rules refuse this commit message\n  commit.co-author-trailer: the message carries a co-author trailer; commit under one author\n  commit.has-body: the message carries more than one line; put the detail in the pull request or the issue\n  commit.subject-malformed: fix(audio): initialize it\\n\\nCo-authored-by: Someone <a@b.c>; write type(scope): description, with a permitted type\nIf this refusal is wrong, set APEX_GUARD=legacy and run the same command again to ask the previous guard instead.\n",
    "stdout": "",
    "tier": "refusal"
   },
@@ -563,7 +563,7 @@
    "effects": [],
    "exit_code": 2,
    "slug": "commit-msg-empty",
-   "stderr": "BLOCKED: Use one Conventional Commit subject, at most 72 characters, with no body or trailers\n",
+   "stderr": "BLOCKED: commit.subject-malformed: (empty); write type(scope): description, with a permitted type\nIf this refusal is wrong, set APEX_GUARD=legacy and run the same command again to ask the previous guard instead.\n",
    "stdout": "",
    "tier": "refusal"
   },

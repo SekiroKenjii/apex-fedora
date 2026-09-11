@@ -98,7 +98,7 @@ def test_the_commit_guard_rejects_a_co_author_trailer() -> None:
     item = next(entry for entry in corpus() if entry["slug"] == "commit-msg-with-co-author")
 
     assert item["exit_code"] == 2
-    assert "Conventional Commit" in str(item["stderr"])
+    assert "commit.co-author-trailer" in str(item["stderr"])
 
 
 def test_the_commit_guard_accepts_the_documented_subject() -> None:

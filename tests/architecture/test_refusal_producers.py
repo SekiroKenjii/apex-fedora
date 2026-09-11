@@ -7,7 +7,7 @@ from pathlib import Path
 from apex.kernel import refusals
 
 SOURCE = Path(__file__).resolve().parents[2] / "src" / "apex"
-GOVERNED = ("REPOSITORY_", "COMMIT_")
+GOVERNED = ("REPOSITORY_", "COMMIT_", "HOOK_")
 
 
 def test_every_repository_and_commit_reason_has_a_producer() -> None:

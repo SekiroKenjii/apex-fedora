@@ -1200,6 +1200,99 @@ history has ever held and a shallow clone would quietly shrink that corpus. Supe
 cancelled. Every action is pinned to a commit rather than a tag. The job carries a timeout, and it
 runs on pushes to the long-lived branches as well as on pull requests.
 
+## P13. The commit message hook answers to the rules
+
+### One hook, not three
+
+The plan reads as though the three hooks move together. They are not equally ready, and the
+difference is not the corpus. It is whether any gate can see the change.
+
+The commit message hook needs no new code that runs a program. It reads a file and applies five
+pure rules, every one of them a transcription, with the oracle reporting no difference over 2526
+messages. It is also the only hook with recorded output, so it is the only one whose transfer can
+be proved rather than asserted.
+
+That mattered more than it sounds. Making a transfer of the other two inoperative leaves every
+gate green, because their only end-to-end assertion is that the word `BLOCKED:` appears, which
+both guards satisfy. A change nothing can detect is a change nothing can protect, so the other two
+keep their current guard until there is a test that would notice.
+
+With the commit message hook flipped, making the transfer inert now fails ten tests and moves seven
+recorded outputs.
+
+### A fault must never permit a commit
+
+Only a refusal from the rules counts as a verdict. Any other exit code, a missing package, an
+interpreter too old, or any exception at all is reported and handed to the guard that was deciding
+before, which delivers its own verdict.
+
+The first shape of this did not hold. Injecting an ordinary `ValueError` printed
+`BLOCKED: not enough values to unpack` at exit 2 and the previous guard never ran, so a Python
+internal wore the costume of a policy refusal. A `TypeError` printed a traceback at exit 1, again
+with the previous guard silent.
+
+Now all three of `ValueError`, `TypeError` and `RecursionError` print a note naming the fault and
+then the previous guard's own refusal, at exit 2. The forwarder has exactly two exits, one verdict
+from each guard, and an architecture test counts them.
+
+### What the operator types when a refusal is wrong
+
+`APEX_GUARD=legacy` in front of the same command. It asks the previous guard instead of turning the
+check off, and every refusal ends with that sentence, so it is discoverable from the refusal rather
+than from a document.
+
+The check is the first thing the forwarder does, before the path is touched and before anything is
+imported, so it still works when the package is missing or the interpreter cannot parse it. Both
+were verified by deleting the package and by running on an older interpreter.
+
+### Four ways the rules can decline to answer, all ending at the previous guard
+
+The switch is set. The interpreter is below 3.12, which is the measured floor: the package uses
+syntax introduced there, and an older one fails to parse it while the guard being replaced works
+fine, so a higher floor would narrow a working control. The package is not checked out. Or the new
+code raised anything at all. Each prints a note saying which, then the previous guard refuses.
+
+### An empty rule registry is a silent permit
+
+Sealing a registry does not require it to hold anything, and judging with no rules returns no
+findings. A registry that loaded nothing would refuse nothing and say nothing, which is the one
+failure of a guard that looks exactly like success. The dispatcher now counts what loaded against
+what the phase shipped and reports a precondition failure if it is short, which the forwarder reads
+as no verdict and hands on. A damaged checkout degrades instead of blocking work.
+
+### A carriage return never survives reading the file
+
+The rule for it cannot fire on this path, because reading a file translates the character before any
+rule sees it. The guard being replaced reads the same way, so behaviour is unchanged and this is
+recorded rather than fixed: reading the message verbatim would make the new guard stricter than the
+one it transcribes, which is a difference the oracle is built to refuse.
+
+### Correction to an earlier entry
+
+P12 recorded that the older tree cannot import the package at all. That is wrong. It is a matter of
+which directory comes first on the path, and the shim shipped in P11 already puts the package first.
+Running the strict readiness command from an unrelated directory prints its table and exits 2. The
+claim was recorded without testing the mechanism this project had already built.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Suite | 1326 passed, 6 skipped |
+| Strict type check | clean over 199 files |
+| Hooks transferred | one of three |
+| Fault injections falling through | 3 of 3 |
+| Runtime merkle root | unchanged |
+
+`migration_red`: the seven authority cases were written first and five observed failing, then two
+more once the forwarder existed. The fallthrough property was verified by injecting three exception
+types. The transfer was made inert to confirm the gate notices.
+`golden_change`: field `stderr` only, on the six commit message refusal slugs. Exit codes and
+effects unchanged on all six; `commit-msg-valid`, `help-git-hook` and `help-hooks` confirmed byte
+identical; no invocation added or removed, so the tier counts stay at 37 and 35. The text is now the
+identity of the rule that refused, where before one sentence stood for four different rules.
+`supersedes`: none.
+
 ## Commands
 
 ```sh
