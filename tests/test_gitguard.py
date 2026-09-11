@@ -97,7 +97,10 @@ def test_push_checks_commit_body(repo):
 
 
 def install_executable_hooks(repo):
-    shutil.copytree(ROOT / 'tools', repo / 'tools', ignore=shutil.ignore_patterns('__pycache__'))
+    # Both trees, because a hook now reaches the repository rules and would otherwise fail to
+    # import them in the fixture while working everywhere else.
+    for tree in ('tools', 'src'):
+        shutil.copytree(ROOT / tree, repo / tree, ignore=shutil.ignore_patterns('__pycache__'))
     gitguard.install(repo)
 
 
