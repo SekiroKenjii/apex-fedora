@@ -1,0 +1,328 @@
+[[check]]
+id = "boot.dbus-failure"
+environment = "vm"
+summary = "A failure of the system D-Bus, one of the conditions in the installed required health check, is treated as a failed boot and drives the same greenboot rollback path."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "The id boot.dbus-failure appears only in config/checks.json and in golden output; binding it to the health check's busctl condition is my inference.",
+    "docs/ARCHITECTURE.md: \"Configuration is not proof of recovery.\" Audio, network and fingerprint failures are deliberately not reboot triggers.",
+    "docs/BACKLOG.md defers required-service faults until the final candidate and isolated disks are ready.",
+]
+sourced_from = "system_files/usr/lib/greenboot/check/required.d/20-apex-system.sh line `timeout 15 busctl --system list ..."
+
+[[check]]
+id = "boot.gdm-failure"
+environment = "vm"
+summary = "When GDM fails on the updated deployment, the installed required health check rejects the boot and greenboot automatically returns the machine to the known-good deployment within the configured."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/RECOVERY-TESTS.md: the evaluator \"rejects a three-failure result even if rollback succeeds\"; three failures yield FAIL and missing observations.",
+    "docs/RECOVERY-TESTS.md: the one-retry preset \"does not prove a two-attempt bound for hangs before userspace or for a health-check process that cannot.",
+    "docs/RECOVERY-TESTS.md: the September 9 pass belongs to signed fixtures A and B and is \"not acceptance results for the unchanged frozen candidate.\"",
+]
+sourced_from = "docs/RECOVERY-TESTS.md \"The fault helper adds an ExecStartPre that exits 42 only when the booted digest is B. GDM itself fails, and the image's ..."
+
+[[check]]
+id = "boot.grub-counter"
+environment = "vm"
+summary = "GRUB's boot-attempt counter persists across boots on the installed candidate and enforces the configured attempt limit, which the current record cannot yet show because the candidate's packaged."
+accepted_proof_kinds = [".json"]
+scope_limits = [
+    "Record's reason: \"future recipe correction needs a new image and actual GRUB persistence/failure tests\"; the stored proof is a read-only probe and a.",
+    "docs/UPDATES.md: the installed /boot/grub2/grub.cfg retained the old joined boot_success### END token after update and rollback, and bootupd's.",
+    "docs/RECOVERY-TESTS.md: greenboot 0.16.4 initializes the counter only after the first failed health check, so GREENBOOT_MAX_BOOT_ATTEMPTS=2 permits.",
+]
+sourced_from = "runtime:evidence/boot.grub-counter.json, environment.description and ..."
+
+[[check]]
+id = "boot.initramfs-failure"
+environment = "vm"
+summary = "A deployment whose initramfs is deliberately corrupted fails to unpack and panics while mounting root before userspace, and what happens next is observed and classified with the fault bound to the."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/INITRAMFS-TESTS.md: the existing run \"covers initial fault reproduction and first manual rescue only\"; automatic recovery did not complete in.",
+    "docs/INITRAMFS-TESTS.md: OSTree retargeted the shared bootlinks after rollback so the fault moved onto A; that is \"a defect in the shared-boot-path.",
+    "docs/INITRAMFS-TESTS.md: \"Require actual unpacking or root-mount failure evidence before classifying an early-boot fault.",
+]
+sourced_from = "docs/INITRAMFS-TESTS.md, \"Prepare the fault\" (the 4 KiB truncated initramfs copy with an invalid header, referenced only by B's initrd field) and ..."
+
+[[check]]
+id = "boot.log-review"
+environment = "vm"
+summary = "Kernel journals, warnings and retained serial output across the ten boots and the Ventoy boot are reviewed, and the review currently holds the release blocked on unresolved clocksource and watchdog."
+accepted_proof_kinds = [".json", ".log"]
+scope_limits = [
+    "Record's reason: \"Desktop startup does not establish harmlessness.\"",
+    "History record: \"Zero observed Oops/panic does not demonstrate fallback or timer expiry.\"",
+    "docs/BOOT-DIAGNOSTICS.md: the watchdog message text alone cannot distinguish a failed stop from a missing magic-close character, and reading sysfs.",
+]
+sourced_from = "runtime:evidence/boot.log-review.json, environment.description and reason, plus its two superseded records in ..."
+
+[[check]]
+id = "boot.pre-userspace-failure"
+environment = "vm"
+summary = "When a boot fails before userspace starts, the saved GRUB state, the failure count and whether a manual power cycle is required are established."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/INITRAMFS-TESTS.md: saved grubenv after the failures held boot_success=0, the expected B digest and fallback=1 but no boot_counter, and \"The.",
+    "docs/RECOVERY.md: greenboot's \"userspace checks cannot recover every kernel hang.\"",
+    "docs/BOOT-DIAGNOSTICS.md: the watchdog settings observed \"do not prove an early-panic reset path or its timing.\"",
+]
+sourced_from = "docs/BACKLOG.md deferred row \"Pre-userspace failure policy and rescue menu | Isolated fixture is available | Saved GRUB state, failure count and ..."
+
+[[check]]
+id = "boot.root-failure"
+environment = "vm"
+summary = "A failure of the mounted-root condition in the installed required health check is treated as a failed boot and drives the same greenboot rollback path."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "The id boot.root-failure appears only in config/checks.json and in golden output; binding it to the health check's findmnt condition is my inference.",
+    "A root-mount failure that happens before userspace belongs to boot.pre- userspace-failure, not here; docs/INITRAMFS-TESTS.md keeps those results.",
+    "docs/ARCHITECTURE.md: \"Configuration is not proof of recovery.\"",
+]
+sourced_from = "system_files/usr/lib/greenboot/check/required.d/20-apex-system.sh line `findmnt --mountpoint / ..."
+
+[[check]]
+id = "boot.ten-cycles"
+environment = "vm"
+summary = "Ten offline boots of the frozen private QCOW2 each reach password login, a new Wayland session, Overview keyboard input and visibly rendered GTK4 pixels."
+accepted_proof_kinds = [".json", ".png", ".xml"]
+scope_limits = [
+    "Record's reason: \"Normal boots only; no claim of failed-deployment recovery or physical hardware acceptance.\"",
+    "docs/TESTING.md: a running GDM unit does not prove password login, a Wayland session or a drawn window; a window-presented log alone does not pass.",
+    "docs/TESTING.md: the test account and boot-argument differences are not a test of an untouched first boot or the installer user workflow.",
+]
+sourced_from = "runtime:evidence/boot.ten-cycles.json, environment.description and ..."
+
+[[check]]
+id = "boot.tty-rescue"
+environment = "vm"
+summary = "After a fallback boot an operator can switch to a login TTY, see the password prompt, authenticate normally and run a command through password sudo."
+accepted_proof_kinds = [".json", ".log", ".png", ".txt", ".xml"]
+scope_limits = [
+    "docs/RECOVERY-TESTS.md: \"SSH success or an existing root rescue shell does not satisfy password TTY acceptance.\"",
+    "docs/RECOVERY-TESTS.md: prompt and result screenshots and authentication records are kept private.",
+    "docs/TESTING.md: the serial-console channel \"uses an existing root rescue session; it does not change PAM or add a login method to the release.",
+]
+sourced_from = "docs/RECOVERY-TESTS.md \"Test TTY independently: switch to a login TTY, inspect the password prompt, authenticate normally and run a command through ..."
+
+[[check]]
+id = "desktop.password-wayland"
+environment = "vm"
+summary = "GDM password login succeeds on an independent fresh overlay and a Wayland application is visibly rendered in the resulting session."
+accepted_proof_kinds = [".json", ".png", ".xml"]
+scope_limits = [
+    "Record's reason: \"Disposable test account; not the installer user-creation workflow.\"",
+    "docs/TESTING.md: an application launched through SSH cannot replace the QMP keyboard input check.",
+]
+sourced_from = "runtime:evidence/desktop.password-wayland.json, environment.description and reason."
+
+[[check]]
+id = "desktop.theme-surfaces"
+environment = "vm"
+summary = "GTK3 controls, libadwaita controls and an open Quick Settings Shell surface render with visible window backgrounds at 1280x800 on a fresh QCOW2, reviewed from retained screenshots."
+accepted_proof_kinds = [".json", ".png", ".xml"]
+scope_limits = [
+    "Record's reason: \"Physical OLED, fractional scaling, XWayland, Flatpak and final design remain untested.\"",
+    "docs/TESTING.md: \"Color bars alone can pass even when the surrounding theme is broken\" and \"The runner does not turn a screenshot capture into a.",
+    "Superseded FAIL record desktop.theme-surfaces-1cda1732...json shows a recovered diagnostic session after Skip \"is not clean acceptance\".",
+]
+sourced_from = "runtime:evidence/desktop.theme-surfaces.json, environment.description and ..."
+
+[[check]]
+id = "firstboot.interrupted"
+environment = "vm"
+summary = "A first boot that is interrupted still reaches GDM afterwards, and optional application downloads do not block it."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "The required-case line names the case and its GDM criterion but no document defines what is interrupted, at which point, or what else must hold.",
+    "No evidence record, no runner and no image unit exist for this case.",
+    "This is the thinnest entry in the group; treat the mechanism as unspecified rather than assumed.",
+]
+sourced_from = "docs/TESTING.md, required-case list, line \"Offline and interrupted firstboot. Optional app downloads must not block GDM.\""
+
+[[check]]
+id = "firstboot.offline"
+environment = "vm"
+summary = "An untouched first boot with no network reaches GDM, and optional application downloads do not block it."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/TESTING.md: the integration runner's test account and boot-argument differences \"do not count as a test of an untouched first boot or the.",
+    "docs/ARCHITECTURE.md: offline app provisioning and the Lotus package \"remain separate work\", so what the optional downloads are is not yet fixed.",
+    "No evidence record and no runner exists; the criterion is stated only as one required-case line.",
+]
+sourced_from = "docs/TESTING.md, \"Each fault case starts from a new virtual disk or overlay. Required cases include:\" list, line \"Offline and interrupted firstboot. ..."
+
+[[check]]
+id = "installer.cancel"
+environment = "vm"
+summary = "Quitting the installer after selecting only the target disk and a pending Standard Partition layout, before installation starts, leaves both attached virtual disks unchanged under complete comparison."
+accepted_proof_kinds = [".json", ".png"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish installer vm.",
+    "Record's reason notes a guest reset was observed and the VM was stopped before the next boot; no claim is made about the boot that would follow.",
+    "Comparison covers only the two attached file-backed overlays; docs/TESTING.md forbids attaching any physical device.",
+    "Superseded record installer.cancel-0492196b...json: earlier ISO results do not approve a changed installer payload.",
+]
+sourced_from = "runtime:evidence/installer.cancel.json, environment.description and ..."
+
+[[check]]
+id = "installer.offline"
+environment = "vm"
+summary = "An offline UEFI installation completes with a manually created password administrator, and after the ISO is removed the installed system reaches password GDM login, Wayland, a rendered Ptyxis window."
+accepted_proof_kinds = [".json", ".png"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish installer vm.",
+    "Record's reason: \"Does not approve physical installation, recovery or negative payload cases.\"",
+    "docs/TESTING.md: test-account and boot-argument differences \"do not count as a test of an untouched first boot or the installer user workflow\" (that.",
+    "Superseded record installer.offline-779be139...json: earlier ISO results \"do not approve this changed installer\", so a payload change invalidates the.",
+]
+sourced_from = "runtime:evidence/installer.offline.json, environment.description and ..."
+
+[[check]]
+id = "installer.other-disks"
+environment = "vm"
+summary = "A completed offline installation onto the 48 GiB target leaves the separate 4 GiB GPT fixture disk with its EFI, NTFS and ext4 partitions identical across the full guest-visible comparison, and the."
+accepted_proof_kinds = [".json", ".png"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish installer vm.",
+    "Record's reason: \"Fixture partitions contain sentinels, not bootable Windows/Ubuntu.\"",
+    "docs/TESTING.md: \"Merely seeing the correct disk name in the installer is insufficient\"; QEMU enumeration can place the other disk at /dev/vda, so.",
+]
+sourced_from = "runtime:evidence/installer.other-disks.json, environment.description and ..."
+
+[[check]]
+id = "installer.payload-rejection"
+environment = "vm"
+summary = "The production Anaconda guard rejects six ISO-level payload faults, missing signature, altered signature, wrong key, changed manifest, corrupt blob and unexpected source, before any storage change."
+accepted_proof_kinds = [".json"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish installer vm.",
+    "Proof \"scope\": \"Six diagnostic offline VM boots of the signed installer; no physical hardware or update acceptance\".",
+    "docs/TESTING.md: each fault must be injected before Anaconda starts; running the guard again after a normal installer startup is \"only a diagnostic.",
+    "docs/TESTING.md: \"Unit tests and the builder's synthetic Skopeo fixture do not satisfy this gate.\"",
+]
+sourced_from = "runtime:evidence/installer.payload-rejection.json environment.description (its reason field is empty) plus its proof file ..."
+
+[[check]]
+id = "live.direct"
+environment = "vm"
+summary = "The signed live ISO boots directly on UEFI with no NIC, reaches a Wayland session with a rendered Ptyxis window, and denies writes to the attached fixture disks."
+accepted_proof_kinds = [".json", ".png"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish live vm.",
+    "Record's reason: \"full protection and Ventoy acceptance remain separate.\"",
+    "docs/LIVE.md: \"Physical acceptance remains untested\" and \"A correctly signed ISO can still fail to boot\"; repeat affected tests when the ISO changes.",
+    "Superseded records show two earlier FAILs and one BLOCKED for this same id, so the result is tied to this exact ISO.",
+]
+sourced_from = "runtime:evidence/live.direct.json, environment.description and ..."
+
+[[check]]
+id = "live.disk-protection"
+environment = "vm"
+summary = "The live image's initramfs guard sets every discovered internal disk read-only and latches any failure, covering fixed devices, USB hotplug after udev settle, the early pre-mount latch and a."
+accepted_proof_kinds = [".json", ".png"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish live vm.",
+    "Record's reason: \"Physical and Ventoy checks remain separate.\"",
+    "Record's environment.description: \"no host devices; one VM at a time\"; docs/TESTING.md forbids attaching a physical block device.",
+    "docs/LIVE.md: results are bound to this ISO, \"Repeat affected tests when the ISO changes; retain the empty optical drive.\"",
+]
+sourced_from = "runtime:evidence/live.disk-protection.json, environment.description and ..."
+
+[[check]]
+id = "live.ventoy"
+environment = "vm"
+summary = "The unchanged signed ISO boots through Ventoy 1.1.17 in normal mode on emulated USB media, reaches a visible Wayland application, and leaves the internal fixture disks protected."
+accepted_proof_kinds = [".json", ".png"]
+scope_limits = [
+    "The stored record says only 'vm'; the v1 vocabulary has four environment kinds and does not distinguish live vm.",
+    "Record's reason: \"Physical rescue, Secure Boot and unresolved boot warnings remain separate.\"",
+    "Record's environment.description: \"no host hardware\"; docs/VENTOY.md, the virtual test \"does not establish rescue boot on the ASUS laptop\" and.",
+    "docs/BACKLOG.md: Ventoy startup messages and Ubuntu live shutdown behavior must be revisited before physical rescue acceptance.",
+]
+sourced_from = "runtime:evidence/live.ventoy.json, environment.description and ..."
+
+[[check]]
+id = "update.bad-signature"
+environment = "vm"
+summary = "The bootc consumer rejects a wrong-key image and an unsigned image with a policy- specific error and leaves deployment state unchanged, each in its own fresh overlay."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/UPDATES.md: \"A connection error or missing file cannot pass. The helper refuses a second fault in the same run.\"",
+    "docs/UPDATES.md: bootc 1.16.10 prints a nonfatal unsupported-dir lookup diagnostic before both imports and rejections; \"Do not use that lookup.",
+    "docs/TESTING.md: the eight-case installer signature fixture \"does not approve the Apex installer or update path\", so installer trust results cannot.",
+]
+sourced_from = "docs/UPDATES.md \"Verification used by bootc\" section and step 3, \"Run wrong-key, unsigned and untrusted in their own overlays. Each requires a ..."
+
+[[check]]
+id = "update.disk-full"
+environment = "vm"
+summary = "An update that runs out of disk space fails on a fresh fault overlay without losing user data, and rollback still works afterwards."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/BACKLOG.md lists this as deferred, resumed only \"when Final candidate and isolated disks are ready\"; deferral \"does not approve installation or.",
+    "No runner action exists for it in tools/update-vm.py; only provision, switch-a, forward, rollback, wrong-key, unsigned, untrusted, check-a and.",
+    "The pass criteria come from the BACKLOG completion-evidence column, not from a written procedure.",
+]
+sourced_from = "docs/TESTING.md required-case line \"Invalid signatures, untrusted sources, full disk, interrupted download and simulated power loss.\""
+
+[[check]]
+id = "update.forward"
+environment = "vm"
+summary = "The installed guest stages the next signed image through the policy-enforced bootc consumer, and after a separate reboot the new deployment reaches the expected digest, password login, Wayland, a."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/UPDATES.md: \"A successful stage or rollback request does not prove that the next boot succeeds.",
+    "docs/UPDATES.md: the offline dir transport \"does not test registry TLS, credentials, network delivery, remote signature discovery or production-key.",
+    "docs/UPDATES.md: \"The frozen candidate's checks were not reassigned to the fixture digests, nor were fixture results assigned back to the candidate.\".",
+]
+sourced_from = "docs/UPDATES.md \"Run one operation at a time\" steps 2 and 4 and the \"September 9 results\" ..."
+
+[[check]]
+id = "update.interrupted"
+environment = "vm"
+summary = "An update download that is interrupted fails on a fresh fault overlay without losing user data, and rollback still works afterwards."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/TESTING.md calls it an interrupted download while docs/UPDATES.md calls it an interrupted update; the two wordings are not reconciled anywhere.",
+    "Deferred in docs/BACKLOG.md until the final candidate and isolated disks are ready.",
+    "No runner action exists for it in tools/update-vm.py.",
+]
+sourced_from = "docs/TESTING.md required-case line \"interrupted download\""
+
+[[check]]
+id = "update.power-loss"
+environment = "vm"
+summary = "A disposable test guest killed part way through an update is resumed from the same disk and its state after that loss of guest execution is recorded."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/TESTING.md: \"This models loss of guest execution and RAM, not loss of the physical drive's write cache. Keep that distinction in results.\"",
+    "docs/TESTING.md: \"The command records the injection but does not declare crash recovery successful.\"",
+    "tools/apexlib/vm.py records host_rebooted false and simulates_physical_storage_power_loss false in power-loss.json.",
+]
+sourced_from = "docs/TESTING.md \"python3 tools/apex.py test-power-loss terminates only an owned disposable test VM, using a PID handle\" and \"just ..."
+
+[[check]]
+id = "update.rollback"
+environment = "vm"
+summary = "Requesting the previous deployment returns the guest, after a separate reboot with networking still restricted, to the earlier image with password login, Wayland, a rendered window and preserved user."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/UPDATES.md: \"Manual rollback does not establish the two-failure GRUB fallback.\"",
+    "docs/UPDATES.md: a successful rollback request does not prove the next boot succeeds.",
+    "September 9 fixture results are not assigned to the frozen candidate.",
+]
+sourced_from = "docs/UPDATES.md step 4, \"rollback requests the previous A deployment without rebooting automatically. Reboot separately and run check-a again with ..."
+
+[[check]]
+id = "update.untrusted-source"
+environment = "vm"
+summary = "An image offered from a source outside the policy's permitted scopes is refused by the rejecting default, with bootc deployment state unchanged."
+accepted_proof_kinds = [".json", ".log", ".png", ".ppm", ".txt", ".xml"]
+scope_limits = [
+    "docs/UPDATES.md: requires a policy-specific error and unchanged deployment state; a connection error or missing file cannot pass.",
+    "docs/UPDATES.md: \"Neither a key supplied by an untrusted payload nor a detached archive signature establishes production update trust.\"",
+    "The offline dir transport does not exercise registry TLS, credentials, network delivery or remote signature discovery.",
+]
+sourced_from = "docs/UPDATES.md \"The separate untrusted-source path has no exception to the rejecting default.\" and step ..."

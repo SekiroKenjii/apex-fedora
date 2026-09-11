@@ -1,0 +1,35 @@
+[[check]]
+id = "git.commit-policy"
+environment = "build"
+summary = "A commit message must be one Conventional Commit subject of at most 72 characters, and the commit-msg hook rejects unknown types, multi-line messages, bodies and co- author trailers."
+accepted_proof_kinds = [".json", ".xml"]
+scope_limits = [
+    "The record explicitly states no external push was performed (runtime:evidence/git.commit-policy.json, reason; history record reason \"No external.",
+    "CONTRIBUTING.md: hooks are local safety checks, not server-side access control; the check establishes local hook behaviour, not enforcement on a.",
+    "The evidence is from disposable local repositories with fixture Git identity and configuration isolated from the contributor's settings.",
+]
+sourced_from = "runtime:candidate-history/4a24fbbec73d49ca9e7604cf9e965419/evidence/git.commit- policy.json, environment.description (\"Local Git fixtures validate ..."
+
+[[check]]
+id = "git.outgoing-history"
+environment = "build"
+summary = "Every commit a push would send has its subject and its full tree re-checked, so a private file deleted in a later commit, a commit body or a co-author trailer anywhere in outgoing history still."
+accepted_proof_kinds = [".json", ".xml"]
+scope_limits = [
+    "No push to any external remote was performed; the record's own environment.description is \"Full local history audit; no push\" and the proof artifact.",
+    "The push path is exercised only against a temporary bare repository on disk, with no network destination (CONTRIBUTING.md.",
+    "The audit covers commits reachable from the current local HEAD at the time of the record (32 commits at head 1bede3f in the current proof artifact).",
+]
+sourced_from = "runtime:candidate-history/4a24fbbec73d49ca9e7604cf9e965419/evidence/git.outgoing- history.json, environment.description (\"Local Git fixtures reject ..."
+
+[[check]]
+id = "git.private-stage"
+environment = "build"
+summary = "Staged content, not the working tree, is inspected before a commit is created, so private or local-only paths, renamed local-only documents, symlinks, submodules, opaque binaries and secret material."
+accepted_proof_kinds = [".json", ".xml"]
+scope_limits = [
+    "The record explicitly states no external push was performed (runtime:evidence/git.private-stage.json, reason).",
+    "The claim about the local-only pointer is about its current state: AGENTS.md remains unstaged and not ignored, not that it can never be staged (same.",
+    "CONTRIBUTING.md: hooks are local safety checks, not server-side access control, and must not be bypassed.",
+]
+sourced_from = "runtime:candidate-history/4a24fbbec73d49ca9e7604cf9e965419/evidence/git.private- stage.json, environment.description (\"Local Git fixtures test staged ..."

@@ -51,7 +51,6 @@ VERSION_LITERAL = re.compile(r"\bfc\d+\b|\bfedora-?\d+\b|\bGNOME ?\d+\b|\bgnome-
 VERSION_HOMES = ("targeting/releases/",)
 
 KIND_SUFFIXES = {
-    "attestation/catalogue": "_check",
     "workspace/entryrules": "_rule",
     "workspace/contentrules": "_rule",
     "workspace/messagerules": "_rule",
@@ -88,11 +87,7 @@ def comments(path: Path) -> Iterator[str]:
 
 
 def test_every_module_has_a_docstring() -> None:
-    missing = [
-        relative(path)
-        for path, tree in modules()
-        if ast.get_docstring(tree) is None and not relative(path).endswith("_check.py")
-    ]
+    missing = [relative(path) for path, tree in modules() if ast.get_docstring(tree) is None]
 
     assert missing == []
 

@@ -17,6 +17,9 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"apex.attestation.catalogue" = ["*.toml"]
+
 [dependency-groups]
 dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]
 

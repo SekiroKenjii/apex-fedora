@@ -1,0 +1,59 @@
+[[check]]
+id = "backup.off-device"
+environment = "operator"
+summary = "Personal data, the partition layout and EFI information are saved outside the internal disk, and the saved copy is verified as readable."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "docs/RECOVERY.md: ISO verification \"does not prove ...",
+    "docs/RECOVERY.md: restoration is a separate check; a saved and readable backup does not establish that restoring from it works.",
+    "docs/RECOVERY.md: \"A USB holding two ISOs is still one physical device.",
+]
+sourced_from = "docs/RECOVERY.md, \"Before the first installation\", step 4, first sentence (\"Save personal data, partition layout and EFI information outside the ..."
+
+[[check]]
+id = "backup.restore-drill"
+environment = "operator"
+summary = "The verified backup is actually restored to a safe destination in a rehearsal, so restoration is known to work before the internal disk is touched."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "docs/RECOVERY.md, \"No working deployment\": \"Restoration can overwrite data, so confirm its source and destination before proceeding.\" The drill goes.",
+    "docs/RECOVERY.md: \"`bootc rollback` selects the previous deployment's boot entry.",
+    "docs/RECOVERY.md: \"There is no previous Apex deployment during the first installation.",
+]
+sourced_from = "docs/RECOVERY.md, \"Before the first installation\", step 4, second sentence (\"perform a restore drill to a safe destination\"). Corroborated by the ..."
+
+[[check]]
+id = "installation.operator-approval"
+environment = "operator"
+summary = "The operator has confirmed the target partition diagram, including EFI, /boot and root, and has given a separate decision to write the internal disk."
+accepted_proof_kinds = [".json", ".png", ".txt"]
+scope_limits = [
+    "docs/RECOVERY.md, opening: \"Do not replace the working system while any installation gate is incomplete.\" Approval is one gate among several and does.",
+    "docs/RECOVERY.md, \"Verify the rescue ISO\": the decision to write the USB is a distinct operator decision from the decision to write the internal.",
+    "docs/BACKLOG.md: \"USB rescue boot, backup restoration, audio/fingerprint acceptance and permission to write the internal disk remain mandatory before.",
+]
+sourced_from = "docs/RECOVERY.md, \"Before the first installation\", step 6 (verbatim: \"Confirm the target partition diagram, including EFI, /boot and root, with the ..."
+
+[[check]]
+id = "rescue.usb-boot"
+environment = "physical"
+summary = "The Ubuntu rescue ISO boots on the actual M7400QC with working input and display, and the backup destination is reachable from that rescue session."
+accepted_proof_kinds = [".json", ".log", ".png", ".txt"]
+scope_limits = [
+    "docs/RECOVERY.md, \"Verify the rescue ISO\": checksum and detached-signature verification is recorded separately from physical rescue boot, and \"does.",
+    "docs/VENTOY.md (September 9 results): the virtual Ventoy fixture \"establishes virtual rescue boot and shell access, not physical rescue acceptance or.",
+    "docs/VENTOY.md: Secure Boot, backup restoration and the physical USB's installed Ventoy version are kept as separate checks.",
+]
+sourced_from = "docs/RECOVERY.md, section \"Before the first installation\", numbered step 3 (verbatim: \"Boot the Ubuntu rescue ISO on the actual M7400QC and confirm ..."
+
+[[check]]
+id = "storage.review"
+environment = "operator"
+summary = "Test and runtime data is held where the recovery plan requires: logs on a separate USB data partition, fingerprint state encrypted, and no persistence of the whole live root filesystem."
+accepted_proof_kinds = [".json", ".log", ".txt"]
+scope_limits = [
+    "docs/LIVE.md: \"The guard is configured to make USB storage read-only.",
+    "docs/RECOVERY.md, \"Verify the rescue ISO\": \"Do not store this evidence on the USB without a separate operator decision to write there.\" Reviewing the.",
+    "tools/apexlib/evidence.py rejects proof outside .txt/.log/.json/.png/.ppm/.xml with \"never store biometric templates\", so the encrypted fingerprint.",
+]
+sourced_from = "docs/RECOVERY.md, \"Before the first installation\", step 5 (verbatim: \"Store logs on a separate USB data partition. Keep fingerprint state encrypted. ..."
