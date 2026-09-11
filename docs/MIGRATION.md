@@ -1413,6 +1413,113 @@ archive left group-readable, before it passed.
 refusing-port tests in `test_discovery.py` by `tests/unit/ports/test_planning.py`; the
 one-module-per-check test by the one-file-per-group test in `test_catalogue.py`.
 
+## P15. Trust: anchors, signed bundles, negatives, and the locked sources
+
+Goal: make the two things a build must trust, a signed artifact bundle and the reviewed source
+lock, into types that are checked before anything is fetched or accepted, and prove the
+verifier refuses what it must.
+
+Four commits on `work/phase-15-trust`, each green on the whole gate.
+
+### The readers
+
+`model/bundles.py` parses the signed inventory (`artifacts.json`) once, from bytes, and refuses
+every malformed shape by one reason. `model/oci.py` reads the frozen image document and the
+configuration digest off the packaged OCI manifest. `model/sourcelock.py` turns the reviewed
+lock into types: every image reference pinned to its own digest, every archive with a
+checksum, an https address by type and a plain basename by type, every commit a full object
+id. The thirteen faults the older tests pin each have their own `RefusalReason`; the older
+code reported all of them as one `Blocked` with prose.
+
+Two new kernel types carry the checks: `locators.HttpsUrl` and `locators.Basename`. A download
+port that only accepts the first cannot be handed a plain-text address. A source directory
+that only accepts the second cannot be steered outside itself.
+
+### Two ports, two adapters each
+
+`SigningPort` verifies a signature over bytes, signs bytes, and generates a key pair. The real
+adapter is openssl; the fake is a keyed hash over a shared secret written under two names, so
+a changed payload, another key and garbage all fail exactly as the real one refuses them, and
+nothing it produces can be mistaken for a signature. A `RejectingSigner` and an
+`AcceptingSigner` exist for the callers' failure paths.
+
+`DownloadPort` fetches an `HttpsUrl` into the runtime root against a required digest. Both
+adapters write a `.part` file first and settle it only when the bytes match; a mismatch keeps
+the part for inspection and never replaces the destination. The real adapter is curl with the
+same flags the older code used. Its happy path needs a network and is not in the contract
+suite; what both adapters share, and what the suite holds, is the shape of a failure. A
+`RefusingNetwork` refuses every fetch, so a run that declared no network cannot reach one.
+
+`HostPorts` carries both, and the planning double covers them with no new code, which is the
+point of generating it from the name asked for.
+
+### Verification over the bytes that are parsed
+
+The older verifier ran openssl over the manifest file and then read the file again to parse
+it. The plan called that a deliberate double read to catch a swap. It was not a defence; a
+swap between the two reads would have parsed an unsigned document. The new port verifies
+bytes, and the same bytes are parsed, so there is no second read for anything to slip between.
+The invariant became structural rather than procedural.
+
+`trust/verifying.py` then lists the bundle directory through the file port and refuses any
+symlink or any regular file the inventory does not name, hashes every named file again with the
+digest cache cleared, checks the signed digest against the packaged OCI manifest, and checks
+`image.json` against the OCI configuration. Each refusal has its own reason.
+
+`trust/anchors.py` makes provenance a field on the anchor. An anchor with bundle provenance
+cannot be constructed, and a key that sits inside the directory it is asked to judge is
+refused before anything is verified against it. A `RegularFile` type names a key the operator
+keeps anywhere; it is never written through.
+
+### The negatives are units
+
+Four modules under `trust/negatives/`, one per way a bundle can lie: an inventory altered after
+signing, a payload that no longer matches, a key nobody trusts, and the key shipped inside the
+bundle. Each declares the reason it expects. `trust/exercising.py` verifies the original,
+prepares every registered negative in a scratch location, and fails the run if any negative is
+accepted or refused for a reason other than the one declared. A test with the accepting signer
+shows the exercise catching a verifier that accepts a forgery.
+
+Only the two header documents are ever copied for a negative; a payload case writes a small
+stand-in and relies on the verifier refusing at the first mismatch in inventory order, which is
+what the older `exercise` relied on too.
+
+### Sources
+
+`config/sourcepins.py` reads the lock out of the checkout and refuses absence, a link and
+unreadable JSON, each by reason; nothing recreates it. `trust/acquiring.py` brings every locked
+source into the runtime root: a source already present with the right digest is left alone, one
+whose bytes changed is fetched again, and the reviewed lock is copied beside the sources only
+after every fetch held.
+
+### Parity
+
+`tests/contract/test_verify_parity.py` runs the older `verify` and the new verifier over one
+openssl-signed fixture through the six cases the older tests pin. They agree on every one.
+`test_sourcepins.py` loads the reviewed lock in this repository and finds the same six sources.
+
+The command surface is untouched. `verify-artifact`, `sources`, `select-candidate` and
+`trust-development-key` still run the older code through the bridge. The last needs the guest
+shell port to fetch the builder's key over SSH and moves with P17.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 164 files, 8 587 lines; `trust` 544 lines in 11 modules |
+| Fast suite | 1 516 passed, 4 skipped |
+| Strict type check | clean over 164 files |
+| Contract suite | 106 cases, real and fake |
+| Gates green | G1 to G7, G10 |
+
+`migration_red`: the model readers, the two ports and the acquisition were each written after
+their tests were observed failing. The verifier and the negatives were written with their
+tests; two of those tests were wrong on first run (a fixture that re-signed with the wrong digest,
+and an expectation that the accepting-signer case ends in one particular reason) and were
+corrected, not the code.
+`golden_change`: none.
+`supersedes`: none. The older tests remain until their commands move.
+
 ## Commands
 
 ```sh
