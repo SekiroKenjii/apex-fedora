@@ -24,7 +24,7 @@ class Refusing:
         if name.startswith("_"):
             raise AttributeError(name)
 
-        def refuse(*arguments: object, **keywords: object) -> NoReturn:
+        def refuse(*_arguments: object, **_keywords: object) -> NoReturn:
             raise errors.InternalDefect(
                 f"{self._port}.{name} was called while only computing was permitted; "
                 "a stage may act only in apply"

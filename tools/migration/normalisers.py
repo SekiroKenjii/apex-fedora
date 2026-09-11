@@ -7,7 +7,6 @@ difference, and updating the baseline for one requires saying why.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
 
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:\d{2}|Z)")
 HEX32 = re.compile(r"\b[0-9a-f]{32}\b")
@@ -40,11 +39,3 @@ def normalise(text: str, *, root: str, repository: str) -> str:
     text = MEMORY_FIELD.sub(r"\1<int>", text)
     return _sequence_hex(text)
 
-
-def unstable_tokens() -> Iterator[str]:
-    yield "<ts>"
-    yield "<tmp>"
-    yield "<tmpname>"
-    yield "<elapsed>"
-    yield "<root>"
-    yield "<repo>"

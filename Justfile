@@ -184,6 +184,9 @@ ratchet:
 types:
     uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
 
+deadcode:
+    uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/architecture tests/contract tests/integration --min-confidence 80
+
 lint:
     uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
 
@@ -206,6 +209,7 @@ gate:
     just test
     just lint
     just types
+    just deadcode
     just runtime-verify
     just readiness-shadow
     just verify-chain

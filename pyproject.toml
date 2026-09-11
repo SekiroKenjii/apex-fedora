@@ -53,8 +53,6 @@ max-statements = 40
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG"]
-# The refusing double accepts any call in order to reject it, so its arguments are unused.
-"src/apex/ports/planning.py" = ["ARG"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

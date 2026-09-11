@@ -6,12 +6,14 @@ package that needs more room gets it in the same change that explains why, not b
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
 
 SOURCE = Path(__file__).resolve().parents[2] / "src" / "apex"
 MODULE_LINE_LIMIT = 400
+FAN_IN_LIMIT = 40
 PACKAGE_LINE_BUDGETS = {
     "kernel": 1400,
     "model": 1200,
@@ -49,6 +51,37 @@ def test_each_package_stays_within_its_line_budget(package: str, budget: int) ->
     total = sum(line_count(path) for path in directory.rglob("*.py"))
 
     assert total <= budget, f"{package} is {total} lines against a budget of {budget}"
+
+
+def importers_by_module() -> dict[str, int]:
+    counted: dict[str, int] = {}
+    for path in SOURCE.rglob("*.py"):
+        tree = ast.parse(path.read_text(), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("apex"):
+                for alias in node.names:
+                    target = (
+                        f"{node.module}.{alias.name}"
+                        if alias.name[0].islower()
+                        else node.module
+                    )
+                    counted[target] = counted.get(target, 0) + 1
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.startswith("apex"):
+                        counted[alias.name] = counted.get(alias.name, 0) + 1
+    return counted
+
+
+def test_no_module_outside_the_kernel_is_imported_by_more_than_the_fan_in_limit() -> None:
+    """The kernel is the shared vocabulary and is expected to be everywhere. Nothing else is."""
+    crowded = [
+        f"{module}: {count}"
+        for module, count in sorted(importers_by_module().items())
+        if count > FAN_IN_LIMIT and not module.startswith("apex.kernel")
+    ]
+
+    assert crowded == []
 
 
 def test_every_package_that_exists_has_a_budget() -> None:
