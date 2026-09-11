@@ -8,7 +8,7 @@ missing producer is a load-time error rather than a surprise part way through a 
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from apex.kernel import errors
 
@@ -21,6 +21,12 @@ class Node:
 
 
 def order(nodes: Sequence[Node], *, seeds: frozenset[str] = frozenset()) -> list[str]:
+    producers = _producers(nodes)
+    dependencies = _dependencies(nodes, producers=producers, seeds=seeds)
+    return _topological(dependencies)
+
+
+def _producers(nodes: Sequence[Node]) -> dict[str, str]:
     producers: dict[str, str] = {}
     for node in sorted(nodes, key=lambda item: item.id):
         for fact in sorted(node.writes):
@@ -30,12 +36,15 @@ def order(nodes: Sequence[Node], *, seeds: frozenset[str] = frozenset()) -> list
                     f"{fact!r} is written by both {claimed!r} and {node.id!r}"
                 )
             producers[fact] = node.id
+    return producers
 
+
+def _dependencies(
+    nodes: Sequence[Node], *, producers: Mapping[str, str], seeds: frozenset[str]
+) -> dict[str, set[str]]:
     dependencies: dict[str, set[str]] = {node.id: set() for node in nodes}
     for node in nodes:
-        for fact in sorted(node.reads):
-            if fact in seeds:
-                continue
+        for fact in sorted(node.reads - seeds):
             producer = producers.get(fact)
             if producer is None:
                 raise errors.RegistrationError(
@@ -43,8 +52,12 @@ def order(nodes: Sequence[Node], *, seeds: frozenset[str] = frozenset()) -> list
                 )
             if producer != node.id:
                 dependencies[node.id].add(producer)
+    return dependencies
 
-    remaining = dict(dependencies)
+
+def _topological(dependencies: Mapping[str, set[str]]) -> list[str]:
+    """Kahn's algorithm with a lexical tiebreak, so the order is the same on every machine."""
+    remaining = {name: set(needs) for name, needs in dependencies.items()}
     resolved: list[str] = []
     while remaining:
         ready = sorted(name for name, needs in remaining.items() if not needs)
