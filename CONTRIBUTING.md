@@ -8,6 +8,17 @@ They check staged content, commit messages and outgoing history. They preserve e
 hooks rather than overwrite another policy. Hooks are local safety checks, not server-side
 access control; do not bypass them.
 
+Commit messages are now checked by the repository rules, which name the rule that refused.
+If a refusal is wrong, put `APEX_GUARD=legacy` in front of the same command to ask the
+previous guard instead. That swaps one implementation for the other and leaves the check on.
+`--no-verify` is the only thing that turns it off, so reach for it last.
+
+Reverting a guard change has one sharp edge worth knowing before you meet it. Reverting the
+most recent commit runs no hooks, so it just works. Reverting an older one can conflict, and
+`git revert --continue` does run them on a message the rules refuse, with no flag to skip.
+The way out is `git revert --quit`, then `git revert -n <sha>`, resolve, then
+`git commit --no-verify -m 'revert: what you undid'`.
+
 The tool suite runs Git itself against temporary repositories to check rejected
 commits, recovery after unstaging local files and outgoing history. Its push tests
 use a temporary bare repository on disk, with no network destination. Fixture authors

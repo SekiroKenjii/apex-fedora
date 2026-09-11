@@ -9,7 +9,7 @@ import sys
 
 sys.dont_write_bytecode = True
 from apexlib import evidence, gitguard, sources, vm
-from apexlib.common import ROOT, Blocked, config, run, state_dir
+from apexlib.common import Blocked, config, run, state_dir
 
 
 def boot(parser: argparse.ArgumentParser) -> None:
@@ -104,13 +104,8 @@ def boot(parser: argparse.ArgumentParser) -> None:
 
     args = parser.parse_args()
     if args.command == "git-hook":
-        if args.kind == "pre-commit":
-            gitguard.inspect_tree(ROOT)
-        elif args.kind == "commit-msg":
-            gitguard.validate_subject(Path(args.arguments[0]).read_text())
-        else:
-            gitguard.inspect_outgoing(ROOT, sys.stdin.read())
-        return
+        from apexlib import guardforward
+        raise SystemExit(guardforward.run(args.kind, args.arguments, dict(os.environ)))
     if args.command == "hooks":
         gitguard.install()
         print("Local Git hooks installed")

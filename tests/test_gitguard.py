@@ -123,17 +123,22 @@ def test_real_pre_commit_blocks_local_file_and_allows_recovery(repo):
     assert git(repo, 'ls-tree', '--name-only', 'HEAD') == 'product.txt'
 
 
-@pytest.mark.parametrize('message', [
-    'update product', 'merge: update product', 'fix: ' + 'a' * 68,
-    'fix: update product\n\nDetails',
-    'fix: update product\n\nCo-authored-by: Fixture <fixture@example.invalid>',
+@pytest.mark.parametrize(('message', 'rule'), [
+    ('update product', 'commit.subject-malformed'),
+    ('merge: update product', 'commit.subject-malformed'),
+    ('fix: ' + 'a' * 68, 'commit.subject-too-long'),
+    ('fix: update product\n\nDetails', 'commit.has-body'),
+    ('fix: update product\n\nCo-authored-by: Fixture <fixture@example.invalid>',
+     'commit.co-author-trailer'),
 ])
-def test_real_commit_msg_hook_rejects_invalid_commit(repo, message):
+def test_real_commit_msg_hook_rejects_invalid_commit(repo, message, rule):
+    # Anchored on the refusing rule rather than on one sentence, so a transfer that stopped
+    # consulting the rules would fail here instead of passing on shared prose.
     install_executable_hooks(repo)
     (repo / 'product.txt').write_text('product source')
     git(repo, 'add', 'product.txt')
     rejected = attempt(repo, 'commit', '-qm', message)
-    assert rejected.returncode != 0 and 'Conventional Commit' in rejected.stderr
+    assert rejected.returncode != 0 and rule in rejected.stderr
     assert attempt(repo, 'rev-parse', '--verify', 'HEAD').returncode != 0
 
 
