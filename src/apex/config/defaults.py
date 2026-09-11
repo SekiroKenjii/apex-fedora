@@ -20,6 +20,8 @@ SOURCE_PATHS = ("Containerfile", "config", "guest", "rpms", "system_files", "liv
 EXPORT_DIRECTORY = "exports"
 SOURCE_ARCHIVE_NAME = "source.tar"
 SOURCE_MANIFEST_NAME = "source-manifest.json"
+SOURCES_DIRECTORY = "sources"
+LOCK_COPY_NAME = "sources.lock.json"
 RECORD_MODE = quantities.FileMode(0o600)
 
 DOCUMENT_LIMIT = bounded.Limit(4 * 1024 * 1024)

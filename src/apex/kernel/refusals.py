@@ -36,6 +36,8 @@ class RefusalReason(enum.StrEnum):
     NEGATIVE_ACCEPTED = "trust.negative-accepted"
     NEGATIVE_WRONG_REASON = "trust.negative-wrong-reason"
 
+    LOCK_MISSING = "lock.missing"
+    LOCK_UNREADABLE = "lock.unreadable"
     LOCK_SCHEMA_UNSUPPORTED = "lock.schema-unsupported"
     LOCK_IMAGE_MISSING = "lock.image-missing"
     LOCK_IMAGE_DIGEST_MALFORMED = "lock.image-digest-malformed"
