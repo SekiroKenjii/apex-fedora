@@ -77,6 +77,8 @@ def inspect_outgoing(repo: Path, updates: str):
             if known.returncode:
                 raise Blocked("Fetch remote history before checking this push")
             args += ["^" + remote_sha]
+        # A commit already held by a remote is not outgoing, whichever branch carries it now.
+        args += ["--not", "--remotes"]
         for commit in output(args).splitlines():
             raw = run(["git", "-C", repo, "cat-file", "commit", commit], capture_output=True).stdout
             validate_subject(raw.split(b"\n\n", 1)[1].decode())
