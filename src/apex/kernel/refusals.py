@@ -63,6 +63,12 @@ class RefusalReason(enum.StrEnum):
 
     LINE_EXCEEDS_LIMIT = "bounded.line-exceeds-limit"
 
+    FRAME_MALFORMED = "frame.malformed"
+    FRAME_OUT_OF_ORDER = "frame.out-of-order"
+    FRAME_LIMIT_EXCEEDED = "frame.limit-exceeded"
+    FRAME_CHECKSUM_MISMATCH = "frame.checksum-mismatch"
+    FRAME_INCOMPLETE = "frame.incomplete"
+
     DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
     DUPLICATE_DEVICE = "machine.duplicate-device"
     TOO_MANY_DEVICES = "machine.too-many-devices"

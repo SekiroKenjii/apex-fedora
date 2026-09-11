@@ -22,7 +22,7 @@ LAYERS = {
     "config": 5, "targeting": 5,
     "attestation": 6, "workspace": 6, "trust": 6, "provisioning": 6, "composition": 6,
     "verification": 6,
-    "adapters": 7, "wiring": 8, "cli": 9, "agent": 10,
+    "adapters": 7, "wiring": 8, "cli": 9, "guest": 10,
 }
 
 # Phrases that only ever compare the tree with the code it replaced. Their history belongs in

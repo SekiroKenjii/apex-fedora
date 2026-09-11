@@ -25,6 +25,7 @@ PACKAGE_LINE_BUDGETS = {
     "attestation": 3600,
     "composition": 1200,
     "trust": 1200,
+    "guest": 1600,
     "workspace": 2000,
     "adapters": 1600,
     "cli": 900,

@@ -13,8 +13,8 @@ from apex.kernel import bounded, quantities, timing
 BUILDER_SSH_PORT = quantities.TcpPort(22244)
 GUEST_SSH_PORT = quantities.TcpPort(22245)
 
-CAPTURE_LIMIT = bounded.Limit(262144)
-SERIAL_CHUNK = bounded.Limit(768)
+CAPTURE_LIMIT = bounded.CAPTURE_LIMIT
+SERIAL_CHUNK = bounded.SERIAL_CHUNK
 
 SOURCE_PATHS = ("Containerfile", "config", "guest", "rpms", "system_files", "live", "tools")
 EXPORT_DIRECTORY = "exports"
