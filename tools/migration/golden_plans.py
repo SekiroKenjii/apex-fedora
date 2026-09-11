@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Keep a readable copy of every recipe's derived plan under version control.
+
+The plan is derived, so nobody edits the copy by hand. Freezing it makes a change to the
+stage graph a diff a reviewer reads, and checking it makes an unreviewed change fail the gate.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections.abc import Sequence
+from pathlib import Path
+
+REPOSITORY = Path(__file__).resolve().parents[2]
+sys.path[:0] = [str(REPOSITORY / "src")]
+
+from apex.composition.recipes import export_source_recipe  # noqa: E402
+from apex.pipeline import plans  # noqa: E402
+
+DIRECTORY = REPOSITORY / "generated" / "plans"
+RECIPES = {export_source_recipe.NAME: export_source_recipe.PLAN}
+
+
+def rendered(name: str) -> str:
+    return json.dumps(plans.render(RECIPES[name]), indent=1, sort_keys=True) + "\n"
+
+
+def freeze() -> int:
+    DIRECTORY.mkdir(parents=True, exist_ok=True)
+    for name in RECIPES:
+        (DIRECTORY / f"{name}.json").write_text(rendered(name))
+    print(json.dumps({"frozen": sorted(RECIPES)}, indent=2))
+    return 0
+
+
+def differences() -> list[str]:
+    found = []
+    for name in RECIPES:
+        path = DIRECTORY / f"{name}.json"
+        if not path.is_file():
+            found.append(f"{name}: no frozen plan")
+        elif path.read_text() != rendered(name):
+            found.append(f"{name}: the frozen plan differs from the derived one")
+    return found
+
+
+def check() -> int:
+    found = differences()
+    print(json.dumps({"plans": sorted(RECIPES), "differences": found}, indent=2))
+    return 1 if found else 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("action", choices=["freeze", "check"])
+    arguments = parser.parse_args(argv)
+    return freeze() if arguments.action == "freeze" else check()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

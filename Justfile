@@ -185,10 +185,16 @@ types:
     uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
 
 deadcode:
-    uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/architecture tests/contract tests/integration --min-confidence 80
+    uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/integration --min-confidence 80
+
+plans-freeze:
+    uv run --no-project --python {{python}} python tools/migration/golden_plans.py freeze
+
+plans:
+    uv run --no-project --python {{python}} python tools/migration/golden_plans.py check
 
 lint:
-    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/architecture tests/contract
+    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/pipelines tests/architecture tests/contract
 
 readiness-shadow:
     uv run --no-project --python {{python}} python tools/migration/readiness_shadow.py
@@ -210,6 +216,7 @@ gate:
     just lint
     just types
     just deadcode
+    just plans
     just runtime-verify
     just readiness-shadow
     just verify-chain

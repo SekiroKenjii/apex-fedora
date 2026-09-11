@@ -8,11 +8,15 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+from collections.abc import Mapping
+from typing import Any
 
 from apex.kernel import errors, identifiers, refusals
 from apex.pipeline import plans, stages
-from apex.pipeline.facts import FactMap
+from apex.pipeline.facts import FactKey, FactMap
 from apex.ports import portset
+
+SEED = identifiers.StageId("seed")
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -48,16 +52,32 @@ def _unreached[P](
     return tuple(sorted(pending, key=str))
 
 
-def run[P: portset.PortBundle](plan: plans.Plan[P], *, ports: P) -> Outcome:
-    verdicts = _preflight(plan, planning=ports.for_planning())
-    refused = _first_refusal(plan, verdicts)
+def run[P: portset.PortBundle](
+    plan: plans.Plan[P],
+    *,
+    ports: P,
+    seeds: Mapping[FactKey[Any], object] | None = None,
+) -> Outcome:
+    """Seeds are the facts the caller already holds, credited to a stage named `seed`."""
+    given = _seeded(seeds or {})
+    verdicts = _preflight(plan, planning=ports.for_planning(), given=given)
+    refused = _first_refusal(plan, verdicts, given=given)
     if refused is not None:
         return refused
-    return _apply(plan, verdicts, ports=ports)
+    return _apply(plan, verdicts, ports=ports, given=given)
 
 
-def _preflight[P](plan: plans.Plan[P], *, planning: P) -> list[stages.Preflight]:
-    context = stages.RunContext(facts=FactMap(), ports=planning)
+def _seeded(seeds: Mapping[FactKey[Any], object]) -> FactMap:
+    facts = FactMap()
+    for key, value in seeds.items():
+        facts = facts.with_fact(key, value, produced_by=SEED)
+    return facts
+
+
+def _preflight[P](
+    plan: plans.Plan[P], *, planning: P, given: FactMap
+) -> list[stages.Preflight]:
+    context = stages.RunContext(facts=given, ports=planning)
     verdicts: list[stages.Preflight] = []
     for stage in plan.stages:
         try:
@@ -70,13 +90,13 @@ def _preflight[P](plan: plans.Plan[P], *, planning: P) -> list[stages.Preflight]
 
 
 def _first_refusal[P](
-    plan: plans.Plan[P], verdicts: list[stages.Preflight]
+    plan: plans.Plan[P], verdicts: list[stages.Preflight], *, given: FactMap
 ) -> Outcome | None:
     for stage, verdict in zip(plan.stages, verdicts, strict=True):
         if isinstance(verdict, stages.RefuseBecause):
             return Outcome(
                 succeeded=False,
-                facts=FactMap(),
+                facts=given,
                 not_tested=_unreached(plan, set()),
                 attested=(),
                 refusal=verdict.reason,
@@ -85,8 +105,10 @@ def _first_refusal[P](
     return None
 
 
-def _apply[P](plan: plans.Plan[P], verdicts: list[stages.Preflight], *, ports: P) -> Outcome:
-    progress = _Progress(context=stages.RunContext(facts=FactMap(), ports=ports))
+def _apply[P](
+    plan: plans.Plan[P], verdicts: list[stages.Preflight], *, ports: P, given: FactMap
+) -> Outcome:
+    progress = _Progress(context=stages.RunContext(facts=given, ports=ports))
     stopped: Outcome | None = None
     try:
         for stage, verdict in zip(plan.stages, verdicts, strict=True):

@@ -16,6 +16,12 @@ GUEST_SSH_PORT = quantities.TcpPort(22245)
 CAPTURE_LIMIT = bounded.Limit(262144)
 SERIAL_CHUNK = bounded.Limit(768)
 
+SOURCE_PATHS = ("Containerfile", "config", "guest", "rpms", "system_files", "live", "tools")
+EXPORT_DIRECTORY = "exports"
+SOURCE_ARCHIVE_NAME = "source.tar"
+SOURCE_MANIFEST_NAME = "source-manifest.json"
+RECORD_MODE = quantities.FileMode(0o600)
+
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class BuilderDefaults:

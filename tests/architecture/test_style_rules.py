@@ -42,7 +42,7 @@ NARRATION = (
 NAME_IMPORT_EXCEPTIONS = {
     "attestation/readiness.py": {"Verdict", "NotTested", "BLOCKED", "PASSED"},
     "pipeline/plans.py": {"FactKey", "Stage"},
-    "pipeline/runner.py": {"FactMap"},
+    "pipeline/runner.py": {"FactKey", "FactMap"},
     "pipeline/stages.py": {"FactKey", "FactMap"},
 }
 TYPING_MODULES = ("typing", "collections.abc")
@@ -51,6 +51,8 @@ VERSION_LITERAL = re.compile(r"\bfc\d+\b|\bfedora-?\d+\b|\bGNOME ?\d+\b|\bgnome-
 VERSION_HOMES = ("targeting/releases/",)
 
 KIND_SUFFIXES = {
+    "composition/stages": "_stage",
+    "composition/recipes": "_recipe",
     "workspace/entryrules": "_rule",
     "workspace/contentrules": "_rule",
     "workspace/messagerules": "_rule",

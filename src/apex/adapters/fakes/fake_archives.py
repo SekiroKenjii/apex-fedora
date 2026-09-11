@@ -1,9 +1,13 @@
-"""Bundle into memory, holding the same determinism contract."""
+"""Bundle into memory, holding the same determinism contract.
+
+The archive digest is taken over the canonical listing, so it is stable for the same files
+and changes when any of them does, without a tar ever being written.
+"""
 
 from __future__ import annotations
 
 from apex.adapters import sourcewalk
-from apex.kernel import claims, errors, hashing, refusals, safepaths
+from apex.kernel import claims, encoding, errors, hashing, refusals, safepaths
 from apex.ports import archives
 
 
@@ -14,7 +18,7 @@ class MemoryArchives:
         self.written: dict[str, tuple[str, ...]] = {}
 
     def bundle(
-        self, sources: archives.SourceSet, *, into: safepaths.SafePath
+        self, sources: archives.SourceSet, *, into: safepaths.SafePath, screen: archives.Screen
     ) -> archives.SourceBundle:
         entries: list[archives.BundledFile] = []
         reads = 0
@@ -30,17 +34,22 @@ class MemoryArchives:
                 )
             payload = candidate.read_bytes()
             reads += 1
+            mode = sourcewalk.mode_for(candidate)
+            screen(archives.BundleCandidate(path=relative, mode=mode, payload=payload))
             entries.append(
                 archives.BundledFile(
-                    path=relative,
-                    mode=sourcewalk.mode_for(candidate),
-                    digest=hashing.digest_bytes(payload),
+                    path=relative, mode=mode, digest=hashing.digest_bytes(payload)
                 )
             )
         ordered = tuple(sorted(entries, key=lambda entry: entry.path))
         self.written[str(into)] = tuple(entry.path for entry in ordered)
+        listing = [
+            {"path": entry.path, "mode": str(entry.mode), "digest": entry.digest.hex}
+            for entry in ordered
+        ]
         return archives.SourceBundle(
             archive=into,
+            archive_digest=hashing.digest_bytes(encoding.canonical(listing)),
             files=ordered,
             merkle_root=hashing.merkle_root([entry.digest for entry in ordered]),
             reads=reads,

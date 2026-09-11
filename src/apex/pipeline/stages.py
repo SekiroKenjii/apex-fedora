@@ -83,15 +83,29 @@ class RunContext[P]:
 
 
 class Stage[P](Protocol):
-    id: identifiers.StageId
-    reads: tuple[FactKey[Any], ...]
-    writes: tuple[FactKey[Any], ...]
-    attests: frozenset[identifiers.CheckId]
-    effects: frozenset[effects.Effect]
+    @property
+    def id(self) -> identifiers.StageId: ...
+
+    @property
+    def reads(self) -> tuple[FactKey[Any], ...]: ...
+
+    @property
+    def writes(self) -> tuple[FactKey[Any], ...]: ...
+
+    @property
+    def attests(self) -> frozenset[identifiers.CheckId]: ...
+
+    @property
+    def effects(self) -> frozenset[effects.Effect]: ...
 
     def preflight(self, context: RunContext[P]) -> Preflight: ...
 
     def apply(self, context: RunContext[P]) -> StageResult: ...
+
+
+def always_ready[P](_context: RunContext[P]) -> Preflight:
+    """The preflight of a stage whose only precondition is that its facts exist."""
+    return Ready()
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

@@ -58,6 +58,28 @@ def test_a_directory_is_not_a_regular_file(root: safepaths.RuntimeRoot) -> None:
     assert raised.value.reason is refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE
 
 
+def test_a_source_root_accepts_any_readable_directory(root: safepaths.RuntimeRoot) -> None:
+    shared = root.path / "checkout"
+    shared.mkdir(mode=0o755)
+
+    assert safepaths.SourceRoot.adopt(shared).path == shared.resolve()
+
+
+def test_a_source_root_refuses_a_symlink_and_a_file(root: safepaths.RuntimeRoot) -> None:
+    plain = root.path / "plain.json"
+    plain.write_bytes(b"{}")
+    link = root.path / "link"
+    link.symlink_to(root.path)
+
+    with pytest.raises(errors.Refusal) as from_file:
+        safepaths.SourceRoot.adopt(plain)
+    with pytest.raises(errors.Refusal) as from_link:
+        safepaths.SourceRoot.adopt(link)
+
+    assert from_file.value.reason is refusals.RefusalReason.PATH_NOT_A_DIRECTORY
+    assert from_link.value.reason is refusals.RefusalReason.PATH_IS_A_SYMLINK
+
+
 def test_a_file_offered_as_a_runtime_root_is_refused_as_not_a_directory(
     root: safepaths.RuntimeRoot,
 ) -> None:

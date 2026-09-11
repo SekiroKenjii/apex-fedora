@@ -23,6 +23,7 @@ PACKAGE_LINE_BUDGETS = {
     "config": 600,
     "targeting": 600,
     "attestation": 3600,
+    "composition": 1200,
     "workspace": 2000,
     "adapters": 1600,
     "cli": 900,
