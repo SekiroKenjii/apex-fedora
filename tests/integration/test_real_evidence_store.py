@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from apex.adapters.real import real_files
 from apex.attestation import (
     attesting,
     ledger,
@@ -83,14 +84,15 @@ def test_reading_the_real_store_changes_nothing(root: Path) -> None:
 
 def test_the_real_store_reads_as_version_one_because_it_carries_no_mark(root: Path) -> None:
     assert storemark.read_mark(root) == storemark.Unmarked()
-    assert reading.read_store(root).version == storemark.FIRST_VERSION
+    found = reading.read_store(root, files=real_files.LocalFiles())
+    assert found.version == storemark.FIRST_VERSION
 
 
 def test_the_versioned_reading_of_the_real_store_still_folds_to_the_frozen_tally(
     root: Path,
 ) -> None:
     """Acceptance criterion ten, checked on the real data rather than argued."""
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
     outcome = readiness.evaluate(
         required=resolving.required_environments(),
         records=found.records,
@@ -108,7 +110,7 @@ def test_every_record_from_the_real_store_is_imported_with_both_permanent_limits
     root: Path,
 ) -> None:
     """The only mechanical check that the import was actually applied."""
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert found.attestations
     for entry in found.attestations:
@@ -118,7 +120,7 @@ def test_every_record_from_the_real_store_is_imported_with_both_permanent_limits
 
 
 def test_strict_readiness_withholds_every_pass_and_keeps_every_finding(root: Path) -> None:
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
     outcome = readiness.evaluate(
         required=resolving.required_environments(),
         records=found.records,
