@@ -26,7 +26,7 @@ context that drives them.
 | `guest/verify-image.py` | 57 | build check | `build.verify-image` unit | P18 |
 | `guest/live-parity.py` | 19 | build check | `build.live-parity` unit | P18 |
 | `guest/live-write-denial.py` | 124 | fault | `fault.live-write-denial` unit, host case in `verification/faults/live_write_denial_fault.py`; the older script stays until `just test-live-check` is repointed | P19b, done |
-| `guest/live-lock-fault.py` | 103 | fault | `verification/faults/live_lock_fault.py` | P19 |
+| `guest/live-lock-fault.py` | 103 | fault | `fault.live-lock` unit, its child run through the process port with `CAP_SYS_ADMIN` dropped; host case in `verification/faults/live_lock_fault.py`; the older script stays until `just test-live-check` is repointed | P19c, done |
 | `guest/test-installer-fault.py` | 155 | fault | `verification/faults/installer_payload_fault.py` | P19 |
 | `guest/test-installer-trust.py` | 164 | fault, signatures | `verification/faults/installer_trust_fault.py` | P19 |
 | `guest/test-fingerprint.py` | 108 | fixture test | `fingerprint.virtual` unit | P19 |
