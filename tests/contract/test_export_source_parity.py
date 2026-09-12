@@ -15,9 +15,11 @@ from apex.adapters.real import (
     real_digesting,
     real_downloading,
     real_files,
+    real_hypervisor,
     real_ids,
     real_locking,
     real_process,
+    real_qmp,
     real_signing,
 )
 from apex.composition import keys
@@ -40,6 +42,8 @@ def real_bundle(root: safepaths.RuntimeRoot) -> portset.HostPorts:
         archives=real_archives.TarArchives(),
         signing=real_signing.OpensslSigner(),
         downloads=real_downloading.CurlDownloads(),
+        hypervisor=real_hypervisor.QemuHypervisor(),
+        monitor=real_qmp.UnixQmp(),
     )
 
 

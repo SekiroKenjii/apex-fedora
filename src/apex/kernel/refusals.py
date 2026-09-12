@@ -79,6 +79,9 @@ class RefusalReason(enum.StrEnum):
     NOT_A_DISPOSABLE_MACHINE = "machine.not-disposable"
     TOPOLOGY_INCONSISTENT = "machine.topology-inconsistent"
     SOCKET_PATH_TOO_LONG = "machine.socket-path-too-long"
+    MACHINE_NOT_RUNNING = "machine.not-running"
+    MACHINE_IDENTITY_CHANGED = "machine.identity-changed"
+    MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
 
     LOCK_HELD = "lock.held"
     ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"

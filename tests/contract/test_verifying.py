@@ -10,7 +10,15 @@ import json
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_ids, fake_locking, fake_process, fake_signing
+from apex.adapters.fakes import (
+    fake_clock,
+    fake_hypervisor,
+    fake_ids,
+    fake_locking,
+    fake_process,
+    fake_qmp,
+    fake_signing,
+)
 from apex.adapters.real import real_archives, real_digesting, real_downloading, real_files
 from apex.kernel import errors, hashing, refusals, safepaths
 from apex.model import bundles
@@ -31,6 +39,8 @@ def bundle_of(signer: signing.SigningPort) -> portset.HostPorts:
         archives=real_archives.TarArchives(),
         signing=signer,
         downloads=real_downloading.CurlDownloads(),
+        hypervisor=fake_hypervisor.FakeQemu(),
+        monitor=fake_qmp.ScriptedQmp(),
     )
 
 

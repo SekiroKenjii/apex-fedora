@@ -30,6 +30,11 @@ SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)
 DOWNLOAD_RETRIES = 2
+MONITOR_APPEARS = timing.Deadline(timing.Elapsed(10))
+MONITOR_POLL = timing.Elapsed(0.05)
+REAP_DEADLINE = timing.Deadline(timing.Elapsed(5))
+QMP_DEADLINE = timing.Deadline(timing.Elapsed(10))
+QMP_LINE_LIMIT = bounded.Limit(1024 * 1024)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
