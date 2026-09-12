@@ -30,6 +30,7 @@ SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)
 DOWNLOAD_RETRIES = 2
+IMAGE_TOOL_DEADLINE = timing.Deadline(timing.Elapsed(120))
 MONITOR_APPEARS = timing.Deadline(timing.Elapsed(10))
 MONITOR_POLL = timing.Elapsed(0.05)
 REAP_DEADLINE = timing.Deadline(timing.Elapsed(5))

@@ -83,6 +83,11 @@ class RefusalReason(enum.StrEnum):
     MACHINE_IDENTITY_CHANGED = "machine.identity-changed"
     MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
 
+    DISK_NOT_QCOW2 = "disk.not-qcow2"
+    DISK_CHAIN_CYCLE = "disk.chain-cycle"
+    DISK_NOT_STANDALONE = "disk.not-standalone"
+    DISK_OVERLAY_EXISTS = "disk.overlay-exists"
+
     LOCK_HELD = "lock.held"
     ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"
 

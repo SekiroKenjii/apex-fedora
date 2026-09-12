@@ -24,6 +24,7 @@ PACKAGE_LINE_BUDGETS = {
     "targeting": 600,
     "attestation": 3600,
     "composition": 1200,
+    "provisioning": 1600,
     "trust": 1200,
     "agent": 1600,
     "workspace": 2000,
