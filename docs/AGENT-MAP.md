@@ -32,10 +32,10 @@ context that drives them.
 | `guest/test-fingerprint.py` | 108 | fixture test | `fingerprint.virtual` unit | P19 |
 | `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18c unit |
 | `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18c unit |
-| `guest/update-fixture.py` | 188 | fixture, signing | host side in `provisioning/fixtures/update_fixture.py`; builder steps become the `fixture.update` unit on `ContainerEnginePort` | P17 host side done, P18c unit |
+| `guest/update-fixture.py` | 188 | fixture, signing | `fixture.update` unit on the container engine, host side in `provisioning/fixtures/update_fixture.py`; the older script stays until `just update-fixture` is repointed | P18c, done |
 | `guest/installer-fixtures.py` | 88 | fixture | `fixture.installer-disks` unit, host side in `provisioning/fixtures/installer_fixture.py`; the older script stays until `just installer-fixtures` is repointed | P18b, done |
-| `guest/ventoy-fixture.py` | 114 | fixture | host side in `provisioning/fixtures/ventoy_fixture.py`; builder steps become the `fixture.ventoy` unit | P17 host side done, P18c unit |
-| `guest/dedupe-update-blobs.py` | 153 | fixture, storage | host side in `provisioning/fixtures/dedupe_fixture.py`; the ioctl runs in the `fixture.dedupe` unit | P17 host side done, P18c unit |
+| `guest/ventoy-fixture.py` | 114 | fixture | `fixture.ventoy` unit, host side in `provisioning/fixtures/ventoy_fixture.py`; the older script stays until `just ventoy-fixture` is repointed | P18c, done |
+| `guest/dedupe-update-blobs.py` | 153 | fixture, storage | `fixture.dedupe` unit over the extent port, layout in `model/extents.py`; the older script stays until `just dedupe` is repointed | P18c, done |
 | `guest/nvidia-build.py` | 190 | build step | `composition/recipes/nvidia_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpms.py` | 137 | build step | `composition/recipes/fingerprint_rpms_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpm-smoke.py` | 66 | build check | `build.fingerprint-smoke` unit | P18 |

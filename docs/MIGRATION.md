@@ -1987,6 +1987,71 @@ test were written after the unit and passed on their first run, with one normali
 the older script's relative output path. `golden_change`: none. `supersedes`: none yet;
 `guest/installer-fixtures.py` stays until `just installer-fixtures` calls the unit.
 
+## P18c. The guest side: the three builder fixtures become units
+
+Goal: move the remaining builder-side fixture scripts into units that run the same commands
+through ports, adding to the ports only what a unit actually asked for. Five commits on
+`work/phase-18c-guest`, each green on the whole gate.
+
+### The ports grew by what was asked
+
+`ProcessPort.run` takes a working directory, because the Ventoy installer is run from the
+directory its archive unpacks into. `FileSystemPort` gained `copy`, `link`, `reserve`,
+`remove`, `patch` and `free_space`: the copies and hard links the update fixture makes, the
+sparse image the medium starts from, the signatures removed from a variant, the one in-place
+write the dedupe self test needs to prove copy-on-write isolation, and the free space every
+fixture checks first. `ArchivePort` gained `extract` with the data filter and `pack` with a
+top-level name. The agent's bundle carries the archive port, the identity port for a
+passphrase, and the new `ExtentPort`. Each addition has a real adapter, a fake and a contract
+case.
+
+### Three units, three parities
+
+`fixture.ventoy` is `guest/ventoy-fixture.py` step for step: the reviewed request, the inputs
+hashed against it, the packages, the upstream archive unpacked and its version read back, a
+sparse image attached as the loop device that must belong to it, the installer run against
+that device alone from the unpacked directory, the table and the version checked, the two
+ISOs copied and hashed again, the QCOW2 written and checked.
+
+`fixture.update` is `guest/update-fixture.py`: the storage check, the payload's manifest
+against the frozen digest, two signing keys, the build context, image A over the payload and
+B over A, each linted and its packages compared with the baseline, each copied out signed,
+then the unsigned, untrusted and wrong-key variants, and the bundle packed for the host.
+The older report embedded every command's output; this one names the images, the files and
+the digests. Extents are not yet shared on Btrfs from inside this unit; the dedupe unit does
+that on a completed fixture.
+
+`fixture.dedupe` is `guest/dedupe-update-blobs.py` over `ports/extents.py`, whose one call is
+the kernel's dedupe ioctl with the layout in `model/extents.py`. The self test proves the
+same three things: identical bytes share, differing bytes are refused by the kernel, and a
+write to one copy does not reach the other.
+
+Each has a parity harness under `tests/contract/`: the older script runs with every program
+answered and every file a copy or a key would leave written by the answer, the unit runs on
+a scripted process with the same answers, and the argument vectors agree. For the medium
+the directory each command starts in is compared too; for the update fixture the bundle
+layout both sides leave is compared as well. `podman run` now spells the network option
+before read-only, as the older builder scripts do.
+
+### What this slice did not do
+
+The installed-guest fixtures, initramfs and recovery, go with the faults they exist for in
+P19. No `just` recipe calls a unit yet; the older scripts stay until the commands move. The
+extent contract's real case skips where the temporary directory's filesystem cannot share.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 222 files, 14183 lines |
+| Units | `guest.state`, `fixture.installer-disks`, `fixture.ventoy`, `fixture.update`, `fixture.dedupe` |
+| Ports declared | 15, the engine and the extents for the guest |
+| Fast suite | 1 836 passed, 5 skipped |
+
+`migration_red`: each unit's tests were written after the unit; the ventoy tests found the
+free space check and a missing version marker, the dedupe parity found the container listing
+had bypassed the recorded process. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
