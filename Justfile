@@ -189,7 +189,7 @@ pyright:
     uv run --no-project --python {{python}} --with pytest==9.1.1 --with pyright==1.1.407 sh -c 'pyright --pythonpath "$(command -v python)"'
 
 deadcode:
-    uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property tests/integration --min-confidence 80
+    uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property tests/support tests/integration --min-confidence 80
 
 agent-wheel out:
     uv run --no-project --python {{python}} python tools/migration/agent_wheel.py "{{out}}"
@@ -201,7 +201,7 @@ plans:
     uv run --no-project --python {{python}} python tools/migration/golden_plans.py check
 
 lint:
-    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property
+    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property tests/support
 
 readiness-shadow:
     uv run --no-project --python {{python}} python tools/migration/readiness_shadow.py

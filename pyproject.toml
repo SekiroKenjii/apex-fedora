@@ -26,7 +26,7 @@ dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "tools"]
+pythonpath = ["src", "tools", "tests/support"]
 addopts = "-ra -p no:cacheprovider -m 'not integration and not golden'"
 markers = [
     "integration: requires file-backed guest artifacts",
@@ -59,6 +59,6 @@ max-statements = 40
 ban-relative-imports = "all"
 
 [tool.pyright]
-include = ["src", "tools/migration", "tests/unit", "tests/contract", "tests/architecture", "tests/pipelines", "tests/property"]
-extraPaths = ["src", "tools"]
+include = ["src", "tools/migration", "tests/unit", "tests/contract", "tests/architecture", "tests/pipelines", "tests/property", "tests/support"]
+extraPaths = ["src", "tools", "tests/support"]
 typeCheckingMode = "standard"

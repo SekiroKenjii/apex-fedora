@@ -29,6 +29,7 @@ PROBE_DEADLINE = timing.Deadline(timing.Elapsed(20))
 OBSERVATION_DEADLINE = timing.Deadline(timing.Elapsed(15))
 OBSERVATION_LIMIT = bounded.CAPTURE_LIMIT
 LIVE_ROOT_TOKEN = "root=live:CDLABEL=Apex-Live"
+SETTLE_DEADLINE = timing.Deadline(timing.Elapsed(25))
 SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)

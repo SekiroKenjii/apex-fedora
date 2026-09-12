@@ -40,6 +40,18 @@ def meet(kinds: Iterable[EnvironmentKind]) -> EnvironmentKind:
     return first
 
 
+def witnessed_through(bundle: EnvironmentKind, guest: EnvironmentKind) -> EnvironmentKind:
+    """The environment a guest's answer stands in, seen through the host bundle that asked.
+
+    A fake anywhere in the bundle makes the answer simulated whatever the guest was. A real
+    bundle witnesses what the adapter that launched the guest declared for it, because the
+    host's own adapters only ever run on the host and cannot vouch for a machine.
+    """
+    if bundle is EnvironmentKind.SIMULATED or guest is EnvironmentKind.SIMULATED:
+        return EnvironmentKind.SIMULATED
+    return guest
+
+
 ATTESTABLE = frozenset(
     kind for kind in EnvironmentKind if kind is not EnvironmentKind.SIMULATED
 )

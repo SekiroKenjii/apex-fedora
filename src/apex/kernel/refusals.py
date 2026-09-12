@@ -96,6 +96,7 @@ class RefusalReason(enum.StrEnum):
     DISK_CHAIN_CYCLE = "disk.chain-cycle"
     DISK_NOT_STANDALONE = "disk.not-standalone"
     DISK_OVERLAY_EXISTS = "disk.overlay-exists"
+    DEVICE_IDENTITY_MISMATCH = "device.identity-mismatch"
 
     FIXTURE_ENTRY_MALFORMED = "fixture.entry-malformed"
     FIXTURE_PATH_NOT_ISOLATED = "fixture.path-not-isolated"

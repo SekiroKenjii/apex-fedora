@@ -20,6 +20,7 @@ import pytest
 
 from apex.adapters.fakes import (
     fake_archives,
+    fake_blockdevices,
     fake_clock,
     fake_extents,
     fake_ids,
@@ -126,7 +127,7 @@ def newer(
         digests=real_digesting.CachedDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(),
+        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
     )
     work = tmp_path / ("apex-dedupe-" + "a" * 32)
     report = dedupe_unit.run(ports, arguments={"work": str(work)})

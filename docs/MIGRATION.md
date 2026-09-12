@@ -2123,6 +2123,75 @@ proof had already been filed, so every citation is now judged before any byte la
 snapshot test found the counting fake counting its own re-entrant calls. `golden_change`:
 none. `supersedes`: none yet.
 
+## P19b. Verification, second slice: the write-denial faults and the first record
+
+Goal: the two faults that prove the live medium protects its disks become units, and one
+stage records what they establish. Four commits on `work/phase-19b-faults`, each green on
+the whole gate.
+
+### A port for the one write a fault makes
+
+`ports/blockdevices.py` has one operation: read a range of a block device, write the same
+bytes back to the same place, read again, on one descriptor whose identity was checked
+against the number sysfs gave for the node. The kernel's refusal is an outcome; a node that
+is not the device named is refused before any read. The real adapter cannot be handed a
+disposable block device on a development host, so the contract proves the refusals on both
+adapters and the accepting and denying paths on the fake only; the live fault in a guest is
+where the real path is proven. The agent's bundle carries the port.
+
+### Two faults over one snapshot
+
+`agent/livefixtures.py` holds the rules the older scripts enforced before touching anything:
+the blank 48 GiB target and the partitioned 4 GiB sentinel by size, serial, bus and layout;
+the one USB fixture by the serial on its USB device; every node read-only, unmounted, not
+swapped, not held, and its `/dev` node the device sysfs described. `fault.live-write-denial`
+and `fault.usb-write-denial` take one inventory, take it again before every attempt, write
+each node's first sector back to it, and stop at the first write that was not denied. The
+report says what happened; the host decides what it proves.
+
+The parity harness compares judgements rather than argument vectors, because the older
+scripts write with the standard library and not through a program: whether an inventory is
+accepted under eleven mutations, what status six write outcomes earn, which devices a run
+attempts before it stops, and how the USB parent is found. One spec builds both sides.
+
+### The first record
+
+`verification/faulting.py` names a fault case and turns a report into a verdict and a proof.
+`verification/stages/fault_stage.py` makes one stage per case; `mint_stage.py` makes one per
+check, folds every report's verdict with `meet`, files every report as proof, and records
+once, because the readiness fold refuses a check with two records. Its preflight refuses a
+witness the check cannot accept before any guest is asked. `deliver_agent_stage.py` ships the
+wheel under the run's directory. `recipes/live_protection_recipe.py` composes them for
+`live.disk-protection`, and its plan is frozen under `generated/plans/`.
+
+The environment a record stands in is `claims.witnessed_through(bundle, guest)`: a fake
+anywhere in the host bundle makes it simulated, otherwise it is what the adapter that
+launched the guest declared. The pipeline test on fakes therefore ends where the design says
+it must: every fault runs, the chain refuses `SIMULATED_ENVIRONMENT`, and nothing is
+recorded. The recording path is tested on a bundle whose fakes declare themselves real, and
+the test says so.
+
+### What this slice did not do
+
+The lock fault needs a child with a capability dropped, which the process port does not
+offer yet; it goes with the remaining faults. The witness is seeded by the caller, because
+the lease does not yet carry it; the catalogue still says `vm` for live checks, so a live
+guest is declared `vm` until the catalogue distinguishes them. No `just` recipe calls the
+recipe yet.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 251 files, 16045 lines |
+| Units | `guest.state`, `live.observe`, `ventoy.observe`, `fault.live-write-denial`, `fault.usb-write-denial`, and the four builder fixtures |
+| Recipes | four builds and exports, `verify-live-protection` |
+| Fast suite | 1 972 passed, 9 skipped |
+
+`migration_red`: the parity found the fake could not model a changed readback under a
+denied write; the style rule refused a second `keys.py` in the context layer.
+`golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
