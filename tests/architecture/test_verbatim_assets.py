@@ -10,7 +10,9 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from apex.agent import fingerprintharness
+import pytest
+
+from apex.agent import desktopprograms, fingerprintharness
 from apex.trust import preflight
 
 REPOSITORY = Path(__file__).resolve().parents[2]
@@ -50,3 +52,12 @@ def test_the_fingerprint_harness_wrapper_carries_the_older_file_s_digest() -> No
     older = REPOSITORY / "guest" / fingerprintharness.ASSET
 
     assert fingerprintharness.digest().hex == hashlib.sha256(older.read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize("program", [desktopprograms.RENDER, desktopprograms.THEME])
+def test_each_desktop_program_wrapper_carries_the_older_file_s_digest(
+    program: desktopprograms.Program,
+) -> None:
+    older = REPOSITORY / "guest" / program.asset
+
+    assert program.digest().hex == hashlib.sha256(older.read_bytes()).hexdigest()
