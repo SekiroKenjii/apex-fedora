@@ -32,7 +32,7 @@ LAYERS = {
     "adapters": 7,
     "wiring": 8,
     "cli": 9,
-    "guest": 10,
+    "agent": 10,
 }
 
 EFFECT_MODULES = frozenset({

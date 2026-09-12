@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from typing import TextIO
 
 from apex.adapters.real import real_clock, real_files, real_process
-from apex.guest import agentports, requests, serialframe, units
+from apex.agent import agentports, requests, serialframe, units
 from apex.kernel import encoding, errors, identifiers
 
 DISTRIBUTION = "apex-build-tools"
@@ -58,7 +58,7 @@ def emit(
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="apex-guest")
+    parser = argparse.ArgumentParser(prog="apex-agent")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("handshake")
     run = commands.add_parser("run")

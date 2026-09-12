@@ -1,12 +1,12 @@
-# Guest tree map
+# Agent map
 
 Every program under `guest/` and the live root runs inside a builder, a test guest or the
-live laptop. This table says what each one is for and where it goes as the guest program
-under `src/apex/guest/` takes the work over. A row marked verbatim is a safety artifact that
+live laptop. This table says what each one is for and where it goes as the agent, `apex.agent`,
+under `src/apex/agent/` takes the work over. A row marked verbatim is a safety artifact that
 moves byte for byte and is wrapped in types afterwards; it is never rewritten in place.
 
-The guest program is one wheel, `apex-guest`, with one unit per file under
-`src/apex/guest/units/`. A unit runs against the guest's own ports and answers a versioned
+The agent is one wheel, `apex-agent`, with one unit per file under
+`src/apex/agent/units/`. A unit runs against the guest's own ports and answers a versioned
 request. The first unit, `guest.state`, replaces `guest/probe.py`; the others arrive with the
 context that drives them.
 
@@ -79,7 +79,7 @@ that repoints its caller, never earlier.
 
 ## What the wheel proves
 
-`just guest-wheel <dir>` builds the wheel and prints its digest. The contract suite installs it
+`just agent-wheel <dir>` builds the wheel and prints its digest. The contract suite installs it
 into a fresh environment and runs the handshake and the state unit from there, so discovery of
 units inside site-packages, the console script and the protocol refusal are all exercised
 before a wheel is ever copied into a guest.

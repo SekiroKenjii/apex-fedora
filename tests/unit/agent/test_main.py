@@ -8,7 +8,7 @@ import json
 import pytest
 
 from apex.adapters.fakes import fake_clock, fake_files, fake_process
-from apex.guest import agentports, main, requests, serialframe
+from apex.agent import agentports, main, requests, serialframe
 from apex.kernel import errors, identifiers, refusals
 
 TOKEN = "c" * 32

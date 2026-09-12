@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Protocol
 
-from apex.guest import agentports
+from apex.agent import agentports
 from apex.kernel import encoding, errors, identifiers, refusals
 from apex.registry import decorators, discovery, registry
 

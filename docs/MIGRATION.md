@@ -1528,18 +1528,24 @@ older `guest/` tree stays until the host side that calls each script has moved.
 
 Four commits on `work/phase-16-agent`, each green on the whole gate.
 
-### The package is `apex.guest`, not `apex.agent`
+### The package is `apex.agent`, and the guard learned one exception
 
-The plan names it `apex.agent`. The repository guard, both the older one and the transcribed
-rule, refuses any path with an `agent` component, because that is the name of the local
-directory that holds material which must never enter Git. The same thing happened to
-`evidence` in P10b, and the same answer applies: rename the package rather than widen a
-security boundary for a name. `apex.guest` is also the truer name; the program runs wherever
-the host is not.
+The repository guard refuses any path with an `agent` component, because `agent` is the name
+of the workspace directory that holds material which must never enter Git. The first attempt
+at this phase renamed the package to `apex.guest` for that reason, as P10b had renamed
+`evidence`. The operator chose the plan's name instead and asked for the guard to carry the
+exception.
+
+The exception is one shape, held identically by the older guard and the transcribed rule so
+the guard shadow still agrees in both directions: the component `agent`, spelt exactly so,
+is admitted when it sits directly under `src/apex` or directly under one test tier such as
+`tests/unit`. It stays private at the workspace root, under `docs/`, under `src/` without
+`apex`, under `tests/` without a tier, and in any other spelling. The shadow corpus carries
+the admitted shape and its near misses, and both guards' tests pin them.
 
 ### One codec on both sides
 
-`guest/serialframe.py` is the framing the older `installer-diagnostics.py` writes and the older
+`agent/serialframe.py` is the framing the older `installer-diagnostics.py` writes and the older
 `installerlogs.decode` reads, as one module: base64 in chunks of the shared size, each line
 carrying the token and an index, closed by a trailer with the count and the digest. The
 decoder is a state machine over lines that keeps at most one line of unread bytes, so a guest
@@ -1552,25 +1558,25 @@ The chunk size and the capture limit now live in `kernel/bounded.py` alone;
 
 ### A request names its protocol
 
-`guest/requests.py` parses a request and refuses one that speaks another protocol before it
+`agent/requests.py` parses a request and refuses one that speaks another protocol before it
 looks at anything else. The request carries the digest of the guest program the host shipped,
 so a guest can refuse to run under a build it was not handed. A reply names the unit it
-answers for. `guest/agentports.py` is the guest's bundle: a process, its files and a clock, and
+answers for. `agent/agentports.py` is the guest's bundle: a process, its files and a clock, and
 nothing that signs, downloads or takes a host lock.
 
-`guest/units/` holds one unit per module, registered by being there and looked up by name.
+`agent/units/` holds one unit per module, registered by being there and looked up by name.
 `state_probe_unit.py` runs the eight observations `guest/probe.py` runs, through the process
 port with a bound on output, and records a missing program instead of stopping on it. Its
 report keeps the older shape and never claims a visual test.
 
-`guest/main.py` is the console script `apex-guest`: `handshake` prints the protocol and the
+`agent/main.py` is the console script `apex-agent`: `handshake` prints the protocol and the
 installed version; `run` reads one request from standard input and writes one reply, plain or
 framed with a token. Standard output carries nothing else.
 
 ### The wheel is proved, not assumed
 
-`just guest-wheel <dir>` builds the wheel and prints its digest.
-`tests/contract/test_guest_wheel.py` builds it, installs it into a fresh environment and runs
+`just agent-wheel <dir>` builds the wheel and prints its digest.
+`tests/contract/test_agent_wheel.py` builds it, installs it into a fresh environment and runs
 the handshake and the state unit from there, so discovery inside site-packages, the console
 script and the protocol refusal are exercised before a wheel is ever copied into a guest.
 
@@ -1587,7 +1593,7 @@ The older test stays until CI shows the namespace test running there rather than
 
 ### Guest map
 
-`docs/GUEST-MAP.md` lists every program under `guest/` and the live root with its role, its
+`docs/AGENT-MAP.md` lists every program under `guest/` and the live root with its role, its
 destination unit or asset, and the phase that moves it. Three files are safety artifacts and
 move verbatim.
 
@@ -1595,7 +1601,7 @@ move verbatim.
 
 | Item | Value |
 |---|---|
-| Package | 171 files, 9 104 lines; `guest` 506 lines in 7 modules |
+| Package | 171 files, 9 104 lines; `agent` 506 lines in 7 modules |
 | Fast suite | 1 574 passed, 3 skipped |
 | Strict type check | clean over 171 files |
 | Contract suite | 121 cases |
@@ -1625,7 +1631,7 @@ just types                  # strict type check over the package
 just deadcode               # unused code at vulture confidence 80
 just plans-freeze           # record every recipe's derived plan, once per change
 just plans                  # check the frozen plans still match the derived ones
-just guest-wheel <dir>      # build the guest program as a wheel and print its digest
+just agent-wheel <dir>      # build the agent as a wheel and print its digest
 just readiness-shadow       # compare the new readiness fold with the old one
 just verify-chain           # replay the attestation chain and name the first break
 just readiness-table        # read the real store through the versioned reader

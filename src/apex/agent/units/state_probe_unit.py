@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from apex.agent import agentports, units
 from apex.config import defaults
-from apex.guest import agentports, units
 from apex.kernel import commands, encoding, errors, identifiers
 
 VISUAL_TEST = "NOT TESTED"

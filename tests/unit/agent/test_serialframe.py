@@ -12,8 +12,8 @@ import json
 
 import pytest
 
+from apex.agent import serialframe
 from apex.config import defaults
-from apex.guest import serialframe
 from apex.kernel import bounded, errors, identifiers, refusals
 from apexlib import installerlogs as older
 

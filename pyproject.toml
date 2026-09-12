@@ -10,7 +10,7 @@ description = "Isolated Fedora image builds and evidence checks"
 
 [project.scripts]
 apex = "apex.cli.main:main"
-apex-guest = "apex.guest.main:main"
+apex-agent = "apex.agent.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

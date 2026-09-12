@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from apex.guest import requests
+from apex.agent import requests
 from apex.kernel import errors, refusals
 
 DIGEST = "a" * 64

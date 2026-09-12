@@ -14,16 +14,16 @@ from pathlib import Path
 
 import pytest
 
-from apex.guest import requests
-from migration import guest_wheel
+from apex.agent import requests
+from migration import agent_wheel
 
 pytestmark = pytest.mark.skipif(shutil.which("uv") is None, reason="NOT TESTED: uv is absent")
 
 
 @pytest.fixture(scope="module")
 def installed(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    base = tmp_path_factory.mktemp("guest-wheel")
-    wheel = guest_wheel.build(base / "dist")
+    base = tmp_path_factory.mktemp("agent-wheel")
+    wheel = agent_wheel.build(base / "dist")
     venv = base / "venv"
     subprocess.run(["uv", "venv", "-q", str(venv)], check=True, capture_output=True)
     subprocess.run(
@@ -31,14 +31,14 @@ def installed(tmp_path_factory: pytest.TempPathFactory) -> Path:
         check=True,
         capture_output=True,
     )
-    return venv / "bin" / "apex-guest"
+    return venv / "bin" / "apex-agent"
 
 
 def test_the_wheel_is_named_by_its_digest(tmp_path: Path) -> None:
-    wheel = guest_wheel.build(tmp_path / "dist")
+    wheel = agent_wheel.build(tmp_path / "dist")
 
     assert wheel.suffix == ".whl"
-    assert len(guest_wheel.digest_of(wheel)) == 64
+    assert len(agent_wheel.digest_of(wheel)) == 64
 
 
 def test_the_installed_guest_answers_the_handshake(installed: Path) -> None:
