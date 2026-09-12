@@ -20,7 +20,11 @@ REPORT_KIND = ".json"
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ProbeCase:
-    """One question a guest can be asked, and where it must be standing to be asked."""
+    """One question a guest can be asked, and where it must be standing to be asked.
+
+    The isolated builder is a guest too, so the build environment is a place a probe can
+    stand; a simulation and the operator's own machine are not.
+    """
 
     unit: identifiers.ProbeId
     environment: claims.EnvironmentKind
@@ -28,11 +32,7 @@ class ProbeCase:
     arguments: Mapping[str, encoding.JsonValue] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if self.environment in {
-            claims.EnvironmentKind.SIMULATED,
-            claims.EnvironmentKind.BUILD,
-            claims.EnvironmentKind.OPERATOR,
-        }:
+        if self.environment in {claims.EnvironmentKind.SIMULATED, claims.EnvironmentKind.OPERATOR}:
             raise errors.RegistrationError(
                 f"{self.unit}: a probe observes a guest, and {self.environment} is not one"
             )

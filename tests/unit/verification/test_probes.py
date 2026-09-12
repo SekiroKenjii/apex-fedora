@@ -45,13 +45,18 @@ def test_an_unknown_probe_is_refused_by_name() -> None:
         probes.lookup(identifiers.ProbeId("live.invented"))
 
 
+def test_the_builder_is_a_guest_a_probe_can_stand_in() -> None:
+    case = probing.ProbeCase(
+        unit=identifiers.ProbeId("live.observe"),
+        environment=claims.EnvironmentKind.BUILD,
+        summary="x",
+    )
+
+    assert case.environment is claims.EnvironmentKind.BUILD
+
+
 @pytest.mark.parametrize(
-    "environment",
-    [
-        claims.EnvironmentKind.SIMULATED,
-        claims.EnvironmentKind.BUILD,
-        claims.EnvironmentKind.OPERATOR,
-    ],
+    "environment", [claims.EnvironmentKind.SIMULATED, claims.EnvironmentKind.OPERATOR]
 )
 def test_a_case_that_observes_no_guest_is_a_registration_fault(
     environment: claims.EnvironmentKind,

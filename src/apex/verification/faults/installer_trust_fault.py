@@ -8,7 +8,7 @@ from apex.verification import faulting, faults
 faults.declare(
     faulting.FaultCase(
         unit=identifiers.ProbeId("fault.installer-trust"),
-        environment=claims.EnvironmentKind.BUILD_CONTAINER,
+        environment=claims.EnvironmentKind.BUILD,
         summary=(
             "A scratch image is built and signed with a fixture key in the isolated builder, "
             "copied under the policy the trust contract implies and opened through the "

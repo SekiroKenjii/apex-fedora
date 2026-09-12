@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from apex.agent import units
+from apex.attestation import catalogue
 from apex.kernel import claims, errors, identifiers, verdicts
 from apex.verification import faulting, faults
 
@@ -18,6 +19,7 @@ def test_every_fault_module_declares_one_case_and_the_registry_holds_them_all() 
 
     assert len(faults.registered()) == len(modules)
     assert [str(case.unit) for case in faults.registered()] == [
+        "fault.fingerprint-cleanup",
         "fault.installer-payload",
         "fault.installer-trust",
         "fault.live-lock",
@@ -37,13 +39,19 @@ def test_an_unknown_fault_is_refused_by_name() -> None:
         faults.lookup(identifiers.ProbeId("fault.invented"))
 
 
+def test_the_builder_s_own_cases_stand_in_the_build_environment_the_catalogue_names() -> None:
+    for name in ("fault.fingerprint-cleanup", "fault.installer-trust"):
+        case = faults.lookup(identifiers.ProbeId(name))
+
+        assert case.environment is claims.EnvironmentKind.BUILD
+    for check in ("fingerprint.virtual-cleanup", "signature.accept", "signature.reject"):
+        required = catalogue.specification(identifiers.CheckId(check)).environment
+
+        assert required is claims.EnvironmentKind.BUILD
+
+
 @pytest.mark.parametrize(
-    "environment",
-    [
-        claims.EnvironmentKind.SIMULATED,
-        claims.EnvironmentKind.BUILD,
-        claims.EnvironmentKind.OPERATOR,
-    ],
+    "environment", [claims.EnvironmentKind.SIMULATED, claims.EnvironmentKind.OPERATOR]
 )
 def test_a_case_attempted_outside_a_guest_is_a_registration_fault(
     environment: claims.EnvironmentKind,

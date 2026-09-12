@@ -2,7 +2,9 @@
 
 A fault case names the guest unit and where the guest must be standing. The unit reports a
 status the older scripts spelt the same way; the host turns it into a verdict and keeps the
-whole report as the proof the verdict cites.
+whole report as the proof the verdict cites. The isolated builder is a guest like any test
+machine, so a case may stand in the build environment; only a simulation and the operator's
+own machine are not places a guest can be asked to break something.
 """
 
 from __future__ import annotations
@@ -15,11 +17,7 @@ from apex.kernel import claims, encoding, errors, identifiers, verdicts
 
 REPORT_KIND = ".json"
 STATUS = "status"
-NOT_A_GUEST = frozenset({
-    claims.EnvironmentKind.SIMULATED,
-    claims.EnvironmentKind.BUILD,
-    claims.EnvironmentKind.OPERATOR,
-})
+NOT_A_GUEST = frozenset({claims.EnvironmentKind.SIMULATED, claims.EnvironmentKind.OPERATOR})
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
