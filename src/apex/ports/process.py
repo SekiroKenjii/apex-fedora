@@ -24,6 +24,7 @@ class ProcessPort(Protocol):
         limit: commands.OutputLimit,
         stdin: bytes | None = None,
         transcript: safepaths.SafePath | None = None,
+        cwd: safepaths.SafePath | None = None,
     ) -> commands.CompletedRun:
         """Run to completion under the deadline.
 

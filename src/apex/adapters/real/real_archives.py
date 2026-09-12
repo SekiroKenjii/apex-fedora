@@ -21,6 +21,20 @@ ARCHIVE_MODE = quantities.FileMode(0o600)
 class TarArchives(archives.ArchivePort):
     environment = claims.EnvironmentKind.BUILD
 
+    def pack(self, directory: safepaths.SafePath, *, into: safepaths.SafePath, name: str) -> None:
+        try:
+            with tarfile.open(into.path, "w") as opened:
+                opened.add(directory.path, arcname=name)
+        except (OSError, tarfile.TarError) as error:
+            raise errors.PortFailure(port="archives", cause=str(error)) from error
+
+    def extract(self, archive: safepaths.SafePath, *, into: safepaths.SafePath) -> None:
+        try:
+            with tarfile.open(archive.path) as opened:
+                opened.extractall(into.path, filter="data")
+        except (OSError, tarfile.TarError) as error:
+            raise errors.PortFailure(port="archives", cause=str(error)) from error
+
     def bundle(
         self, sources: archives.SourceSet, *, into: safepaths.SafePath, screen: archives.Screen
     ) -> archives.SourceBundle:

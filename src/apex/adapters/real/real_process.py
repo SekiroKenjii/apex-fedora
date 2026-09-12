@@ -20,12 +20,15 @@ class SubprocessRunner(process.ProcessPort):
         limit: commands.OutputLimit,
         stdin: bytes | None = None,
         transcript: safepaths.SafePath | None = None,
+        cwd: safepaths.SafePath | None = None,
     ) -> commands.CompletedRun:
         if transcript is not None:
             transcript.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             with transcript.path.open("ab") as handle:
-                return self._run(argv, deadline=deadline, limit=limit, stdin=stdin, sink=handle)
-        return self._run(argv, deadline=deadline, limit=limit, stdin=stdin, sink=None)
+                return self._run(
+                    argv, deadline=deadline, limit=limit, stdin=stdin, sink=handle, cwd=cwd
+                )
+        return self._run(argv, deadline=deadline, limit=limit, stdin=stdin, sink=None, cwd=cwd)
 
     def _run(
         self,
@@ -35,6 +38,7 @@ class SubprocessRunner(process.ProcessPort):
         limit: commands.OutputLimit,
         stdin: bytes | None,
         sink: IO[bytes] | None,
+        cwd: safepaths.SafePath | None,
     ) -> commands.CompletedRun:
         try:
             completed = subprocess.run(  # noqa: S603
@@ -45,6 +49,7 @@ class SubprocessRunner(process.ProcessPort):
                 input=stdin,
                 timeout=deadline.budget.seconds,
                 check=False,
+                cwd=None if cwd is None else cwd.path,
             )
         except FileNotFoundError as error:
             raise errors.PortFailure(

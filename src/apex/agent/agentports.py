@@ -11,7 +11,17 @@ import dataclasses
 from typing import Self
 
 from apex.kernel import claims
-from apex.ports import clock, containers, digesting, files, planning, process
+from apex.ports import (
+    archives,
+    clock,
+    containers,
+    digesting,
+    extents,
+    files,
+    ids,
+    planning,
+    process,
+)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -21,13 +31,23 @@ class AgentPorts:
     clock: clock.ClockPort
     containers: containers.ContainerEnginePort
     digests: digesting.DigestPort
+    archives: archives.ArchivePort
+    identities: ids.IdentityPort
+    extents: extents.ExtentPort
 
     @property
     def environment(self) -> claims.EnvironmentKind:
         return claims.meet(
             member.environment
             for member in (
-                self.processes, self.files, self.clock, self.containers, self.digests,
+                self.processes,
+                self.files,
+                self.clock,
+                self.containers,
+                self.digests,
+                self.archives,
+                self.identities,
+                self.extents,
             )
         )
 
@@ -38,4 +58,7 @@ class AgentPorts:
             clock=planning.refusing("clock"),
             containers=planning.refusing("containers"),
             digests=planning.refusing("digests"),
+            archives=planning.refusing("archives"),
+            identities=planning.refusing("identities"),
+            extents=planning.refusing("extents"),
         )

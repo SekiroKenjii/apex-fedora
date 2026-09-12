@@ -22,6 +22,14 @@ def parse_document(payload: bytes) -> JsonValue:
     return loaded
 
 
+def parse_object(payload: bytes) -> dict[str, JsonValue]:
+    """The object a JSON document holds, or `ValueError` when it holds something else."""
+    loaded = parse_document(payload)
+    if not isinstance(loaded, dict):
+        raise ValueError("not a JSON object")
+    return loaded
+
+
 def canonical(document: JsonValue) -> bytes:
     return json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True

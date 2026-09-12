@@ -54,6 +54,7 @@ class RecordingProcess(process.ProcessPort):
         limit: commands.OutputLimit,  # noqa: ARG002
         stdin: bytes | None = None,  # noqa: ARG002
         transcript: safepaths.SafePath | None = None,  # noqa: ARG002
+        cwd: safepaths.SafePath | None = None,  # noqa: ARG002
     ) -> commands.CompletedRun:
         self.calls.append(list(argv))
         return commands.CompletedRun(exit_code=0, stdout=b"", stderr=b"", truncated=False)

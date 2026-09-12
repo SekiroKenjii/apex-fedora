@@ -16,6 +16,14 @@ class MemoryArchives(archives.ArchivePort):
 
     def __init__(self) -> None:
         self.written: dict[str, tuple[str, ...]] = {}
+        self.extracted: list[tuple[safepaths.SafePath, safepaths.SafePath]] = []
+        self.packed: list[tuple[safepaths.SafePath, safepaths.SafePath, str]] = []
+
+    def pack(self, directory: safepaths.SafePath, *, into: safepaths.SafePath, name: str) -> None:
+        self.packed.append((directory, into, name))
+
+    def extract(self, archive: safepaths.SafePath, *, into: safepaths.SafePath) -> None:
+        self.extracted.append((archive, into))
 
     def bundle(
         self, sources: archives.SourceSet, *, into: safepaths.SafePath, screen: archives.Screen

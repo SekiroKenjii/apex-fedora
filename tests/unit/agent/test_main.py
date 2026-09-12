@@ -8,10 +8,13 @@ import json
 import pytest
 
 from apex.adapters.fakes import (
+    fake_archives,
     fake_clock,
     fake_containers,
     fake_digesting,
+    fake_extents,
     fake_files,
+    fake_ids,
     fake_process,
 )
 from apex.agent import agentports, main
@@ -51,6 +54,9 @@ def bundle() -> agentports.AgentPorts:
         processes=process, files=fake_files.MemoryFiles(), clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
     )
 
 

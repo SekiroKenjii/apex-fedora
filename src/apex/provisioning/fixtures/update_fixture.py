@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import dataclasses
+import re
 from collections.abc import Mapping
 
 from apex.kernel import encoding, errors, identifiers, quantities, refusals
@@ -17,7 +18,35 @@ VERSIONS = ("a", "b")
 CASES = (("a", "a"), ("b", "b"), ("wrong-key", "b"), ("unsigned", "b"))
 FIXTURE_ROOT = "/var/lib/apex-update-fixture"
 IMAGE_PREFIX = "localhost/apex-recovery-"
+PAYLOAD_PREFIX = "localhost/apex-payload:"
 SCOPE = "signed offline update fixture, not a release candidate"
+RPM_QUERY = ("rpm", "-qa", "--qf", "%{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n")
+LINT = ("bootc", "container", "lint", "--fatal-warnings")
+FRAGMENT = "/usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg"
+RECOVERY_CHECK = (
+    "sh", "-c",
+    "set -eu; sha256sum /etc/greenboot/greenboot.conf /usr/share/apex/greenboot.conf "
+    f"{FRAGMENT}; "
+    f'test "$(tail -c1 {FRAGMENT} | od -An -tu1 | tr -d " ")" = 10',
+)
+RETRY_PRESET = "system_files/usr/share/apex/greenboot.conf"
+RETRY_LINE = "GREENBOOT_MAX_BOOT_ATTEMPTS=1\n"
+GRUB_REPAIR = "guest/fix-grub-fragment.py"
+BUILDER_POLICY = "/etc/containers/policy.json"
+STORAGE_SCOPE = "[overlay@/var/lib/containers/storage]"
+CASES_FROM_B = ("unsigned", "untrusted")
+BLOB_NAME = re.compile(r"[a-f0-9]{64}")
+SIGNATURE_PREFIX = "signature-"
+
+
+def signing_policy(tag: str) -> encoding.Document:
+    """Accept only the image just built from the local store, for the copy that signs it."""
+    return {
+        "default": [{"type": "reject"}],
+        "transports": {
+            "containers-storage": {f"{STORAGE_SCOPE}{tag}": [{"type": "insecureAcceptAnything"}]}
+        },
+    }
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

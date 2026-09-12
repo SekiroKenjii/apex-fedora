@@ -20,10 +20,13 @@ from typing import Any
 import pytest
 
 from apex.adapters.fakes import (
+    fake_archives,
     fake_clock,
     fake_containers,
     fake_digesting,
+    fake_extents,
     fake_files,
+    fake_ids,
     fake_process,
 )
 from apex.agent import agentports, builder
@@ -116,6 +119,9 @@ def newer_calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[st
         clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
     )
     monkeypatch.setattr(builder.os, "geteuid", lambda: 0)
     installer_disks_unit.run(

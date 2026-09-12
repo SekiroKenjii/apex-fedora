@@ -55,6 +55,34 @@ class FileSystemPort(Protocol):
         ...
 
     @abstractmethod
+    def copy(self, source: safepaths.SafePath, destination: safepaths.SafePath) -> None:
+        """Copy one regular file's bytes; the destination's mode is the source's."""
+        ...
+
+    @abstractmethod
+    def link(self, existing: safepaths.SafePath, new: safepaths.SafePath) -> None:
+        """A second name for the same bytes, refused when the new name is taken."""
+        ...
+
+    @abstractmethod
+    def reserve(self, path: safepaths.SafePath, *, size: quantities.ByteCount) -> None:
+        """A new sparse file of the given size, refused when the path is taken."""
+        ...
+
+    @abstractmethod
+    def patch(self, path: safepaths.SafePath, *, offset: int, payload: bytes) -> None:
+        """Overwrite bytes in place, in the same inode. Exists for one self test."""
+        ...
+
+    @abstractmethod
+    def remove(self, path: safepaths.SafePath) -> None:
+        """Remove one regular file. A directory is never removed through this port."""
+        ...
+
+    @abstractmethod
+    def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount: ...
+
+    @abstractmethod
     def exists(self, path: safepaths.SafePath) -> bool: ...
 
     @abstractmethod

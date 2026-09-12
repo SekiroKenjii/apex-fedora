@@ -12,10 +12,13 @@ from collections.abc import Sequence
 from typing import TextIO
 
 from apex.adapters.real import (
+    real_archives,
     real_clock,
     real_containers,
     real_digesting,
+    real_extents,
     real_files,
+    real_ids,
     real_process,
 )
 from apex.agent import agentports, units
@@ -33,6 +36,9 @@ def real_ports() -> agentports.AgentPorts:
         clock=real_clock.SystemClock(),
         containers=real_containers.PodmanEngine(processes),
         digests=real_digesting.CachedDigests(),
+        archives=real_archives.TarArchives(),
+        identities=real_ids.RandomIdentities(),
+        extents=real_extents.LinuxExtents(),
     )
 
 
