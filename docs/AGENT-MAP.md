@@ -54,12 +54,12 @@ context that drives them.
 | `guest/prepare-live-builder.py` | 42 | image step | `generated/os/` build step | P19 |
 | `guest/prepare-live-rootfs.py` | 132 | image step | `generated/os/` build step | P19 |
 | `guest/installer-preflight.py` | 185 | safety artifact | `assets/verbatim/`, typed wrapper in `trust/` | verbatim, P19 |
-| `guest/bootstrap.sh` | 13 | build shell | `composition` remote run | P18 |
-| `guest/build.sh` | 35 | build shell | `composition/recipes/image_recipe.py` | P18 |
-| `guest/build-rpms.sh` | 19 | build shell | `composition/recipes/rpms_recipe.py` | P18 |
-| `guest/disk-artifact.sh` | 84 | build shell | `composition/recipes/disk_artifact_recipe.py` | P18 |
-| `guest/live-artifact.sh` | 35 | build shell | `composition/recipes/live_artifact_recipe.py` | P18 |
-| `guest/import-payload.sh` | 20 | build shell | `composition` stage | P18 |
+| `guest/bootstrap.sh` | 13 | build shell | runs as shipped, first step under the guest lock in `composition/stages/run_build_stage.py` | P18 host side done |
+| `guest/build.sh` | 35 | build shell | runs as shipped from `composition/recipes/image_recipe.py`; its steps become units when the builder carries the agent | P18 host side done |
+| `guest/build-rpms.sh` | 19 | build shell | called by `build.sh` as shipped; a recipe of its own when the builder carries the agent | P18 host side done |
+| `guest/disk-artifact.sh` | 84 | build shell | runs as shipped from `composition/recipes/disk_artifact_recipe.py` | P18 host side done |
+| `guest/live-artifact.sh` | 35 | build shell | runs as shipped from `composition/recipes/live_artifact_recipe.py` | P18 host side done |
+| `guest/import-payload.sh` | 20 | build shell | runs as shipped, first derived step in `run_build_stage.py` | P18 host side done |
 | `guest/image-configure.sh` | 52 | image shell | `generated/os/` build step | P19 |
 | `guest/installer-configure.sh` | 72 | image shell | `generated/os/` build step | P19 |
 | `guest/assemble-live-squashfs.sh` | 22 | image shell | `generated/os/` build step | P19 |

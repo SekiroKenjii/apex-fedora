@@ -9,7 +9,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Protocol
 
-from apex.kernel import claims, commands, timing
+from apex.kernel import claims, commands, safepaths, timing
 
 
 class ProcessPort(Protocol):
@@ -23,4 +23,12 @@ class ProcessPort(Protocol):
         deadline: timing.Deadline,
         limit: commands.OutputLimit,
         stdin: bytes | None = None,
-    ) -> commands.CompletedRun: ...
+        transcript: safepaths.SafePath | None = None,
+    ) -> commands.CompletedRun:
+        """Run to completion under the deadline.
+
+        With a transcript, both output streams are appended to that file as they arrive and
+        the returned run carries no output, which is how a build that talks for an hour is
+        kept without holding it in memory.
+        """
+        ...

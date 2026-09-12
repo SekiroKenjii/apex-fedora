@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from apex.kernel import bounded, quantities, timing
+from apex.kernel import bounded, quantities, safepaths, timing
 
 BUILDER_SSH_PORT = quantities.TcpPort(22244)
 GUEST_SSH_PORT = quantities.TcpPort(22245)
@@ -30,6 +30,18 @@ SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)
 DOWNLOAD_RETRIES = 2
+SSH_CONNECT_TIMEOUT = timing.Elapsed(5)
+GUEST_COMMAND_DEADLINE = timing.Deadline(timing.Elapsed(300))
+TRANSFER_DEADLINE = timing.Deadline(timing.Elapsed(1800))
+BUILD_DEADLINE = timing.Deadline(timing.Elapsed(4 * 3600))
+BUILDER_USER = "builder"
+BUILDER_OWNER = "builder:builder"
+BUILDER_KEY_NAME = "builder_ed25519"
+KNOWN_HOSTS_NAME = "known_hosts"
+BUILDER_MARKER = "/etc/apex-builder"
+BUILD_LOCK = safepaths.RemotePath("/run/apex-build.lock")
+REMOTE_PREFIX = "/var/tmp/apex-"
+REMOTE_DIRECTORY_MODE = "700"
 IMAGE_TOOL_DEADLINE = timing.Deadline(timing.Elapsed(120))
 MACHINE_LOCK = "machine"
 INTENT_NAME = "machine-intent.json"

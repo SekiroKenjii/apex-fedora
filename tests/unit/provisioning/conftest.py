@@ -13,6 +13,7 @@ from apex.adapters.fakes import (
     fake_digesting,
     fake_downloading,
     fake_files,
+    fake_guestshell,
     fake_hypervisor,
     fake_ids,
     fake_locking,
@@ -46,6 +47,7 @@ def host(tmp_path: Path) -> Host:
         downloads=fake_downloading.OfflineFetcher({}),
         hypervisor=hypervisor,
         monitor=monitor,
+        guest=fake_guestshell.ScriptedGuest(),
     )
     return Host(
         ports=ports,

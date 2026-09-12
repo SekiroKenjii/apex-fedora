@@ -103,6 +103,13 @@ class RefusalReason(enum.StrEnum):
 
     STAGE_FAILED = "stage.failed"
 
+    BUILD_PROFILE_NOT_REVIEWED = "build.profile-not-reviewed"
+    BUILD_PARENT_REQUIRED = "build.parent-required"
+    BUILD_PARENT_NOT_COMPLETE = "build.parent-not-complete"
+    BUILD_RECORD_MALFORMED = "build.record-malformed"
+    FROZEN_IMAGE_MISMATCH = "build.frozen-image-mismatch"
+    BUILDER_NOT_ISOLATED = "build.builder-not-isolated"
+
     UNKNOWN_SETTING = "settings.unknown"
     INCONSISTENT_SETTINGS = "settings.inconsistent"
 
