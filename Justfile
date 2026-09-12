@@ -187,6 +187,9 @@ types:
 deadcode:
     uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/integration --min-confidence 80
 
+guest-wheel out:
+    uv run --no-project --python {{python}} python tools/migration/guest_wheel.py "{{out}}"
+
 plans-freeze:
     uv run --no-project --python {{python}} python tools/migration/golden_plans.py freeze
 
