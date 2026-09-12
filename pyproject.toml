@@ -20,6 +20,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "apex.attestation.catalogue" = ["*.toml"]
+"apex.assets.verbatim" = ["*.verbatim"]
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]

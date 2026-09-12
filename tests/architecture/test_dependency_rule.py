@@ -17,6 +17,7 @@ SOURCE = Path(__file__).resolve().parents[2] / "src" / "apex"
 
 LAYERS = {
     "kernel": 0,
+    "assets": 0,
     "model": 1,
     "ports": 2,
     "registry": 3,
