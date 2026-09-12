@@ -7,25 +7,16 @@ with the exit code its kind carries, and a fault in a unit is never dressed up a
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
 import sys
 from collections.abc import Sequence
 from typing import TextIO
 
 from apex.adapters.real import real_clock, real_containers, real_files, real_process
-from apex.agent import agentports, requests, serialframe, units
-from apex.kernel import encoding, errors, identifiers
+from apex.agent import agentports, units
+from apex.kernel import distribution, encoding, errors, identifiers
+from apex.model import agentwire, serialframe
 
-DISTRIBUTION = "apex-build-tools"
-SOURCE_VERSION = "source"
 PREFIX = "BLOCKED: "
-
-
-def version() -> str:
-    try:
-        return importlib.metadata.version(DISTRIBUTION)
-    except importlib.metadata.PackageNotFoundError:
-        return SOURCE_VERSION
 
 
 def real_ports() -> agentports.AgentPorts:
@@ -39,16 +30,16 @@ def real_ports() -> agentports.AgentPorts:
 
 
 def dispatch(
-    request: requests.AgentRequest, *, ports: agentports.AgentPorts
-) -> requests.AgentReply:
+    request: agentwire.AgentRequest, *, ports: agentports.AgentPorts
+) -> agentwire.AgentReply:
     unit = units.lookup(request.unit)
-    return requests.AgentReply.answering(
+    return agentwire.AgentReply.answering(
         request, observations=unit.run(ports, arguments=request.arguments)
     )
 
 
 def emit(
-    reply: requests.AgentReply, *, framed_with: identifiers.Token | None, stream: TextIO
+    reply: agentwire.AgentReply, *, framed_with: identifiers.Token | None, stream: TextIO
 ) -> None:
     payload = encoding.canonical(reply.document())
     if framed_with is None:
@@ -70,9 +61,10 @@ def _parser() -> argparse.ArgumentParser:
 
 def _run(arguments: argparse.Namespace) -> int:
     if arguments.command == "handshake":
-        sys.stdout.write(encoding.canonical(requests.handshake(version())).decode() + "\n")
+        greeting = agentwire.handshake(distribution.installed_version())
+        sys.stdout.write(encoding.canonical(greeting).decode() + "\n")
         return 0
-    request = requests.AgentRequest.parse(sys.stdin.buffer.read())
+    request = agentwire.AgentRequest.parse(sys.stdin.buffer.read())
     token = identifiers.Token(arguments.framed) if arguments.framed else None
     emit(dispatch(request, ports=real_ports()), framed_with=token, stream=sys.stdout)
     return 0

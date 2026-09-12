@@ -16,7 +16,7 @@ MODULE_LINE_LIMIT = 400
 FAN_IN_LIMIT = 40
 PACKAGE_LINE_BUDGETS = {
     "kernel": 1400,
-    "model": 1200,
+    "model": 1600,
     "ports": 1000,
     "registry": 700,
     "pipeline": 1200,

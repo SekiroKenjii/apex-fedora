@@ -80,7 +80,7 @@ the older script's pure functions in `tests/contract/test_fixture_parity.py`.
 
 ## How a unit gets there
 
-A unit is written against `AgentPorts` and the request shape in `guest/requests.py`, with a
+A unit is written against `AgentPorts` and the request shape in `model/agentwire.py`, with a
 test on fakes that pins the observations it makes and the shape it answers. The older script
 stays until the host side that calls it has moved, so the two exist beside each other for a
 while and the parity test is what ties them. The older script is deleted in the same change
