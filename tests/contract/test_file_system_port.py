@@ -148,6 +148,52 @@ def test_a_symlink_in_the_tree_is_reported_not_followed(root: safepaths.RuntimeR
     assert listed["link"] is files_port.EntryKind.SYMLINK
 
 
+def test_a_copy_carries_the_bytes_and_the_mode(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    source = target(root, "source.bin")
+    files.write_atomic(source, b"payload", mode=quantities.FileMode(0o640))
+    destination = target(root, "copy.bin")
+
+    files.copy(source, destination)
+
+    assert files.read_bytes(destination, limit=64) == b"payload"
+    assert files.mode_of(destination) == quantities.FileMode(0o640)
+
+
+def test_a_link_is_refused_over_an_existing_name(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    source = target(root, "blob")
+    taken = target(root, "taken")
+    files.write_atomic(source, b"payload", mode=quantities.FileMode(0o600))
+    files.write_atomic(taken, b"other", mode=quantities.FileMode(0o600))
+
+    files.link(source, target(root, "second-name"))
+    with pytest.raises(errors.PortFailure):
+        files.link(source, taken)
+
+    assert files.read_bytes(target(root, "second-name"), limit=64) == b"payload"
+
+
+def test_a_reserved_file_exists_and_is_never_replaced(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    image = target(root, "media.raw")
+
+    files.reserve(image, size=quantities.Mib(64).as_bytes())
+
+    assert files.exists(image)
+    with pytest.raises(errors.PortFailure):
+        files.reserve(image, size=quantities.Mib(1).as_bytes())
+
+
+def test_free_space_is_a_positive_count(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    assert files.free_space(root.child(".")).value > 0
+
+
 def test_a_made_directory_exists_afterwards(
     files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
 ) -> None:

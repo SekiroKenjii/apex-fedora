@@ -74,6 +74,23 @@ def test_a_run_that_exceeds_its_deadline_raises_a_port_failure(
         )
 
 
+def test_a_run_starts_in_the_directory_it_was_given(
+    processes: process.ProcessPort, root: safepaths.RuntimeRoot
+) -> None:
+    inside = root.child("work")
+    inside.path.mkdir()
+    if isinstance(processes, fake_process.ScriptedProcess):
+        processes.expect(("pwd",), fake_process.Reply(stdout=str(inside).encode() + b"\n"))
+
+    completed = processes.run(
+        commands.Argv.of("pwd"), deadline=short(), limit=commands.OutputLimit.default(), cwd=inside
+    )
+
+    assert completed.stdout.strip() == str(inside).encode()
+    if isinstance(processes, fake_process.ScriptedProcess):
+        assert processes.directories[-1] == inside
+
+
 def test_a_run_with_a_transcript_writes_the_file_and_returns_no_output(
     processes: process.ProcessPort, root: safepaths.RuntimeRoot
 ) -> None:

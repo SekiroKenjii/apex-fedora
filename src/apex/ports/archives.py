@@ -59,6 +59,11 @@ class ArchivePort(Protocol):
     environment: claims.EnvironmentKind
 
     @abstractmethod
+    def extract(self, archive: safepaths.SafePath, *, into: safepaths.SafePath) -> None:
+        """Unpack a tar archive below `into`, refusing members that would escape it."""
+        ...
+
+    @abstractmethod
     def bundle(
         self, sources: SourceSet, *, into: safepaths.SafePath, screen: Screen
     ) -> SourceBundle: ...

@@ -23,6 +23,8 @@ class MemoryFiles(files.FileSystemPort):
         self.writes: list[str] = []
         self.appended = 0
         self.fail_after = fail_after
+        self.reserved: dict[str, quantities.ByteCount] = {}
+        self.free = quantities.Gib(512).as_bytes()
 
     def read_bytes(self, path: safepaths.SafePath, *, limit: int) -> bytes:
         stored = self._files.get(str(path))
@@ -49,6 +51,28 @@ class MemoryFiles(files.FileSystemPort):
 
     def make_directory(self, path: safepaths.SafePath, *, mode: quantities.FileMode) -> None:  # noqa: ARG002
         self.directories.add(str(path))
+
+    def copy(self, source: safepaths.SafePath, destination: safepaths.SafePath) -> None:
+        stored = self._files.get(str(source))
+        if stored is None:
+            raise errors.PortFailure(port="files", cause=f"{source}: no such file")
+        self._files[str(destination)] = stored
+        self.writes.append(str(destination))
+
+    def link(self, existing: safepaths.SafePath, new: safepaths.SafePath) -> None:
+        if str(new) in self._files:
+            raise errors.PortFailure(port="files", cause=f"{new}: File exists")
+        self.copy(existing, new)
+
+    def reserve(self, path: safepaths.SafePath, *, size: quantities.ByteCount) -> None:
+        if str(path) in self._files:
+            raise errors.PortFailure(port="files", cause=f"{path}: File exists")
+        self._files[str(path)] = StoredFile(b"", quantities.FileMode(0o600))
+        self.reserved[str(path)] = size
+        self.writes.append(str(path))
+
+    def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount:  # noqa: ARG002
+        return self.free
 
     def exists(self, path: safepaths.SafePath) -> bool:
         return str(path) in self._files or str(path) in self.directories

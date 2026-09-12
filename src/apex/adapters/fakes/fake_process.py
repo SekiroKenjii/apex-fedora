@@ -28,6 +28,7 @@ class ScriptedProcess(process.ProcessPort):
         self._replies = dict(replies or {})
         self.calls: list[commands.Argv] = []
         self.transcripts: list[safepaths.SafePath] = []
+        self.directories: list[safepaths.SafePath | None] = []
 
     @classmethod
     def with_shell_probe(cls) -> ScriptedProcess:
@@ -54,10 +55,12 @@ class ScriptedProcess(process.ProcessPort):
         limit: commands.OutputLimit,
         stdin: bytes | None = None,  # noqa: ARG002
         transcript: safepaths.SafePath | None = None,
+        cwd: safepaths.SafePath | None = None,
     ) -> commands.CompletedRun:
         # `stdin` is part of the port and is ignored here; a fake that needed it would
         # record it, and no contract case supplies one yet.
         self.calls.append(argv)
+        self.directories.append(cwd)
         if transcript is not None:
             self.transcripts.append(transcript)
         key = tuple(argv)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -71,6 +72,32 @@ class LocalFiles(files.FileSystemPort):
     def make_directory(self, path: safepaths.SafePath, *, mode: quantities.FileMode) -> None:
         try:
             path.path.mkdir(parents=True, exist_ok=True, mode=mode.value)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
+    def copy(self, source: safepaths.SafePath, destination: safepaths.SafePath) -> None:
+        try:
+            shutil.copyfile(source.path, destination.path)
+            destination.path.chmod(source.path.stat().st_mode & quantities.PERMISSION_BITS)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
+    def link(self, existing: safepaths.SafePath, new: safepaths.SafePath) -> None:
+        try:
+            os.link(existing.path, new.path)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
+    def reserve(self, path: safepaths.SafePath, *, size: quantities.ByteCount) -> None:
+        try:
+            with path.path.open("xb") as handle:
+                handle.truncate(size.value)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
+    def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount:
+        try:
+            return quantities.ByteCount(shutil.disk_usage(path.path).free)
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
 

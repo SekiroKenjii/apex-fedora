@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from apex.adapters.fakes import fake_archives
 from apex.kernel import errors, refusals, safepaths
 from apex.ports import archives as archive_port
 
@@ -22,6 +23,28 @@ def refuse_helpers(candidate: archive_port.BundleCandidate) -> None:
         raise errors.Refusal(
             refusals.RefusalReason.REPOSITORY_PRIVATE_DOCUMENT, subject=candidate.path
         )
+
+
+def test_an_archive_extracts_below_the_directory_it_is_given(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    import io  # noqa: PLC0415
+    import tarfile  # noqa: PLC0415
+
+    packed = root.path / "upstream.tar.gz"
+    with tarfile.open(packed, "w:gz") as opened:
+        member = tarfile.TarInfo("ventoy-1.1.05/ventoy/version")
+        member.size = 6
+        opened.addfile(member, io.BytesIO(b"1.1.05"))
+    into = root.child("upstream")
+    into.path.mkdir()
+
+    archives.extract(safepaths.SafePath.regular_file(packed, within=root), into=into)
+
+    if isinstance(archives, fake_archives.MemoryArchives):
+        assert archives.extracted[-1][1] == into
+    else:
+        assert (into.path / "ventoy-1.1.05" / "ventoy" / "version").read_bytes() == b"1.1.05"
 
 
 def test_bundling_produces_a_root_over_every_file(
