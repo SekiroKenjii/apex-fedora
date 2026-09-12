@@ -54,6 +54,7 @@ KIND_SUFFIXES = {
     "composition/stages": "_stage",
     "composition/recipes": "_recipe",
     "trust/negatives": "_negative",
+    "provisioning/fixtures": "_fixture",
     "workspace/entryrules": "_rule",
     "workspace/contentrules": "_rule",
     "workspace/messagerules": "_rule",

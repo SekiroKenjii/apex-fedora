@@ -12,9 +12,11 @@ from apex.adapters.fakes import (
     fake_digesting,
     fake_downloading,
     fake_files,
+    fake_hypervisor,
     fake_ids,
     fake_locking,
     fake_process,
+    fake_qmp,
     fake_signing,
 )
 from apex.adapters.real import (
@@ -23,9 +25,11 @@ from apex.adapters.real import (
     real_digesting,
     real_downloading,
     real_files,
+    real_hypervisor,
     real_ids,
     real_locking,
     real_process,
+    real_qmp,
     real_signing,
 )
 from apex.kernel import safepaths
@@ -44,6 +48,8 @@ def ports_of_fakes() -> portset.HostPorts:
         archives=fake_archives.MemoryArchives(),
         signing=fake_signing.FakeSigner(),
         downloads=fake_downloading.OfflineFetcher({}),
+        hypervisor=fake_hypervisor.FakeQemu(),
+        monitor=fake_qmp.ScriptedQmp(),
     )
 
 
@@ -61,4 +67,6 @@ def ports_of_reals(tmp_path: Path) -> portset.HostPorts:
         archives=real_archives.TarArchives(),
         signing=real_signing.OpensslSigner(),
         downloads=real_downloading.CurlDownloads(),
+        hypervisor=real_hypervisor.QemuHypervisor(),
+        monitor=real_qmp.UnixQmp(),
     )

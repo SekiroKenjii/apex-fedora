@@ -18,10 +18,12 @@ from apex.ports import (
     digesting,
     downloading,
     files,
+    hypervisor,
     ids,
     locking,
     planning,
     process,
+    qmp,
     signing,
 )
 
@@ -44,6 +46,8 @@ class HostPorts:
     archives: archives.ArchivePort
     signing: signing.SigningPort
     downloads: downloading.DownloadPort
+    hypervisor: hypervisor.HypervisorPort
+    monitor: qmp.QmpPort
 
     @property
     def environment(self) -> claims.EnvironmentKind:
@@ -59,6 +63,8 @@ class HostPorts:
                 self.archives,
                 self.signing,
                 self.downloads,
+                self.hypervisor,
+                self.monitor,
             )
         )
 
@@ -73,6 +79,8 @@ class HostPorts:
             archives=planning.Refusing("archives"),
             signing=planning.Refusing("signing"),
             downloads=planning.Refusing("downloads"),
+            hypervisor=planning.Refusing("hypervisor"),
+            monitor=planning.Refusing("monitor"),
         )
 
     def require_attestable(

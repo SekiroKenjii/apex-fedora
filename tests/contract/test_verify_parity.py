@@ -13,7 +13,14 @@ from pathlib import Path
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_ids, fake_locking, fake_process
+from apex.adapters.fakes import (
+    fake_clock,
+    fake_hypervisor,
+    fake_ids,
+    fake_locking,
+    fake_process,
+    fake_qmp,
+)
 from apex.adapters.real import (
     real_archives,
     real_digesting,
@@ -41,6 +48,8 @@ def ports() -> portset.HostPorts:
         archives=real_archives.TarArchives(),
         signing=real_signing.OpensslSigner(),
         downloads=real_downloading.CurlDownloads(),
+        hypervisor=fake_hypervisor.FakeQemu(),
+        monitor=fake_qmp.ScriptedQmp(),
     )
 
 

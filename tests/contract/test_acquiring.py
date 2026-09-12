@@ -9,9 +9,11 @@ import pytest
 from apex.adapters.fakes import (
     fake_clock,
     fake_downloading,
+    fake_hypervisor,
     fake_ids,
     fake_locking,
     fake_process,
+    fake_qmp,
     fake_signing,
 )
 from apex.adapters.real import real_archives, real_digesting, real_files
@@ -56,6 +58,8 @@ def bundle(fetcher: downloading.DownloadPort) -> portset.HostPorts:
         archives=real_archives.TarArchives(),
         signing=fake_signing.FakeSigner(),
         downloads=fetcher,
+        hypervisor=fake_hypervisor.FakeQemu(),
+        monitor=fake_qmp.ScriptedQmp(),
     )
 
 

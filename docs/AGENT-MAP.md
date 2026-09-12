@@ -30,12 +30,12 @@ context that drives them.
 | `guest/test-installer-fault.py` | 155 | fault | `verification/faults/installer_payload_fault.py` | P19 |
 | `guest/test-installer-trust.py` | 164 | fault, signatures | `verification/faults/installer_trust_fault.py` | P19 |
 | `guest/test-fingerprint.py` | 108 | fixture test | `fingerprint.virtual` unit | P19 |
-| `guest/initramfs-fixture.py` | 260 | fixture | `provisioning/fixtures/initramfs_fixture.py` | P17 |
-| `guest/recovery-fixture.py` | 182 | fixture | `provisioning/fixtures/recovery_fixture.py` | P17 |
-| `guest/update-fixture.py` | 188 | fixture, signing | `provisioning/fixtures/update_fixture.py` | P17 |
-| `guest/installer-fixtures.py` | 88 | fixture | `provisioning/fixtures/installer_fixture.py` | P17 |
-| `guest/ventoy-fixture.py` | 114 | fixture | `provisioning/fixtures/ventoy_fixture.py` | P17 |
-| `guest/dedupe-update-blobs.py` | 153 | fixture, storage | `provisioning/fixtures/dedupe_blobs.py` | P17 |
+| `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18 unit |
+| `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18 unit |
+| `guest/update-fixture.py` | 188 | fixture, signing | host side in `provisioning/fixtures/update_fixture.py`; builder steps become the `fixture.update` unit on `ContainerEnginePort` | P17 host side done, P18 unit |
+| `guest/installer-fixtures.py` | 88 | fixture | host side in `provisioning/fixtures/installer_fixture.py`; builder steps become the `fixture.installer-disks` unit | P17 host side done, P18 unit |
+| `guest/ventoy-fixture.py` | 114 | fixture | host side in `provisioning/fixtures/ventoy_fixture.py`; builder steps become the `fixture.ventoy` unit | P17 host side done, P18 unit |
+| `guest/dedupe-update-blobs.py` | 153 | fixture, storage | host side in `provisioning/fixtures/dedupe_fixture.py`; the ioctl runs in the `fixture.dedupe` unit | P17 host side done, P18 unit |
 | `guest/nvidia-build.py` | 190 | build step | `composition/recipes/nvidia_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpms.py` | 137 | build step | `composition/recipes/fingerprint_rpms_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpm-smoke.py` | 66 | build check | `build.fingerprint-smoke` unit | P18 |
@@ -68,6 +68,15 @@ context that drives them.
 | `live/rootfs/usr/libexec/apex/live-disk-guard.sh` | 40 | safety artifact | stays in the live root; tested unmodified | verbatim, done |
 | `live/rootfs/usr/libexec/apex/live-protection-check.sh` | 7 | safety artifact | stays in the live root | verbatim |
 | `live/rootfs/usr/lib/dracut/modules.d/01apexprotect/` | 13 | safety artifact | stays in the live root | verbatim |
+
+## What a fixture's host side is
+
+A fixture is made or mutated inside a builder or a disposable guest, and the steps that run
+there belong to the agent. The host side, under `provisioning/fixtures/`, is everything that
+can be decided without a guest: the request a builder is handed, the parser for the report it
+sends back, the derivations the older scripts made in pure functions, and the refusals that
+keep a fixture from passing as a release artifact. Each host-side module is checked against
+the older script's pure functions in `tests/contract/test_fixture_parity.py`.
 
 ## How a unit gets there
 

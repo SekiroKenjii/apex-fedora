@@ -30,6 +30,25 @@ SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)
 DOWNLOAD_RETRIES = 2
+IMAGE_TOOL_DEADLINE = timing.Deadline(timing.Elapsed(120))
+MACHINE_LOCK = "machine"
+INTENT_NAME = "machine-intent.json"
+LEASE_NAME = "machine.json"
+RUNS_DIRECTORY = "vm-runs"
+MONITOR_SOCKET_NAME = "qmp.sock"
+SERIAL_SOCKET_NAME = "serial.sock"
+HYPERVISOR_LOG_NAME = "qemu.log"
+INITIAL_VARIABLES_NAME = "initial-vars.fd"
+VARIABLES_NAME = "test-vars.fd"
+POWER_LOSS_RECORD = "power-loss.json"
+COMPARISON_RECORD = "disk-comparison.json"
+FIRMWARE_VARIABLES_LIMIT = bounded.Limit(8 * 1024 * 1024)
+TEST_MACHINE_MINIMUM_FREE = quantities.Gib(12)
+MONITOR_APPEARS = timing.Deadline(timing.Elapsed(10))
+MONITOR_POLL = timing.Elapsed(0.05)
+REAP_DEADLINE = timing.Deadline(timing.Elapsed(5))
+QMP_DEADLINE = timing.Deadline(timing.Elapsed(10))
+QMP_LINE_LIMIT = bounded.Limit(1024 * 1024)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
