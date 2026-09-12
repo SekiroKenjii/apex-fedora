@@ -25,6 +25,7 @@ LOCK_COPY_NAME = "sources.lock.json"
 RECORD_MODE = quantities.FileMode(0o600)
 
 DOCUMENT_LIMIT = bounded.Limit(4 * 1024 * 1024)
+PROBE_DEADLINE = timing.Deadline(timing.Elapsed(20))
 SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)

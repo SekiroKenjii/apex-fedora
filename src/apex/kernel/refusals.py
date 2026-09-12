@@ -69,6 +69,10 @@ class RefusalReason(enum.StrEnum):
     FRAME_CHECKSUM_MISMATCH = "frame.checksum-mismatch"
     FRAME_INCOMPLETE = "frame.incomplete"
 
+    REQUEST_MALFORMED = "guest.request-malformed"
+    PROTOCOL_MISMATCH = "guest.protocol-mismatch"
+    UNIT_UNKNOWN = "guest.unit-unknown"
+
     DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
     DUPLICATE_DEVICE = "machine.duplicate-device"
     TOO_MANY_DEVICES = "machine.too-many-devices"
