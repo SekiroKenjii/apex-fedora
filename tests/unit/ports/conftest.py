@@ -12,6 +12,7 @@ from apex.adapters.fakes import (
     fake_digesting,
     fake_downloading,
     fake_files,
+    fake_guestshell,
     fake_hypervisor,
     fake_ids,
     fake_locking,
@@ -25,6 +26,7 @@ from apex.adapters.real import (
     real_digesting,
     real_downloading,
     real_files,
+    real_guestshell,
     real_hypervisor,
     real_ids,
     real_locking,
@@ -50,6 +52,7 @@ def ports_of_fakes() -> portset.HostPorts:
         downloads=fake_downloading.OfflineFetcher({}),
         hypervisor=fake_hypervisor.FakeQemu(),
         monitor=fake_qmp.ScriptedQmp(),
+        guest=fake_guestshell.ScriptedGuest(),
     )
 
 
@@ -69,4 +72,5 @@ def ports_of_reals(tmp_path: Path) -> portset.HostPorts:
         downloads=real_downloading.CurlDownloads(),
         hypervisor=real_hypervisor.QemuHypervisor(),
         monitor=real_qmp.UnixQmp(),
+        guest=real_guestshell.OpensshGuestShell(real_process.SubprocessRunner()),
     )

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from apex.kernel import bounded, claims, commands, errors, timing
+from apex.kernel import bounded, claims, commands, errors, safepaths, timing
 from apex.ports import process
 
 
@@ -27,6 +27,7 @@ class ScriptedProcess(process.ProcessPort):
     def __init__(self, replies: dict[tuple[str, ...], Reply] | None = None) -> None:
         self._replies = dict(replies or {})
         self.calls: list[commands.Argv] = []
+        self.transcripts: list[safepaths.SafePath] = []
 
     @classmethod
     def with_shell_probe(cls) -> ScriptedProcess:
@@ -52,10 +53,13 @@ class ScriptedProcess(process.ProcessPort):
         deadline: timing.Deadline,
         limit: commands.OutputLimit,
         stdin: bytes | None = None,  # noqa: ARG002
+        transcript: safepaths.SafePath | None = None,
     ) -> commands.CompletedRun:
         # `stdin` is part of the port and is ignored here; a fake that needed it would
         # record it, and no contract case supplies one yet.
         self.calls.append(argv)
+        if transcript is not None:
+            self.transcripts.append(transcript)
         key = tuple(argv)
         if key not in self._replies:
             raise errors.PortFailure(
@@ -67,6 +71,10 @@ class ScriptedProcess(process.ProcessPort):
         if reply.delay.seconds > deadline.budget.seconds:
             raise errors.PortFailure(
                 port="process", cause=f"{key[0]} exceeded {deadline.budget.seconds}s"
+            )
+        if transcript is not None:
+            return commands.CompletedRun(
+                exit_code=reply.exit_code, stdout=b"", stderr=b"", truncated=False
             )
         out = bounded.take(reply.stdout, bounded.Limit(limit.value))
         err = bounded.take(reply.stderr, bounded.Limit(limit.value))

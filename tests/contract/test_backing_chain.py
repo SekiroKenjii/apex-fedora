@@ -19,6 +19,7 @@ from apex.adapters.fakes import (
     fake_digesting,
     fake_downloading,
     fake_files,
+    fake_guestshell,
     fake_hypervisor,
     fake_ids,
     fake_locking,
@@ -111,6 +112,7 @@ def bundle(images: Images) -> portset.HostPorts:
         downloads=fake_downloading.OfflineFetcher({}),
         hypervisor=fake_hypervisor.FakeQemu(),
         monitor=fake_qmp.ScriptedQmp(),
+        guest=fake_guestshell.ScriptedGuest(),
     )
 
 

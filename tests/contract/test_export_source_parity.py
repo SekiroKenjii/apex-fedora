@@ -15,6 +15,7 @@ from apex.adapters.real import (
     real_digesting,
     real_downloading,
     real_files,
+    real_guestshell,
     real_hypervisor,
     real_ids,
     real_locking,
@@ -44,6 +45,7 @@ def real_bundle(root: safepaths.RuntimeRoot) -> portset.HostPorts:
         downloads=real_downloading.CurlDownloads(),
         hypervisor=real_hypervisor.QemuHypervisor(),
         monitor=real_qmp.UnixQmp(),
+        guest=real_guestshell.OpensshGuestShell(real_process.SubprocessRunner()),
     )
 
 

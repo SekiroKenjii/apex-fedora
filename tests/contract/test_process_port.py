@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from apex.kernel import commands, errors, timing
+from apex.adapters.fakes import fake_process
+from apex.kernel import commands, errors, safepaths, timing
 from apex.ports import process
 
 
@@ -71,3 +72,23 @@ def test_a_run_that_exceeds_its_deadline_raises_a_port_failure(
             deadline=timing.Deadline(timing.Elapsed(0.05)),
             limit=commands.OutputLimit.default(),
         )
+
+
+def test_a_run_with_a_transcript_writes_the_file_and_returns_no_output(
+    processes: process.ProcessPort, root: safepaths.RuntimeRoot
+) -> None:
+    transcript = root.child("logs/run.log")
+
+    completed = processes.run(
+        commands.Argv.of("printf", "hello"),
+        deadline=short(),
+        limit=commands.OutputLimit.default(),
+        transcript=transcript,
+    )
+
+    assert completed.succeeded
+    assert completed.stdout == b""
+    if isinstance(processes, fake_process.ScriptedProcess):
+        assert processes.transcripts == [transcript]
+    else:
+        assert transcript.path.read_bytes() == b"hello"

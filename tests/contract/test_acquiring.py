@@ -9,6 +9,7 @@ import pytest
 from apex.adapters.fakes import (
     fake_clock,
     fake_downloading,
+    fake_guestshell,
     fake_hypervisor,
     fake_ids,
     fake_locking,
@@ -60,6 +61,7 @@ def bundle(fetcher: downloading.DownloadPort) -> portset.HostPorts:
         downloads=fetcher,
         hypervisor=fake_hypervisor.FakeQemu(),
         monitor=fake_qmp.ScriptedQmp(),
+        guest=fake_guestshell.ScriptedGuest(),
     )
 
 

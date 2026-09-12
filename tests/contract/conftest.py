@@ -24,6 +24,7 @@ from apex.adapters.fakes import (
     fake_digesting,
     fake_downloading,
     fake_files,
+    fake_guestshell,
     fake_hypervisor,
     fake_ids,
     fake_locking,
@@ -37,6 +38,7 @@ from apex.adapters.real import (
     real_digesting,
     real_downloading,
     real_files,
+    real_guestshell,
     real_hypervisor,
     real_ids,
     real_locking,
@@ -61,6 +63,41 @@ listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 listener.bind(path)
 listener.listen(1)
 time.sleep(30)
+"""
+
+# Stand-ins for ssh and scp. The ssh shim prints the script it was handed; the scp shim copies
+# between the host and a directory standing for the guest's filesystem.
+SSH_SHIM = f"""#!{sys.executable}
+import sys
+sys.stdout.write(sys.argv[-1])
+"""
+SCP_SHIM = f"""#!{sys.executable}
+import os, shutil, sys
+root = os.environ["APEX_SHIM_GUEST_ROOT"]
+arguments = sys.argv[1:]
+positional = []
+skip = False
+for item in arguments:
+    if skip:
+        skip = False
+        continue
+    if item in ("-i", "-P", "-o"):
+        skip = True
+        continue
+    if item.startswith("-"):
+        continue
+    positional.append(item)
+source, destination = positional[-2], positional[-1]
+def resolve(spec):
+    return root + spec.split(":", 1)[1] if "@127.0.0.1:" in spec else spec
+source, destination = resolve(source), resolve(destination)
+os.makedirs(os.path.dirname(destination.rstrip("/")) or ".", exist_ok=True)
+if os.path.isdir(source):
+    if os.path.isdir(destination):
+        destination = os.path.join(destination, os.path.basename(source.rstrip("/")))
+    shutil.copytree(source, destination)
+else:
+    shutil.copy(source, destination)
 """
 
 MONITOR_REPLIES: dict[str, object] = {
@@ -214,3 +251,23 @@ def monitors(request: pytest.FixtureRequest, root: safepaths.RuntimeRoot) -> Ite
         yield Monitor(port=real_qmp.UnixQmp(), socket=path)
     else:
         yield Monitor(port=fake_qmp.ScriptedQmp(MONITOR_REPLIES), socket=path)
+
+
+@pytest.fixture(params=["real", "fake"])
+def guests(
+    request: pytest.FixtureRequest, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[object]:
+    if request.param == "real":
+        shims = tmp_path / "shims"
+        shims.mkdir()
+        for name, body in (("ssh", SSH_SHIM), ("scp", SCP_SHIM)):
+            shim = shims / name
+            shim.write_text(body)
+            shim.chmod(shim.stat().st_mode | stat.S_IXUSR)
+        guest_root = tmp_path / "guest"
+        guest_root.mkdir()
+        monkeypatch.setenv("PATH", f"{shims}:{request.config.getoption('--basetemp', '')}")
+        monkeypatch.setenv("APEX_SHIM_GUEST_ROOT", str(guest_root))
+        yield real_guestshell.OpensshGuestShell(real_process.SubprocessRunner())
+    else:
+        yield fake_guestshell.ScriptedGuest.echoing()
