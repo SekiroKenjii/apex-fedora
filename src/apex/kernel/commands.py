@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import dataclasses
+import enum
 import os
 from collections.abc import Iterator, Sequence
 
 from apex.kernel import bounded, errors, refusals, timing
+
+
+class Capability(enum.IntEnum):
+    """A Linux capability by its kernel number, named so a restriction reads as one."""
+
+    SYS_ADMIN = 21
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
