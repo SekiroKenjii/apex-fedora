@@ -1,0 +1,80 @@
+{
+ "digest": "234b8ac5beb8e65c1e22185d7f4cdc8a14266651e26485ec393ed30c25d49d41",
+ "name": "verify-live-protection",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "fault.live-write-denial",
+   "reads": [
+    "agent.install",
+    "verification.guest"
+   ],
+   "writes": [
+    "fault.fault.live-write-denial"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "fault.usb-write-denial",
+   "reads": [
+    "agent.install",
+    "verification.guest"
+   ],
+   "writes": [
+    "fault.fault.usb-write-denial"
+   ]
+  },
+  {
+   "attests": [
+    "live.disk-protection"
+   ],
+   "effects": [
+    "emits-evidence",
+    "writes-runtime"
+   ],
+   "id": "attest.live.disk-protection",
+   "reads": [
+    "candidate.digest",
+    "evidence.recorder",
+    "fault.fault.live-write-denial",
+    "fault.fault.usb-write-denial",
+    "guest.witness"
+   ],
+   "writes": [
+    "minted.live.disk-protection"
+   ]
+  }
+ ]
+}
