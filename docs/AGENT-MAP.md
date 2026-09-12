@@ -16,12 +16,12 @@ context that drives them.
 | `guest/live-probe.py` | 97 | probe | `live.observe` unit over one sysfs snapshot; the older script stays until `just live-check` is repointed | P19a, done |
 | `guest/live-usb-probe.py` | 75 | probe | `fault.usb-write-denial` unit over the sysfs snapshot and the block device port; the older script stays until `just test-live-check` is repointed | P19b, done |
 | `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit over the same snapshot; the older script stays until `just live-check` is repointed | P19a, done |
-| `guest/recovery-probe.py` | 68 | probe | `recovery.prerequisites` unit | P19 |
-| `guest/installed-recovery-probe.py` | 58 | probe | `recovery.installed` unit | P19 |
+| `guest/recovery-probe.py` | 68 | probe | `recovery.prerequisites` unit; the older script stays until `just recovery-probe` is repointed | P19d, done |
+| `guest/installed-recovery-probe.py` | 58 | probe | `recovery.installed` unit with `agent/grubstatic.py`; the older script stays until its caller is repointed | P19d, done |
 | `guest/render-probe.py` | 37 | probe, GTK | `desktop.render` unit | P19 |
 | `guest/theme-probe.py` | 54 | probe, GTK | `desktop.theme` unit | P19 |
-| `guest/diagnostics.py` | 40 | diagnostics | `guest.diagnostics` unit | P19 |
-| `guest/installer-diagnostics.py` | 89 | diagnostics, framed serial | `installer.diagnostics` unit on the shared codec | P19 |
+| `guest/diagnostics.py` | 40 | diagnostics | `guest.diagnostics` unit, the destination created exclusively through the file port; the older script stays for the operator's USB until the agent reaches the laptop | P19d, done |
+| `guest/installer-diagnostics.py` | 89 | diagnostics, framed serial | `installer.diagnostics` unit; the framing is the agent's, under the host's token; the older script stays until `just installer-logs` is repointed | P19d, done |
 | `guest/nvidia-check.py` | 56 | build check | `build.nvidia-check` unit | P18 |
 | `guest/verify-image.py` | 57 | build check | `build.verify-image` unit | P18 |
 | `guest/live-parity.py` | 19 | build check | `build.live-parity` unit | P18 |

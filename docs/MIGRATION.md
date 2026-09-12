@@ -2261,6 +2261,61 @@ opens a store for writing yet outside the tests.
 read from the output. `golden_change`: none. `supersedes`: a recorded entry supersedes the
 imported document for the same check, by construction of the reader.
 
+## P19d. Verification, fourth slice: the recovery and diagnostics probes
+
+Goal: the four remaining probes that only read become units. Five commits on
+`work/phase-19d-probes`, each green on the whole gate.
+
+### A reserved file takes a mode
+
+`FileSystemPort.reserve` takes the mode the file is created with, like every other write,
+because a diagnostics capture on the operator's storage is private from its first byte. The
+older collector created it exclusively; the unit reserves it, which is refused when the path
+is taken, and then patches the bytes in, so an earlier capture is never overwritten.
+
+### Four probes as units
+
+`recovery.prerequisites` is `guest/recovery-probe.py`: the same eight programs and four
+files, and the same reading of the deployment status, where two distinct deployments are a
+prerequisite and never a pass. `recovery.installed` is `guest/installed-recovery-probe.py`:
+the booted deployment must be the expected candidate, else the guest is refused as not the
+one asked about; the installed GRUB file must be exactly bootupd's assembly of the image's
+fragments, kept as `agent/grubstatic.py`; the retry configuration must hash to the fixture
+the host names and carry the one-retry preset; SELinux must enforce. A configuration that
+differs is a report that says what differs, never a refusal, because the report is the
+evidence.
+
+`guest.diagnostics` is `guest/diagnostics.py` with the destination as its argument.
+`installer.diagnostics` is `guest/installer-diagnostics.py` without its transport: the logs
+are read only when they are regular files and bounded at the same size, the programs are
+bounded the same way, and the bundle has the same shape; the framing under the host's token,
+which the older script wrote to the serial port itself, is what the agent does for every
+unit.
+
+The parity harnesses compare the programs and files for the readers, the judgement over
+eight mutations for the installed probe, the codec dumps for the laptop collector, and the
+bundle the older receiver decodes from the older emitter against the unit's document.
+
+### What this slice did not do
+
+The desktop render and theme probes carry GTK programs that must be shipped into the guest
+and run under the user's session; they go with the screenshot stage that judges them. The
+installer faults and the fingerprint fixture test follow. No `just` recipe calls any of
+these units.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 263 files, 17181 lines |
+| Units | eleven: five probes, three faults, four builder fixtures |
+| Probe cases | six |
+| Fast suite | 2039 passed, 9 skipped |
+
+`migration_red`: the installed probe's tests found the answering fake could not fail a
+program, and its write assertion counted the fixture's own writes. `golden_change`: none.
+`supersedes`: none yet.
+
 ## Commands
 
 ```sh
