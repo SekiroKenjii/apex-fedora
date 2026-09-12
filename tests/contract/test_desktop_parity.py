@@ -139,7 +139,7 @@ def test_the_render_probe_is_installed_started_and_read_as_the_older_host_did(
     guest.password_file = credentials
     seats = iter([None, "c1", "c2"])
 
-    def seat_session(account: str | None = None, *, session_class: str | None = None) -> str | None:
+    def seat_session(*_: object, **__: object) -> str | None:
         return next(seats)
 
     monkeypatch.setattr(guest, "seat_session", seat_session)
