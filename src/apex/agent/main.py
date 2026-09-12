@@ -13,6 +13,7 @@ from typing import TextIO
 
 from apex.adapters.real import (
     real_archives,
+    real_blockdevices,
     real_clock,
     real_containers,
     real_digesting,
@@ -39,6 +40,7 @@ def real_ports() -> agentports.AgentPorts:
         archives=real_archives.TarArchives(),
         identities=real_ids.RandomIdentities(),
         extents=real_extents.LinuxExtents(),
+        blocks=real_blockdevices.LinuxBlockDevices(),
     )
 
 

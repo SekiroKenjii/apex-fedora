@@ -1,5 +1,5 @@
-"""The authority a guest unit holds: a process, the guest's files, a clock and its container
-engine, and no more.
+"""The authority a guest unit holds: a process, the guest's files, a clock, its container
+engine, its block devices, and no more.
 
 A guest never signs with the operator's key, never downloads and never takes a host lock, so
 those ports are not in its bundle and a unit cannot reach for them.
@@ -13,6 +13,7 @@ from typing import Self
 from apex.kernel import claims
 from apex.ports import (
     archives,
+    blockdevices,
     clock,
     containers,
     digesting,
@@ -34,6 +35,7 @@ class AgentPorts:
     archives: archives.ArchivePort
     identities: ids.IdentityPort
     extents: extents.ExtentPort
+    blocks: blockdevices.BlockDevicePort
 
     @property
     def environment(self) -> claims.EnvironmentKind:
@@ -48,6 +50,7 @@ class AgentPorts:
                 self.archives,
                 self.identities,
                 self.extents,
+                self.blocks,
             )
         )
 
@@ -61,4 +64,5 @@ class AgentPorts:
             archives=planning.refusing("archives"),
             identities=planning.refusing("identities"),
             extents=planning.refusing("extents"),
+            blocks=planning.refusing("blocks"),
         )

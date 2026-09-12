@@ -20,6 +20,7 @@ import pytest
 
 from apex.adapters.fakes import (
     fake_archives,
+    fake_blockdevices,
     fake_clock,
     fake_containers,
     fake_digesting,
@@ -36,6 +37,7 @@ from apex.adapters.fakes import (
 )
 from apex.adapters.real import (
     real_archives,
+    real_blockdevices,
     real_clock,
     real_containers,
     real_digesting,
@@ -329,3 +331,11 @@ def shares(request: pytest.FixtureRequest) -> Iterator[object]:
         yield real_extents.LinuxExtents()
     else:
         yield fake_extents.FakeExtents()
+
+
+@pytest.fixture(params=["real", "fake"])
+def blocks(request: pytest.FixtureRequest) -> Iterator[object]:
+    if request.param == "real":
+        yield real_blockdevices.LinuxBlockDevices()
+    else:
+        yield fake_blockdevices.FakeBlockDevices()

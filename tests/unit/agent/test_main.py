@@ -9,6 +9,7 @@ import pytest
 
 from apex.adapters.fakes import (
     fake_archives,
+    fake_blockdevices,
     fake_clock,
     fake_containers,
     fake_digesting,
@@ -56,7 +57,7 @@ def bundle() -> agentports.AgentPorts:
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(),
+        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 
