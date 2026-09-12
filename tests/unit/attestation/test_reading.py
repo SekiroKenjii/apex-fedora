@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from apex.adapters.real import real_files
 from apex.attestation import attesting, ledger, reading
 from apex.kernel import refusals
 
@@ -60,7 +61,7 @@ def test_every_record_from_a_v1_store_is_imported_and_carries_both_permanent_lim
     put(root, "one", record("build.one"))
     put(root, "two", record("build.two", "FAIL"))
 
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert found.version == 1
     assert len(found.attestations) == 2
@@ -78,7 +79,7 @@ def test_one_unreadable_record_becomes_a_fault_and_the_others_still_resolve(
     put(root, "damaged", "{ not json")
     put(root, "two", record("build.two"))
 
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert {entry.check for entry in found.attestations} == {"build.one", "build.two"}
     assert any("damaged.json" in fault for fault in found.faults)
@@ -91,7 +92,7 @@ def test_a_symlinked_record_becomes_a_fault_rather_than_a_silent_absence(
     real = put(root, "one", record("build.one"))
     (root / "evidence" / "linked.json").symlink_to(real)
 
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert len(found.attestations) == 1
     assert any(
@@ -104,7 +105,7 @@ def test_a_malformed_proof_entry_is_a_named_fault_not_a_key_error(tmp_path: Path
     root = store(tmp_path)
     put(root, "one", record("build.one", proofs=[{"path": "a.txt"}]))
 
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert found.attestations == ()
     assert any(
@@ -119,7 +120,7 @@ def test_a_store_with_no_candidate_drops_every_record_and_says_so(tmp_path: Path
     put(root, "one", record("build.one"))
     put(root, "two", record("build.two"))
 
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert found.candidate is None
     assert found.attestations == ()
@@ -138,7 +139,7 @@ def test_the_reading_never_opens_history_or_candidate_history(tmp_path: Path) ->
     archive.mkdir(parents=True)
     (archive / "old.json").write_text(json.dumps(record("build.archived")))
 
-    found = reading.read_store(root)
+    found = reading.read_store(root, files=real_files.LocalFiles())
 
     assert {entry.check for entry in found.attestations} == {"build.one"}
 
@@ -150,13 +151,13 @@ def test_reading_a_store_writes_nothing_and_creates_nothing_under_its_root(
     put(root, "one", record("build.one"))
     before = inventory(root)
 
-    reading.read_store(root)
+    reading.read_store(root, files=real_files.LocalFiles())
 
     assert inventory(root) == before
 
 
 def test_an_empty_store_reads_as_version_one_with_nothing_in_it(tmp_path: Path) -> None:
-    found = reading.read_store(store(tmp_path))
+    found = reading.read_store(store(tmp_path), files=real_files.LocalFiles())
 
     assert found.version == 1
     assert found.attestations == ()

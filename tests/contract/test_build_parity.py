@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 import types
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +56,8 @@ class RecordingProcess(process.ProcessPort):
         stdin: bytes | None = None,  # noqa: ARG002
         transcript: safepaths.SafePath | None = None,  # noqa: ARG002
         cwd: safepaths.SafePath | None = None,  # noqa: ARG002
+        variables: Mapping[str, str] | None = None,  # noqa: ARG002
+        dropping: frozenset[commands.Capability] = frozenset(),  # noqa: ARG002
     ) -> commands.CompletedRun:
         self.calls.append(list(argv))
         return commands.CompletedRun(exit_code=0, stdout=b"", stderr=b"", truncated=False)

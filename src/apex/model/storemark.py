@@ -11,13 +11,19 @@ import dataclasses
 import json
 from pathlib import Path
 
-from apex.kernel import errors, refusals
+from apex.kernel import encoding, errors, refusals
 
 MARK_NAME = "schema.json"
 MARK_BYTE_LIMIT = 4096
 FIRST_VERSION = 1
+SECOND_VERSION = 2
 SCHEMA_KEY = "schema"
 VERSION_KEY = "version"
+
+
+def document(version: int) -> bytes:
+    """The mark as it is written; reading it back through `read_mark` yields `Marked`."""
+    return encoding.canonical({SCHEMA_KEY: Marked(version).version})
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

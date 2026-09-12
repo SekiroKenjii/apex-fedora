@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from apex.adapters.fakes import fake_process
@@ -109,3 +111,47 @@ def test_a_run_with_a_transcript_writes_the_file_and_returns_no_output(
         assert processes.transcripts == [transcript]
     else:
         assert transcript.path.read_bytes() == b"hello"
+
+
+def test_variables_reach_the_program_on_top_of_the_inherited_environment(
+    processes: process.ProcessPort,
+) -> None:
+    completed = processes.run(
+        commands.Argv.of("env"), deadline=short(), limit=commands.OutputLimit.default(),
+        variables={"APEX_CONTRACT": "held"},
+    )
+
+    if isinstance(processes, fake_process.ScriptedProcess):
+        assert processes.variables[-1] == {"APEX_CONTRACT": "held"}
+    assert b"APEX_CONTRACT=held" in completed.stdout
+
+
+def test_a_capability_is_dropped_from_the_child_or_the_run_is_refused(
+    processes: process.ProcessPort,
+) -> None:
+    """Never a third outcome: a run that ignored the restriction would look like a pass."""
+    try:
+        completed = processes.run(
+            commands.Argv.of("cat", "/proc/self/status"),
+            deadline=short(),
+            limit=commands.OutputLimit.default(),
+            dropping=frozenset({commands.Capability.SYS_ADMIN}),
+        )
+    except errors.PortFailure as failure:
+        assert "cannot restrict" in failure.cause
+        return
+    if isinstance(processes, fake_process.ScriptedProcess):
+        assert processes.restrictions[-1] == frozenset({commands.Capability.SYS_ADMIN})
+    bounding = re.search(rb"CapBnd:\s*([0-9a-f]+)", completed.stdout)
+    assert bounding is not None
+    assert int(bounding.group(1), 16) & (1 << commands.Capability.SYS_ADMIN) == 0
+
+
+def test_an_unrestricted_run_records_no_restriction(processes: process.ProcessPort) -> None:
+    processes.run(
+        commands.Argv.of("printf", "hello"), deadline=short(), limit=commands.OutputLimit.default()
+    )
+
+    if isinstance(processes, fake_process.ScriptedProcess):
+        assert processes.restrictions[-1] == frozenset()
+        assert processes.variables[-1] is None

@@ -91,6 +91,9 @@ class Guest:
         )
 
 
+GUARD_TEXT = b"#!/bin/sh\nblockdev --setro \"$1\" || { : > /run/apex-protection-failed; exit 1; }\n"
+
+
 def guest(
     specs: list[DeviceSpec],
     *,
@@ -98,8 +101,16 @@ def guest(
     mountinfo: str = MOUNTINFO,
     swaps: str = SWAPS,
     usb_serial: str | None = "apex-usb-fixture",
+    initramfs: bool = False,
+    files: fake_files.MemoryFiles | None = None,
 ) -> Guest:
-    files = fake_files.MemoryFiles()
+    files = fake_files.MemoryFiles() if files is None else files
+    if initramfs:
+        files.write_atomic(safepaths.SafePath(Path(defaults.INITRD_RELEASE)), b"", mode=PUBLIC)
+        files.write_atomic(
+            safepaths.SafePath(Path(defaults.MOUNTS)), b"rootfs / rootfs rw 0 0\n", mode=PUBLIC
+        )
+        files.write_atomic(safepaths.SafePath(Path(defaults.LIVE_GUARD)), GUARD_TEXT, mode=PUBLIC)
     blocks = fake_blockdevices.FakeBlockDevices()
     process = fake_process.ScriptedProcess()
     process.expect(("systemd-detect-virt", "--vm"), fake_process.Reply(stdout=b"kvm\n"))

@@ -30,6 +30,11 @@ OBSERVATION_DEADLINE = timing.Deadline(timing.Elapsed(15))
 OBSERVATION_LIMIT = bounded.CAPTURE_LIMIT
 LIVE_ROOT_TOKEN = "root=live:CDLABEL=Apex-Live"
 SETTLE_DEADLINE = timing.Deadline(timing.Elapsed(25))
+INITRD_RELEASE = "/etc/initrd-release"
+MOUNTS = "/proc/mounts"
+SYSROOT = "/sysroot"
+PROTECTION_LATCH = "/run/apex-protection-failed"
+LIVE_GUARD = "/usr/libexec/apex/live-disk-guard.sh"
 SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)

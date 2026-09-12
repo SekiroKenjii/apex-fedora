@@ -7,6 +7,7 @@ nothing, so a change in what a stage runs cannot pass unnoticed.
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Mapping
 
 from apex.kernel import bounded, claims, commands, errors, safepaths, timing
 from apex.ports import process
@@ -29,6 +30,8 @@ class ScriptedProcess(process.ProcessPort):
         self.calls: list[commands.Argv] = []
         self.transcripts: list[safepaths.SafePath] = []
         self.directories: list[safepaths.SafePath | None] = []
+        self.variables: list[Mapping[str, str] | None] = []
+        self.restrictions: list[frozenset[commands.Capability]] = []
 
     @classmethod
     def with_shell_probe(cls) -> ScriptedProcess:
@@ -41,6 +44,8 @@ class ScriptedProcess(process.ProcessPort):
                 ("printf", "%s", "; touch owned"): Reply(stdout=b"; touch owned"),
                 ("apex-no-such-program",): Reply(missing=True),
                 ("sleep", "5"): Reply(delay=timing.Elapsed(5)),
+                ("env",): Reply(stdout=b"APEX_CONTRACT=held\n"),
+                ("cat", "/proc/self/status"): Reply(stdout=b"CapBnd:\t000001ffffdfffff\n"),
             }
         )
 
@@ -56,11 +61,15 @@ class ScriptedProcess(process.ProcessPort):
         stdin: bytes | None = None,  # noqa: ARG002
         transcript: safepaths.SafePath | None = None,
         cwd: safepaths.SafePath | None = None,
+        variables: Mapping[str, str] | None = None,
+        dropping: frozenset[commands.Capability] = frozenset(),
     ) -> commands.CompletedRun:
         # `stdin` is part of the port and is ignored here; a fake that needed it would
         # record it, and no contract case supplies one yet.
         self.calls.append(argv)
         self.directories.append(cwd)
+        self.variables.append(variables)
+        self.restrictions.append(dropping)
         if transcript is not None:
             self.transcripts.append(transcript)
         key = tuple(argv)

@@ -19,13 +19,14 @@ from pathlib import Path
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(REPOSITORY / "src")]
 
+from apex.adapters.real import real_files  # noqa: E402
 from apex.attestation import columns, readiness, reading, resolving, retracting  # noqa: E402
 from apex.cli import rendering  # noqa: E402
 from apex.kernel import errors  # noqa: E402
 
 
 def tabulate(runtime_root: Path, *, strict: bool) -> columns.Table:
-    found = reading.read_store(runtime_root)
+    found = reading.read_store(runtime_root, files=real_files.LocalFiles())
     outcome = readiness.evaluate(
         required=resolving.required_environments(),
         records=found.records,

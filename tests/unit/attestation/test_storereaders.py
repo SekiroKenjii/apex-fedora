@@ -14,10 +14,16 @@ import pytest
 from apex.attestation import electing, markclaims, readerspecs, storereaders
 from apex.kernel import errors, refusals
 from apex.model import storemark
+from apex.ports import files as files_port
 from apex.registry import provenance, registry
 
 
-def reading(runtime_root: Path, *, spec: readerspecs.StoreReaderSpec) -> readerspecs.StoreReading:
+def reading(
+    runtime_root: Path,  # noqa: ARG001
+    *,
+    spec: readerspecs.StoreReaderSpec,
+    files: files_port.FileSystemPort,  # noqa: ARG001
+) -> readerspecs.StoreReading:
     return readerspecs.StoreReading(
         version=spec.version, attestations=(), candidate=None, faults=()
     )

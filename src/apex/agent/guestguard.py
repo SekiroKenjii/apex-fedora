@@ -54,3 +54,19 @@ def require_live(ports: agentports.AgentPorts) -> None:
     cmdline = ports.files.read_bytes(CMDLINE, limit=defaults.DOCUMENT_LIMIT.value)
     if defaults.LIVE_ROOT_TOKEN not in cmdline.decode(errors="replace").split():
         raise refuse("the kernel command line does not name the live medium")
+
+
+def require_initramfs(ports: agentports.AgentPorts) -> None:
+    """A live guest stopped at its pre-mount breakpoint, before the guard has ever failed."""
+    require_live(ports)
+    if not ports.files.exists(safepaths.SafePath(Path(defaults.INITRD_RELEASE))):
+        raise refuse("not in the initramfs")
+    mounts = ports.files.read_bytes(
+        safepaths.SafePath(Path(defaults.MOUNTS)), limit=defaults.DOCUMENT_LIMIT.value
+    )
+    for line in mounts.decode(errors="replace").splitlines():
+        fields = line.split()
+        if len(fields) > 1 and fields[1] == defaults.SYSROOT:
+            raise refuse("the root filesystem is already mounted")
+    if ports.files.exists(safepaths.SafePath(Path(defaults.PROTECTION_LATCH))):
+        raise refuse("the protection latch is already set")

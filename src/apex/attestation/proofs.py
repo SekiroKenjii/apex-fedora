@@ -24,7 +24,9 @@ HEAD_NAME = "head.json"
 FAN_OUT = 2
 LEGACY_AREA = runtimestate.EVIDENCE_DIRECTORY
 DEFAULT_AREA = "attestation"
+KEY_NAME = "key"
 OBJECT_MODE = quantities.FileMode(0o600)
+OBJECT_LIMIT = 64 * 1024 * 1024
 OVERREAD = 1
 
 
@@ -77,6 +79,9 @@ class StoreLocation:
     def head_path(self) -> safepaths.SafePath:
         return self.root.child(f"{self.area}/{LEDGER_DIRECTORY}/{HEAD_NAME}")
 
+    def key_path(self) -> safepaths.SafePath:
+        return self.root.child(f"{self.area}/{LEDGER_DIRECTORY}/{KEY_NAME}")
+
 
 class ProofStore:
     """Absorb bytes, hand back a citation, and refuse to return anything that changed."""
@@ -99,6 +104,14 @@ class ProofStore:
 
     def holds(self, proof: Proof) -> bool:
         return self._files.exists(self._location.object_path(proof.digest))
+
+    def intact(self, digest: identifiers.Digest) -> bool:
+        """Whether the object filed under this name still hashes to it, read in full."""
+        target = self._location.object_path(digest)
+        if not self._files.exists(target):
+            return False
+        payload = self._files.read_bytes(target, limit=OBJECT_LIMIT + OVERREAD)
+        return len(payload) <= OBJECT_LIMIT and address(payload) == digest
 
     def load(self, proof: Proof) -> bytes:
         """Return the bytes only if they still hash to the name they are filed under.

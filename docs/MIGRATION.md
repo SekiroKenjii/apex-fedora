@@ -2192,6 +2192,75 @@ recipe yet.
 denied write; the style rule refused a second `keys.py` in the context layer.
 `golden_change`: none. `supersedes`: none yet.
 
+## P19c. Verification, third slice: the lock fault and the store that reads its own records
+
+Goal: the last fault over the live fixtures, and a reader for the records the previous slice
+started writing. Four commits on `work/phase-19c-lock`, each green on the whole gate.
+
+### A run may drop a capability, or refuse to run
+
+`ProcessPort.run` takes `variables`, added to the inherited environment, and `dropping`, a
+set of capabilities removed from the child's bounding set between fork and exec. The real
+adapter applies the restriction with `prctl` in the child; a host that cannot apply it fails
+the run rather than running it unrestricted, and the contract suite states that as the only
+two outcomes. The lock fault needs both: the guard's denial must be read in one locale, and
+the guard must run without `CAP_SYS_ADMIN` so the kernel refuses its lock.
+
+### The lock fault
+
+`fault.live-lock` is `guest/live-lock-fault.py`: the guest must be at the pre-mount
+breakpoint with the reviewed guard on disk, checked by digest against an argument the host
+supplies; the sentinel fixture is made writable behind a stopped udev queue; the guard is
+run in a restricted child; the read-only flag and the latch are read back; the fixture is
+restored and the queue restarted whatever happened. Every step that does not go as the fault
+needs is recorded rather than raised past the cleanup, so the report always says what was
+done. The parity harness runs the older script with its files and programs answered in place
+and the unit on a process fake that moves the tree the same way: the argument vectors, which
+of them ran restricted, and the statuses agree for the passing run and two failures.
+
+The lock fault has no recipe yet. It runs in a different boot from the write-denial faults,
+and all three establish `live.disk-protection` together; composing them across boots needs
+the machine stages that arrive with `apex machine`.
+
+### The store reads its own records
+
+A version two mark elects `storereaders/v2_reader.py`. It reads the legacy documents exactly
+as the version one reader does, still imported, and then the chain, whose entries were
+witnessed by ports and carry no permanent limit. Where a check has both, the chain's latest
+entry counts and the imported one is superseded. A chain that does not replay is a named
+fault at the sequence where it breaks, and the entries before the break still count because
+each carried its own tag and link. A chain with no key beside it counts nothing and says so.
+
+The key lives beside the chain, at `attestation/ledger/key` under mode 0600, laid down by
+`Recorder.open` the first time a root is opened for writing, which also writes the version
+two mark. A version one store becomes version two by that mark alone. `verify-chain` prefers
+the key file and falls back to the environment variable it used before.
+
+The read path takes a file port. The legacy reader ignores it and reads the documents where
+they lie, as before; the chain and the objects are read through it, so the same reader serves
+a root on disk and a store in memory.
+
+### What this slice did not do
+
+The remaining probes (recovery, installed recovery, desktop render and theme, diagnostics,
+installer diagnostics), the installer faults and the fingerprint fixture test follow. The
+witness on the machine lease and the recipe across boots go with `apex machine`. Nothing
+opens a store for writing yet outside the tests.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 254 files, 16583 lines |
+| Units | `guest.state`, `live.observe`, `ventoy.observe`, `fault.live-write-denial`, `fault.usb-write-denial`, `fault.live-lock`, and the four builder fixtures |
+| Store readers | version one, version two |
+| Fast suite | 2 002 passed, 9 skipped |
+
+`migration_red`: the adapter symmetry rule found a launch record whose field was named
+`environment`; the parity found the older script raises after printing, so its report is
+read from the output. `golden_change`: none. `supersedes`: a recorded entry supersedes the
+imported document for the same check, by construction of the reader.
+
 ## Commands
 
 ```sh
