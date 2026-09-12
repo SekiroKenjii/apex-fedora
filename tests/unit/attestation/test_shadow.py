@@ -24,6 +24,7 @@ def test_the_one_accepted_divergence_is_the_altered_proof(tmp_path: Path) -> Non
 
     accepted = readiness_shadow.compare(root)["accepted_divergences"]
 
+    assert isinstance(accepted, list)
     assert [item["check"] for item in accepted] == ["live.direct"]
     assert accepted[0]["legacy"] == "NOT TESTED"
     assert accepted[0]["new"] == "BLOCKED"

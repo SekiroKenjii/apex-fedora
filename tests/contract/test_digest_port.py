@@ -2,8 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Protocol
+
 from apex.kernel import hashing, safepaths
 from apex.ports import digesting as digest_port
+
+
+class CountsReads(digest_port.DigestPort, Protocol):
+    """Both adapters count reads for this suite; the port itself does not promise to."""
+
+    reads: int
 
 
 def written(root: safepaths.RuntimeRoot, name: str, payload: bytes) -> safepaths.SafePath:
@@ -40,7 +48,7 @@ def test_a_changed_file_gives_a_different_digest(
 
 
 def test_the_second_hash_of_an_unchanged_file_is_served_from_the_cache(
-    digests: digest_port.DigestPort, root: safepaths.RuntimeRoot
+    digests: CountsReads, root: safepaths.RuntimeRoot
 ) -> None:
     path = written(root, "a.bin", b"payload")
 
@@ -52,7 +60,7 @@ def test_the_second_hash_of_an_unchanged_file_is_served_from_the_cache(
 
 
 def test_a_changed_file_is_read_again(
-    digests: digest_port.DigestPort, root: safepaths.RuntimeRoot
+    digests: CountsReads, root: safepaths.RuntimeRoot
 ) -> None:
     path = written(root, "a.bin", b"before")
     digests.file(path)

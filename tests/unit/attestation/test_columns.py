@@ -43,7 +43,12 @@ def reading(
     )
 
 
-def outcome(faults: tuple[str, ...] = (), **by_check: verdicts.Verdict) -> readiness.Outcome:
+def outcome(
+    faults: tuple[str, ...] = (),
+    named: dict[str, verdicts.Verdict] | None = None,
+    **by_check: verdicts.Verdict,
+) -> readiness.Outcome:
+    by_check = {**(named or {}), **by_check}
     counts: dict[str, int] = {}
     for verdict in by_check.values():
         counts[verdict.stored_name] = counts.get(verdict.stored_name, 0) + 1
@@ -131,7 +136,7 @@ def test_a_table_standing_on_imported_passes_is_not_ready_even_when_every_check_
 def test_the_rows_are_ordered_by_check() -> None:
     table = columns.tabulate(
         reading=reading("z.one", "a.two"),
-        outcome=outcome(**{"z.one": verdicts.PASSED, "a.two": verdicts.PASSED}),
+        outcome=outcome(named={"z.one": verdicts.PASSED, "a.two": verdicts.PASSED}),
         withheld=(),
         strict=False,
     )

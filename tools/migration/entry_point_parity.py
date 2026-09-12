@@ -9,6 +9,7 @@ anything is rewired to it.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import os
 import subprocess
@@ -50,15 +51,21 @@ def execute(command: list[str], arguments: list[str], root: Path) -> dict[str, o
     }
 
 
-def compare(scratch: Path) -> list[dict[str, object]]:
+@dataclasses.dataclass(frozen=True, slots=True)
+class Difference:
+    arguments: list[str]
+    field: str
+
+
+def compare(scratch: Path) -> list[Difference]:
     root = synthetic_root.build(scratch / "root")
-    differences = []
+    differences: list[Difference] = []
     for arguments in invocation_arguments():
         legacy = execute([str(LEGACY)], arguments, root)
         modern = execute(list(MODERN), arguments, root)
         for field in ("exit_code", "stdout", "stderr"):
             if legacy[field] != modern[field]:
-                differences.append({"arguments": arguments, "field": field})
+                differences.append(Difference(arguments=arguments, field=field))
     return differences
 
 
@@ -72,7 +79,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     summary = {"compared": len(invocation_arguments()), "differences": len(differences)}
     print(json.dumps(summary, indent=2))
     for difference in differences:
-        print(f"  {' '.join(difference['arguments'])}: {difference['field']}", file=sys.stderr)
+        print(f"  {' '.join(difference.arguments)}: {difference.field}", file=sys.stderr)
     return 1 if differences else 0
 
 

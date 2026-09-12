@@ -50,7 +50,8 @@ def install(events: list[dict[str, object]], root: str, repository: str) -> None
             events.append({"kind": "write", "target": redact(arguments[0])})
             return
         if event == "subprocess.Popen":
-            argv = [redact(item) for item in (arguments[1] or [])]
+            raw = arguments[1] if len(arguments) > 1 else None
+            argv = [redact(item) for item in (raw if isinstance(raw, list | tuple) else [])]
             events.append({"kind": "spawn", "argv": argv})
             return
         events.append({"kind": kind, "target": redact(arguments[0])})
