@@ -32,7 +32,7 @@ class SubprocessRunner(process.ProcessPort):
             deadline=deadline,
             stdin=stdin,
             cwd=cwd,
-            environment=None if variables is None else {**os.environ, **variables},
+            added=None if variables is None else {**os.environ, **variables},
             dropping=dropping,
         )
         if transcript is not None:
@@ -60,7 +60,7 @@ class SubprocessRunner(process.ProcessPort):
                 timeout=deadline.budget.seconds,
                 check=False,
                 cwd=None if launch.cwd is None else launch.cwd.path,
-                env=launch.environment,
+                env=launch.added,
                 preexec_fn=_dropper(launch.dropping) if launch.dropping else None,
             )
         except subprocess.SubprocessError as error:
@@ -93,7 +93,7 @@ class _Launch:
     deadline: timing.Deadline
     stdin: bytes | None
     cwd: safepaths.SafePath | None
-    environment: Mapping[str, str] | None
+    added: Mapping[str, str] | None
     dropping: frozenset[commands.Capability]
 
 

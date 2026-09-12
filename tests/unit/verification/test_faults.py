@@ -18,7 +18,7 @@ def test_every_fault_module_declares_one_case_and_the_registry_holds_them_all() 
 
     assert len(faults.registered()) == len(modules)
     assert [str(case.unit) for case in faults.registered()] == [
-        "fault.live-write-denial", "fault.usb-write-denial",
+        "fault.live-lock", "fault.live-write-denial", "fault.usb-write-denial",
     ]
 
 
