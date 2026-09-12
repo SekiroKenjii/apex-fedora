@@ -29,7 +29,7 @@ context that drives them.
 | `guest/live-lock-fault.py` | 103 | fault | `fault.live-lock` unit, its child run through the process port with `CAP_SYS_ADMIN` dropped; host case in `verification/faults/live_lock_fault.py`; the older script stays until `just test-live-check` is repointed | P19c, done |
 | `guest/test-installer-fault.py` | 155 | fault | `fault.installer-payload` unit, host case in `verification/faults/installer_payload_fault.py`; the older script stays until `just test-installer-fault` is repointed | P19e, done |
 | `guest/test-installer-trust.py` | 164 | fault, signatures | `fault.installer-trust` unit through the engine port, host case in `verification/faults/installer_trust_fault.py`; the older script stays until `just installer-trust` is repointed | P19e, done |
-| `guest/test-fingerprint.py` | 108 | fixture test | `fingerprint.virtual` unit | P19 |
+| `guest/test-fingerprint.py` | 108 | fixture test, harness | `assets/verbatim/test-fingerprint.py.verbatim`, byte for byte, held equal by a test; typed wrapper `agent/fingerprintharness.py`; run as the builder user by the `fault.fingerprint-cleanup` unit; the older script stays until `just test-fingerprint` is repointed | verbatim, P19f, done |
 | `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18c unit |
 | `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18c unit |
 | `guest/update-fixture.py` | 188 | fixture, signing | `fixture.update` unit on the container engine, host side in `provisioning/fixtures/update_fixture.py`; the older script stays until `just update-fixture` is repointed | P18c, done |
@@ -64,7 +64,7 @@ context that drives them.
 | `guest/installer-configure.sh` | 72 | image shell | `generated/os/` build step | P19 |
 | `guest/assemble-live-squashfs.sh` | 22 | image shell | `generated/os/` build step | P19 |
 | `guest/run-installer-osbuild.sh` | 18 | build shell | `composition` stage | P18 |
-| `guest/fingerprint-tests.sh` | 25 | build shell | `composition` stage | P18 |
+| `guest/fingerprint-tests.sh` | 25 | build shell | `fault.fingerprint-cleanup` unit step for step, host case in `verification/faults/fingerprint_cleanup_fault.py`; its downloads moved to the host, `trust/testsources.py` against `config/fingerprint-tests.lock.json`; the older script stays until `just test-fingerprint` is repointed | P19f, done |
 | `live/rootfs/usr/libexec/apex/live-disk-guard.sh` | 40 | safety artifact | stays in the live root; tested unmodified | verbatim, done |
 | `live/rootfs/usr/libexec/apex/live-protection-check.sh` | 7 | safety artifact | stays in the live root | verbatim |
 | `live/rootfs/usr/lib/dracut/modules.d/01apexprotect/` | 13 | safety artifact | stays in the live root | verbatim |
