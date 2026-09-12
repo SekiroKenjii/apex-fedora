@@ -160,7 +160,9 @@ def _classes(row: memoryview, width: int) -> bytes:
         blue.translate(BLUE_LOW_FOR_GREEN),
     )
     blues = _wide(
-        blue.translate(BLUE_HIGH), red.translate(RED_LOW_FOR_BLUE), green.translate(GREEN_LOW_FOR_BLUE)
+        blue.translate(BLUE_HIGH),
+        red.translate(RED_LOW_FOR_BLUE),
+        green.translate(GREEN_LOW_FOR_BLUE),
     )
     return (reds * RED + greens * GREEN + blues * BLUE).to_bytes(width, "big")
 
