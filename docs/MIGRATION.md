@@ -1615,6 +1615,135 @@ block nodes bound beneath it, which is a fact about mount namespaces and not abo
 `supersedes`: none yet. `tests/test_live_guard.py` is superseded by the namespace test once CI
 runs it.
 
+## P17. Provisioning: the machine, its ports, the chain, the lease, the fixtures
+
+Goal: give the host a typed way to start one machine, stop only that machine, know what
+disk it is layered over, and describe every fixture it will boot, all through ports that run
+on fakes in the fast suite. The older `tools/apexlib/vm.py` stays until the commands that
+call it move.
+
+Six commits on `work/phase-17-provisioning`, each green on the whole gate.
+
+### The machine renders every topology
+
+`model/machines.py` gained the two devices the older `vm.command` could express and the
+model could not: a serial socket with an appended transcript, and booting from the attached
+cdrom. `VmSpec.build` now takes the monitor and the serial device, the optional usb
+controller and usb boot media, and refuses the combinations the older code refused: a serial
+socket, a usb controller, extra disks or usb media on anything but a disposable test
+machine; usb boot with a cdrom, a network or other than one further disk; a cdrom boot with
+no cdrom. A socket path that would not fit `sun_path` is refused where the device is built.
+
+`tests/contract/test_machine_parity.py` renders seven topologies and compares each, word for
+word, with what `vm.command` assembles for the same inputs: the builder, a sealed test
+machine, an installer test that boots its iso and answers on loopback, two extra disks, a
+serial socket, an emulated usb bus, and usb boot. The order of `-drive` and `-device`
+arguments decides the addresses a guest sees, so the comparison is on order too.
+
+### Two ports, four adapters
+
+`ports/hypervisor.py` takes a rendered machine and answers with `VmIdentity`: the process
+number, the inode of its pidfd, its start time in clock ticks and the inode of its monitor
+socket. `spawn` returns only once the monitor socket exists, bounded by a deadline, and a
+process that exits before then is a port failure that names the log. `terminate` opens a
+pidfd, reads the start time again and compares every field before it signals; a mismatch is
+refused and nothing is signalled. `capacity` reports available memory, free space below the
+runtime root and whether the accelerator device is accessible.
+
+`real_hypervisor.QemuHypervisor` runs the program detached in its own session with standard
+input closed and both output streams appended to the log. Its contract test puts a stand-in
+`qemu-system-x86_64` on the path that opens the monitor socket it was given and waits, so
+spawning, the identity check, the refusal on a changed identity and the failure on an early
+exit are all exercised without a guest. `fake_hypervisor.FakeQemu` records every spec it was
+handed and issues identities that a test can make disappear.
+
+`ports/qmp.py` opens a bounded session over the monitor socket. `real_qmp.UnixQmp` reads
+the greeting, negotiates capabilities, matches replies by identifier and skips events; an
+error from the machine is a port failure. Its contract test runs a monitor server in a
+thread. `fake_qmp.ScriptedQmp` answers from a table, records every command, and can be told
+what the guest does on receiving one, which is how the fast suite makes a guest halt when
+asked. `HostPorts` carries both, and `for_planning` refuses both.
+
+### The backing chain is a type
+
+`provisioning/backingchain.py` walks a disk the way the hypervisor will: each link is a
+regular file below the runtime root, reported as qcow2 by `qemu-img info`, and a link seen
+twice is a cycle. The result is `BackingChain`, the disk first and its base last, and
+`require_standalone` is how a downloaded base is checked before anything is layered over it.
+`overlay` creates the copy-on-write layer for a run and walks it back; it refuses to replace
+a file that exists, because an overlay is evidence once a guest has written to it. The
+contract test runs on the real tool and on a scripted process fed the same descriptions,
+including a cycle the tool itself does not detect.
+
+### The intent before the process
+
+`provisioning/leases.py` holds the two records a machine leaves in the runtime root. The
+intent names the role, the run, the run directory, the monitor and the exact command; the
+lease adds the identity. `launching.launch` takes the machine lock, refuses if a lease names
+a running machine, checks capacity, writes the intent, spawns, and writes the lease, in that
+order. A host that dies between the intent and the lease leaves the shape `reclaim` looks
+for. Neither record is deleted: a lease is released by writing that it was, and a copy of it
+lands in the run directory as evidence.
+
+`shutdown` refuses a lease whose identity no longer names a running machine, sends
+`system_powerdown`, waits under the declared budget through the clock port, and only then
+terminates, which rechecks the identity again inside the adapter. `power_loss` takes an
+`OwnedTestVm`, so a builder cannot be asked, refuses an owner that is not the lease, writes
+the fault record before the signal, and kills. `comparing.compare` refuses while a machine
+runs, compares every overlay with its source through `qemu-img compare`, and reads the
+firmware variables a run started with against what it left. The older tree wrote that
+baseline and never read it.
+
+The fast suite drives all of it on fakes: the intent is on disk when a spawn fails, a second
+launch is refused, a held lock refuses before anything is written, three kinds of capacity
+shortfall write no intent, a guest that halts is stopped and one that ignores the request is
+killed after the budget elapses on a manual clock.
+
+### Fixtures, the host side
+
+`provisioning/fixtures/` holds one module per fixture the older `guest/` scripts build or
+mutate. What lives there is what can be decided without a guest: the request a builder is
+handed, the parser for the report it returns, the derivations the older scripts made in pure
+functions, and the refusals that keep a fixture from passing as a release artifact. The
+initramfs entry parser, the fault path rule, the rescue verdict, the exact GRUB newline
+repair, the observer program, the one-retry configuration, the signing policy and the two
+container recipes are each compared with the older script's function in
+`tests/contract/test_fixture_parity.py`, on accepted inputs and on refused ones.
+
+One deliberate divergence: `initramfs_fixture.plan_digest` hashes the canonical encoding
+every other record uses, while the older `plan_hash` hashes Python's default JSON rendering.
+The two halves of that protocol move together in P18, so nothing compares one with the other.
+
+The steps that run inside a guest or the builder, which remount, format, sign and call the
+dedupe ioctl, are agent units and arrive with `GuestShellPort` and `ContainerEnginePort`.
+`docs/AGENT-MAP.md` says so per row.
+
+### What this phase did not do
+
+The block device probe threshold the plan files under P17 belongs to the `live.observe`
+unit, which is guest side and moves in P19. `OwnedTestVm` still carries the role rather than
+the whole spec. No command calls any of this yet; `apex machine` arrives with the cli in a
+later phase, and until then `tools/apexlib/vm.py` is the authority the operator runs.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 189 files, 10 857 lines; `provisioning` 1 126 lines in 12 modules |
+| Fast suite | 1 719 passed, 3 skipped |
+| Strict type check | clean over 189 files |
+| Contract suite | 265 cases |
+| Gates green | G1 to G7, G10 |
+
+`migration_red`: the machine tests failed first on the two new required arguments; the
+launching tests were written before `launching.py` and one of them, the clean stop, failed
+once more after the precheck was added because the fake guest had halted before it was
+asked, which is what the reaction hook on the scripted monitor now expresses. The contract
+tests for the hypervisor, the monitor and the chain were written with their adapters; the
+parity tests were written after the code they compare.
+`golden_change`: none.
+`supersedes`: none yet. `tools/apexlib/vm.py` is superseded once the machine commands move.
+
 ## Commands
 
 ```sh
