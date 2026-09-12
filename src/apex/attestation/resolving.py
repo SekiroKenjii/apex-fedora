@@ -12,12 +12,13 @@ from pathlib import Path
 
 from apex.attestation import catalogue, readiness, reading
 from apex.kernel import claims, identifiers
+from apex.ports import files as files_port
 
 
-def resolve_store(runtime_root: Path) -> tuple[
-    tuple[readiness.ResolvedRecord, ...], identifiers.Digest | None
-]:
-    found = reading.read_store(runtime_root)
+def resolve_store(
+    runtime_root: Path, *, files: files_port.FileSystemPort
+) -> tuple[tuple[readiness.ResolvedRecord, ...], identifiers.Digest | None]:
+    found = reading.read_store(runtime_root, files=files)
     return found.records, found.candidate
 
 

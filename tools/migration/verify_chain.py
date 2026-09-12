@@ -5,9 +5,10 @@ The chain is empty until minting starts writing to it, and an empty chain is a t
 rather than a skipped check. Running this on every gate keeps the reader exercised instead of
 leaving it to be discovered at the moment it is needed.
 
-The key sits beside the chain under the same account. A broken link therefore means an edit
-made without the key or a file damaged by something else, not proof that the operator did not
-change the chain deliberately.
+The key sits beside the chain under the same account, laid down when the store was first
+opened for writing; before that, an environment variable may name one. A broken link
+therefore means an edit made without the key or a file damaged by something else, not proof
+that the operator did not change the chain deliberately.
 """
 
 from __future__ import annotations
@@ -31,8 +32,10 @@ KEY_VARIABLE = "APEX_CHAIN_KEY"
 
 def inspect(root: Path, key: str) -> dict[str, object]:
     location = proofs.StoreLocation(root=safepaths.RuntimeRoot.adopt(root))
-    lines, head = ledger.read_chain(location, real_files.LocalFiles())
-    report = ledger.replay(lines, signer=ledger.ChainSigner(secrets.Secret(key)), head=head)
+    files = real_files.LocalFiles()
+    lines, head = ledger.read_chain(location, files)
+    signer = ledger.signer_at(location, files) or ledger.ChainSigner(secrets.Secret(key))
+    report = ledger.replay(lines, signer=signer, head=head)
     return {
         "entries": report.entries,
         "intact": report.intact,

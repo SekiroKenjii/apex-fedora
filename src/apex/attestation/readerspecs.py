@@ -15,11 +15,12 @@ from typing import Protocol
 from apex.attestation import attesting, ledger, markclaims, readiness
 from apex.kernel import claims, errors, identifiers
 from apex.model import storemark
+from apex.ports import files
 
 
 class ReadStore(Protocol):
     def __call__(
-        self, runtime_root: Path, *, spec: StoreReaderSpec
+        self, runtime_root: Path, *, spec: StoreReaderSpec, files: files.FileSystemPort
     ) -> StoreReading: ...
 
 

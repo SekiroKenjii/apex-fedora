@@ -12,12 +12,13 @@ import dataclasses
 import enum
 from collections.abc import Mapping, Sequence
 
-from apex.attestation import readerspecs, readiness, retracting
+from apex.attestation import attesting, ledger, readerspecs, readiness, retracting
 from apex.kernel import claims, encoding, verdicts
 
 
 class Origin(enum.StrEnum):
     IMPORTED = "imported"
+    RECORDED = "recorded"
     ABSENT = "absent"
 
 
@@ -54,7 +55,7 @@ def tabulate(
         Row(
             check=name,
             verdict=outcome.verdict_of(name),
-            origin=Origin.IMPORTED if name in by_check else Origin.ABSENT,
+            origin=_origin(by_check.get(name)),
             limits=tuple(sorted(by_check[name].limits)) if name in by_check else (),
             withheld=stated_before.get(name),
         )
@@ -69,6 +70,14 @@ def tabulate(
         rows=rows,
         faults=outcome.faults + reading.faults,
     )
+
+
+def _origin(found: attesting.Attestation | None) -> Origin:
+    if found is None:
+        return Origin.ABSENT
+    if found.kind is ledger.EntryKind.RECORDED:
+        return Origin.RECORDED
+    return Origin.IMPORTED
 
 
 def document(table: Table) -> encoding.Document:

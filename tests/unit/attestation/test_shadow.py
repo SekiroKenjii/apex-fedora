@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from apex.adapters.real import real_files
 from apex.attestation import readiness, resolving
 from migration import readiness_shadow, synthetic_root
 
@@ -32,7 +33,9 @@ def test_the_one_accepted_divergence_is_the_altered_proof(tmp_path: Path) -> Non
 
 def test_the_deliberately_corrupted_proof_is_blocked_not_passed(tmp_path: Path) -> None:
     root = synthetic_root.build(tmp_path / "runtime")
-    records, candidate = resolving.resolve_store(root)
+    records, candidate = resolving.resolve_store(
+        root, files=real_files.LocalFiles()
+    )
 
     fresh = readiness.evaluate(
         required=resolving.required_environments(), records=records, candidate=candidate
@@ -45,14 +48,13 @@ def test_the_deliberately_corrupted_proof_is_blocked_not_passed(tmp_path: Path) 
 def test_resolving_re_reads_the_proof_bytes_every_time(tmp_path: Path) -> None:
     """A digest trusted from metadata is a digest an editor can change."""
     root = synthetic_root.build(tmp_path / "runtime")
-    records, _ = resolving.resolve_store(root)
+    records, _ = resolving.resolve_store(root, files=real_files.LocalFiles())
     before = {str(item.check): item.proofs_intact for item in records}
 
     target = root / "evidence" / "0dff0c4156f3476cafc5decf611fa714" / "0-summary.json"
     target.write_text('{"boots": 0}\n')
-    after = {
-        str(item.check): item.proofs_intact for item in resolving.resolve_store(root)[0]
-    }
+    records, _ = resolving.resolve_store(root, files=real_files.LocalFiles())
+    after = {str(item.check): item.proofs_intact for item in records}
 
     assert before["boot.ten-cycles"]
     assert not after["boot.ten-cycles"]

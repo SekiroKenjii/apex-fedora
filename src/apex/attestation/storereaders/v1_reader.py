@@ -22,6 +22,7 @@ from apex.attestation import (
 )
 from apex.kernel import errors, refusals
 from apex.model import runtimestate, storemark
+from apex.ports import files as files_port
 
 VERSION = storemark.FIRST_VERSION
 
@@ -31,8 +32,13 @@ def _fault(reason: refusals.RefusalReason, subject: str) -> str:
 
 
 def read(
-    runtime_root: Path, *, spec: readerspecs.StoreReaderSpec
+    runtime_root: Path,
+    *,
+    spec: readerspecs.StoreReaderSpec,
+    files: files_port.FileSystemPort,  # noqa: ARG001
 ) -> readerspecs.StoreReading:
+    # The legacy documents are read where they lie, by the model's own readers; the port
+    # arrived with the store that is written through it and this reader has no use for it.
     evidence_root = runtime_root / runtimestate.EVIDENCE_DIRECTORY
     document = runtime_root / runtimestate.CANDIDATE_NAME
     candidate = (
@@ -79,7 +85,7 @@ def read(
     )
 
 
-storereaders.declare(
+SPEC = storereaders.declare(
     readerspecs.StoreReaderSpec(
         version=VERSION,
         marks=(markclaims.MarkAbsent(), markclaims.MarkEquals(VERSION)),

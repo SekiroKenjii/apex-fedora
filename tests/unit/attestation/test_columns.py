@@ -156,3 +156,36 @@ def test_the_document_is_canonical_and_names_the_store_version() -> None:
 
     assert document["version"] == 1
     assert document["imported"] == 1
+
+
+def test_a_recorded_row_names_its_chain_origin_and_carries_no_limit() -> None:
+    recorded = attesting.Attestation(
+        kind=ledger.EntryKind.RECORDED,
+        resolved=readiness.ResolvedRecord(
+            check=identifiers.CheckId("image.lint"),
+            verdict=verdicts.PASSED,
+            environment=claims.EnvironmentKind.BUILD,
+            candidate=CANDIDATE,
+            proofs_intact=True,
+            proof_count=2,
+            imported=False,
+        ),
+        limits=frozenset(),
+        origin="chain#4",
+    )
+    found = readerspecs.StoreReading(
+        version=2, attestations=(recorded,), candidate=CANDIDATE, faults=()
+    )
+    outcome = readiness.evaluate(
+        required={"image.lint": claims.EnvironmentKind.BUILD},
+        records=found.records,
+        candidate=CANDIDATE,
+    )
+
+    table = columns.tabulate(reading=found, outcome=outcome, withheld=(), strict=False)
+
+    (row,) = table.rows
+    assert row.origin is columns.Origin.RECORDED
+    assert row.limits == ()
+    assert table.imported == 0
+    assert columns.document(table)["checks"][0]["origin"] == "recorded"  # type: ignore[index]

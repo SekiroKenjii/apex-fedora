@@ -23,12 +23,13 @@ from pathlib import Path
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(REPOSITORY / "src"), str(REPOSITORY / "tools")]
 
+from apex.adapters.real import real_files  # noqa: E402
 from apex.attestation import readiness, resolving  # noqa: E402
 from apexlib import evidence as legacy  # noqa: E402
 
 
 def compare(runtime_root: Path) -> dict[str, object]:
-    records, candidate = resolving.resolve_store(runtime_root)
+    records, candidate = resolving.resolve_store(runtime_root, files=real_files.LocalFiles())
     fresh = readiness.evaluate(
         required=resolving.required_environments(), records=records, candidate=candidate
     )

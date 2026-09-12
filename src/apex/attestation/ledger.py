@@ -40,6 +40,8 @@ HEAD_NAME = "head.json"
 LEDGER_DIRECTORY = "ledger"
 LINE_LIMIT = 1024 * 1024
 CHAIN_LIMIT = 1024 * 1024 * 64
+KEY_LIMIT = 256
+KEY_HEX = 64
 RECORD_MODE = quantities.FileMode(0o600)
 
 
@@ -160,15 +162,9 @@ class Report:
 EMPTY = Head(sequence=BEFORE_FIRST, link=GENESIS)
 
 
-def _stored_head(
-    location: proofs.StoreLocation, filesystem: files.FileSystemPort
-) -> Head | None:
-    """Continue an existing chain rather than starting a second one over it."""
-    path = location.head_path()
-    if not filesystem.exists(path):
-        return None
+def parse_head(payload: bytes, *, origin: str) -> Head:
     try:
-        document = json.loads(filesystem.read_bytes(path, limit=LINE_LIMIT))
+        document = json.loads(payload)
         return Head(
             sequence=int(document["sequence"]),
             link=identifiers.Digest(str(document["link"])),
@@ -176,9 +172,36 @@ def _stored_head(
     except (json.JSONDecodeError, KeyError, TypeError, ValueError, errors.Refusal) as error:
         raise errors.Refusal(
             refusals.RefusalReason.STALE_EVIDENCE,
-            subject=str(path),
+            subject=origin,
             remedy="the head record is unreadable, so the chain cannot be continued safely",
         ) from error
+
+
+def _stored_head(
+    location: proofs.StoreLocation, filesystem: files.FileSystemPort
+) -> Head | None:
+    """Continue an existing chain rather than starting a second one over it."""
+    path = location.head_path()
+    if not filesystem.exists(path):
+        return None
+    return parse_head(filesystem.read_bytes(path, limit=LINE_LIMIT), origin=str(path))
+
+
+def signer_at(
+    location: proofs.StoreLocation, filesystem: files.FileSystemPort
+) -> ChainSigner | None:
+    """The key beside the chain, or nothing when the store has never been opened for writing."""
+    path = location.key_path()
+    if not filesystem.exists(path):
+        return None
+    material = filesystem.read_bytes(path, limit=KEY_LIMIT).decode(errors="replace").strip()
+    if len(material) != KEY_HEX or any(char not in "0123456789abcdef" for char in material):
+        raise errors.Refusal(
+            refusals.RefusalReason.STALE_EVIDENCE,
+            subject=str(path),
+            remedy="the chain key is unreadable, so no entry can be confirmed",
+        )
+    return ChainSigner(secrets.Secret(material))
 
 
 def read_chain(
@@ -265,33 +288,49 @@ def _parse(line: bytes) -> Sealed | None:
         return None
 
 
-def replay(
+def verified(
     lines: Sequence[bytes], *, signer: ChainSigner, head: Head | None
-) -> Report:
-    """Decide over lines alone. Nothing here reads a file or trusts a stored digest."""
+) -> tuple[tuple[Sealed, ...], Report]:
+    """Every entry up to the first break, and where the break is.
+
+    An entry before a break carried its own tag and its own link and so still holds; an
+    entry at or after it proves nothing, whatever it says. Nothing here reads a file or
+    trusts a stored digest.
+    """
+    held: list[Sealed] = []
     previous = GENESIS
     expected = 0
     for position, line in enumerate(lines):
         sealed = _parse(line)
         if sealed is None:
-            return Report(entries=position, first_break=Breakage(expected, Break.MALFORMED_LINE))
+            return tuple(held), Report(
+                entries=position, first_break=Breakage(expected, Break.MALFORMED_LINE)
+            )
         if sealed.entry.sequence != expected:
-            return Report(
+            return tuple(held), Report(
                 entries=position,
                 first_break=Breakage(sealed.entry.sequence, Break.SEQUENCE_OUT_OF_ORDER),
             )
         if not signer.confirms(sealed.link, sealed.tag):
-            return Report(
+            return tuple(held), Report(
                 entries=position, first_break=Breakage(expected, Break.MAC_MISMATCH)
             )
         if sealed.link != link_after(previous, sealed.entry):
-            return Report(
+            return tuple(held), Report(
                 entries=position, first_break=Breakage(expected, Break.LINK_MISMATCH)
             )
+        held.append(sealed)
         previous = sealed.link
         expected += 1
     if head is not None and (head.sequence != expected - 1 or head.link != previous):
-        return Report(
+        return tuple(held), Report(
             entries=len(lines), first_break=Breakage(head.sequence, Break.HEAD_AHEAD_OF_CHAIN)
         )
-    return Report(entries=len(lines), first_break=None)
+    return tuple(held), Report(entries=len(lines), first_break=None)
+
+
+def replay(
+    lines: Sequence[bytes], *, signer: ChainSigner, head: Head | None
+) -> Report:
+    """Decide over lines alone. Nothing here reads a file or trusts a stored digest."""
+    return verified(lines, signer=signer, head=head)[1]
