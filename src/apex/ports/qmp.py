@@ -29,5 +29,5 @@ class QmpPort(Protocol):
     environment: claims.EnvironmentKind
 
     def connect(
-        self, socket: safepaths.SafePath, *, deadline: timing.Deadline
+        self, socket_path: safepaths.SafePath, *, deadline: timing.Deadline
     ) -> contextlib.AbstractContextManager[QmpSession]: ...
