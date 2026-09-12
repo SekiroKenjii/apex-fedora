@@ -1,9 +1,10 @@
-"""Record one check's verdict from the fault reports that establish it.
+"""Record one check's verdict from the reports that establish it.
 
-One record per check, whatever the number of faults behind it, because the readiness fold
-refuses a check with two records. The verdict is the meet of the reports' verdicts and every
-report is filed as proof. The preflight refuses a witness the check cannot accept before
-any guest is asked, so a run that could never be recorded never mutates a guest.
+One record per check, whatever the number of reports behind it, because the readiness fold
+refuses a check with two records. The verdict is the meet of the reports' verdicts, and every
+report is filed as proof with whatever it captured beside it. The preflight refuses a
+witness the check cannot accept before any guest is asked, so a run that could never be
+recorded never mutates a guest.
 """
 
 from __future__ import annotations
@@ -14,11 +15,11 @@ from apex.attestation import catalogue
 from apex.kernel import claims, errors, identifiers, refusals, verdicts
 from apex.pipeline import effects, facts, stages
 from apex.ports import portset
-from apex.verification import faulting, verifykeys
+from apex.verification import judging, verifykeys
 
 
-def for_check(
-    check: identifiers.CheckId, *, reports: Sequence[facts.FactKey[faulting.FaultReport]]
+def for_check[E: judging.Evidence](
+    check: identifiers.CheckId, *, reports: Sequence[facts.FactKey[E]]
 ) -> stages.SimpleStage[portset.HostPorts]:
     key = verifykeys.minted(check)
 
@@ -41,7 +42,7 @@ def for_check(
             recorded = context.facts[verifykeys.RECORDER].record(
                 check=check,
                 verdict=verdict,
-                offered=[item.proof for item in found],
+                offered=[proof for item in found for proof in (item.proof, *item.extras)],
                 candidate=context.facts[verifykeys.CANDIDATE],
                 witnessed=claims.witnessed_through(
                     context.ports.environment, context.facts[verifykeys.WITNESS]

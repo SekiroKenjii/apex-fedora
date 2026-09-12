@@ -42,6 +42,7 @@ class FaultReport:
     observations: encoding.Document
     verdict: verdicts.Verdict
     proof: minting.Offered
+    extras: tuple[minting.Offered, ...] = ()
 
 
 def judge(observations: encoding.Document) -> verdicts.Verdict:
