@@ -23,6 +23,11 @@ DEVICES = safepaths.SafePath(Path("/sys/devices/pci0000:00"))
 PRIVATE = quantities.FileMode(0o644)
 CALLS_PER_DEVICE = 9
 VIRTIO = re.compile(r"virtio[0-9]+")
+PORT_METHODS = frozenset(
+    name
+    for name in dir(files.FileSystemPort)
+    if not name.startswith("_") and callable(getattr(files.FileSystemPort, name))
+)
 
 
 class Counting(fake_files.MemoryFiles):
@@ -35,7 +40,7 @@ class Counting(fake_files.MemoryFiles):
 
     def __getattribute__(self, name: str) -> Any:
         attribute = super().__getattribute__(name)
-        if name not in files.FileSystemPort.__abstractmethods__:
+        if name not in PORT_METHODS:
             return attribute
 
         def counted(*arguments: Any, **keywords: Any) -> Any:
