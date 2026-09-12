@@ -9,6 +9,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from apex.adapters import pidfds
 from apex.config import defaults
 from apex.kernel import claims, errors, quantities, refusals, safepaths, timing
 from apex.model import machines
@@ -88,13 +89,8 @@ class QemuHypervisor:
         return observed is not None and observed == identity.boot_ticks
 
     def terminate(self, identity: machines.VmIdentity) -> None:
-        if not hasattr(os, "pidfd_open"):
-            raise errors.PreconditionUnmet(
-                refusals.RefusalReason.MACHINE_IDENTITY_UNCHECKABLE,
-                subject="this interpreter has no pidfd_open",
-            )
         try:
-            descriptor = os.pidfd_open(identity.process)
+            descriptor = pidfds.open_process(identity.process)
         except OSError as error:
             raise errors.Refusal(
                 refusals.RefusalReason.MACHINE_NOT_RUNNING,
@@ -113,7 +109,7 @@ class QemuHypervisor:
                     subject=f"process {identity.process} is not the machine that was started",
                     remedy="the identifier was reused; nothing was signalled",
                 )
-            signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+            pidfds.send_signal(descriptor, signal.SIGKILL)
         finally:
             os.close(descriptor)
         child = self._children.get(identity.process)
@@ -141,7 +137,7 @@ def _start_ticks(process: int) -> int | None:
 
 
 def _identity_of(process: int, monitor: safepaths.SafePath) -> machines.VmIdentity:
-    descriptor = os.pidfd_open(process)
+    descriptor = pidfds.open_process(process)
     try:
         pidfd_inode = os.fstat(descriptor).st_ino
     finally:

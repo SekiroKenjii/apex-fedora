@@ -1657,6 +1657,13 @@ spawning, the identity check, the refusal on a changed identity and the failure 
 exit are all exercised without a guest. `fake_hypervisor.FakeQemu` records every spec it was
 handed and issues identities that a test can make disappear.
 
+The first CI run failed here: the interpreter build uv installs on the runner omits
+`os.pidfd_open` although the kernel provides the call, which is the gap the older
+`vm.power_loss` fell into by calling it unconditionally. `adapters/pidfds.py` now makes
+the two system calls directly when the module does not expose them, so the identity check
+before a kill does not depend on how the interpreter was built. `tests/contract/test_pidfds.py`
+runs both routes on this host, where the module route exists, by hiding it for the second.
+
 `ports/qmp.py` opens a bounded session over the monitor socket. `real_qmp.UnixQmp` reads
 the greeting, negotiates capabilities, matches replies by identifier and skips events; an
 error from the machine is a port failure. Its contract test runs a monitor server in a
