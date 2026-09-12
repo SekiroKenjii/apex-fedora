@@ -22,6 +22,16 @@ SOURCE_ARCHIVE_NAME = "source.tar"
 SOURCE_MANIFEST_NAME = "source-manifest.json"
 SOURCES_DIRECTORY = "sources"
 LOCK_COPY_NAME = "sources.lock.json"
+FINGERPRINT_TESTS_DIRECTORY = "fingerprint-tests"
+FINGERPRINT_SOURCES_NAME = "fingerprint-sources"
+FINGERPRINT_LOCK_DIRECTORY = "config"
+FINGERPRINT_LOCK_NAME = "fingerprint-tests.lock.json"
+FINGERPRINT_OUTPUT_DIRECTORY = "output/fingerprint"
+FINGERPRINT_PACKAGES = ("fprintd", "libfprint")
+FINGERPRINT_TEST_PACKAGES = ("python3-dbusmock", "python3-gobject", "python3-cairo", "dbus-daemon")
+FINGERPRINT_TEST_DEADLINE = timing.Deadline(timing.Elapsed(180))
+RPM_NEVRA_FORMAT = "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\\n"
+RPM_EVRA_FORMAT = "%{NAME}-%{EVR}.%{ARCH}\\n"
 RECORD_MODE = quantities.FileMode(0o600)
 
 DOCUMENT_LIMIT = bounded.Limit(4 * 1024 * 1024)

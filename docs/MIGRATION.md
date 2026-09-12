@@ -2374,6 +2374,84 @@ reads disk and so could not be tested in memory; the payload unit's test had the
 guard's program order wrong; pyright refused a proxy stub assigned onto a module and the
 tests now substitute it through the fixture. `golden_change`: none. `supersedes`: none yet.
 
+## P19f. Verification, sixth slice: the fingerprint test, fed by the host
+
+Goal: the one fixture test the older tree could not run without downloading inside the
+builder, as a unit whose every input the host delivers. Five commits on
+`work/phase-19f-fingerprint`, built in order, the whole gate green at the head.
+
+### The harness moves byte for byte
+
+`guest/test-fingerprint.py` is the program that produced the recorded result of September 9:
+six upstream fprintd cases and two of this project's, over a virtual device on a private
+bus, run as the unprivileged builder because the harness refuses root. It is carried as
+`assets/verbatim/test-fingerprint.py.verbatim`, the second verbatim asset, and held equal to
+the older file by the same architecture test. `agent/fingerprintharness.py` wraps it: the
+bytes, their digest, where they are placed for the builder user to read, the argument vector
+that runs them, and the older host's judgement of the report, which is PASS only when all
+eight cases ran, none skipped, and the harness exited clean.
+
+### The downloads move to the host
+
+`guest/fingerprint-tests.sh` fetched the upstream test files with curl inside the builder and
+checked them against `config/fingerprint-tests.lock.json`. A guest never downloads, so
+`model/pinnedfiles.py` types that lock, a set of relative names each pinned to a digest under
+one https base; `config/fingerprintpins.py` reads it out of the checkout like the source lock;
+and `trust/testsources.py` fetches each file through the download port against its pin into
+the runtime root, laid out as the harness expects, with the reviewed lock beside them, so the
+directory can be sent into the guest as it is. A file already held with the right digest is
+not fetched again, and the lock is recorded only once every file held.
+
+### The test as a unit
+
+`fault.fingerprint-cleanup` is `guest/fingerprint-tests.sh` step for step, less the downloads:
+the isolation guard; the delivered files inspected, digested and compared with the lock, and
+anything unpinned refused, before any program runs; fprintd and libfprint named from a
+read-only, networkless container of the target image, and refused unless there are exactly
+two; the same two installed on the builder with the test dependencies; the installed pair
+compared with the target's; the builder's packages listed; the harness placed and run as the
+builder user in the work directory, under the deadline the older `timeout` gave it. The
+report is judged as the older host judged it and carried whole; a harness the port could not
+run blocks the verdict with the cause rather than failing the run. The parity runs the older
+shell under bash with every program stood in for by a script that records its arguments and
+answers from the same spec the unit's fakes answer from, then compares the argument vectors
+once the work directory is normalised and the downloads set aside, the three package
+listings both leave, and the judgement.
+
+P19e's note had this test running inside a container of the built image. It runs on the
+builder itself; the image is only asked which packages it carries.
+
+### The builder is a guest
+
+The catalogue puts `fingerprint.virtual-cleanup`, `signature.accept` and `signature.reject`
+in the build environment, and a fault case could not stand there, because a case's
+registration counted `build` among the places that are not a guest. The isolated builder is
+a guest like any test machine, so a case may now stand in `build`; only a simulation and the
+operator's machine are refused. `fault.installer-trust` moves from `build-container` to
+`build`, which is what its checks require, and the test that holds the cases to the
+catalogue says so.
+
+### What this slice did not do
+
+No recipe runs the fingerprint test end to end yet: the stages that lease the builder,
+prepare its work directory, transfer the sources and the frozen image document, and fill
+the `work` argument go with the machine context. The desktop probes and `generated/os/`
+follow. No `just` recipe calls any of these units.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 276 files, 18593 lines |
+| Units | seventeen: seven probes, six faults, four builder fixtures |
+| Verbatim assets | two |
+| Fast suite | 2 155 passed, 9 skipped |
+
+`migration_red`: the rpm query format first carried a real newline where the older shell
+passes a backslash and an `n`, which the parity caught; the check for a linked delivery
+looked for the file through its link and had to inspect the entry first. `golden_change`:
+none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

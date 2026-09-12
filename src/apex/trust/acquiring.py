@@ -45,7 +45,7 @@ def _acquire_one(
     ports: portset.HostPorts, source: sourcelock.LockedSource, *, root: safepaths.RuntimeRoot
 ) -> AcquiredSource:
     target = root.child(f"{defaults.SOURCES_DIRECTORY}/{source.filename}")
-    if _already_held(ports, target, expected=source.sha256, root=root):
+    if already_held(ports, target, expected=source.sha256, root=root):
         return AcquiredSource(
             name=source.name, filename=str(source.filename), digest=source.sha256, fetched=False
         )
@@ -57,13 +57,14 @@ def _acquire_one(
     )
 
 
-def _already_held(
+def already_held(
     ports: portset.HostPorts,
     target: safepaths.SafePath,
     *,
     expected: identifiers.Digest,
     root: safepaths.RuntimeRoot,
 ) -> bool:
+    """Whether the file is already there with the pinned digest, read afresh off the disk."""
     if not ports.files.exists(target):
         return False
     ports.digests.forget()
