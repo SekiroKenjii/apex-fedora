@@ -11,7 +11,13 @@ import sys
 from collections.abc import Sequence
 from typing import TextIO
 
-from apex.adapters.real import real_clock, real_containers, real_files, real_process
+from apex.adapters.real import (
+    real_clock,
+    real_containers,
+    real_digesting,
+    real_files,
+    real_process,
+)
 from apex.agent import agentports, units
 from apex.kernel import distribution, encoding, errors, identifiers
 from apex.model import agentwire, serialframe
@@ -26,6 +32,7 @@ def real_ports() -> agentports.AgentPorts:
         files=real_files.LocalFiles(),
         clock=real_clock.SystemClock(),
         containers=real_containers.PodmanEngine(processes),
+        digests=real_digesting.CachedDigests(),
     )
 
 

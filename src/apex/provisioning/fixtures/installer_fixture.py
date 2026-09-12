@@ -15,7 +15,12 @@ OTHER_SIZE = quantities.Gib(4)
 TARGET_SIZE = quantities.Gib(48)
 OTHER_IMAGE = "other.qcow2"
 TARGET_IMAGE = "target.qcow2"
+RAW_IMAGE = "other.raw"
+MOUNT_POINT = "mnt"
+REPORT_NAME = "fixtures.json"
 PURPOSE = "installer disk preservation tests"
+PACKAGES = ("dosfstools", "e2fsprogs", "ntfs-3g", "ntfsprogs", "qemu-img", "util-linux-core")
+MOUNT_OPTIONS = "nosuid,nodev,noexec"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -26,6 +31,14 @@ class Partition:
     filesystem: str
     label: str
     sentinel: str
+
+    def format_argv(self, device: str) -> tuple[str, ...]:
+        """The formatter the older script ran for this filesystem, label included."""
+        if self.filesystem == "vfat":
+            return ("mkfs.vfat", "-F", "32", "-n", self.label, device)
+        if self.filesystem == "ntfs-3g":
+            return ("mkfs.ntfs", "-Q", "-L", self.label, device)
+        return ("mkfs.ext4", "-L", self.label, device)
 
 
 PARTITIONS = (

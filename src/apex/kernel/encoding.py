@@ -16,6 +16,12 @@ type JsonValue = (
 type Document = Mapping[str, JsonValue]
 
 
+def parse_document(payload: bytes) -> JsonValue:
+    """The value a JSON document holds, or `ValueError` when it is not one."""
+    loaded: JsonValue = json.loads(payload)
+    return loaded
+
+
 def canonical(document: JsonValue) -> bytes:
     return json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True

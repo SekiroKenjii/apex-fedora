@@ -7,7 +7,13 @@ import json
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_containers, fake_files, fake_process
+from apex.adapters.fakes import (
+    fake_clock,
+    fake_containers,
+    fake_digesting,
+    fake_files,
+    fake_process,
+)
 from apex.agent import agentports, main
 from apex.kernel import errors, identifiers, refusals
 from apex.model import agentwire, serialframe
@@ -44,6 +50,7 @@ def bundle() -> agentports.AgentPorts:
     return agentports.AgentPorts(
         processes=process, files=fake_files.MemoryFiles(), clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
     )
 
 

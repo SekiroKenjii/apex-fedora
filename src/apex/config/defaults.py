@@ -41,6 +41,16 @@ BUILDER_OWNER = "builder:builder"
 BUILDER_KEY_NAME = "builder_ed25519"
 KNOWN_HOSTS_NAME = "known_hosts"
 BUILDER_MARKER = "/etc/apex-builder"
+BUILDER_MARKER_TEXT = "apex-isolated-builder-v1"
+VIRTUALISERS = frozenset({"kvm", "qemu"})
+PARTITION_APPEARS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(5)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(0.1), ceiling=timing.Elapsed(0.1), factor=1
+    ),
+    description="the partition node appears",
+)
+PACKAGE_INSTALL_DEADLINE = timing.Deadline(timing.Elapsed(1800))
 BUILD_LOCK = safepaths.RemotePath("/run/apex-build.lock")
 REMOTE_PREFIX = "/var/tmp/apex-"
 REMOTE_DIRECTORY_MODE = "700"
