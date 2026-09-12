@@ -70,17 +70,17 @@ class HostPorts:
 
     def for_planning(self) -> Self:
         return type(self)(
-            processes=planning.Refusing("processes"),
-            files=planning.Refusing("files"),
-            clock=planning.Refusing("clock"),
-            identities=planning.Refusing("identities"),
-            locks=planning.Refusing("locks"),
-            digests=planning.Refusing("digests"),
-            archives=planning.Refusing("archives"),
-            signing=planning.Refusing("signing"),
-            downloads=planning.Refusing("downloads"),
-            hypervisor=planning.Refusing("hypervisor"),
-            monitor=planning.Refusing("monitor"),
+            processes=planning.refusing("processes"),
+            files=planning.refusing("files"),
+            clock=planning.refusing("clock"),
+            identities=planning.refusing("identities"),
+            locks=planning.refusing("locks"),
+            digests=planning.refusing("digests"),
+            archives=planning.refusing("archives"),
+            signing=planning.refusing("signing"),
+            downloads=planning.refusing("downloads"),
+            hypervisor=planning.refusing("hypervisor"),
+            monitor=planning.refusing("monitor"),
         )
 
     def require_attestable(

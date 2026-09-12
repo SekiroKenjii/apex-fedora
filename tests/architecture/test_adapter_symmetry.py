@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import pkgutil
 from pathlib import Path
+from typing import Protocol
 
 import pytest
 
@@ -54,3 +55,26 @@ def test_every_adapter_declares_its_environment(package: str, expected: bool) ->
         for adapter in adapters:
             simulated = adapter.environment is claims.EnvironmentKind.SIMULATED
             assert simulated is expected, f"{name}.{adapter.__name__} attests the wrong kind"
+
+
+@pytest.mark.parametrize("package", ["real", "fakes"])
+def test_every_adapter_inherits_the_port_it_implements(package: str) -> None:
+    """Conformance is declared where the adapter is written, so a drifted signature is
+    reported at the class and refused at instantiation, not discovered where it is passed."""
+    for name in sorted(module_names(package)):
+        module = importlib.import_module(f"apex.adapters.{package}.{name}")
+        adapters = [
+            value
+            for value in vars(module).values()
+            if isinstance(value, type)
+            and value.__module__ == module.__name__
+            and hasattr(value, "environment")
+        ]
+        for adapter in adapters:
+            ports = [
+                base
+                for base in adapter.__mro__[1:]
+                if base is not Protocol and base.__module__.startswith("apex.ports.")
+            ]
+
+            assert ports, f"{name}.{adapter.__name__} inherits no port"

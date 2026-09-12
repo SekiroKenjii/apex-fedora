@@ -23,7 +23,7 @@ class Spawned:
     identity: machines.VmIdentity
 
 
-class FakeQemu:
+class FakeQemu(hypervisor.HypervisorPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(

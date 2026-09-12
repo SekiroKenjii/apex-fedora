@@ -184,6 +184,10 @@ ratchet:
 types:
     uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
 
+# The editor's checker, so a finding in the editor is a finding in the gate and nowhere else.
+pyright:
+    uv run --no-project --python {{python}} --with pytest==9.1.1 --with pyright==1.1.407 sh -c 'pyright --pythonpath "$(command -v python)"'
+
 deadcode:
     uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/integration --min-confidence 80
 
@@ -218,6 +222,7 @@ gate:
     just test
     just lint
     just types
+    just pyright
     just deadcode
     just plans
     just runtime-verify

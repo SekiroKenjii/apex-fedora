@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from apex.kernel import claims, identifiers
+from apex.ports import ids
 
 
-class SequenceIdentities:
+class SequenceIdentities(ids.IdentityPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self) -> None:

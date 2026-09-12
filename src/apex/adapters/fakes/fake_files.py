@@ -14,7 +14,7 @@ class StoredFile:
     mode: quantities.FileMode
 
 
-class MemoryFiles:
+class MemoryFiles(files.FileSystemPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self, *, fail_after: int | None = None) -> None:

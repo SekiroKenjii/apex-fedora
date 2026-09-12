@@ -12,6 +12,7 @@ archive behind.
 from __future__ import annotations
 
 import dataclasses
+from abc import abstractmethod
 from collections.abc import Callable
 from typing import Protocol
 
@@ -57,6 +58,7 @@ def admit_all(candidate: BundleCandidate) -> None:
 class ArchivePort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def bundle(
         self, sources: SourceSet, *, into: safepaths.SafePath, screen: Screen
     ) -> SourceBundle: ...

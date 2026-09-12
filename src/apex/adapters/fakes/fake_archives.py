@@ -11,7 +11,7 @@ from apex.kernel import claims, encoding, errors, hashing, refusals, safepaths
 from apex.ports import archives
 
 
-class MemoryArchives:
+class MemoryArchives(archives.ArchivePort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self) -> None:

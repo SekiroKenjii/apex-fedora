@@ -6,9 +6,10 @@ from collections.abc import Mapping
 
 from apex.adapters import parts
 from apex.kernel import claims, errors, identifiers, locators, refusals, safepaths, timing
+from apex.ports import downloading
 
 
-class OfflineFetcher:
+class OfflineFetcher(downloading.DownloadPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self, served: Mapping[str, bytes]) -> None:
@@ -35,7 +36,7 @@ class OfflineFetcher:
         return parts.settle(part, into.path, expected)
 
 
-class RefusingNetwork:
+class RefusingNetwork(downloading.DownloadPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def fetch(

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+from abc import abstractmethod
 from typing import Protocol
 
 from apex.kernel import claims, identifiers, quantities, safepaths
@@ -29,12 +30,15 @@ class TreeEntry:
 class FileSystemPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def read_bytes(self, path: safepaths.SafePath, *, limit: int) -> bytes: ...
 
+    @abstractmethod
     def write_atomic(
         self, path: safepaths.SafePath, payload: bytes, *, mode: quantities.FileMode
     ) -> identifiers.Digest: ...
 
+    @abstractmethod
     def append_line(
         self, path: safepaths.SafePath, payload: bytes, *, mode: quantities.FileMode
     ) -> None:
@@ -45,10 +49,13 @@ class FileSystemPort(Protocol):
         """
         ...
 
+    @abstractmethod
     def exists(self, path: safepaths.SafePath) -> bool: ...
 
+    @abstractmethod
     def mode_of(self, path: safepaths.SafePath) -> quantities.FileMode: ...
 
+    @abstractmethod
     def list_tree(self, directory: safepaths.SafePath) -> tuple[TreeEntry, ...]:
         """Every entry below a directory, symlinks reported as symlinks and never followed."""
         ...

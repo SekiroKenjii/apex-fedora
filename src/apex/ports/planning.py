@@ -9,7 +9,7 @@ gap in the double.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import NoReturn
+from typing import Any, NoReturn
 
 from apex.kernel import claims, errors
 
@@ -34,3 +34,12 @@ class Refusing:
 
     def __repr__(self) -> str:
         return f"<Refusing {self._port}>"
+
+
+def refusing(name: str) -> Any:
+    """The refusing double, handed to a slot typed as the port it stands in for.
+
+    The double answers every method name by refusing, so it satisfies any port at runtime.
+    `Any` is the one place that fact is stated for the checker, instead of a cast per slot.
+    """
+    return Refusing(name)

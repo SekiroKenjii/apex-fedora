@@ -12,12 +12,13 @@ import hmac
 
 from apex.adapters import parts
 from apex.kernel import claims, errors, safepaths
+from apex.ports import signing
 
 PRIVATE_PREFIX = "private:"
 PUBLIC_PREFIX = "public:"
 
 
-class FakeSigner:
+class FakeSigner(signing.SigningPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self) -> None:

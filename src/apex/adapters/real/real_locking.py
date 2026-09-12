@@ -15,7 +15,7 @@ from apex.ports import locking
 POLL = 0.01
 
 
-class FileLocks:
+class FileLocks(locking.LockPort):
     environment = claims.EnvironmentKind.BUILD
 
     def __init__(self, root: safepaths.RuntimeRoot) -> None:

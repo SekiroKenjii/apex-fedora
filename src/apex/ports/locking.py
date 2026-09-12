@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+from abc import abstractmethod
 from typing import Protocol, Self
 
 from apex.kernel import claims, timing
@@ -40,8 +41,10 @@ class LockLease:
 class LockPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def acquire(
         self, scope: LockScope, policy: AcquisitionPolicy
     ) -> contextlib.AbstractContextManager[LockLease]: ...
 
+    @abstractmethod
     def holder(self, scope: LockScope) -> str | None: ...

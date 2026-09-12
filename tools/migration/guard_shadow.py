@@ -25,7 +25,7 @@ import dataclasses
 import json
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[2]
@@ -164,7 +164,9 @@ def new_findings(
     )
 
 
-def introduced_only(findings: Sequence[rulespecs.Finding], *, origins: dict[str, object]) -> bool:
+def introduced_only(
+    findings: Sequence[rulespecs.Finding], *, origins: Mapping[str, object]
+) -> bool:
     return bool(findings) and all(
         isinstance(origins[str(finding.rule)], ruleorigins.Introduced) for finding in findings
     )

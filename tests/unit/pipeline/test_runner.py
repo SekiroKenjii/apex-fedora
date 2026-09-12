@@ -152,7 +152,10 @@ def test_a_run_that_stops_records_not_tested_for_every_unreached_check(
         "demo",
         [
             stage("fail", writes=(TOKEN,), log=log, outcome="refuse"),
-            stage("later", reads=(TOKEN,), writes=(ARTIFACT,), log=log, attests={"image.lint"}),
+            stage(
+                "later", reads=(TOKEN,), writes=(ARTIFACT,), log=log,
+                attests=frozenset({"image.lint"}),
+            ),
         ],
     )
 

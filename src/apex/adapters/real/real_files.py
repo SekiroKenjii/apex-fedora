@@ -10,7 +10,7 @@ from apex.kernel import bounded, claims, errors, hashing, identifiers, quantitie
 from apex.ports import files
 
 
-class LocalFiles:
+class LocalFiles(files.FileSystemPort):
     environment = claims.EnvironmentKind.BUILD
 
     def read_bytes(self, path: safepaths.SafePath, *, limit: int) -> bytes:

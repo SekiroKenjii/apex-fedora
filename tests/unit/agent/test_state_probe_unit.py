@@ -66,8 +66,10 @@ def test_a_missing_program_is_recorded_not_raised() -> None:
 
     observations = report["observations"]
     assert isinstance(observations, dict)
-    assert observations["selinux"]["returncode"] is None
-    assert "error" in observations["selinux"]
+    selinux = observations["selinux"]
+    assert isinstance(selinux, dict)
+    assert selinux["returncode"] is None
+    assert "error" in selinux
 
 
 def test_the_unit_is_registered_under_its_identifier() -> None:

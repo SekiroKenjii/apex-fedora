@@ -27,7 +27,7 @@ class AgentPorts:
 
     def for_planning(self) -> Self:
         return type(self)(
-            processes=planning.Refusing("processes"),
-            files=planning.Refusing("files"),
-            clock=planning.Refusing("clock"),
+            processes=planning.refusing("processes"),
+            files=planning.refusing("files"),
+            clock=planning.refusing("clock"),
         )
