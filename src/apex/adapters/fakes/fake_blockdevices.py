@@ -57,9 +57,9 @@ class FakeBlockDevices(blockdevices.BlockDevicePort):
             raise errors.PortFailure(
                 port="blocks", cause=f"{node}: read {len(before)} of {length} bytes at {offset}"
             )
+        after = bytes([before[0] ^ 1]) + before[1:] if device.changes_on_write else before
         if device.denial is not None:
             return blockdevices.Rewrite(
-                before=before, after=before, written=None, error_number=device.denial
+                before=before, after=after, written=None, error_number=device.denial
             )
-        after = bytes([before[0] ^ 1]) + before[1:] if device.changes_on_write else before
         return blockdevices.Rewrite(before=before, after=after, written=length, error_number=None)

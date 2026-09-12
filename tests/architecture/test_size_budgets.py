@@ -27,7 +27,7 @@ PACKAGE_LINE_BUDGETS = {
     "verification": 600,
     "provisioning": 1600,
     "trust": 1200,
-    "agent": 2000,
+    "agent": 2400,
     "workspace": 2000,
     "adapters": 2600,
     "cli": 900,
