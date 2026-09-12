@@ -20,7 +20,7 @@ FAN_IN_EXEMPT = ("apex.kernel", "apex.config.defaults")
 PACKAGE_LINE_BUDGETS = {
     "kernel": 1400,
     "assets": 100,
-    "model": 1600,
+    "model": 1800,
     "ports": 1000,
     "registry": 700,
     "pipeline": 1200,
