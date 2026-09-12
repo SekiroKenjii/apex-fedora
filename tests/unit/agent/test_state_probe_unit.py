@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from apex.adapters.fakes import fake_clock, fake_files, fake_process
+from apex.adapters.fakes import (
+    fake_clock,
+    fake_containers,
+    fake_digesting,
+    fake_files,
+    fake_process,
+)
 from apex.agent import agentports, units
 from apex.agent.units import state_probe_unit
 from apex.kernel import identifiers
@@ -35,7 +41,9 @@ def scripted() -> fake_process.ScriptedProcess:
 
 def bundle(process: fake_process.ScriptedProcess) -> agentports.AgentPorts:
     return agentports.AgentPorts(
-        processes=process, files=fake_files.MemoryFiles(), clock=fake_clock.ManualClock()
+        processes=process, files=fake_files.MemoryFiles(), clock=fake_clock.ManualClock(),
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
     )
 
 

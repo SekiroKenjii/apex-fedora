@@ -34,14 +34,30 @@ SSH_CONNECT_TIMEOUT = timing.Elapsed(5)
 GUEST_COMMAND_DEADLINE = timing.Deadline(timing.Elapsed(300))
 TRANSFER_DEADLINE = timing.Deadline(timing.Elapsed(1800))
 BUILD_DEADLINE = timing.Deadline(timing.Elapsed(4 * 3600))
+ENGINE_QUERY_DEADLINE = timing.Deadline(timing.Elapsed(120))
+ENGINE_BUILD_DEADLINE = timing.Deadline(timing.Elapsed(3600))
 BUILDER_USER = "builder"
 BUILDER_OWNER = "builder:builder"
 BUILDER_KEY_NAME = "builder_ed25519"
 KNOWN_HOSTS_NAME = "known_hosts"
 BUILDER_MARKER = "/etc/apex-builder"
+BUILDER_MARKER_TEXT = "apex-isolated-builder-v1"
+VIRTUALISERS = frozenset({"kvm", "qemu"})
+PARTITION_APPEARS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(5)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(0.1), ceiling=timing.Elapsed(0.1), factor=1
+    ),
+    description="the partition node appears",
+)
+PACKAGE_INSTALL_DEADLINE = timing.Deadline(timing.Elapsed(1800))
 BUILD_LOCK = safepaths.RemotePath("/run/apex-build.lock")
 REMOTE_PREFIX = "/var/tmp/apex-"
 REMOTE_DIRECTORY_MODE = "700"
+AGENT_DIRECTORY = "agent"
+AGENT_WHEEL_NAME = "apex-agent.whl"
+AGENT_LIBRARY = "lib"
+AGENT_REPLY_LIMIT = bounded.Limit(32 * 1024 * 1024)
 IMAGE_TOOL_DEADLINE = timing.Deadline(timing.Elapsed(120))
 MACHINE_LOCK = "machine"
 INTENT_NAME = "machine-intent.json"

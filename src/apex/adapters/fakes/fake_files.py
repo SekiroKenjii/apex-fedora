@@ -47,8 +47,11 @@ class MemoryFiles(files.FileSystemPort):
         self._files[str(path)] = StoredFile(body, existing.mode if existing else mode)
         self.appended += 1
 
+    def make_directory(self, path: safepaths.SafePath, *, mode: quantities.FileMode) -> None:  # noqa: ARG002
+        self.directories.add(str(path))
+
     def exists(self, path: safepaths.SafePath) -> bool:
-        return str(path) in self._files
+        return str(path) in self._files or str(path) in self.directories
 
     def mode_of(self, path: safepaths.SafePath) -> quantities.FileMode:
         stored = self._files.get(str(path))

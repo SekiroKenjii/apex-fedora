@@ -12,8 +12,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from apex.agent import serialframe
 from apex.kernel import identifiers
+from apex.model import serialframe
 
 TOKEN = identifiers.Token("a" * 32)
 PIECE = 64 * 1024

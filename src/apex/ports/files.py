@@ -50,6 +50,11 @@ class FileSystemPort(Protocol):
         ...
 
     @abstractmethod
+    def make_directory(self, path: safepaths.SafePath, *, mode: quantities.FileMode) -> None:
+        """Create the directory and any missing parent, each with the given mode."""
+        ...
+
+    @abstractmethod
     def exists(self, path: safepaths.SafePath) -> bool: ...
 
     @abstractmethod

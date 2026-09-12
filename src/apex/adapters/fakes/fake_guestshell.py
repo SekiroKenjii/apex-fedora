@@ -60,7 +60,7 @@ class ScriptedGuest(guestshell.GuestShellPort):
         if reply is None and self._strict:
             raise errors.PortFailure(port="guest", cause=f"undeclared script: {text}")
         if reply is None:
-            reply = GuestReply(stdout=text.encode())
+            reply = GuestReply(stdout=text.encode() + (run.stdin or b""))
         if run.transcript is not None:
             return commands.CompletedRun(
                 exit_code=reply.exit_code, stdout=b"", stderr=b"", truncated=False

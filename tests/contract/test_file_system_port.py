@@ -146,3 +146,13 @@ def test_a_symlink_in_the_tree_is_reported_not_followed(root: safepaths.RuntimeR
     listed = {entry.relative: entry.kind for entry in entries}
 
     assert listed["link"] is files_port.EntryKind.SYMLINK
+
+
+def test_a_made_directory_exists_afterwards(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    target = root.child("work/mnt")
+
+    files.make_directory(target, mode=quantities.FileMode(0o700))
+
+    assert files.exists(target)

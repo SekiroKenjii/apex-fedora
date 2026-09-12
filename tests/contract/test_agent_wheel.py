@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from apex.agent import requests
+from apex.model import agentwire
 from migration import agent_wheel
 
 pytestmark = pytest.mark.skipif(shutil.which("uv") is None, reason="NOT TESTED: uv is absent")
@@ -45,14 +45,14 @@ def test_the_installed_guest_answers_the_handshake(installed: Path) -> None:
     completed = subprocess.run([str(installed), "handshake"], capture_output=True, check=True)
 
     document = json.loads(completed.stdout)
-    assert document["protocol"] == requests.PROTOCOL_VERSION
+    assert document["protocol"] == agentwire.PROTOCOL_VERSION
     assert document["agent_version"] != "source"
 
 
 def test_the_installed_guest_runs_a_unit_found_in_site_packages(installed: Path) -> None:
     request = json.dumps(
         {
-            "protocol": requests.PROTOCOL_VERSION,
+            "protocol": agentwire.PROTOCOL_VERSION,
             "host_version": "0.2.0",
             "unit": "guest.state",
             "arguments": {},

@@ -68,6 +68,12 @@ class LocalFiles(files.FileSystemPort):
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
 
+    def make_directory(self, path: safepaths.SafePath, *, mode: quantities.FileMode) -> None:
+        try:
+            path.path.mkdir(parents=True, exist_ok=True, mode=mode.value)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
     def exists(self, path: safepaths.SafePath) -> bool:
         return path.path.exists()
 

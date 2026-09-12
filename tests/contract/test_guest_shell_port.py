@@ -106,3 +106,19 @@ def test_a_guest_user_that_is_not_a_plain_name_is_refused(root: safepaths.Runtim
         )
 
     assert raised.value.reason is refusals.RefusalReason.MALFORMED_IDENTIFIER
+
+
+def test_what_is_written_to_the_run_reaches_the_guest(
+    guests: guestshell.GuestShellPort, root: safepaths.RuntimeRoot
+) -> None:
+    completed = guests.run(
+        target(root),
+        guestshell.GuestRun(
+            script=guestshell.RemoteScript.of(guestshell.Step.of("cat")),
+            deadline=defaults.GUEST_COMMAND_DEADLINE,
+            limit=commands.OutputLimit.default(),
+            stdin=b"request document",
+        ),
+    )
+
+    assert completed.stdout == b"cat" + b"request document"

@@ -21,6 +21,7 @@ import pytest
 from apex.adapters.fakes import (
     fake_archives,
     fake_clock,
+    fake_containers,
     fake_digesting,
     fake_downloading,
     fake_files,
@@ -35,6 +36,7 @@ from apex.adapters.fakes import (
 from apex.adapters.real import (
     real_archives,
     real_clock,
+    real_containers,
     real_digesting,
     real_downloading,
     real_files,
@@ -70,6 +72,8 @@ time.sleep(30)
 SSH_SHIM = f"""#!{sys.executable}
 import sys
 sys.stdout.write(sys.argv[-1])
+sys.stdout.flush()
+sys.stdout.buffer.write(sys.stdin.buffer.read())
 """
 SCP_SHIM = f"""#!{sys.executable}
 import os, shutil, sys
@@ -98,6 +102,33 @@ if os.path.isdir(source):
     shutil.copytree(source, destination)
 else:
     shutil.copy(source, destination)
+"""
+
+# A stand-in for both engine programs: it answers the queries the contract suite makes about
+# one image and accepts every build, copy and key generation.
+ENGINE_SHIM = f"""#!{sys.executable}
+import sys
+arguments = sys.argv[1:]
+program = sys.argv[0].rsplit("/", 1)[-1]
+if program == "podman" and arguments[:2] == ["image", "inspect"]:
+    name = arguments[-1]
+    if name != "localhost/apex:fedora":
+        sys.stderr.write("Error: no such image\\n")
+        sys.exit(125)
+    formatted = "--format" in arguments
+    sys.stdout.write("sha256:" + "a" * 64 + "\\n" if formatted else '{{"config": {{}}}}')
+elif program == "podman" and arguments[:1] == ["run"]:
+    tail = arguments[arguments.index("localhost/apex:fedora") + 1:]
+    if tail == ["false"]:
+        sys.exit(1)
+    sys.stdout.write("bash-5\\n")
+elif program == "podman" and arguments[:1] == ["ps"]:
+    sys.stdout.write("[]")
+elif program == "skopeo" and arguments[:2] == ["inspect", "--raw"]:
+    if "localhost/apex:fedora" not in arguments[-1]:
+        sys.stderr.write("Error: no such image\\n")
+        sys.exit(1)
+    sys.stdout.write('{{"schemaVersion": 2}}')
 """
 
 MONITOR_REPLIES: dict[str, object] = {
@@ -271,3 +302,20 @@ def guests(
         yield real_guestshell.OpensshGuestShell(real_process.SubprocessRunner())
     else:
         yield fake_guestshell.ScriptedGuest.echoing()
+
+
+@pytest.fixture(params=["real", "fake"])
+def engines(
+    request: pytest.FixtureRequest, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[object]:
+    if request.param == "real":
+        shims = tmp_path / "engine-shims"
+        shims.mkdir()
+        for name in ("podman", "skopeo"):
+            shim = shims / name
+            shim.write_text(ENGINE_SHIM)
+            shim.chmod(shim.stat().st_mode | stat.S_IXUSR)
+        monkeypatch.setenv("PATH", f"{shims}:{request.config.getoption('--basetemp', '')}")
+        yield real_containers.PodmanEngine(real_process.SubprocessRunner())
+    else:
+        yield fake_containers.FakeRegistry.with_shell_probe()

@@ -103,6 +103,22 @@ class AgentReply:
             "observations": dict(self.observations),
         }
 
+    @classmethod
+    def parse(cls, payload: bytes) -> Self:
+        document = _document(payload)
+        _protocol(document)
+        unit = document.get("unit")
+        observations = document.get("observations")
+        if not isinstance(unit, str):
+            raise _refuse(f"unit {unit!r}")
+        if not isinstance(observations, dict):
+            raise _refuse("observations must be an object")
+        try:
+            named = identifiers.ProbeId(unit)
+        except errors.Refusal as fault:
+            raise _refuse(f"unit {unit!r}") from fault
+        return cls(unit=named, observations=observations)
+
 
 def handshake(agent_version: str) -> encoding.Document:
     return {"protocol": PROTOCOL_VERSION, "agent_version": agent_version}

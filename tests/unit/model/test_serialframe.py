@@ -12,9 +12,9 @@ import json
 
 import pytest
 
-from apex.agent import serialframe
 from apex.config import defaults
 from apex.kernel import bounded, errors, identifiers, refusals
+from apex.model import serialframe
 from apexlib import installerlogs as older
 
 TOKEN = identifiers.Token("a" * 32)

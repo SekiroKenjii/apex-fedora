@@ -72,6 +72,7 @@ class RefusalReason(enum.StrEnum):
     REQUEST_MALFORMED = "agent.request-malformed"
     PROTOCOL_MISMATCH = "agent.protocol-mismatch"
     UNIT_UNKNOWN = "agent.unit-unknown"
+    AGENT_REFUSED = "agent.refused"
 
     DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
     DUPLICATE_DEVICE = "machine.duplicate-device"
