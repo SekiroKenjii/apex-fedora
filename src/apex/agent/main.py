@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from typing import TextIO
 
 from apex.adapters.real import (
+    real_archives,
     real_clock,
     real_containers,
     real_digesting,
@@ -33,6 +34,7 @@ def real_ports() -> agentports.AgentPorts:
         clock=real_clock.SystemClock(),
         containers=real_containers.PodmanEngine(processes),
         digests=real_digesting.CachedDigests(),
+        archives=real_archives.TarArchives(),
     )
 
 

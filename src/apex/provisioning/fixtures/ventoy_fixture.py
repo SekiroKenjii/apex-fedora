@@ -16,6 +16,18 @@ REQUIRED_FREE = quantities.Gib(27)
 VERSION = re.compile(r"\d+\.\d+\.\d+")
 PARTITION_TABLE = "dos"
 PARTITIONS = 2
+PACKAGES = ("parted", "exfatprogs", "qemu-img", "util-linux", "xz")
+ARCHIVE = "ventoy.tar.gz"
+UPSTREAM = "upstream"
+RAW_IMAGE = "ventoy.raw"
+IMAGE = "ventoy.qcow2"
+MOUNT_POINT = "mount"
+REPORT_NAME = "media.json"
+REQUEST_NAME = "request.json"
+INSTALLER = "Ventoy2Disk.sh"
+MOUNT_OPTIONS = "nosuid,nodev,noexec"
+FILESYSTEM = "exfat"
+VERSION_LINE = "Ventoy Version in Disk: "
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

@@ -117,6 +117,10 @@ class SafePath:
     def __fspath__(self) -> str:
         return str(self.path)
 
+    def __truediv__(self, name: str) -> SafePath:
+        """A child by plain name; a name that climbs is refused where the path is used."""
+        return SafePath(self.path / name)
+
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class RegularFile:

@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 
 from apex.adapters.fakes import (
+    fake_archives,
     fake_clock,
     fake_containers,
     fake_digesting,
@@ -116,6 +117,7 @@ def newer_calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[st
         clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
     )
     monkeypatch.setattr(builder.os, "geteuid", lambda: 0)
     installer_disks_unit.run(

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from apex.adapters.fakes import (
+    fake_archives,
     fake_clock,
     fake_containers,
     fake_digesting,
@@ -95,6 +96,7 @@ def bundle(root: Path, *, builder: bool = True) -> agentports.AgentPorts:
         clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
     )
 
 
