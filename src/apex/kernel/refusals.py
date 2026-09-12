@@ -36,6 +36,7 @@ class RefusalReason(enum.StrEnum):
     IMAGE_METADATA_MISMATCH = "trust.image-metadata-mismatch"
     NEGATIVE_ACCEPTED = "trust.negative-accepted"
     NEGATIVE_WRONG_REASON = "trust.negative-wrong-reason"
+    PAYLOAD_CONTRACT_INVALID = "trust.payload-contract-invalid"
 
     LOCK_MISSING = "lock.missing"
     LOCK_UNREADABLE = "lock.unreadable"

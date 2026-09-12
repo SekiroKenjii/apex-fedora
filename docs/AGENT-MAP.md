@@ -27,8 +27,8 @@ context that drives them.
 | `guest/live-parity.py` | 19 | build check | `build.live-parity` unit | P18 |
 | `guest/live-write-denial.py` | 124 | fault | `fault.live-write-denial` unit, host case in `verification/faults/live_write_denial_fault.py`; the older script stays until `just test-live-check` is repointed | P19b, done |
 | `guest/live-lock-fault.py` | 103 | fault | `fault.live-lock` unit, its child run through the process port with `CAP_SYS_ADMIN` dropped; host case in `verification/faults/live_lock_fault.py`; the older script stays until `just test-live-check` is repointed | P19c, done |
-| `guest/test-installer-fault.py` | 155 | fault | `verification/faults/installer_payload_fault.py` | P19 |
-| `guest/test-installer-trust.py` | 164 | fault, signatures | `verification/faults/installer_trust_fault.py` | P19 |
+| `guest/test-installer-fault.py` | 155 | fault | `fault.installer-payload` unit, host case in `verification/faults/installer_payload_fault.py`; the older script stays until `just test-installer-fault` is repointed | P19e, done |
+| `guest/test-installer-trust.py` | 164 | fault, signatures | `fault.installer-trust` unit through the engine port, host case in `verification/faults/installer_trust_fault.py`; the older script stays until `just installer-trust` is repointed | P19e, done |
 | `guest/test-fingerprint.py` | 108 | fixture test | `fingerprint.virtual` unit | P19 |
 | `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18c unit |
 | `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18c unit |
@@ -53,7 +53,7 @@ context that drives them.
 | `guest/guard-installer-entrypoint.py` | 37 | image step | `generated/os/` build step | P19 |
 | `guest/prepare-live-builder.py` | 42 | image step | `generated/os/` build step | P19 |
 | `guest/prepare-live-rootfs.py` | 132 | image step | `generated/os/` build step | P19 |
-| `guest/installer-preflight.py` | 185 | safety artifact | `assets/verbatim/`, typed wrapper in `trust/` | verbatim, P19 |
+| `guest/installer-preflight.py` | 185 | safety artifact | `assets/verbatim/installer-preflight.py.verbatim`, byte for byte, held equal by a test; typed wrapper `trust/preflight.py` | verbatim, P19e, done |
 | `guest/bootstrap.sh` | 13 | build shell | runs as shipped, first step under the guest lock in `composition/stages/run_build_stage.py` | P18 host side done |
 | `guest/build.sh` | 35 | build shell | runs as shipped from `composition/recipes/image_recipe.py`; its steps become units when the builder carries the agent | P18 host side done |
 | `guest/build-rpms.sh` | 19 | build shell | called by `build.sh` as shipped; a recipe of its own when the builder carries the agent | P18 host side done |

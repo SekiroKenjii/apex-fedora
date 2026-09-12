@@ -2316,6 +2316,64 @@ these units.
 program, and its write assertion counted the fixture's own writes. `golden_change`: none.
 `supersedes`: none yet.
 
+## P19e. Verification, fifth slice: the installer's trust, exercised
+
+Goal: the two faults that prove the installer refuses what it must, and the first verbatim
+asset. Five commits on `work/phase-19e-faults`, each green on the whole gate.
+
+### A safety artifact moves byte for byte
+
+`guest/installer-preflight.py` is the program that runs before Anaconda, and it is not
+rewritten. It is carried as `assets/verbatim/installer-preflight.py.verbatim`, a data file
+in the wheel that nothing scans as code, and an architecture test holds it equal to the
+older tree's file for as long as that tree exists. `trust/preflight.py` executes those bytes
+as a module and exposes the three calls the product makes with the types the product uses:
+the policy the trust contract implies, the proxy check that a policy accepts an image, and
+the whole verification. Its `ValueError` is a refused contract and its `RuntimeError` a
+rejected signature, which is what those exceptions mean in its source.
+
+### The payload fault
+
+`fault.installer-payload` is `guest/test-installer-fault.py`: the same guards over the
+offline installer guest at its diagnostic target, the same six mutations each with a
+byte-for-byte backup and refused twice in one boot, the same run of the production entry
+point, and the same reading of what it left behind. The wrong-key case writes the policy the
+verbatim program derives from the rewritten contract, so the real verifier is what refuses.
+The parity compares the files each mutation leaves on both sides and the judgement over six
+outcomes of the entry point.
+
+### The trust fixture
+
+`fault.installer-trust` is `guest/test-installer-trust.py` through the engine port: a scratch
+image built and signed with a fixture key, copied under the policy the trust contract
+implies, opened through the same proxy check the installer uses, and then a wrong key, a
+wrong identity, no signature, a tampered signature, a tampered manifest and an unexpected
+source each refused. A negative the engine accepts, or refuses for another reason, refuses
+the whole run, with the trust context's own reasons. The fake engine learned to refuse a
+copy under a named policy. The parity runs the older script and the unit over the real
+engine adapter on one scripted process and compares every argument vector, normalised for
+the run directory and identifier, and both reports' cases.
+
+### What this slice did not do
+
+The fingerprint fixture test runs inside a container of the built image and is fed sources
+the host must fetch, since a guest never downloads; it goes with the next slice. The desktop
+probes and `generated/os/` follow. No `just` recipe calls any of these units.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 270 files, 18010 lines |
+| Units | thirteen: five probes, five faults, four builder fixtures, less the fingerprint test |
+| Verbatim assets | one |
+| Fast suite | 2 102 passed, 9 skipped |
+
+`migration_red`: the trust unit first hashed its small files through the digest port, which
+reads disk and so could not be tested in memory; the payload unit's test had the older
+guard's program order wrong; pyright refused a proxy stub assigned onto a module and the
+tests now substitute it through the fixture. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
