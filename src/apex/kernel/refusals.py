@@ -14,6 +14,7 @@ class RefusalReason(enum.StrEnum):
     MALFORMED_IDENTIFIER = "malformed.identifier"
     MALFORMED_PACKAGE_COORDINATE = "malformed.package-coordinate"
     MALFORMED_VERDICT = "malformed.verdict"
+    MALFORMED_DEVICE_NUMBER = "malformed.device-number"
     MALFORMED_STORE_MARK = "malformed.store-mark"
     MALFORMED_TREE_ROW = "malformed.tree-row"
     MALFORMED_PROOF_REFERENCE = "malformed.proof-reference"

@@ -226,3 +226,134 @@ def test_a_made_directory_exists_afterwards(
     files.make_directory(target, mode=quantities.FileMode(0o700))
 
     assert files.exists(target)
+
+
+def link_from(
+    files: files_port.FileSystemPort, path: safepaths.SafePath, *, to: safepaths.SafePath
+) -> None:
+    """The one place the two adapters differ: a link is on disk, or declared to the fake."""
+    from apex.adapters.fakes import fake_files
+
+    if isinstance(files, fake_files.MemoryFiles):
+        files.symlink(path, target=to)
+    else:
+        path.path.parent.mkdir(parents=True, exist_ok=True)
+        path.path.symlink_to(to.path)
+
+
+def at(root: safepaths.RuntimeRoot, name: str) -> safepaths.SafePath:
+    """A path spelt below the root without resolving it, which `child` would do to a link."""
+    return safepaths.SafePath(root.path / name)
+
+
+def test_listing_a_directory_reports_its_direct_children_only(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    private = quantities.FileMode(0o600)
+    files.write_atomic(root.child("bundle/a.txt"), b"a", mode=private)
+    files.write_atomic(root.child("bundle/nested/b.txt"), b"b", mode=private)
+    link_from(files, at(root, "bundle/alias"), to=root.child("bundle/a.txt"))
+
+    listed = {entry.relative: entry.kind for entry in files.list_directory(root.child("bundle"))}
+
+    assert listed == {
+        "a.txt": files_port.EntryKind.REGULAR,
+        "alias": files_port.EntryKind.SYMLINK,
+        "nested": files_port.EntryKind.DIRECTORY,
+    }
+
+
+def test_listing_an_absent_directory_directly_is_a_port_failure(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    with pytest.raises(errors.PortFailure):
+        files.list_directory(root.child("absent"))
+
+
+def test_resolving_follows_every_link_to_the_file(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    files.write_atomic(root.child("devices/vda"), b"", mode=quantities.FileMode(0o600))
+    link_from(files, at(root, "class/vda"), to=root.child("devices/vda"))
+    link_from(files, at(root, "alias"), to=root.child("class/vda"))
+
+    assert files.resolve(at(root, "alias")) == root.child("devices/vda")
+
+
+def test_a_read_through_a_link_reaches_the_target(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    files.write_atomic(root.child("devices/vda/dev"), b"253:0\n", mode=quantities.FileMode(0o600))
+    link_from(files, at(root, "class/vda"), to=root.child("devices/vda"))
+
+    assert files.read_bytes(at(root, "class/vda/dev"), limit=16) == b"253:0\n"
+
+
+def test_resolving_a_dangling_link_is_a_port_failure(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    link_from(files, at(root, "dangling"), to=root.child("absent"))
+
+    with pytest.raises(errors.PortFailure):
+        files.resolve(at(root, "dangling"))
+
+
+def test_inspecting_a_file_reports_its_kind_and_mode_and_no_device(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    files.write_atomic(root.child("guard.sh"), b"#!/bin/sh\n", mode=quantities.FileMode(0o755))
+
+    seen = files.inspect(root.child("guard.sh"))
+
+    assert seen.kind is files_port.EntryKind.REGULAR
+    assert seen.mode == quantities.FileMode(0o755)
+    assert seen.device is None
+    assert seen.label is None or isinstance(seen.label, str)
+
+
+def test_inspecting_a_link_reports_the_link_and_never_follows_it(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    files.write_atomic(root.child("guard.sh"), b"#!/bin/sh\n", mode=quantities.FileMode(0o755))
+    link_from(files, at(root, "alias"), to=root.child("guard.sh"))
+
+    assert files.inspect(at(root, "alias")).kind is files_port.EntryKind.SYMLINK
+
+
+def test_inspecting_an_absent_path_is_a_port_failure(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    with pytest.raises(errors.PortFailure):
+        files.inspect(root.child("absent"))
+
+
+def test_a_device_node_reports_its_number() -> None:
+    """The real adapter reads the null device every Linux host has; the fake is told one."""
+    from pathlib import Path
+
+    from apex.adapters.fakes import fake_files
+    from apex.adapters.real import real_files
+
+    null = safepaths.SafePath(Path("/dev/null"))
+    fake = fake_files.MemoryFiles()
+    fake.devices[str(null)] = files_port.DeviceNumber(1, 3)
+
+    real_seen = real_files.LocalFiles().inspect(null)
+    fake_seen = fake.inspect(null)
+
+    assert real_seen.device == files_port.DeviceNumber(1, 3)
+    assert real_seen.kind is files_port.EntryKind.OTHER
+    assert fake_seen.device == real_seen.device
+    assert fake_seen.kind is real_seen.kind
+
+
+def test_a_device_number_is_parsed_from_the_sysfs_spelling() -> None:
+    number = files_port.DeviceNumber.parse("253:16\n")
+
+    assert (number.major, number.minor) == (253, 16)
+    assert number.rendered == "253:16"
+
+
+def test_a_device_number_that_is_not_two_integers_is_refused() -> None:
+    with pytest.raises(errors.Refusal):
+        files_port.DeviceNumber.parse("vda")

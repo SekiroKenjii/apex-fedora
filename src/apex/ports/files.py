@@ -11,7 +11,7 @@ import enum
 from abc import abstractmethod
 from typing import Protocol
 
-from apex.kernel import claims, identifiers, quantities, safepaths
+from apex.kernel import claims, errors, identifiers, quantities, refusals, safepaths
 
 
 class EntryKind(enum.StrEnum):
@@ -25,6 +25,43 @@ class EntryKind(enum.StrEnum):
 class TreeEntry:
     relative: str
     kind: EntryKind
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class DeviceNumber:
+    """The kernel's name for a device node; sysfs spells it `major:minor`."""
+
+    major: int
+    minor: int
+
+    @classmethod
+    def parse(cls, text: str) -> DeviceNumber:
+        major, separator, minor = text.strip().partition(":")
+        if not separator or not major.isdigit() or not minor.isdigit():
+            raise errors.Refusal(
+                refusals.RefusalReason.MALFORMED_DEVICE_NUMBER, subject=text.strip()
+            )
+        return cls(int(major), int(minor))
+
+    @property
+    def rendered(self) -> str:
+        return f"{self.major}:{self.minor}"
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Inspection:
+    """What `lstat` and the security label say about one path, without following a link.
+
+    `device` is the number of a block or character node and nothing else, so a caller that
+    wants to know a node is the device sysfs described compares one field.
+    """
+
+    kind: EntryKind
+    owner: int
+    group: int
+    mode: quantities.FileMode
+    label: str | None
+    device: DeviceNumber | None
 
 
 class FileSystemPort(Protocol):
@@ -92,3 +129,16 @@ class FileSystemPort(Protocol):
     def list_tree(self, directory: safepaths.SafePath) -> tuple[TreeEntry, ...]:
         """Every entry below a directory, symlinks reported as symlinks and never followed."""
         ...
+
+    @abstractmethod
+    def list_directory(self, directory: safepaths.SafePath) -> tuple[TreeEntry, ...]:
+        """The entries of one directory only, sorted by name, symlinks never followed."""
+        ...
+
+    @abstractmethod
+    def resolve(self, path: safepaths.SafePath) -> safepaths.SafePath:
+        """The path with every symlink followed; refused when any link is dangling."""
+        ...
+
+    @abstractmethod
+    def inspect(self, path: safepaths.SafePath) -> Inspection: ...
