@@ -15,6 +15,9 @@ from apex.kernel import commands, errors, quantities, refusals, safepaths
 MAXIMUM_EXTRA_DISKS = 2
 LOOPBACK = "127.0.0.1"
 QEMU_PROGRAM = "qemu-system-x86_64"
+SERIAL_CHARDEV = "apex-serial"
+# `sun_path` on Linux holds 108 bytes including the terminator.
+SOCKET_PATH_LIMIT = 108
 
 
 class VmRole(enum.StrEnum):
@@ -79,6 +82,35 @@ class SerialFile:
 
     def render(self) -> tuple[str, ...]:
         return ("-serial", f"file:{self.path}")
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class SerialSocket:
+    """Serial input and output over a socket, with the transcript appended to a log file."""
+
+    path: safepaths.SafePath
+    log: safepaths.SafePath
+
+    def __post_init__(self) -> None:
+        if len(str(self.path).encode()) >= SOCKET_PATH_LIMIT:
+            raise errors.Refusal(
+                refusals.RefusalReason.SOCKET_PATH_TOO_LONG,
+                subject=str(self.path),
+                remedy="place the runtime root at a shorter path",
+            )
+
+    def render(self) -> tuple[str, ...]:
+        options = (
+            f"socket,id={SERIAL_CHARDEV},path={self.path},server=on,wait=off,"
+            f"logfile={self.log},logappend=on"
+        )
+        return ("-chardev", options, "-serial", f"chardev:{SERIAL_CHARDEV}")
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class BootFromCdrom:
+    def render(self) -> tuple[str, ...]:
+        return ("-boot", "order=d")
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -151,14 +183,16 @@ class NoNetwork:
         return ("-nic", "none")
 
 
+type Serial = SerialFile | SerialSocket
 type QemuDevice = (
-    Machine | Firmware | Display | MonitorSocket | SerialFile | RootDisk | ExtraDisk
-    | Cdrom | UsbController | UsbStorage | RestrictedNet | NoNetwork
+    Machine | Firmware | Display | MonitorSocket | SerialFile | SerialSocket | RootDisk
+    | ExtraDisk | Cdrom | UsbController | UsbStorage | RestrictedNet | NoNetwork
+    | BootFromCdrom
 )
 
 DEVICE_TYPES: tuple[type, ...] = (
-    Machine, Firmware, Display, MonitorSocket, SerialFile, RootDisk, ExtraDisk,
-    Cdrom, UsbController, UsbStorage, RestrictedNet, NoNetwork,
+    Machine, Firmware, Display, MonitorSocket, SerialFile, SerialSocket, RootDisk,
+    ExtraDisk, Cdrom, UsbController, UsbStorage, RestrictedNet, NoNetwork, BootFromCdrom,
 )
 
 
@@ -176,28 +210,31 @@ class VmSpec:
     extra_disks: tuple[safepaths.SafePath, ...]
 
     @classmethod
-    def build(
+    def build(  # noqa: PLR0913
         cls,
         *,
         role: VmRole,
         resources: VmResources,
         root_disk: safepaths.SafePath,
         firmware: Firmware,
+        monitor: MonitorSocket,
+        serial: Serial,
         extra_disks: tuple[safepaths.SafePath, ...] = (),
         seed: safepaths.SafePath | None = None,
         network: RestrictedNet | None = None,
+        usb: UsbController | None = None,
+        boot_usb: UsbStorage | None = None,
+        boot_from_cdrom: bool = False,
     ) -> Self:
-        if extra_disks and not role.is_disposable:
-            raise errors.Refusal(
-                refusals.RefusalReason.DEVICE_NOT_PERMITTED_FOR_ROLE,
-                subject=f"{len(extra_disks)} extra disks on a {role} machine",
-                remedy="additional disks are restricted to disposable test machines",
-            )
+        _require_disposable_for(role, extra_disks=extra_disks, serial=serial, usb=usb,
+                                boot_usb=boot_usb)
+        _require_consistent(seed=seed, network=network, usb=usb, boot_usb=boot_usb,
+                            extra_disks=extra_disks, boot_from_cdrom=boot_from_cdrom)
         if len(extra_disks) > MAXIMUM_EXTRA_DISKS:
             raise errors.Refusal(
                 refusals.RefusalReason.TOO_MANY_DEVICES, subject=f"{len(extra_disks)} extra disks"
             )
-        attached = [root_disk, *extra_disks]
+        attached = [root_disk, *extra_disks, *([boot_usb.path] if boot_usb else [])]
         if len({str(item) for item in attached}) != len(attached):
             raise errors.Refusal(
                 refusals.RefusalReason.DUPLICATE_DEVICE,
@@ -206,13 +243,21 @@ class VmSpec:
         devices: list[QemuDevice] = [
             Machine(processors=resources.processors, memory=resources.memory),
             Display(),
+            monitor,
+            serial,
             firmware,
             RootDisk(root_disk, discard_unmap=role is VmRole.BUILDER),
         ]
         if seed is not None:
             devices.append(Cdrom(seed))
+        if usb is not None:
+            devices.append(usb)
         devices.extend(ExtraDisk(path, index) for index, path in enumerate(extra_disks, 1))
+        if boot_usb is not None:
+            devices.append(boot_usb)
         devices.append(network if network is not None else NoNetwork())
+        if boot_from_cdrom:
+            devices.append(BootFromCdrom())
         return cls(
             role=role, resources=resources, devices=tuple(devices), extra_disks=extra_disks
         )
@@ -222,6 +267,55 @@ class VmSpec:
         for device in self.devices:
             arguments.extend(device.render())
         return commands.Argv.of(QEMU_PROGRAM, *arguments)
+
+
+def _require_disposable_for(
+    role: VmRole,
+    *,
+    extra_disks: tuple[safepaths.SafePath, ...],
+    serial: Serial,
+    usb: UsbController | None,
+    boot_usb: UsbStorage | None,
+) -> None:
+    if role.is_disposable:
+        return
+    wanted = {
+        f"{len(extra_disks)} extra disks": bool(extra_disks),
+        "a serial socket": isinstance(serial, SerialSocket),
+        "an emulated usb controller": usb is not None,
+        "a bootable usb image": boot_usb is not None,
+    }
+    for subject, present in wanted.items():
+        if present:
+            raise errors.Refusal(
+                refusals.RefusalReason.DEVICE_NOT_PERMITTED_FOR_ROLE,
+                subject=f"{subject} on a {role} machine",
+                remedy="these devices are restricted to disposable test machines",
+            )
+
+
+def _require_consistent(
+    *,
+    seed: safepaths.SafePath | None,
+    network: RestrictedNet | None,
+    usb: UsbController | None,
+    boot_usb: UsbStorage | None,
+    extra_disks: tuple[safepaths.SafePath, ...],
+    boot_from_cdrom: bool,
+) -> None:
+    if boot_from_cdrom and seed is None:
+        raise errors.Refusal(
+            refusals.RefusalReason.TOPOLOGY_INCONSISTENT,
+            subject="booting from a cdrom that is not attached",
+        )
+    if boot_usb is None:
+        return
+    if usb is None or seed is not None or network is not None or len(extra_disks) != 1:
+        raise errors.Refusal(
+            refusals.RefusalReason.TOPOLOGY_INCONSISTENT,
+            subject="usb boot",
+            remedy="usb boot takes the controller, one other disk, no cdrom and no network",
+        )
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

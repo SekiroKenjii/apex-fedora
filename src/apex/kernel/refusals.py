@@ -77,6 +77,8 @@ class RefusalReason(enum.StrEnum):
     DUPLICATE_DEVICE = "machine.duplicate-device"
     TOO_MANY_DEVICES = "machine.too-many-devices"
     NOT_A_DISPOSABLE_MACHINE = "machine.not-disposable"
+    TOPOLOGY_INCONSISTENT = "machine.topology-inconsistent"
+    SOCKET_PATH_TOO_LONG = "machine.socket-path-too-long"
 
     LOCK_HELD = "lock.held"
     ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"
