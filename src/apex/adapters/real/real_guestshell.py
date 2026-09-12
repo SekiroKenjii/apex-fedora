@@ -34,7 +34,11 @@ class OpensshGuestShell(guestshell.GuestShellPort):
             run.script.rendered(),
         )
         return self._processes.run(
-            argv, deadline=run.deadline, limit=run.limit, transcript=run.transcript
+            argv,
+            deadline=run.deadline,
+            limit=run.limit,
+            stdin=run.stdin,
+            transcript=run.transcript,
         )
 
     def send(

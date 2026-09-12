@@ -72,6 +72,8 @@ time.sleep(30)
 SSH_SHIM = f"""#!{sys.executable}
 import sys
 sys.stdout.write(sys.argv[-1])
+sys.stdout.flush()
+sys.stdout.buffer.write(sys.stdin.buffer.read())
 """
 SCP_SHIM = f"""#!{sys.executable}
 import os, shutil, sys

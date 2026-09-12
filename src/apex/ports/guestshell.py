@@ -86,6 +86,7 @@ class GuestRun:
     deadline: timing.Deadline
     limit: commands.OutputLimit
     transcript: safepaths.SafePath | None = None
+    stdin: bytes | None = None
 
 
 class GuestShellPort(Protocol):
