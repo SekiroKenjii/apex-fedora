@@ -59,6 +59,6 @@ max-statements = 40
 ban-relative-imports = "all"
 
 [tool.pyright]
-include = ["src", "tools/migration", "tests/unit", "tests/contract", "tests/architecture", "tests/pipelines"]
+include = ["src", "tools/migration", "tests/unit", "tests/contract", "tests/architecture", "tests/pipelines", "tests/property"]
 extraPaths = ["src", "tools"]
 typeCheckingMode = "standard"
