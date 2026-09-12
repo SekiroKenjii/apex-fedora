@@ -197,7 +197,7 @@ plans:
     uv run --no-project --python {{python}} python tools/migration/golden_plans.py check
 
 lint:
-    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check src tools/migration tests/unit tests/pipelines tests/architecture tests/contract
+    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit tests/pipelines tests/architecture tests/contract
 
 readiness-shadow:
     uv run --no-project --python {{python}} python tools/migration/readiness_shadow.py

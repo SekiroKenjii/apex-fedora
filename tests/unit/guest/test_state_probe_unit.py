@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from apex.guest.units import state_probe_unit
-
 from apex.adapters.fakes import fake_clock, fake_files, fake_process
 from apex.guest import agentports, units
+from apex.guest.units import state_probe_unit
 from apex.kernel import identifiers
 
 OLDER_OBSERVATIONS = {
