@@ -12,7 +12,7 @@ import sys
 from collections.abc import Sequence
 from typing import TextIO
 
-from apex.adapters.real import real_clock, real_files, real_process
+from apex.adapters.real import real_clock, real_containers, real_files, real_process
 from apex.agent import agentports, requests, serialframe, units
 from apex.kernel import encoding, errors, identifiers
 
@@ -29,10 +29,12 @@ def version() -> str:
 
 
 def real_ports() -> agentports.AgentPorts:
+    processes = real_process.SubprocessRunner()
     return agentports.AgentPorts(
-        processes=real_process.SubprocessRunner(),
+        processes=processes,
         files=real_files.LocalFiles(),
         clock=real_clock.SystemClock(),
+        containers=real_containers.PodmanEngine(processes),
     )
 
 
