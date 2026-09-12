@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from apex.kernel import claims, errors, hashing, identifiers, safepaths
+from apex.ports import digesting
 
 
-class CountingDigests:
+class CountingDigests(digesting.DigestPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self) -> None:

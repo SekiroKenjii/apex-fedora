@@ -5,9 +5,10 @@ from __future__ import annotations
 import subprocess
 
 from apex.kernel import bounded, claims, commands, errors, timing
+from apex.ports import process
 
 
-class SubprocessRunner:
+class SubprocessRunner(process.ProcessPort):
     environment = claims.EnvironmentKind.BUILD
 
     def run(

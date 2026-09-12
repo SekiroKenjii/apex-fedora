@@ -6,6 +6,7 @@ and a deadline is a required keyword, so a run without a bound cannot be written
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Protocol
 
 from apex.kernel import claims, commands, timing
@@ -14,6 +15,7 @@ from apex.kernel import claims, commands, timing
 class ProcessPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def run(
         self,
         argv: commands.Argv,

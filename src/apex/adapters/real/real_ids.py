@@ -5,9 +5,10 @@ from __future__ import annotations
 import secrets
 
 from apex.kernel import claims, identifiers
+from apex.ports import ids
 
 
-class RandomIdentities:
+class RandomIdentities(ids.IdentityPort):
     environment = claims.EnvironmentKind.BUILD
 
     def run_id(self) -> identifiers.RunId:

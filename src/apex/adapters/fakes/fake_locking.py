@@ -9,7 +9,7 @@ from apex.kernel import claims, errors, refusals
 from apex.ports import locking
 
 
-class MemoryLocks:
+class MemoryLocks(locking.LockPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self) -> None:

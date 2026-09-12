@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+from abc import abstractmethod
 from collections.abc import Mapping
 from typing import Protocol
 
@@ -22,12 +23,14 @@ class QmpCommand:
 
 
 class QmpSession(Protocol):
+    @abstractmethod
     def execute(self, command: QmpCommand) -> object: ...
 
 
 class QmpPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def connect(
         self, socket_path: safepaths.SafePath, *, deadline: timing.Deadline
     ) -> contextlib.AbstractContextManager[QmpSession]: ...

@@ -9,6 +9,7 @@ from __future__ import annotations
 import dataclasses
 
 from apex.kernel import bounded, claims, commands, errors, timing
+from apex.ports import process
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -20,7 +21,7 @@ class Reply:
     missing: bool = False
 
 
-class ScriptedProcess:
+class ScriptedProcess(process.ProcessPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self, replies: dict[tuple[str, ...], Reply] | None = None) -> None:

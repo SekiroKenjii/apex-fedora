@@ -18,7 +18,7 @@ PRIVATE_DIRECTORY = 0o700
 ARCHIVE_MODE = quantities.FileMode(0o600)
 
 
-class TarArchives:
+class TarArchives(archives.ArchivePort):
     environment = claims.EnvironmentKind.BUILD
 
     def bundle(

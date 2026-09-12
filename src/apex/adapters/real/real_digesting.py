@@ -8,9 +8,10 @@ that keeps this an optimisation.
 from __future__ import annotations
 
 from apex.kernel import claims, errors, hashing, identifiers, safepaths
+from apex.ports import digesting
 
 
-class CachedDigests:
+class CachedDigests(digesting.DigestPort):
     environment = claims.EnvironmentKind.BUILD
 
     def __init__(self) -> None:

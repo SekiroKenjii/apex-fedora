@@ -12,6 +12,7 @@ clock that jumps cannot reorder evidence.
 from __future__ import annotations
 
 import dataclasses
+from abc import abstractmethod
 from collections.abc import Callable
 from typing import Protocol
 
@@ -26,12 +27,16 @@ class Stamp:
 class ClockPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def now(self) -> timing.Instant: ...
 
+    @abstractmethod
     def stamp(self) -> Stamp: ...
 
+    @abstractmethod
     def sleep(self, span: timing.Elapsed) -> None: ...
 
+    @abstractmethod
     def wait_until(
         self, condition: Callable[[], bool], policy: timing.WaitPolicy
     ) -> timing.Elapsed: ...

@@ -7,6 +7,7 @@ swap to slip between.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Protocol
 
 from apex.kernel import claims, safepaths
@@ -15,12 +16,15 @@ from apex.kernel import claims, safepaths
 class SigningPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def verify(
         self, *, payload: bytes, signature: bytes, public_key: safepaths.RegularFile
     ) -> bool: ...
 
+    @abstractmethod
     def sign(self, *, payload: bytes, private_key: safepaths.RegularFile) -> bytes: ...
 
+    @abstractmethod
     def generate_key_pair(
         self, *, private_into: safepaths.SafePath, public_into: safepaths.SafePath
     ) -> None: ...

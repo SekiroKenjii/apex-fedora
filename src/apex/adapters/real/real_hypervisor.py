@@ -22,7 +22,7 @@ START_TICKS_FIELD = 19
 GONE_STATES = frozenset({"Z", "X"})
 
 
-class QemuHypervisor:
+class QemuHypervisor(hypervisor.HypervisorPort):
     environment = claims.EnvironmentKind.BUILD
 
     def __init__(self) -> None:

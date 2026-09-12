@@ -7,12 +7,13 @@ import subprocess
 from apex.adapters import parts
 from apex.config import defaults
 from apex.kernel import claims, errors, identifiers, locators, safepaths, timing
+from apex.ports import downloading
 
 PROGRAM = "curl"
 TIMEOUT_GRACE_SECONDS = 5
 
 
-class CurlDownloads:
+class CurlDownloads(downloading.DownloadPort):
     environment = claims.EnvironmentKind.BUILD
 
     def fetch(

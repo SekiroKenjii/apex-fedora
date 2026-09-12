@@ -9,7 +9,7 @@ from apex.kernel import claims, errors, safepaths, timing
 from apex.ports import qmp
 
 
-class ScriptedQmp:
+class ScriptedQmp(qmp.QmpPort, qmp.QmpSession):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(

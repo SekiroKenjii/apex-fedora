@@ -7,6 +7,7 @@ never replaces the destination.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Protocol
 
 from apex.kernel import claims, identifiers, locators, safepaths, timing
@@ -15,6 +16,7 @@ from apex.kernel import claims, identifiers, locators, safepaths, timing
 class DownloadPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def fetch(
         self,
         url: locators.HttpsUrl,

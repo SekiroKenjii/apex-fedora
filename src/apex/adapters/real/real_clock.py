@@ -10,7 +10,7 @@ from apex.kernel import claims, errors, timing
 from apex.ports import clock
 
 
-class SystemClock:
+class SystemClock(clock.ClockPort):
     environment = claims.EnvironmentKind.BUILD
 
     def now(self) -> timing.Instant:

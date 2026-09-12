@@ -16,7 +16,7 @@ EPOCH = timing.Instant(0)
 FIXED_ORIGIN = datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC)
 
 
-class ManualClock:
+class ManualClock(clock.ClockPort):
     environment = claims.EnvironmentKind.SIMULATED
 
     def __init__(self, start: timing.Instant = EPOCH) -> None:

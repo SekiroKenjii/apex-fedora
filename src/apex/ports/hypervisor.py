@@ -8,6 +8,7 @@ process identifier the kernel has since handed to something else cannot be signa
 from __future__ import annotations
 
 import dataclasses
+from abc import abstractmethod
 from typing import Protocol
 
 from apex.kernel import claims, quantities, safepaths, timing
@@ -24,8 +25,10 @@ class HostCapacity:
 class HypervisorPort(Protocol):
     environment: claims.EnvironmentKind
 
+    @abstractmethod
     def capacity(self, root: safepaths.RuntimeRoot) -> HostCapacity: ...
 
+    @abstractmethod
     def spawn(
         self,
         spec: machines.VmSpec,
@@ -41,8 +44,10 @@ class HypervisorPort(Protocol):
         """
         ...
 
+    @abstractmethod
     def running(self, identity: machines.VmIdentity) -> bool: ...
 
+    @abstractmethod
     def terminate(self, identity: machines.VmIdentity) -> None:
         """Kill the process, after checking that it is still the one the identity names."""
         ...

@@ -9,6 +9,7 @@ from pathlib import Path
 from apex.adapters import parts
 from apex.config import defaults
 from apex.kernel import claims, errors, safepaths
+from apex.ports import signing
 
 PROGRAM = "openssl"
 ALGORITHM = "ED25519"
@@ -34,7 +35,7 @@ def _succeed(arguments: list[str]) -> bytes:
     return completed.stdout
 
 
-class OpensslSigner:
+class OpensslSigner(signing.SigningPort):
     environment = claims.EnvironmentKind.BUILD
 
     def generate_key_pair(

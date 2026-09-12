@@ -16,7 +16,7 @@ GREETING_KEY = "QMP"
 CAPABILITIES = qmp.QmpCommand("qmp_capabilities")
 
 
-class UnixQmp:
+class UnixQmp(qmp.QmpPort):
     environment = claims.EnvironmentKind.BUILD
 
     @contextlib.contextmanager
@@ -40,7 +40,7 @@ class UnixQmp:
             connection.close()
 
 
-class _Session:
+class _Session(qmp.QmpSession):
     def __init__(self, stream: io.BufferedRWPair) -> None:
         self._stream = stream
         self._issued = 0
