@@ -38,6 +38,7 @@ class FakeRegistry(containers.ContainerEnginePort):
         self.keys: list[KeyPair] = []
         self.on_copy: Callable[[containers.ImageReference], None] | None = None
         self.on_key: Callable[[safepaths.SafePath], None] | None = None
+        self.rejections: dict[str, str] = {}
 
     @classmethod
     def with_shell_probe(cls) -> FakeRegistry:
@@ -106,6 +107,10 @@ class FakeRegistry(containers.ContainerEnginePort):
         signing: containers.SigstoreSigning | None,
     ) -> None:
         self.copies.append(Copied(source, destination, policy, signing))
+        if policy is not None and policy.path.name in self.rejections:
+            raise errors.PortFailure(
+                port="containers", cause=f"skopeo: {self.rejections[policy.path.name]}"
+            )
         if str(source) in self._manifests:
             self._manifests[str(destination)] = self._manifests[str(source)]
         if self.on_copy is not None:
