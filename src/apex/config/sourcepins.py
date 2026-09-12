@@ -22,8 +22,8 @@ class ReviewedLock:
     document: bytes
 
 
-def load(repository: safepaths.SourceRoot) -> ReviewedLock:
-    candidate = repository.path / LOCK_PATH
+def reviewed_document(candidate: Path) -> tuple[bytes, object]:
+    """A reviewed lock's bytes and the value they hold; absent, linked or unreadable is refused."""
     if candidate.is_symlink():
         raise errors.Refusal(refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(candidate))
     if not candidate.is_file():
@@ -34,9 +34,14 @@ def load(repository: safepaths.SourceRoot) -> ReviewedLock:
         )
     document = candidate.read_bytes()
     try:
-        parsed = json.loads(document)
+        parsed: object = json.loads(document)
     except (json.JSONDecodeError, UnicodeDecodeError) as fault:
         raise errors.Refusal(
             refusals.RefusalReason.LOCK_UNREADABLE, subject=str(candidate)
         ) from fault
+    return document, parsed
+
+
+def load(repository: safepaths.SourceRoot) -> ReviewedLock:
+    document, parsed = reviewed_document(repository.path / LOCK_PATH)
     return ReviewedLock(lock=sourcelock.parse(parsed), document=document)
