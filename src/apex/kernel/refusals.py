@@ -77,6 +77,7 @@ class RefusalReason(enum.StrEnum):
 
     PROBE_ENVIRONMENT_UNEXPECTED = "probe.environment-unexpected"
     SYSFS_ATTRIBUTE_MALFORMED = "probe.sysfs-attribute-malformed"
+    PROBE_DESTINATION_TAKEN = "probe.destination-taken"
 
     DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
     DUPLICATE_DEVICE = "machine.duplicate-device"

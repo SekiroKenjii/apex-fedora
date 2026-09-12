@@ -79,10 +79,12 @@ class MemoryFiles(files.FileSystemPort):
             raise errors.PortFailure(port="files", cause=f"{new}: File exists")
         self.copy(existing, new)
 
-    def reserve(self, path: safepaths.SafePath, *, size: quantities.ByteCount) -> None:
+    def reserve(
+        self, path: safepaths.SafePath, *, size: quantities.ByteCount, mode: quantities.FileMode
+    ) -> None:
         if str(path) in self._files:
             raise errors.PortFailure(port="files", cause=f"{path}: File exists")
-        self._files[str(path)] = StoredFile(b"", quantities.FileMode(0o600))
+        self._files[str(path)] = StoredFile(b"", mode)
         self.reserved[str(path)] = size
         self.writes.append(str(path))
 

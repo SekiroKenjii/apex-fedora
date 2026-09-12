@@ -93,9 +93,12 @@ class LocalFiles(files.FileSystemPort):
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
 
-    def reserve(self, path: safepaths.SafePath, *, size: quantities.ByteCount) -> None:
+    def reserve(
+        self, path: safepaths.SafePath, *, size: quantities.ByteCount, mode: quantities.FileMode
+    ) -> None:
         try:
             with path.path.open("xb") as handle:
+                os.fchmod(handle.fileno(), mode.value)
                 handle.truncate(size.value)
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error

@@ -181,11 +181,12 @@ def test_a_reserved_file_exists_and_is_never_replaced(
 ) -> None:
     image = target(root, "media.raw")
 
-    files.reserve(image, size=quantities.Mib(64).as_bytes())
+    files.reserve(image, size=quantities.Mib(64).as_bytes(), mode=quantities.FileMode(0o600))
 
     assert files.exists(image)
+    assert files.mode_of(image) == quantities.FileMode(0o600)
     with pytest.raises(errors.PortFailure):
-        files.reserve(image, size=quantities.Mib(1).as_bytes())
+        files.reserve(image, size=quantities.Mib(1).as_bytes(), mode=quantities.FileMode(0o600))
 
 
 def test_a_patch_changes_bytes_in_place(

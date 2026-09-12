@@ -24,7 +24,14 @@ def test_every_probe_module_declares_one_case_and_the_registry_holds_them_all() 
     modules = sorted(p for p in SOURCE.glob("*.py") if not p.name.startswith("_"))
 
     assert len(probes.registered()) == len(modules)
-    assert [str(case.unit) for case in probes.registered()] == ["live.observe", "ventoy.observe"]
+    assert [str(case.unit) for case in probes.registered()] == [
+        "guest.diagnostics",
+        "installer.diagnostics",
+        "live.observe",
+        "recovery.installed",
+        "recovery.prerequisites",
+        "ventoy.observe",
+    ]
 
 
 def test_every_case_names_a_unit_the_agent_declares() -> None:
