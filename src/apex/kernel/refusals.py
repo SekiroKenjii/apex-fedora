@@ -75,6 +75,9 @@ class RefusalReason(enum.StrEnum):
     UNIT_UNKNOWN = "agent.unit-unknown"
     AGENT_REFUSED = "agent.refused"
 
+    PROBE_ENVIRONMENT_UNEXPECTED = "probe.environment-unexpected"
+    SYSFS_ATTRIBUTE_MALFORMED = "probe.sysfs-attribute-malformed"
+
     DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
     DUPLICATE_DEVICE = "machine.duplicate-device"
     TOO_MANY_DEVICES = "machine.too-many-devices"

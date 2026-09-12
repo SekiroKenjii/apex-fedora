@@ -104,7 +104,9 @@ class MemoryFiles(files.FileSystemPort):
 
     def exists(self, path: safepaths.SafePath) -> bool:
         name = self._canonical(str(path))
-        return name in self._files or name in self.directories or name in self.devices
+        if name in self._files or name in self.directories or name in self.devices:
+            return True
+        return any(stored.startswith(name + "/") for stored in self._files)
 
     def mode_of(self, path: safepaths.SafePath) -> quantities.FileMode:
         stored = self._files.get(str(path))
