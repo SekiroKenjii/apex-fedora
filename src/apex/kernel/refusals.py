@@ -92,6 +92,12 @@ class RefusalReason(enum.StrEnum):
     DISK_NOT_STANDALONE = "disk.not-standalone"
     DISK_OVERLAY_EXISTS = "disk.overlay-exists"
 
+    FIXTURE_ENTRY_MALFORMED = "fixture.entry-malformed"
+    FIXTURE_PATH_NOT_ISOLATED = "fixture.path-not-isolated"
+    FIXTURE_REQUEST_MALFORMED = "fixture.request-malformed"
+    FIXTURE_REPORT_MALFORMED = "fixture.report-malformed"
+    FIXTURE_STATE_UNEXPECTED = "fixture.state-unexpected"
+
     LOCK_HELD = "lock.held"
     ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"
 
