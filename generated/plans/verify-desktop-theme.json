@@ -1,0 +1,124 @@
+{
+ "digest": "89188383c0863f80352f03b7d7fda586d0bb4584f2cfec8e0795d3afbd8485ef",
+ "name": "verify-desktop-theme",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.window-gtk3",
+   "reads": [
+    "agent.install",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.window.gtk3"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.window-adwaita",
+   "reads": [
+    "agent.install",
+    "judged.window.gtk3",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.window.adwaita"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "writes-runtime"
+   ],
+   "id": "desktop.shell-surface",
+   "reads": [
+    "judged.window.adwaita",
+    "judged.window.gtk3",
+    "machine.monitor",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "judged.shell.surface"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "desktop.theme-settings",
+   "reads": [
+    "agent.install",
+    "judged.shell.surface",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.theme.settings"
+   ]
+  },
+  {
+   "attests": [
+    "desktop.theme-surfaces"
+   ],
+   "effects": [
+    "emits-evidence",
+    "writes-runtime"
+   ],
+   "id": "attest.desktop.theme-surfaces",
+   "reads": [
+    "candidate.digest",
+    "evidence.recorder",
+    "guest.witness",
+    "judged.shell.surface",
+    "judged.theme.settings",
+    "judged.window.adwaita",
+    "judged.window.gtk3"
+   ],
+   "writes": [
+    "minted.desktop.theme-surfaces"
+   ]
+  }
+ ]
+}

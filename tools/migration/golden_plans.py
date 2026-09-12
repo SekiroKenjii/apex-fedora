@@ -23,7 +23,7 @@ from apex.composition.recipes import (  # noqa: E402
     live_artifact_recipe,
 )
 from apex.pipeline import plans  # noqa: E402
-from apex.verification.recipes import live_protection_recipe  # noqa: E402
+from apex.verification.recipes import desktop_theme_recipe, live_protection_recipe  # noqa: E402
 
 DIRECTORY = REPOSITORY / "generated" / "plans"
 RECIPES = {
@@ -32,6 +32,7 @@ RECIPES = {
     disk_artifact_recipe.NAME: disk_artifact_recipe.PLAN,
     live_artifact_recipe.NAME: live_artifact_recipe.PLAN,
     live_protection_recipe.NAME: live_protection_recipe.PLAN,
+    desktop_theme_recipe.NAME: desktop_theme_recipe.PLAN,
 }
 
 
