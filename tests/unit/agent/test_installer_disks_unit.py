@@ -12,6 +12,7 @@ from apex.adapters.fakes import (
     fake_clock,
     fake_containers,
     fake_digesting,
+    fake_extents,
     fake_files,
     fake_ids,
     fake_process,
@@ -99,6 +100,7 @@ def bundle(root: Path, *, builder: bool = True) -> agentports.AgentPorts:
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
     )
 
 

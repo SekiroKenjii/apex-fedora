@@ -24,6 +24,7 @@ from apex.adapters.fakes import (
     fake_clock,
     fake_containers,
     fake_digesting,
+    fake_extents,
     fake_files,
     fake_ids,
     fake_process,
@@ -120,6 +121,7 @@ def newer_calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[st
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
     )
     monkeypatch.setattr(builder.os, "geteuid", lambda: 0)
     installer_disks_unit.run(

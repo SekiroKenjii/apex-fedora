@@ -188,6 +188,17 @@ def test_a_reserved_file_exists_and_is_never_replaced(
         files.reserve(image, size=quantities.Mib(1).as_bytes())
 
 
+def test_a_patch_changes_bytes_in_place(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    blob = target(root, "blob")
+    files.write_atomic(blob, b"0123456789", mode=quantities.FileMode(0o600))
+
+    files.patch(blob, offset=2, payload=b"XY")
+
+    assert files.read_bytes(blob, limit=64) == b"01XY456789"
+
+
 def test_a_removed_file_is_gone_and_a_second_removal_fails(
     files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
 ) -> None:

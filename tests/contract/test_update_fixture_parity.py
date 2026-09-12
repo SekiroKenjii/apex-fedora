@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_ids, fake_process
+from apex.adapters.fakes import fake_clock, fake_extents, fake_ids, fake_process
 from apex.adapters.real import real_archives, real_containers, real_digesting, real_files
 from apex.agent import agentports, builder
 from apex.agent.units import update_fixture_unit
@@ -171,6 +171,7 @@ def newer_calls(work: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
         digests=real_digesting.CachedDigests(),
         archives=real_archives.TarArchives(),
         identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
     )
     update_fixture_unit.run(ports, arguments={"work": str(work)})
     return [list(call) for call in process.calls]

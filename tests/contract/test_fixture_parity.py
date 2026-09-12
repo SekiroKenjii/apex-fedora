@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 
 from apex.kernel import errors, hashing, identifiers, safepaths
+from apex.model import extents
 from apex.provisioning.fixtures import (
-    dedupe_fixture,
     initramfs_fixture,
     recovery_fixture,
     update_fixture,
@@ -212,7 +212,7 @@ def test_the_ventoy_request_is_accepted_and_refused_alike(tmp_path: Path) -> Non
 def test_the_dedupe_ioctl_layout_is_unchanged() -> None:
     legacy = older("dedupe-update-blobs")
 
-    assert dedupe_fixture.FIDEDUPERANGE == legacy.FIDEDUPERANGE
-    assert dedupe_fixture.HEADER.format == legacy.HEADER.format
-    assert dedupe_fixture.INFO.format == legacy.INFO.format
-    assert dedupe_fixture.CHUNK.bytes == legacy.CHUNK
+    assert extents.FIDEDUPERANGE == legacy.FIDEDUPERANGE
+    assert extents.HEADER.format == legacy.HEADER.format
+    assert extents.INFO.format == legacy.INFO.format
+    assert extents.CHUNK.bytes == legacy.CHUNK

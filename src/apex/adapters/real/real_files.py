@@ -95,6 +95,16 @@ class LocalFiles(files.FileSystemPort):
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
 
+    def patch(self, path: safepaths.SafePath, *, offset: int, payload: bytes) -> None:
+        try:
+            with path.path.open("r+b") as handle:
+                handle.seek(offset)
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
     def remove(self, path: safepaths.SafePath) -> None:
         try:
             path.path.unlink()

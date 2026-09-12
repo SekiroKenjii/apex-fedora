@@ -70,6 +70,11 @@ class FileSystemPort(Protocol):
         ...
 
     @abstractmethod
+    def patch(self, path: safepaths.SafePath, *, offset: int, payload: bytes) -> None:
+        """Overwrite bytes in place, in the same inode. Exists for one self test."""
+        ...
+
+    @abstractmethod
     def remove(self, path: safepaths.SafePath) -> None:
         """Remove one regular file. A directory is never removed through this port."""
         ...

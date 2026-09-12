@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from apex.kernel import errors, refusals
+from apex.model import extents
 from apex.provisioning.fixtures import (
-    dedupe_fixture,
     initramfs_fixture,
     installer_fixture,
     recovery_fixture,
@@ -147,29 +147,29 @@ def test_a_plan_digest_is_stable_across_key_order() -> None:
 
 
 def test_dedupe_spans_cover_the_aligned_prefix_only() -> None:
-    size = 2 * dedupe_fixture.CHUNK.bytes + 4096 + 100
+    size = 2 * extents.CHUNK.bytes + 4096 + 100
 
-    spans = dedupe_fixture.spans(size)
+    spans = extents.spans(size)
 
     assert [item.length for item in spans] == [
-        dedupe_fixture.CHUNK.bytes, dedupe_fixture.CHUNK.bytes, 4096
+        extents.CHUNK.bytes, extents.CHUNK.bytes, 4096
     ]
-    assert dedupe_fixture.shareable_length(size) == size - 100
+    assert extents.shareable_length(size) == size - 100
 
 
 def test_a_misaligned_dedupe_range_is_refused() -> None:
     with pytest.raises(errors.Refusal):
-        dedupe_fixture.DedupeRange(offset=1, length=4096)
+        extents.DedupeRange(offset=1, length=4096)
 
 
 def test_a_dedupe_buffer_reads_back_its_outcome() -> None:
-    buffer = dedupe_fixture.request_buffer(dedupe_fixture.DedupeRange(0, 4096), 7)
+    buffer = extents.request_buffer(extents.DedupeRange(0, 4096), 7)
 
-    outcome = dedupe_fixture.outcome_of(buffer)
+    outcome = extents.outcome_of(buffer)
 
     assert outcome.bytes_deduped == 0
     assert outcome.complete
-    assert len(buffer) == dedupe_fixture.HEADER.size + dedupe_fixture.INFO.size
+    assert len(buffer) == extents.HEADER.size + extents.INFO.size
 
 
 def test_the_update_policy_rejects_by_default_and_names_four_scopes() -> None:

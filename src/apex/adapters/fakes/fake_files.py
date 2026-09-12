@@ -71,6 +71,14 @@ class MemoryFiles(files.FileSystemPort):
         self.reserved[str(path)] = size
         self.writes.append(str(path))
 
+    def patch(self, path: safepaths.SafePath, *, offset: int, payload: bytes) -> None:
+        stored = self._files.get(str(path))
+        if stored is None:
+            raise errors.PortFailure(port="files", cause=f"{path}: no such file")
+        body = bytearray(stored.payload)
+        body[offset : offset + len(payload)] = payload
+        self._files[str(path)] = StoredFile(bytes(body), stored.mode)
+
     def remove(self, path: safepaths.SafePath) -> None:
         if str(path) not in self._files:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")

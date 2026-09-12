@@ -24,6 +24,7 @@ from apex.adapters.fakes import (
     fake_containers,
     fake_digesting,
     fake_downloading,
+    fake_extents,
     fake_files,
     fake_guestshell,
     fake_hypervisor,
@@ -39,6 +40,7 @@ from apex.adapters.real import (
     real_containers,
     real_digesting,
     real_downloading,
+    real_extents,
     real_files,
     real_guestshell,
     real_hypervisor,
@@ -319,3 +321,11 @@ def engines(
         yield real_containers.PodmanEngine(real_process.SubprocessRunner())
     else:
         yield fake_containers.FakeRegistry.with_shell_probe()
+
+
+@pytest.fixture(params=["real", "fake"])
+def shares(request: pytest.FixtureRequest) -> Iterator[object]:
+    if request.param == "real":
+        yield real_extents.LinuxExtents()
+    else:
+        yield fake_extents.FakeExtents()

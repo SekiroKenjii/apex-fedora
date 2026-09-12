@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_containers, fake_ids, fake_process
+from apex.adapters.fakes import fake_clock, fake_containers, fake_extents, fake_ids, fake_process
 from apex.adapters.real import real_archives, real_digesting, real_files
 from apex.agent import agentports, builder
 from apex.agent.units import ventoy_unit
@@ -109,6 +109,7 @@ def bundle(tmp_path: Path) -> tuple[agentports.AgentPorts, Answering]:
         digests=real_digesting.CachedDigests(),
         archives=real_archives.TarArchives(),
         identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
     )
     return ports, process
 
