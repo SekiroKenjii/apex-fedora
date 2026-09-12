@@ -7,8 +7,9 @@ press is the sequence of key codes the older tool sent, held for the same time.
 
 from __future__ import annotations
 
+from apex.composition import exports
 from apex.config import defaults
-from apex.kernel import safepaths
+from apex.kernel import identifiers, safepaths
 from apex.ports import portset, qmp
 
 SCREENDUMP = "screendump"
@@ -37,3 +38,10 @@ def press(ports: portset.HostPorts, monitor: safepaths.SafePath, *codes: str) ->
         session.execute(
             qmp.QmpCommand(SEND_KEY, {"keys": keys, "hold-time": defaults.KEY_HOLD_MILLISECONDS})
         )
+
+
+def capture_into(
+    root: safepaths.RuntimeRoot, run: identifiers.RunId, name: str
+) -> safepaths.SafePath:
+    """Where a run keeps a named capture: under its own export directory, never elsewhere."""
+    return exports.inside(root, run, f"{defaults.SCREENS_DIRECTORY}/{name}")

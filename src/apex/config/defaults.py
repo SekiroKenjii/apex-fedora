@@ -91,6 +91,21 @@ WINDOW_APPEARS = timing.WaitPolicy(
     description="the probe's window is presented",
 )
 SHELL_THEME_SOURCE = "/usr/share/apex/shell-theme-source.json"
+WINDOW_SETTLE = timing.Elapsed(3)
+SHELL_SETTLE = timing.Elapsed(2)
+BARS_APPEAR = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(45)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(1), ceiling=timing.Elapsed(1), factor=1
+    ),
+    description="the render probe's bars are visible",
+)
+ESCAPE_KEY = "esc"
+SHELL_SHORTCUT = ("meta_l", "s")
+SCREENS_DIRECTORY = "screens"
+GTK_THEME = "'Adwaita-dark'"
+SHELL_THEME = "'Shadcn-Graphite'"
+WAYLAND_DISPLAY = "GdkWaylandDisplay"
 BUILD_LOCK = safepaths.RemotePath("/run/apex-build.lock")
 REMOTE_PREFIX = "/var/tmp/apex-"
 REMOTE_DIRECTORY_MODE = "700"
