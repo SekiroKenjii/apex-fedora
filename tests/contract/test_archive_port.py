@@ -47,6 +47,25 @@ def test_an_archive_extracts_below_the_directory_it_is_given(
         assert (into.path / "ventoy-1.1.05" / "ventoy" / "version").read_bytes() == b"1.1.05"
 
 
+def test_a_packed_directory_is_named_as_asked(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    import tarfile  # noqa: PLC0415
+
+    bundle = root.child("bundle")
+    (bundle.path / "a").mkdir(parents=True)
+    (bundle.path / "a" / "manifest.json").write_bytes(b"{}")
+    into = root.child("payloads.tar")
+
+    archives.pack(bundle, into=into, name="run")
+
+    if isinstance(archives, fake_archives.MemoryArchives):
+        assert archives.packed[-1] == (bundle, into, "run")
+    else:
+        with tarfile.open(into.path) as opened:
+            assert "run/a/manifest.json" in opened.getnames()
+
+
 def test_bundling_produces_a_root_over_every_file(
     archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
 ) -> None:

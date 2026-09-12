@@ -188,6 +188,19 @@ def test_a_reserved_file_exists_and_is_never_replaced(
         files.reserve(image, size=quantities.Mib(1).as_bytes())
 
 
+def test_a_removed_file_is_gone_and_a_second_removal_fails(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    doomed = target(root, "doomed")
+    files.write_atomic(doomed, b"x", mode=quantities.FileMode(0o600))
+
+    files.remove(doomed)
+
+    assert not files.exists(doomed)
+    with pytest.raises(errors.PortFailure):
+        files.remove(doomed)
+
+
 def test_free_space_is_a_positive_count(
     files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
 ) -> None:

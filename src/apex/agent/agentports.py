@@ -11,7 +11,7 @@ import dataclasses
 from typing import Self
 
 from apex.kernel import claims
-from apex.ports import archives, clock, containers, digesting, files, planning, process
+from apex.ports import archives, clock, containers, digesting, files, ids, planning, process
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -22,6 +22,7 @@ class AgentPorts:
     containers: containers.ContainerEnginePort
     digests: digesting.DigestPort
     archives: archives.ArchivePort
+    identities: ids.IdentityPort
 
     @property
     def environment(self) -> claims.EnvironmentKind:
@@ -34,6 +35,7 @@ class AgentPorts:
                 self.containers,
                 self.digests,
                 self.archives,
+                self.identities,
             )
         )
 
@@ -45,4 +47,5 @@ class AgentPorts:
             containers=planning.refusing("containers"),
             digests=planning.refusing("digests"),
             archives=planning.refusing("archives"),
+            identities=planning.refusing("identities"),
         )

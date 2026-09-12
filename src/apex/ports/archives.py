@@ -59,6 +59,11 @@ class ArchivePort(Protocol):
     environment: claims.EnvironmentKind
 
     @abstractmethod
+    def pack(self, directory: safepaths.SafePath, *, into: safepaths.SafePath, name: str) -> None:
+        """Archive a directory under the given top-level name, every entry included."""
+        ...
+
+    @abstractmethod
     def extract(self, archive: safepaths.SafePath, *, into: safepaths.SafePath) -> None:
         """Unpack a tar archive below `into`, refusing members that would escape it."""
         ...

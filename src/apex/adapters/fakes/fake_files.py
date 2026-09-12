@@ -71,6 +71,11 @@ class MemoryFiles(files.FileSystemPort):
         self.reserved[str(path)] = size
         self.writes.append(str(path))
 
+    def remove(self, path: safepaths.SafePath) -> None:
+        if str(path) not in self._files:
+            raise errors.PortFailure(port="files", cause=f"{path}: no such file")
+        del self._files[str(path)]
+
     def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount:  # noqa: ARG002
         return self.free
 

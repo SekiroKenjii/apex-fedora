@@ -70,6 +70,11 @@ class FileSystemPort(Protocol):
         ...
 
     @abstractmethod
+    def remove(self, path: safepaths.SafePath) -> None:
+        """Remove one regular file. A directory is never removed through this port."""
+        ...
+
+    @abstractmethod
     def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount: ...
 
     @abstractmethod

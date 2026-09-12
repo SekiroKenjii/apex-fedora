@@ -95,6 +95,12 @@ class LocalFiles(files.FileSystemPort):
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
 
+    def remove(self, path: safepaths.SafePath) -> None:
+        try:
+            path.path.unlink()
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
     def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount:
         try:
             return quantities.ByteCount(shutil.disk_usage(path.path).free)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Callable
 
 from apex.kernel import claims, commands, errors, identifiers, safepaths
 from apex.ports import containers
@@ -35,6 +36,8 @@ class FakeRegistry(containers.ContainerEnginePort):
         self.runs: list[containers.RunRequest] = []
         self.copies: list[Copied] = []
         self.keys: list[KeyPair] = []
+        self.on_copy: Callable[[containers.ImageReference], None] | None = None
+        self.on_key: Callable[[safepaths.SafePath], None] | None = None
 
     @classmethod
     def with_shell_probe(cls) -> FakeRegistry:
@@ -105,11 +108,15 @@ class FakeRegistry(containers.ContainerEnginePort):
         self.copies.append(Copied(source, destination, policy, signing))
         if str(source) in self._manifests:
             self._manifests[str(destination)] = self._manifests[str(source)]
+        if self.on_copy is not None:
+            self.on_copy(destination)
 
     def generate_sigstore_key(
         self, *, prefix: safepaths.SafePath, passphrase: safepaths.SafePath
     ) -> None:
         self.keys.append(KeyPair(prefix=prefix, passphrase=passphrase))
+        if self.on_key is not None:
+            self.on_key(prefix)
 
     def running_containers(self) -> bytes:
         return self.containers_listing

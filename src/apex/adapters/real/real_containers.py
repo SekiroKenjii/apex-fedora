@@ -55,10 +55,10 @@ class PodmanEngine(containers.ContainerEnginePort):
 
     def run(self, request: containers.RunRequest) -> commands.CompletedRun:
         argv = [PODMAN, "run", "--rm"]
-        if request.read_only:
-            argv.append("--read-only")
         if request.network_none:
             argv += ["--network", "none"]
+        if request.read_only:
+            argv.append("--read-only")
         if request.entrypoint is not None:
             argv += ["--entrypoint", request.entrypoint]
         argv.append(request.image)

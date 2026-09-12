@@ -24,7 +24,7 @@ from typing import Any
 
 import pytest
 
-from apex.adapters.fakes import fake_clock, fake_containers, fake_process
+from apex.adapters.fakes import fake_clock, fake_containers, fake_ids, fake_process
 from apex.adapters.real import real_archives, real_digesting, real_files
 from apex.agent import agentports, builder
 from apex.agent.units import ventoy_unit
@@ -168,6 +168,7 @@ def newer_calls(
         containers=fake_containers.FakeRegistry(),
         digests=real_digesting.CachedDigests(),
         archives=real_archives.TarArchives(),
+        identities=fake_ids.SequenceIdentities(),
     )
     ventoy_unit.run(ports, arguments={"work": str(work)})
     calls = []

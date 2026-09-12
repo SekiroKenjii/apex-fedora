@@ -8,6 +8,7 @@ from apex.adapters.fakes import (
     fake_containers,
     fake_digesting,
     fake_files,
+    fake_ids,
     fake_process,
 )
 from apex.agent import agentports, units
@@ -46,6 +47,7 @@ def bundle(process: fake_process.ScriptedProcess) -> agentports.AgentPorts:
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
     )
 
 

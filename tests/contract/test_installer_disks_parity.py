@@ -25,6 +25,7 @@ from apex.adapters.fakes import (
     fake_containers,
     fake_digesting,
     fake_files,
+    fake_ids,
     fake_process,
 )
 from apex.agent import agentports, builder
@@ -118,6 +119,7 @@ def newer_calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[st
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
     )
     monkeypatch.setattr(builder.os, "geteuid", lambda: 0)
     installer_disks_unit.run(
