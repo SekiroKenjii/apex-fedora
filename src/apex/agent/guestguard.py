@@ -8,6 +8,7 @@ question the older script asked, through the ports, and refuses with the same st
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from apex.agent import agentports
@@ -17,6 +18,11 @@ from apex.ports import files
 
 ROOT_USER = 0
 CMDLINE = safepaths.SafePath(Path("/proc/cmdline"))
+SHELL_OWNER = commands.Argv.of(
+    "busctl", "--user", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
+    "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", "org.gnome.Shell",
+)
+SHELL_PID = re.compile(r"u [1-9][0-9]*")
 
 
 def refuse(detail: str) -> errors.Refusal:
@@ -89,3 +95,21 @@ def require_initramfs(ports: agentports.AgentPorts) -> None:
             raise refuse("the root filesystem is already mounted")
     if ports.files.exists(safepaths.SafePath(Path(defaults.PROTECTION_LATCH))):
         raise refuse("the protection latch is already set")
+
+
+def require_shell_session(ports: agentports.AgentPorts) -> None:
+    """Not root, virtual, and GNOME Shell on this user's bus: the session the older host used.
+
+    The desktop probes show windows in the logged-in user's session, so they run as that
+    user and never as root, and they ask the user's bus for the Shell's owner the way the
+    older host did before it launched anything.
+    """
+    if os.geteuid() == ROOT_USER:
+        raise refuse("running as root; the desktop probes run as the session's user")
+    require_virtual(ports)
+    completed = ports.processes.run(
+        SHELL_OWNER, deadline=defaults.PROBE_DEADLINE, limit=commands.OutputLimit.default()
+    )
+    owner = completed.stdout.decode(errors="replace").strip()
+    if not completed.succeeded or SHELL_PID.fullmatch(owner) is None:
+        raise refuse("GNOME Shell is not on this user's bus")

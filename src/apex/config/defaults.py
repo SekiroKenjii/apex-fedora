@@ -83,6 +83,14 @@ PARTITION_APPEARS = timing.WaitPolicy(
     description="the partition node appears",
 )
 PACKAGE_INSTALL_DEADLINE = timing.Deadline(timing.Elapsed(1800))
+WINDOW_APPEARS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(30)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(1), ceiling=timing.Elapsed(1), factor=1
+    ),
+    description="the probe's window is presented",
+)
+SHELL_THEME_SOURCE = "/usr/share/apex/shell-theme-source.json"
 BUILD_LOCK = safepaths.RemotePath("/run/apex-build.lock")
 REMOTE_PREFIX = "/var/tmp/apex-"
 REMOTE_DIRECTORY_MODE = "700"
@@ -109,6 +117,8 @@ MONITOR_POLL = timing.Elapsed(0.05)
 REAP_DEADLINE = timing.Deadline(timing.Elapsed(5))
 QMP_DEADLINE = timing.Deadline(timing.Elapsed(10))
 QMP_LINE_LIMIT = bounded.Limit(1024 * 1024)
+SCREEN_LIMIT = bounded.Limit(64 * 1024 * 1024)
+KEY_HOLD_MILLISECONDS = 40
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

@@ -70,8 +70,13 @@ def run_unit(
     unit: identifiers.ProbeId,
     arguments: Mapping[str, encoding.JsonValue],
     token: identifiers.Token,
+    privileged: bool = True,
 ) -> agentwire.AgentReply:
-    """One request in, one framed reply out, run as root under the guest's build lock."""
+    """One request in, one framed reply out.
+
+    A privileged request runs as root under the guest's build lock. A session request runs
+    as the shell's own user with no lock, which is how a unit reaches that user's desktop.
+    """
     request = agentwire.AgentRequest(
         host_version=distribution.installed_version(),
         unit=unit,
@@ -84,12 +89,12 @@ def run_unit(
             "run", "--framed", str(token),
         )
     )
+    asked = invocation.under_lock(defaults.BUILD_LOCK) if privileged else invocation.steps[0]
     completed = ports.guest.run(
         target,
         guestshell.GuestRun(
             script=guestshell.RemoteScript.of(
-                guestshell.Step.of("cd", str(install.directory)),
-                invocation.under_lock(defaults.BUILD_LOCK),
+                guestshell.Step.of("cd", str(install.directory)), asked
             ),
             deadline=defaults.BUILD_DEADLINE,
             limit=commands.OutputLimit(defaults.AGENT_REPLY_LIMIT.value),

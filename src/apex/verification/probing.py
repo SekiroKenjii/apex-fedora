@@ -23,13 +23,16 @@ class ProbeCase:
     """One question a guest can be asked, and where it must be standing to be asked.
 
     The isolated builder is a guest too, so the build environment is a place a probe can
-    stand; a simulation and the operator's own machine are not.
+    stand; a simulation and the operator's own machine are not. A privileged case is asked
+    as root under the guest's build lock; a session case is asked as the shell's own user,
+    because it shows windows in that user's desktop.
     """
 
     unit: identifiers.ProbeId
     environment: claims.EnvironmentKind
     summary: str
     arguments: Mapping[str, encoding.JsonValue] = dataclasses.field(default_factory=dict)
+    privileged: bool = True
 
     def __post_init__(self) -> None:
         if self.environment in {claims.EnvironmentKind.SIMULATED, claims.EnvironmentKind.OPERATOR}:
@@ -56,7 +59,8 @@ def observe(
     token: identifiers.Token,
 ) -> Observation:
     reply = agentrun.run_unit(
-        ports, target, install, unit=case.unit, arguments=case.arguments, token=token
+        ports, target, install, unit=case.unit, arguments=case.arguments, token=token,
+        privileged=case.privileged,
     )
     return Observation(
         case=case,

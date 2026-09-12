@@ -18,8 +18,8 @@ context that drives them.
 | `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit over the same snapshot; the older script stays until `just live-check` is repointed | P19a, done |
 | `guest/recovery-probe.py` | 68 | probe | `recovery.prerequisites` unit; the older script stays until `just recovery-probe` is repointed | P19d, done |
 | `guest/installed-recovery-probe.py` | 58 | probe | `recovery.installed` unit with `agent/grubstatic.py`; the older script stays until its caller is repointed | P19d, done |
-| `guest/render-probe.py` | 37 | probe, GTK | `desktop.render` unit | P19 |
-| `guest/theme-probe.py` | 54 | probe, GTK | `desktop.theme` unit | P19 |
+| `guest/render-probe.py` | 37 | probe, GTK | `assets/verbatim/render-probe.py.verbatim`, byte for byte, held equal by a test; placed and started by the `desktop.render` unit as the session's user, host case in `verification/probes/desktop_render_probe.py`; the older program stays until `tools/apexlib/guesttest.py` is repointed | verbatim, P19g, done |
+| `guest/theme-probe.py` | 54 | probe, GTK | `assets/verbatim/theme-probe.py.verbatim`, byte for byte, held equal by a test; shown and stopped by the `desktop.theme-gtk3` and `desktop.theme-adwaita` units, the session's settings read by `desktop.theme-settings`; host cases under `verification/probes/`; the older program stays until `tools/apexlib/guesttest.py` is repointed | verbatim, P19g, done |
 | `guest/diagnostics.py` | 40 | diagnostics | `guest.diagnostics` unit, the destination created exclusively through the file port; the older script stays for the operator's USB until the agent reaches the laptop | P19d, done |
 | `guest/installer-diagnostics.py` | 89 | diagnostics, framed serial | `installer.diagnostics` unit; the framing is the agent's, under the host's token; the older script stays until `just installer-logs` is repointed | P19d, done |
 | `guest/nvidia-check.py` | 56 | build check | `build.nvidia-check` unit | P18 |

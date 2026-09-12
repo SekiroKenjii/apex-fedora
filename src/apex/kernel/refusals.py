@@ -21,6 +21,7 @@ class RefusalReason(enum.StrEnum):
     MALFORMED_ARTIFACT_MANIFEST = "malformed.artifact-manifest"
     MALFORMED_IMAGE_DOCUMENT = "malformed.image-document"
     MALFORMED_OCI_MANIFEST = "malformed.oci-manifest"
+    MALFORMED_SCREEN_FRAME = "malformed.screen-frame"
 
     URL_NOT_HTTPS = "locator.url-not-https"
     FILENAME_NOT_PLAIN = "locator.filename-not-plain"
@@ -93,6 +94,8 @@ class RefusalReason(enum.StrEnum):
     HOST_CAPACITY_INSUFFICIENT = "machine.host-capacity-insufficient"
     LEASE_MALFORMED = "machine.lease-malformed"
     LEASE_MISMATCH = "machine.lease-mismatch"
+
+    SCREEN_SIZE_CHANGED = "screen.size-changed"
 
     DISK_NOT_QCOW2 = "disk.not-qcow2"
     DISK_CHAIN_CYCLE = "disk.chain-cycle"
