@@ -59,6 +59,27 @@ def test_a_file_named_after_a_private_directory_is_permitted() -> None:
     assert refusals.RefusalReason.REPOSITORY_PRIVATE_DIRECTORY in reasons("a/logs/b.txt")
 
 
+@pytest.mark.parametrize(
+    "path", ["src/apex/agent/main.py", "src/apex/agent/units/x.py", "tests/unit/agent/test_x.py"]
+)
+def test_the_agent_package_is_admitted_at_its_two_homes(path: str) -> None:
+    assert refusals.RefusalReason.REPOSITORY_PRIVATE_DIRECTORY not in reasons(path)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "agent/notes.md",
+        "src/agent/x.py",
+        "tests/agent/x.py",
+        "docs/agent/x.md",
+        "src/apex/Agent/x.py",
+    ],
+)
+def test_every_other_agent_directory_stays_private(path: str) -> None:
+    assert refusals.RefusalReason.REPOSITORY_PRIVATE_DIRECTORY in reasons(path)
+
+
 def test_only_the_last_suffix_decides() -> None:
     assert reasons("x.tar.gz") == set()
     assert reasons("dir.log/f.txt") == set()

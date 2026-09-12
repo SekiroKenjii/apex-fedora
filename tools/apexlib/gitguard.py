@@ -12,9 +12,27 @@ SUBJECT = re.compile(r"(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|
 SECRETS = [re.compile(rb"-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----"), re.compile(rb"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})\b")]
 
 
+PACKAGE_DIRECTORY = "agent"
+PACKAGE_HOME = ("src", "apex")
+TEST_ROOT = "tests"
+
+
+def private_directory(parts) -> bool:
+    # `agent` is private everywhere except as the package under src/apex or its test mirror.
+    for index, part in enumerate(parts):
+        if part.lower() not in PRIVATE_DIRS:
+            continue
+        above = parts[:index]
+        package = above == PACKAGE_HOME or (len(above) == 2 and above[0] == TEST_ROOT)
+        if part == PACKAGE_DIRECTORY and package:
+            continue
+        return True
+    return False
+
+
 def permitted(path: str) -> bool:
     p = PurePosixPath(path)
-    return not (p.is_absolute() or ".." in p.parts or p.name.lower() in PRIVATE_NAMES or p.name.lower().startswith(".env.") or any(x.lower() in PRIVATE_DIRS for x in p.parts[:-1]) or p.suffix.lower() in {".log", ".pcap", ".pcapng", ".qcow2", ".iso", ".key", ".pem", ".p12", ".pfx", ".pyc", ".fpt", ".fpm"})
+    return not (p.is_absolute() or ".." in p.parts or p.name.lower() in PRIVATE_NAMES or p.name.lower().startswith(".env.") or private_directory(p.parts[:-1]) or p.suffix.lower() in {".log", ".pcap", ".pcapng", ".qcow2", ".iso", ".key", ".pem", ".p12", ".pfx", ".pyc", ".fpt", ".fpm"})
 
 
 def validate_subject(message: str):

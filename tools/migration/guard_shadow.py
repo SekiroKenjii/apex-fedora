@@ -91,6 +91,14 @@ def enumerated_paths() -> set[str]:
         "",
         "a\\b.txt",
         *(f"agent{character}.md" for character in FOLD_DIVERGENT),
+        # The one admitted shape of the private `agent` name, and its near misses.
+        "src/apex/agent/main.py",
+        "src/apex/agent/units/state_probe_unit.py",
+        "tests/unit/agent/test_main.py",
+        "tests/agent/test_main.py",
+        "src/agent/main.py",
+        "docs/agent/notes.md",
+        "src/apex/agent",
     ]
     generated: set[str] = set()
     for seed in seeds:
