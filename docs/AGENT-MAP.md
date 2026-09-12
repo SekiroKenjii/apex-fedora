@@ -14,7 +14,7 @@ context that drives them.
 |---|---|---|---|---|
 | `guest/probe.py` | 22 | probe | `guest.state` unit | P16, done |
 | `guest/live-probe.py` | 97 | probe | `live.observe` unit over one sysfs snapshot; the older script stays until `just live-check` is repointed | P19a, done |
-| `guest/live-usb-probe.py` | 75 | probe | `live.usb-fixture` unit | P19 |
+| `guest/live-usb-probe.py` | 75 | probe | `fault.usb-write-denial` unit over the sysfs snapshot and the block device port; the older script stays until `just test-live-check` is repointed | P19b, done |
 | `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit over the same snapshot; the older script stays until `just live-check` is repointed | P19a, done |
 | `guest/recovery-probe.py` | 68 | probe | `recovery.prerequisites` unit | P19 |
 | `guest/installed-recovery-probe.py` | 58 | probe | `recovery.installed` unit | P19 |
@@ -25,7 +25,7 @@ context that drives them.
 | `guest/nvidia-check.py` | 56 | build check | `build.nvidia-check` unit | P18 |
 | `guest/verify-image.py` | 57 | build check | `build.verify-image` unit | P18 |
 | `guest/live-parity.py` | 19 | build check | `build.live-parity` unit | P18 |
-| `guest/live-write-denial.py` | 124 | fault | `verification/faults/live_write_denial_fault.py` | P19 |
+| `guest/live-write-denial.py` | 124 | fault | `fault.live-write-denial` unit, host case in `verification/faults/live_write_denial_fault.py`; the older script stays until `just test-live-check` is repointed | P19b, done |
 | `guest/live-lock-fault.py` | 103 | fault | `verification/faults/live_lock_fault.py` | P19 |
 | `guest/test-installer-fault.py` | 155 | fault | `verification/faults/installer_payload_fault.py` | P19 |
 | `guest/test-installer-trust.py` | 164 | fault, signatures | `verification/faults/installer_trust_fault.py` | P19 |
