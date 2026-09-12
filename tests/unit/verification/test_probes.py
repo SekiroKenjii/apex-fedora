@@ -25,6 +25,10 @@ def test_every_probe_module_declares_one_case_and_the_registry_holds_them_all() 
 
     assert len(probes.registered()) == len(modules)
     assert [str(case.unit) for case in probes.registered()] == [
+        "desktop.render",
+        "desktop.theme-adwaita",
+        "desktop.theme-gtk3",
+        "desktop.theme-settings",
         "guest.diagnostics",
         "installer.diagnostics",
         "live.observe",
@@ -121,3 +125,34 @@ def test_the_answer_is_held_as_json_proof_exactly_as_the_guest_sent_it(
     sent = guest.runs[-1]
     assert sent.stdin is not None
     assert json.loads(sent.stdin)["unit"] == "live.observe"
+
+
+def test_the_desktop_cases_are_asked_as_the_session_s_user_without_the_lock(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = ports.guest
+    assert isinstance(guest, fake_guestshell.ScriptedGuest)
+    document = {
+        "protocol": 1, "unit": "desktop.render", "observations": {"presented": True},
+    }
+    lines = serialframe.encode(json.dumps(document).encode(), token=TOKEN)
+    script = (
+        "cd /var/tmp/apex-run/agent && "
+        "env PYTHONPATH=/var/tmp/apex-run/agent/lib python3 -m apex.agent.main run "
+        f"--framed {TOKEN}"
+    )
+    guest.expect(script, fake_guestshell.GuestReply(stdout=b"\n".join(lines) + b"\n"))
+    install = agentrun.AgentInstall(
+        directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
+        digest=identifiers.Digest("a" * 64),
+    )
+    case = probes.lookup(identifiers.ProbeId("desktop.render"))
+
+    observed = probing.observe(ports, target(root), install, case, token=TOKEN)
+
+    assert not case.privileged
+    assert observed.observations == {"presented": True}
+    assert "sudo" not in guest.runs[-1].script.rendered()
+    for name in ("desktop.theme-gtk3", "desktop.theme-adwaita", "desktop.theme-settings"):
+        assert not probes.lookup(identifiers.ProbeId(name)).privileged
+    assert probes.lookup(identifiers.ProbeId("live.observe")).privileged

@@ -161,3 +161,30 @@ def _script() -> str:
         "'env PYTHONPATH=/var/tmp/apex-run/agent/lib python3 -m apex.agent.main run "
         f"--framed {TOKEN}'"
     )
+
+
+def test_a_session_unit_is_asked_as_the_user_without_the_lock(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    install = agentrun.AgentInstall(
+        directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
+        digest=identifiers.Digest("a" * 64),
+    )
+    script = (
+        "cd /var/tmp/apex-run/agent && "
+        "env PYTHONPATH=/var/tmp/apex-run/agent/lib python3 -m apex.agent.main run "
+        f"--framed {TOKEN}"
+    )
+    guest_of(ports).expect(
+        script,
+        fake_guestshell.GuestReply(
+            stdout=framed({"protocol": 1, "unit": "guest.state", "observations": {"x": 2}})
+        ),
+    )
+
+    reply = agentrun.run_unit(
+        ports, target(root), install, unit=UNIT, arguments={}, token=TOKEN, privileged=False
+    )
+
+    assert reply.observations == {"x": 2}
+    assert guest_of(ports).runs[-1].script.rendered() == script
