@@ -1914,6 +1914,79 @@ guest shell contract tests were written with the adapters. `golden_change`: thre
 added, `export-source` unchanged. `supersedes`: none yet; `tools/apexlib/pipeline.py` stays
 until the build commands move.
 
+## P18b. The guest side: an engine, a delivery, and the first fixture unit
+
+Goal: give a unit inside the builder the ports it needs, give the host a way to put the
+guest program there and ask for a unit, and move the first builder-side fixture script into
+a unit that runs the same commands. Four commits on `work/phase-18b-guest`, each green on
+the whole gate.
+
+### The engine is a port the guest holds
+
+Every podman and skopeo call in the tree runs inside a guest script; the host has no call
+site. `ports/containers.py` is therefore declared with the other ports and implemented for
+the guest: a reference carries its transport, a build and a run are requests, a copy
+preserves digests and may sign, and the raw manifest is bytes because that is what a digest
+is taken over. `real_containers.PodmanEngine` renders the older scripts' arguments through
+the process port; `fake_containers.FakeRegistry` answers from tables and records every
+build, run, copy and key. The contract test runs the real adapter against a stand-in for
+both programs on the path. `AgentPorts` carries the engine and, since a unit hashes what it
+produced, the digest port.
+
+### The wire protocol lives below both sides
+
+`composition` may not import `agent`: the layer rule holds that. The request, the reply and
+the framing codec are used by the host that asks and the guest that answers, so they moved
+from `agent/` to `model/agentwire.py` and `model/serialframe.py`. The agent imports them from
+there like everyone else. The reply gained a parser, and the process port and the guest run
+gained standard input, which a request travels on.
+
+### Delivery
+
+`composition/agentrun.py` sends the wheel beside the run, unpacks it with `python3 -m
+zipfile`, and asks for a unit as root under the guest's build lock, with the request on
+standard input and the reply framed under a token. `tests/contract/test_agent_delivery.py`
+builds the wheel, unpacks it the same way on this host and runs the handshake and the state
+probe off that directory, so the path that needs nothing installed in the guest is proved
+where a wheel can be built. On fakes, the unit tests pin the two scripts, the request the
+guest receives, and that a refusal, a reply for another unit and a reply that never finishes
+each stop the host.
+
+### The first fixture unit
+
+`agent/units/installer_disks_unit.py` is `guest/installer-fixtures.py` step for step through
+the ports: the packages, the raw image, its table, the loop device that must belong to the
+image, one formatted and sentinelled partition at a time, the two QCOW2 outputs, the report.
+`agent/builder.py` refuses any guest that is not the isolated builder before the first step.
+`tests/contract/test_installer_disks_parity.py` runs the older script with every program
+captured and answered, and the unit on a scripted process with the same answers; the two
+argument vector sequences agree. One difference is by construction: the unit waits for a
+partition node to exist rather than asking whether it is a block device, because the file
+port has no such question and a path under `/dev/loop` is a block device or absent.
+
+### What this slice did not do
+
+The remaining builder-side fixtures need four things the ports do not offer yet: a working
+directory for a run, a file copy, a sparse file of a given size, and the free space below a
+path. They go to P18c with those additions. The installed-guest fixtures, initramfs and
+recovery, go with the faults they exist for in P19. `kernel = SameAsImage()` belongs to the
+NVIDIA milestone, and test access to the secrets port.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 215 files, 12943 lines |
+| Ports declared | 14, twelve with a host adapter, the engine for the guest |
+| Units | `guest.state`, `fixture.installer-disks` |
+| Strict type check and pyright | clean |
+
+`migration_red`: the layer test failed on the first delivery commit because composition
+imported the agent, which is what moved the protocol down; the unit tests and the parity
+test were written after the unit and passed on their first run, with one normalisation for
+the older script's relative output path. `golden_change`: none. `supersedes`: none yet;
+`guest/installer-fixtures.py` stays until `just installer-fixtures` calls the unit.
+
 ## Commands
 
 ```sh

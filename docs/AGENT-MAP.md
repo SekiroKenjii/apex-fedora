@@ -30,12 +30,12 @@ context that drives them.
 | `guest/test-installer-fault.py` | 155 | fault | `verification/faults/installer_payload_fault.py` | P19 |
 | `guest/test-installer-trust.py` | 164 | fault, signatures | `verification/faults/installer_trust_fault.py` | P19 |
 | `guest/test-fingerprint.py` | 108 | fixture test | `fingerprint.virtual` unit | P19 |
-| `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18 unit |
-| `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18 unit |
-| `guest/update-fixture.py` | 188 | fixture, signing | host side in `provisioning/fixtures/update_fixture.py`; builder steps become the `fixture.update` unit on `ContainerEnginePort` | P17 host side done, P18 unit |
-| `guest/installer-fixtures.py` | 88 | fixture | host side in `provisioning/fixtures/installer_fixture.py`; builder steps become the `fixture.installer-disks` unit | P17 host side done, P18 unit |
-| `guest/ventoy-fixture.py` | 114 | fixture | host side in `provisioning/fixtures/ventoy_fixture.py`; builder steps become the `fixture.ventoy` unit | P17 host side done, P18 unit |
-| `guest/dedupe-update-blobs.py` | 153 | fixture, storage | host side in `provisioning/fixtures/dedupe_fixture.py`; the ioctl runs in the `fixture.dedupe` unit | P17 host side done, P18 unit |
+| `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18c unit |
+| `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18c unit |
+| `guest/update-fixture.py` | 188 | fixture, signing | host side in `provisioning/fixtures/update_fixture.py`; builder steps become the `fixture.update` unit on `ContainerEnginePort` | P17 host side done, P18c unit |
+| `guest/installer-fixtures.py` | 88 | fixture | `fixture.installer-disks` unit, host side in `provisioning/fixtures/installer_fixture.py`; the older script stays until `just installer-fixtures` is repointed | P18b, done |
+| `guest/ventoy-fixture.py` | 114 | fixture | host side in `provisioning/fixtures/ventoy_fixture.py`; builder steps become the `fixture.ventoy` unit | P17 host side done, P18c unit |
+| `guest/dedupe-update-blobs.py` | 153 | fixture, storage | host side in `provisioning/fixtures/dedupe_fixture.py`; the ioctl runs in the `fixture.dedupe` unit | P17 host side done, P18c unit |
 | `guest/nvidia-build.py` | 190 | build step | `composition/recipes/nvidia_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpms.py` | 137 | build step | `composition/recipes/fingerprint_rpms_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpm-smoke.py` | 66 | build check | `build.fingerprint-smoke` unit | P18 |
@@ -77,6 +77,15 @@ can be decided without a guest: the request a builder is handed, the parser for 
 sends back, the derivations the older scripts made in pure functions, and the refusals that
 keep a fixture from passing as a release artifact. Each host-side module is checked against
 the older script's pure functions in `tests/contract/test_fixture_parity.py`.
+
+## How the host reaches a unit
+
+`composition/agentrun.py` sends the wheel to the guest's run directory, unpacks it with the
+interpreter's own archive module so the guest needs nothing installed, and asks for one unit
+as root under the guest's build lock. The request names the wheel's digest; the reply comes
+back framed under a token the host chose and is decoded by the shared codec in
+`model/serialframe.py`. A refusal inside the guest arrives as a refusal on the host with the
+guest's words.
 
 ## How a unit gets there
 
