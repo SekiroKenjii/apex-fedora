@@ -13,6 +13,7 @@ from pathlib import Path
 from apex.agent import agentports
 from apex.config import defaults
 from apex.kernel import commands, errors, refusals, safepaths
+from apex.ports import files
 
 ROOT_USER = 0
 CMDLINE = safepaths.SafePath(Path("/proc/cmdline"))
@@ -54,6 +55,24 @@ def require_live(ports: agentports.AgentPorts) -> None:
     cmdline = ports.files.read_bytes(CMDLINE, limit=defaults.DOCUMENT_LIMIT.value)
     if defaults.LIVE_ROOT_TOKEN not in cmdline.decode(errors="replace").split():
         raise refuse("the kernel command line does not name the live medium")
+
+
+def require_installed(ports: agentports.AgentPorts) -> None:
+    """Root, virtual, and booted from an installed OSTree deployment."""
+    require_virtual_root(ports)
+    if not ports.files.exists(safepaths.SafePath(Path(defaults.OSTREE_BOOTED))):
+        raise refuse("not an installed OSTree guest")
+
+
+def require_installer(ports: agentports.AgentPorts) -> None:
+    """Root, the installer payload marker on disk, and virtual, in the older script's order."""
+    require_root()
+    marker = safepaths.SafePath(Path(defaults.INSTALLER_MARKER))
+    if not ports.files.exists(marker):
+        raise refuse("not the installer guest")
+    if ports.files.inspect(marker).kind is not files.EntryKind.REGULAR:
+        raise refuse("not the installer guest")
+    require_virtual(ports)
 
 
 def require_initramfs(ports: agentports.AgentPorts) -> None:

@@ -51,7 +51,7 @@ def run(
          deadline=defaults.PACKAGE_INSTALL_DEADLINE)
     upstream = _unpack(ports, work, request)
     raw = work / ventoy_fixture.RAW_IMAGE
-    ports.files.reserve(raw, size=ventoy_fixture.MEDIA_SIZE.as_bytes())
+    ports.files.reserve(raw, size=ventoy_fixture.MEDIA_SIZE.as_bytes(), mode=defaults.RECORD_MODE)
     loop = _attach(ports, raw)
     mount = work / ventoy_fixture.MOUNT_POINT
     ports.files.make_directory(mount, mode=DIRECTORY_MODE)

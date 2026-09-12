@@ -102,8 +102,10 @@ class FileSystemPort(Protocol):
         ...
 
     @abstractmethod
-    def reserve(self, path: safepaths.SafePath, *, size: quantities.ByteCount) -> None:
-        """A new sparse file of the given size, refused when the path is taken."""
+    def reserve(
+        self, path: safepaths.SafePath, *, size: quantities.ByteCount, mode: quantities.FileMode
+    ) -> None:
+        """A new sparse file of the given size and mode, refused when the path is taken."""
         ...
 
     @abstractmethod
