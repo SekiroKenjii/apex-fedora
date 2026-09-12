@@ -2452,6 +2452,83 @@ passes a backslash and an `n`, which the parity caught; the check for a linked d
 looked for the file through its link and had to inspect the entry first. `golden_change`:
 none. `supersedes`: none yet.
 
+## P19g. Verification, seventh slice: the desktop probes, and the screen judged by row
+
+Goal: the two GTK programs the older host launched over ssh, shown by units that run as the
+session's user, and the pixel judgements over the hypervisor's screenshot as typed values.
+Eight commits on `work/phase-19g-desktop`, five of substance and three of housekeeping,
+the whole gate green at the head.
+
+### The screen as a document
+
+`model/screens.py` reads a binary PPM as `Frame` and holds the older tool's two judgements:
+`swatches`, which looks for three wide adjacent red, green and blue bars on every fourth row,
+and `surface_change`, which counts the pixels below the top bar that moved between two
+captures of the Shell. Neither loops over pixels. A row equal to its counterpart is skipped
+whole; a colour class is found by translating each channel through a table and joining the
+channels as wide integers, and the three bars by one regular expression over the class
+bytes; a changed pixel is looked at only where a byte differs. Both judgements are values
+with a `visible` reading, and a frame that cannot be read, or two that differ in size, is
+refused as a broken capture rather than failed as a check. The tests hold both against the
+older `apexlib.render` on the same synthetic frames and against a pixel-by-pixel reading on
+random frames.
+
+### Two programs move byte for byte
+
+`guest/render-probe.py` and `guest/theme-probe.py` are the windows the screenshots judge,
+so they are carried as the third and fourth verbatim assets, held equal to the older files by
+the architecture test. `agent/desktopprograms.py` places each where the older host installed
+it, private to the user as `install -m 0600` left it, and starts it as the same transient
+user unit under Wayland.
+
+### The desktop units run as the session's user
+
+`guestguard.require_shell_session` is the older host's precondition: not root, virtual, and
+GNOME Shell on the user's bus. `desktop.render` places and starts the render probe and waits
+up to thirty seconds, polling its journal each second, for the line it prints once its
+window is presented; the journal, whether it presented and the display type it named are
+the observations, and rendering is NOT TESTED until the host's screenshot says otherwise.
+`desktop.theme-gtk3` and `desktop.theme-adwaita` do the same for one mode each and stop
+their unit when asked to dismiss, so the host can capture the window in between.
+`desktop.theme-settings` reads the GTK theme, the Shell theme, the enabled extensions and the
+recorded Shell theme composition, and judges none of it. `agent/desktopprobing.py` is the
+shared shape. A `ProbeCase` now says whether it is privileged; a session case is asked
+through `agentrun.run_unit` as the shell's own user with no lock, since `systemd-run --user`
+must reach that user's manager. The parity runs the older `Guest.theme_surfaces` and
+`Guest.password_login_and_render` with their shell recorded and their keyboard and
+screenshots stood in for, and the commands agree once the install through stdin is read as
+the file write it became, the login commands are set aside, and the journal polls are
+collapsed; the composition the older host read with `cat` is a file read.
+
+### The console
+
+`verification/console.py` captures the display through the monitor to a file the host
+names inside its runtime root, as PNG when the name says so, and reads it back through the
+file port, so the bytes filed as proof are the bytes on disk; and it presses keys as the
+older tool did, held for the same forty milliseconds.
+
+### What this slice did not do
+
+The stages that press Escape, capture, judge the bars and retry for forty five seconds; the
+Shell surface capture before and after its shortcut; the records for
+`desktop.password-wayland` and `desktop.theme-surfaces`; and the GDM password login through
+the keyboard, which needs the machine context and the test access. No recipe calls these
+units.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 288 files, 19235 lines |
+| Units | twenty one: eleven probes, six faults, four builder fixtures |
+| Verbatim assets | four |
+| Fast suite | 2 201 passed, 9 skipped |
+
+`migration_red`: the console test's basename collided with a legacy test under the prepend
+import mode and was renamed; a reaction stub returned a tuple where the fake wants nothing;
+pyright refused stand-ins assigned onto the older `Guest` and the parity patches them
+through the fixture. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
