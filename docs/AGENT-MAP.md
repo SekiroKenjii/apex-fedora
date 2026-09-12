@@ -13,9 +13,9 @@ context that drives them.
 | File | Lines | Role | Destination | Phase |
 |---|---|---|---|---|
 | `guest/probe.py` | 22 | probe | `guest.state` unit | P16, done |
-| `guest/live-probe.py` | 97 | probe | `live.observe` unit | P19 |
+| `guest/live-probe.py` | 97 | probe | `live.observe` unit over one sysfs snapshot; the older script stays until `just live-check` is repointed | P19a, done |
 | `guest/live-usb-probe.py` | 75 | probe | `live.usb-fixture` unit | P19 |
-| `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit | P19 |
+| `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit over the same snapshot; the older script stays until `just live-check` is repointed | P19a, done |
 | `guest/recovery-probe.py` | 68 | probe | `recovery.prerequisites` unit | P19 |
 | `guest/installed-recovery-probe.py` | 58 | probe | `recovery.installed` unit | P19 |
 | `guest/render-probe.py` | 37 | probe, GTK | `desktop.render` unit | P19 |
