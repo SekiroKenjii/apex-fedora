@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from pathlib import Path
 
 from apex.kernel import bounded, claims, errors, hashing, identifiers, quantities, safepaths
 from apex.ports import files
@@ -25,9 +26,23 @@ class MemoryFiles(files.FileSystemPort):
         self.fail_after = fail_after
         self.reserved: dict[str, quantities.ByteCount] = {}
         self.free = quantities.Gib(512).as_bytes()
+        self.links: dict[str, str] = {}
+        self.labels: dict[str, str] = {}
+        self.devices: dict[str, files.DeviceNumber] = {}
+
+    def _canonical(self, name: str) -> str:
+        """Follow a link anywhere on the path, as the kernel would for a read."""
+        for _ in range(len(self.links) + 1):
+            for source, target in self.links.items():
+                if name == source or name.startswith(source + "/"):
+                    name = target + name[len(source):]
+                    break
+            else:
+                return name
+        return name
 
     def read_bytes(self, path: safepaths.SafePath, *, limit: int) -> bytes:
-        stored = self._files.get(str(path))
+        stored = self._files.get(self._canonical(str(path)))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         return bounded.take(stored.payload, bounded.Limit(limit)).data
@@ -88,13 +103,84 @@ class MemoryFiles(files.FileSystemPort):
         return self.free
 
     def exists(self, path: safepaths.SafePath) -> bool:
-        return str(path) in self._files or str(path) in self.directories
+        name = self._canonical(str(path))
+        if name in self._files or name in self.directories or name in self.devices:
+            return True
+        return any(stored.startswith(name + "/") for stored in self._files)
 
     def mode_of(self, path: safepaths.SafePath) -> quantities.FileMode:
         stored = self._files.get(str(path))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         return stored.mode
+
+    def list_directory(self, directory: safepaths.SafePath) -> tuple[files.TreeEntry, ...]:
+        prefix = self._canonical(str(directory)).rstrip("/") + "/"
+        found: dict[str, files.EntryKind] = {}
+        for name in self._files:
+            if name.startswith(prefix):
+                head, _, rest = name[len(prefix):].partition("/")
+                found.setdefault(
+                    head, files.EntryKind.DIRECTORY if rest else files.EntryKind.REGULAR
+                )
+        direct = [
+            (name[len(prefix):], kind)
+            for names, kind in (
+                (self.directories, files.EntryKind.DIRECTORY),
+                (self.devices, files.EntryKind.OTHER),
+                (self.links, files.EntryKind.SYMLINK),
+            )
+            for name in names
+            if name.startswith(prefix) and "/" not in name[len(prefix):]
+        ]
+        for name, kind in direct:
+            found[name] = kind
+        if not found and prefix.rstrip("/") not in self.directories:
+            raise errors.PortFailure(port="files", cause=f"{directory}: not a directory")
+        return tuple(
+            files.TreeEntry(relative=name, kind=kind) for name, kind in sorted(found.items())
+        )
+
+    def symlink(self, path: safepaths.SafePath, *, target: safepaths.SafePath) -> None:
+        """A link the fake will follow; the real adapter finds these on disk."""
+        self.links[str(path)] = str(target)
+
+    def resolve(self, path: safepaths.SafePath) -> safepaths.SafePath:
+        current = str(path)
+        for _ in range(len(self.links) + 1):
+            target = self.links.get(current)
+            if target is None:
+                if self.exists(safepaths.SafePath(Path(current))):
+                    return safepaths.SafePath(Path(current))
+                raise errors.PortFailure(port="files", cause=f"{path}: no such file")
+            current = target
+        raise errors.PortFailure(port="files", cause=f"{path}: too many levels of links")
+
+    def inspect(self, path: safepaths.SafePath) -> files.Inspection:
+        name = str(path)
+        if name in self.links:
+            return files.Inspection(
+                kind=files.EntryKind.SYMLINK, owner=0, group=0,
+                mode=quantities.FileMode(0o777), label=self.labels.get(name), device=None,
+            )
+        if name in self.devices:
+            return files.Inspection(
+                kind=files.EntryKind.OTHER, owner=0, group=0,
+                mode=quantities.FileMode(0o660), label=self.labels.get(name),
+                device=self.devices[name],
+            )
+        if name in self.directories:
+            return files.Inspection(
+                kind=files.EntryKind.DIRECTORY, owner=0, group=0,
+                mode=quantities.FileMode(0o700), label=self.labels.get(name), device=None,
+            )
+        stored = self._files.get(name)
+        if stored is None:
+            raise errors.PortFailure(port="files", cause=f"{path}: no such file")
+        return files.Inspection(
+            kind=files.EntryKind.REGULAR, owner=0, group=0, mode=stored.mode,
+            label=self.labels.get(name), device=None,
+        )
 
     def list_tree(self, directory: safepaths.SafePath) -> tuple[files.TreeEntry, ...]:
         prefix = str(directory).rstrip("/") + "/"

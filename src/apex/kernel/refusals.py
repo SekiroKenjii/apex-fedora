@@ -14,6 +14,7 @@ class RefusalReason(enum.StrEnum):
     MALFORMED_IDENTIFIER = "malformed.identifier"
     MALFORMED_PACKAGE_COORDINATE = "malformed.package-coordinate"
     MALFORMED_VERDICT = "malformed.verdict"
+    MALFORMED_DEVICE_NUMBER = "malformed.device-number"
     MALFORMED_STORE_MARK = "malformed.store-mark"
     MALFORMED_TREE_ROW = "malformed.tree-row"
     MALFORMED_PROOF_REFERENCE = "malformed.proof-reference"
@@ -73,6 +74,9 @@ class RefusalReason(enum.StrEnum):
     PROTOCOL_MISMATCH = "agent.protocol-mismatch"
     UNIT_UNKNOWN = "agent.unit-unknown"
     AGENT_REFUSED = "agent.refused"
+
+    PROBE_ENVIRONMENT_UNEXPECTED = "probe.environment-unexpected"
+    SYSFS_ATTRIBUTE_MALFORMED = "probe.sysfs-attribute-malformed"
 
     DEVICE_NOT_PERMITTED_FOR_ROLE = "machine.device-not-permitted-for-role"
     DUPLICATE_DEVICE = "machine.duplicate-device"

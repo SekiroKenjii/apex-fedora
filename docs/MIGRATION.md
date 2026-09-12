@@ -2052,6 +2052,77 @@ extent contract's real case skips where the temporary directory's filesystem can
 free space check and a missing version marker, the dedupe parity found the container listing
 had bypassed the recorded process. `golden_change`: none. `supersedes`: none yet.
 
+## P19a. Verification, first slice: the write path and two observation probes
+
+Goal: close the write side of the evidence store and start the verification context with the
+probes that only read. Five commits on `work/phase-19-verification`, each green on the whole
+gate.
+
+### Every refusal before the first byte
+
+`attestation/minting.py` is the one way a new result enters the store. It refuses, in this
+order, a check the catalogue does not declare, hardware evidence from anything but the
+laptop, a bundle that witnesses another environment than the check requires, a simulated
+bundle, a proof kind the check does not accept, an empty proof, and a pass with no proof.
+Only then does it absorb the proofs and append the entry. The environment is what the port
+bundle reports, never an argument. The two half invariants from the specification, the proof
+suffix allowlist and the hardware environment at write, are now whole: the read side in
+`readiness._judge` stays, because the store on disk is not trusted to have come from this
+code. Each refusal has a test that violates it on purpose and checks the chain and the
+object store are untouched.
+
+### The file port answers three more questions
+
+`list_directory` lists one level, `resolve` follows every link, `inspect` reports kind,
+owner, mode, the security label and, for a device node, its number. The fake follows
+declared links on reads and lists declared devices; the contract suite proves both adapters
+the same way, with the null device standing in for a block node the real adapter cannot make.
+
+### One snapshot of sysfs
+
+`agent/blockdevices.py` reads `/sys/class/block` once: nine port calls per device, then a
+lookup by number or by name costs none. A digest over the listing says whether the tree
+changed between two snapshots, which is how the older scripts asked whether a fixture moved
+under them. The test takes two hundred devices, counts the calls with a fake that ignores
+its own re-entrant calls, and states the bound as a number. The threshold the plan filed
+under P17 is met here, where the first caller is.
+
+### Two probes as units, and the host side that asks for them
+
+`live.observe` is `guest/live-probe.py`: the same three guards, the same thirteen programs,
+the same five files and two executables, and the block devices from the snapshot.
+`ventoy.observe` is `guest/ventoy-probe.py` the same way. A parity harness runs each older
+script with every program answered and every file it opens recorded, and requires the unit
+to run the same argument vectors in the same order and read every file the script read; the
+unit may read more attributes through the snapshot and never fewer.
+
+`verification/` is the sixth context. `probing.ProbeCase` names a unit and the environment
+a guest must be in to be asked; `verification/probes/` holds one case per file, sealed like
+every other registry, and a test checks that every case names a unit the agent declares.
+`probing.observe` asks the guest through `composition.agentrun` and holds the whole reply,
+canonically encoded, as a JSON proof for `minting.mint`, so the bytes filed are the bytes
+the guest sent.
+
+### What this slice did not do
+
+No stage calls `mint` or `observe` yet; the first is the write-denial fault in P19b, which
+needs the snapshot's identity check against the opened node. The remaining probes, the
+faults and `generated/os/` follow in later slices. No `just` recipe calls a unit yet.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 233 files, 15106 lines |
+| Units | `guest.state`, `live.observe`, `ventoy.observe`, `fixture.installer-disks`, `fixture.ventoy`, `fixture.update`, `fixture.dedupe` |
+| Probe cases | `live.observe`, `ventoy.observe` |
+| Fast suite | 1 897 passed, 4 skipped |
+
+`migration_red`: the minting tests found that an empty proof was refused after the first
+proof had already been filed, so every citation is now judged before any byte lands; the
+snapshot test found the counting fake counting its own re-entrant calls. `golden_change`:
+none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import shutil
+import stat
 import tempfile
 from pathlib import Path
 
 from apex.kernel import bounded, claims, errors, hashing, identifiers, quantities, safepaths
 from apex.ports import files
+
+SECURITY_LABEL = "security.selinux"
+NO_LABEL = frozenset({errno.ENODATA, errno.ENOTSUP, errno.EOPNOTSUPP})
 
 
 class LocalFiles(files.FileSystemPort):
@@ -133,6 +138,52 @@ class LocalFiles(files.FileSystemPort):
                 files.TreeEntry(relative=str(path.relative_to(base)), kind=_kind_of(path))
             )
         return tuple(entries)
+
+    def list_directory(self, directory: safepaths.SafePath) -> tuple[files.TreeEntry, ...]:
+        base = directory.path
+        if not base.is_dir():
+            raise errors.PortFailure(port="files", cause=f"{directory}: not a directory")
+        try:
+            names = sorted(entry.name for entry in base.iterdir())
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+        return tuple(
+            files.TreeEntry(relative=name, kind=_kind_of(base / name)) for name in names
+        )
+
+    def resolve(self, path: safepaths.SafePath) -> safepaths.SafePath:
+        try:
+            return safepaths.SafePath(path.path.resolve(strict=True))
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+
+    def inspect(self, path: safepaths.SafePath) -> files.Inspection:
+        try:
+            info = path.path.lstat()
+            label = _label_of(path.path)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+        device = None
+        if stat.S_ISBLK(info.st_mode) or stat.S_ISCHR(info.st_mode):
+            device = files.DeviceNumber(os.major(info.st_rdev), os.minor(info.st_rdev))
+        return files.Inspection(
+            kind=_kind_of(path.path),
+            owner=info.st_uid,
+            group=info.st_gid,
+            mode=quantities.FileMode(stat.S_IMODE(info.st_mode)),
+            label=label,
+            device=device,
+        )
+
+
+def _label_of(path: Path) -> str | None:
+    try:
+        raw = os.getxattr(path, SECURITY_LABEL, follow_symlinks=False)
+    except OSError as error:
+        if error.errno in NO_LABEL:
+            return None
+        raise
+    return raw.rstrip(b"\0").decode(errors="replace")
 
 
 def _kind_of(path: Path) -> files.EntryKind:

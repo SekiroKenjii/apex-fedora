@@ -26,6 +26,9 @@ RECORD_MODE = quantities.FileMode(0o600)
 
 DOCUMENT_LIMIT = bounded.Limit(4 * 1024 * 1024)
 PROBE_DEADLINE = timing.Deadline(timing.Elapsed(20))
+OBSERVATION_DEADLINE = timing.Deadline(timing.Elapsed(15))
+OBSERVATION_LIMIT = bounded.CAPTURE_LIMIT
+LIVE_ROOT_TOKEN = "root=live:CDLABEL=Apex-Live"
 SIGNING_DEADLINE = timing.Deadline(timing.Elapsed(60))
 DOWNLOAD_DEADLINE = timing.Deadline(timing.Elapsed(1200))
 DOWNLOAD_CONNECT_TIMEOUT = timing.Elapsed(20)
