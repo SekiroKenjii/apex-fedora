@@ -22,6 +22,21 @@ def test_private_paths(path):
     assert not gitguard.permitted(path)
 
 
+@pytest.mark.parametrize("path", [
+    "src/apex/agent/main.py", "src/apex/agent/units/x.py", "tests/unit/agent/test_main.py",
+])
+def test_the_agent_package_is_not_the_private_agent_directory(path):
+    assert gitguard.permitted(path)
+
+
+@pytest.mark.parametrize("path", [
+    "agent/notes.md", "src/agent/main.py", "tests/agent/x.py", "docs/agent/x.md",
+    "src/apex/Agent/x.py",
+])
+def test_every_other_agent_directory_stays_private(path):
+    assert not gitguard.permitted(path)
+
+
 def test_secret_detection():
     with pytest.raises(Blocked):
         gitguard.inspect_blob("config/test.txt", "100644", b"-----BEGIN " + b"OPENSSH PRIVATE KEY-----")
