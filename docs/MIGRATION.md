@@ -2529,6 +2529,66 @@ import mode and was renamed; a reaction stub returned a tuple where the fake wan
 pyright refused stand-ins assigned onto the older `Guest` and the parity patches them
 through the fixture. `golden_change`: none. `supersedes`: none yet.
 
+## P19h. Verification, eighth slice: the theme surfaces, captured, judged and recorded
+
+Goal: the stages that do on the host what the older `Guest.theme_surfaces` did in one
+method, a recipe that records `desktop.theme-surfaces` from them, and the bars stage the
+render check will use once the keyboard login exists. Four commits on
+`work/phase-19h-desktop-stages`, the whole gate green at the head.
+
+### A judged observation
+
+A probe reports and never judges, so the judgement is the host's. `verification/judging.py`
+holds it: `judge` writes the verdict into the observations and offers those bytes as proof,
+and `capture` offers a file under the kind its name carries. A fault report is the same
+shape, and the minting stage now takes either, folding their verdicts and filing every
+report with whatever it captured beside it.
+
+### Four stages
+
+`desktop.window-<mode>` asks the theme case as the session's user, waits for it to say its
+window is presented, settles, sends Escape, captures the window as PNG through the monitor,
+and dismisses it; a window that never presents blocks the verdict and is neither captured nor
+dismissed. `desktop.shell-surface` captures the Shell, sends the older shortcut, settles,
+captures again as PPM and PNG, judges the change below the top bar and sends Escape; a
+change too small fails the check, two frames of different sizes refuse the run.
+`desktop.theme-settings` asks the settings case and judges the GTK and Shell theme names
+against the ones the image ships, blocking on a setting the session could not report.
+`desktop.render-bars` shows the render probe and looks for its bars as the older host did,
+Escape then a second then a capture, for forty five seconds, and requires a Wayland
+display. Each stage declares the facts that must exist before it, so one window shows at a
+time and the Shell is captured only after every window is dismissed; the frozen plan
+`generated/plans/verify-desktop-theme.json` reads in the older order for that reason.
+
+### The recipe
+
+`verify-desktop-theme` is those stages behind the run identifier and the agent's delivery,
+with one record for `desktop.theme-surfaces` at the end. It is seeded with the guest, the
+wheel, the candidate, the witness, the recorder, the machine's monitor socket and the runtime
+root; the caller supplies them until the machine context does. On fakes the run reaches the
+record and the chain refuses the simulated bundle, which is the property the store rests on.
+The visual review stays NOT TESTED in every record this recipe makes.
+
+### What this slice did not do
+
+`desktop.password-wayland` needs the GDM password login through the keyboard before the
+render probe can be shown, and that login needs the machine context and the test access; the
+bars stage waits for it. No `just` recipe calls the desktop recipe yet.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 294 files, 19752 lines |
+| Frozen plans | six |
+| Fast suite | 2 220 passed, 9 skipped |
+
+`migration_red`: the plan first derived a lexical order among independent stages and showed
+the Shell before the windows, so the stages now name what must exist before them; the
+recording's proofs are addresses, not the offered kinds, which a test had assumed; the
+verification package passed its budget and the host bundle passed the fan-in limit, both
+raised with a reason. `golden_change`: one plan added, none changed. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
