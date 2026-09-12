@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 
 from apex.kernel import claims, errors, safepaths, timing
 from apex.ports import qmp
@@ -19,6 +19,7 @@ class ScriptedQmp:
         self._reachable = reachable
         self.executed: list[qmp.QmpCommand] = []
         self.connections: list[safepaths.SafePath] = []
+        self._reactions: dict[str, Callable[[], None]] = {}
 
     @classmethod
     def with_shell_probe(cls) -> ScriptedQmp:
@@ -27,6 +28,10 @@ class ScriptedQmp:
 
     def reply(self, name: str, value: object) -> None:
         self._replies[name] = value
+
+    def react(self, name: str, effect: Callable[[], None]) -> None:
+        """What the guest does when it receives the command, as a test describes it."""
+        self._reactions[name] = effect
 
     @contextlib.contextmanager
     def connect(
@@ -43,4 +48,6 @@ class ScriptedQmp:
             raise errors.PortFailure(
                 port="qmp", cause=f"{command.name}: The command has not been found"
             )
+        if command.name in self._reactions:
+            self._reactions[command.name]()
         return self._replies[command.name]

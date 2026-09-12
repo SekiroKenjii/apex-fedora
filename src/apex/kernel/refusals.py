@@ -82,6 +82,10 @@ class RefusalReason(enum.StrEnum):
     MACHINE_NOT_RUNNING = "machine.not-running"
     MACHINE_IDENTITY_CHANGED = "machine.identity-changed"
     MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
+    MACHINE_RUNNING = "machine.running"
+    HOST_CAPACITY_INSUFFICIENT = "machine.host-capacity-insufficient"
+    LEASE_MALFORMED = "machine.lease-malformed"
+    LEASE_MISMATCH = "machine.lease-mismatch"
 
     DISK_NOT_QCOW2 = "disk.not-qcow2"
     DISK_CHAIN_CYCLE = "disk.chain-cycle"
