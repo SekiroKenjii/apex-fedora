@@ -83,6 +83,14 @@ PARTITION_APPEARS = timing.WaitPolicy(
     description="the partition node appears",
 )
 PACKAGE_INSTALL_DEADLINE = timing.Deadline(timing.Elapsed(1800))
+WINDOW_APPEARS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(30)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(1), ceiling=timing.Elapsed(1), factor=1
+    ),
+    description="the probe's window is presented",
+)
+SHELL_THEME_SOURCE = "/usr/share/apex/shell-theme-source.json"
 BUILD_LOCK = safepaths.RemotePath("/run/apex-build.lock")
 REMOTE_PREFIX = "/var/tmp/apex-"
 REMOTE_DIRECTORY_MODE = "700"
