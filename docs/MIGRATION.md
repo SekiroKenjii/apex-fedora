@@ -1819,6 +1819,101 @@ the ratchet and go with P21.
 inherited; the pyright findings were the failing observation for everything else, recorded
 on `dev` before any change. `golden_change`: none. `supersedes`: none.
 
+## P18. Composition: the guest shell, and the four builds on the pipeline
+
+Goal: give the host a typed way to reach the builder, and run every build the older
+`_execute` runs as a plan of stages whose order is derived, whose refusals happen before the
+first effect, and whose host commands are the older ones word for word. Six commits on
+`work/phase-18-composition`, each green on the whole gate.
+
+### A script is steps, not a string
+
+`ports/guestshell.py` names a guest by where its shell answers and which key opens it, always
+on loopback; a user name that is not a plain name is refused. A `RemoteScript` is a tuple of
+steps, each an argument vector; it renders once with shell quoting and joins with `&&`. The
+only shell syntax admitted is on a step: discard errors, tolerate failure. `under_lock` wraps a
+whole script as one step under the guest's build lock, which is how the older tree's
+`sudo flock -n ... bash -c '...'` is composed without a string being written by hand.
+
+`real_guestshell.OpensshGuestShell` renders the same `ssh` and `scp` argument vectors the
+older `vm.ssh_args` and its copied lists render, and runs them through the process port.
+The process port gained a transcript: a run may append both output streams to a file as
+they arrive and return no output, which is how a build that talks for hours is kept without
+holding it in memory. `fake_guestshell.ScriptedGuest` echoes any script back unless told to
+be strict, records every copy in both directions, and answers a declared script with a
+declared exit code. The contract test runs the real adapter against `ssh` and `scp` stand-ins
+on the path, so a file sent to the guest comes back through them.
+
+### What is built from what
+
+`model/builds.py` types the request and the record: the two profiles, of which only Fedora
+is reviewed; the four artifact kinds, of which three are derived; the record the older
+`result.json` holds; and `require_frozen`, which accepts a parent build only when its record
+says it completed an image, its frozen document names the manifest on disk, and that manifest
+names the image the document claims. Those are the three checks the older `_execute` made
+inline, now one function with a test per refusal.
+
+### One plan, three recipes
+
+Nine stages join the four from P14 in `composition/stages/`. `build.freeze` decides in
+preflight what is being built from: an unreviewed profile and a derived artifact without a
+parent are refused before any stage acts. `builder.check` reads the frozen fact so no guest
+is reached before the parent is validated, and `guest.prepare` reads the acquired sources so
+nothing is created in the guest before the sources are pinned. The transfer, run, retrieve
+and record stages are the older sequence: send the bundle and the frozen document, run the
+build under the lock with the transcript at `exports/<run>/build.log`, bring `output/` home
+whether or not the build passed, write the record, and fail the run if the guest did. The
+record lands before the verdict, so a failed build is never mistaken for one that did not
+happen.
+
+`composition/buildplan.py` holds the shared stage set; `image_recipe`, `disk_artifact_recipe`
+and `live_artifact_recipe` name the plan and seed the kind. With `export_source` there are
+now four recipes on the pipeline, each with a frozen plan under `generated/plans/`. The
+derived order puts every local decision before the first remote effect.
+
+### Parity
+
+`tests/contract/test_build_parity.py` runs the older `_execute` with its shell, copies and
+build captured instead of performed, and the recipe on the real guest shell adapter over a
+recording process port. For each of the four kinds the two argument vector sequences agree
+word for word once run identifiers are normalised: the isolation check, the private
+directory, the bundle, the frozen document, the locked build script, the ownership step and
+the retrieval. `tests/pipelines/test_build_recipes.py` drives the same recipes on fakes and
+pins the refusals, the failed build's record, and that preflight only computes.
+
+### The decoder under hostile bytes
+
+`tests/property/test_serialframe_memory.py` feeds the frame decoder sixty four mebibytes in
+three hostile shapes and holds the peak under four mebibytes, with at most one line of
+unread bytes pending. The specification names one gibibyte; memory that is constant over
+sixty four is constant after it, and the fast suite cannot afford the gibibyte. The property
+tier is lint checked, type checked and searched for dead code like the others.
+
+### What this phase did not do
+
+Test access for a private QCOW2 fixture, the blueprint the older `execute` writes when asked,
+is not offered by the recipes yet; it needs the secrets port. The guest side of the fixtures,
+the `ContainerEnginePort`, the canonical plan hash on both halves of the initramfs protocol,
+and `kernel = SameAsImage()` for the NVIDIA lock move to the next slice, P18b, which needs
+the agent inside the builder. The guest build scripts run as shipped through the guest
+shell; `docs/AGENT-MAP.md` says so per row. No command calls the recipes yet.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 208 files, 12187 lines; `composition` 920 lines in 24 modules |
+| Recipes on the pipeline | 4, each with a frozen plan |
+| Parity | 4 artifact kinds, host commands identical to the older build |
+| Strict type check and pyright | clean |
+
+`migration_red`: the recipe tests on fakes and the parity test were written after the stages,
+against the older sequence read from `_execute`; both passed on their first run, which says
+the older sequence was transcribed step by step rather than that nothing was learned. The
+guest shell contract tests were written with the adapters. `golden_change`: three plans
+added, `export-source` unchanged. `supersedes`: none yet; `tools/apexlib/pipeline.py` stays
+until the build commands move.
+
 ## Commands
 
 ```sh
