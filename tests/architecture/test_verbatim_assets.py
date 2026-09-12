@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+from apex.agent import fingerprintharness
 from apex.trust import preflight
 
 REPOSITORY = Path(__file__).resolve().parents[2]
@@ -43,3 +44,9 @@ def test_the_preflight_wrapper_carries_the_older_file_s_digest() -> None:
     expected = hashlib.sha256((REPOSITORY / "guest" / preflight.ASSET).read_bytes()).hexdigest()
 
     assert preflight.digest().hex == expected
+
+
+def test_the_fingerprint_harness_wrapper_carries_the_older_file_s_digest() -> None:
+    older = REPOSITORY / "guest" / fingerprintharness.ASSET
+
+    assert fingerprintharness.digest().hex == hashlib.sha256(older.read_bytes()).hexdigest()
