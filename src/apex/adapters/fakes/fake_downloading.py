@@ -54,3 +54,27 @@ class RefusingNetwork(downloading.DownloadPort):
             subject=str(url),
             remedy="this run declared no network; fetch the sources in a run that does",
         )
+
+
+class PinningFetcher(downloading.DownloadPort):
+    """Answers every fetch with the digest it was asked for, and records the asking.
+
+    For runs where the sources are not the subject: the locked archives are large and
+    remote, and a recipe that acquires them still has to be driven end to end on fakes.
+    """
+
+    environment = claims.EnvironmentKind.SIMULATED
+
+    def __init__(self) -> None:
+        self.fetched: list[tuple[locators.HttpsUrl, safepaths.SafePath]] = []
+
+    def fetch(
+        self,
+        url: locators.HttpsUrl,
+        *,
+        into: safepaths.SafePath,
+        expected: identifiers.Digest,
+        deadline: timing.Deadline,  # noqa: ARG002
+    ) -> identifiers.Digest:
+        self.fetched.append((url, into))
+        return expected

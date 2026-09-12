@@ -16,11 +16,21 @@ from pathlib import Path
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(REPOSITORY / "src")]
 
-from apex.composition.recipes import export_source_recipe  # noqa: E402
+from apex.composition.recipes import (  # noqa: E402
+    disk_artifact_recipe,
+    export_source_recipe,
+    image_recipe,
+    live_artifact_recipe,
+)
 from apex.pipeline import plans  # noqa: E402
 
 DIRECTORY = REPOSITORY / "generated" / "plans"
-RECIPES = {export_source_recipe.NAME: export_source_recipe.PLAN}
+RECIPES = {
+    export_source_recipe.NAME: export_source_recipe.PLAN,
+    image_recipe.NAME: image_recipe.PLAN,
+    disk_artifact_recipe.NAME: disk_artifact_recipe.PLAN,
+    live_artifact_recipe.NAME: live_artifact_recipe.PLAN,
+}
 
 
 def rendered(name: str) -> str:

@@ -31,8 +31,12 @@ class Received:
 class ScriptedGuest(guestshell.GuestShellPort):
     environment = claims.EnvironmentKind.SIMULATED
 
-    def __init__(self, replies: dict[str, GuestReply] | None = None) -> None:
+    def __init__(
+        self, replies: dict[str, GuestReply] | None = None, *, strict: bool = False
+    ) -> None:
+        """A script not in the table echoes itself, or is a port failure when strict."""
         self._replies = dict(replies or {})
+        self._strict = strict
         self.runs: list[guestshell.GuestRun] = []
         self.targets: list[guestshell.GuestTarget] = []
         self.sent: list[Sent] = []
@@ -53,7 +57,7 @@ class ScriptedGuest(guestshell.GuestShellPort):
         self.runs.append(run)
         text = run.script.rendered()
         reply = self._replies.get(text)
-        if reply is None and self._replies:
+        if reply is None and self._strict:
             raise errors.PortFailure(port="guest", cause=f"undeclared script: {text}")
         if reply is None:
             reply = GuestReply(stdout=text.encode())
