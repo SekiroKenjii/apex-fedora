@@ -52,13 +52,25 @@ Held by: ruff `TID`; the test named above.
 
 ## Types
 
-Every function and method in `src/` and `tests/` is fully annotated and `mypy --strict` is
-clean. `Any` is confined to the JSON boundary and to the refusing ports; each remaining `Any`
-has a reason beside it. `cast` is not used to silence the checker. Value types are
-`dataclass(frozen=True, slots=True)`. A class holds mutable state only when that is its whole
-purpose (`Registry`, `FactMap`, `Ledger`), and then it says so in its docstring.
+Every function and method in `src/` and `tests/` is fully annotated, and two checkers are
+clean: `mypy --strict` over `src/apex`, and pyright in standard mode over `src/`,
+`tools/migration/` and the test tiers the new tree owns. Pyright is the engine the editor
+runs, so a finding shown while editing is a finding the gate would report, and the gate
+never passes what the editor marks. `Any` is confined to the JSON boundary and to the one
+factory that hands out the refusing double; each remaining `Any` has a reason beside it.
+`cast` is not used to silence the checker. Value types are `dataclass(frozen=True, slots=True)`.
+A class holds mutable state only when that is its whole purpose (`Registry`, `FactMap`,
+`Ledger`), and then it says so in its docstring.
 
-Held by: `just types`.
+A port is a `Protocol` whose members are marked `@abstractmethod`. Every adapter, real or
+fake, inherits the port it implements, so a signature that drifts is reported at the class
+and an adapter missing a member is refused at instantiation, instead of being discovered
+wherever the adapter is passed. Anything that satisfies a port without inheriting it, such
+as the refusing double or a legacy object, still passes structurally. Protocol methods whose
+callers pass the argument positionally declare it positional-only, so a callable field can
+stand in for the method.
+
+Held by: `just types`; `just pyright`; `test_every_adapter_inherits_the_port_it_implements`.
 
 ## Functions
 
@@ -143,7 +155,7 @@ tracked file that carries the name outside a package coordinate.
 
 ## Enforcement
 
-`just gate` runs the formatter in check mode, ruff, `mypy --strict`, the lint ratchet, dead
+`just gate` runs the formatter in check mode, ruff, `mypy --strict`, pyright, the lint ratchet, dead
 code detection, the architecture tests, and every test in this document. No rule runs in a
 warning mode. A new rule arrives with its check and with the fix for every existing
 violation, in one change.

@@ -1751,6 +1751,74 @@ parity tests were written after the code they compare.
 `golden_change`: none.
 `supersedes`: none yet. `tools/apexlib/vm.py` is superseded once the machine commands move.
 
+## P17a. Two checkers, one contract: ports declare, adapters inherit
+
+Goal: make conformance to a port visible where the adapter is written and checked by the
+same engine the editor runs, after the operator found findings in the editor that the gate
+did not report. Six commits on `work/typing-hygiene`, each green on the whole gate.
+
+### What the editor saw and the gate did not
+
+`just types` runs `mypy --strict` over `src/apex` only, and no module under `src/` assigns
+an adapter to a slot typed as its port; that assignment happens in tests and in the wiring
+that does not exist yet. So an adapter could drift from its port and every gate stayed
+green. The editor runs pyright over everything, and pyright reported 41 findings on `dev`
+once it could resolve pytest. Eleven were configuration: pyright did not know `tools/` is on
+the path. The rest had five causes: the monitor adapter named its socket parameter
+differently from the port; `SimpleStage` carries callable fields while the `Stage` protocol
+declared methods with a named parameter, which pyright treats as part of the contract; the
+refusing double was assigned straight into port-typed slots, which pyright does not accept
+because it does not consult `__getattr__` when matching a protocol; and the new test tiers
+and migration tools indexed `object` and `JsonValue` without narrowing.
+
+### Protocol with the discipline of an abstract base
+
+The operator asked for an assessment of `Protocol` against `ABC`. An abstract base gives an
+explicit declaration at the class, an override check by the type checker, and a refusal at
+instantiation when a member is missing; it costs nominal typing, so every double and every
+legacy object would have to inherit. A protocol whose members carry `@abstractmethod` gives
+all three when the adapter inherits it, and stays structural for anything that does not.
+Both facts were measured before the change: an explicit subclass missing a member raises
+`TypeError` at instantiation, and a structural implementer still passes through the
+port-typed slot.
+
+Every port under `ports/` now marks its members abstract, and every adapter under
+`adapters/real/` and `adapters/fakes/` inherits the port it implements.
+`test_every_adapter_inherits_the_port_it_implements` holds that. The one drift already
+present, `UnixQmp.connect(socket_path=...)` against `QmpPort.connect(socket=...)`, was
+corrected on the port side first, and pyright reported the fake's remaining mismatch at the
+class the moment the fake inherited, which is the behaviour this change exists for.
+
+### The double and the stage
+
+`planning.refusing(name)` is the one place the refusing double is typed `Any`, with the
+reason beside it; the eleven slots in `HostPorts.for_planning` and the three in
+`AgentPorts.for_planning` call it instead of holding a cast each. `mypy` will not accept a
+protocol with abstract members as `type[T]`, so a factory typed by the port was not open.
+`Stage.preflight` and `Stage.apply` take their context positionally, since every caller
+passes it that way and `SimpleStage` carries them as callable fields.
+
+### Pyright in the gate
+
+`[tool.pyright]` in `pyproject.toml` names the paths and the tiers; `just pyright` runs it
+with the same pinned interpreter as the rest of the gate, with pytest resolvable so the
+tests type check; `just gate` runs it after `mypy`. Pyright is scoped to `src/`,
+`tools/migration/` and the four new test tiers. The legacy tests under `tests/` are left to
+the ratchet and go with P21.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 190 files, `mypy --strict` clean, pyright 0 errors over source, tools and four test tiers |
+| Fast suite | 1 725 passed, 3 skipped |
+| Adapters inheriting their port | 24 classes across 11 ports |
+| Gates green | G1 to G7, G10, plus pyright |
+
+`migration_red`: the architecture test for inheritance was written after the adapters
+inherited; the pyright findings were the failing observation for everything else, recorded
+on `dev` before any change. `golden_change`: none. `supersedes`: none.
+
 ## Commands
 
 ```sh
