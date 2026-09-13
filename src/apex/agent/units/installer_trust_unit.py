@@ -33,7 +33,7 @@ from apex.trust import preflight
 PASS = "PASS"
 FAIL = "FAIL"
 SCOPE = "synthetic image in builder VM, not Apex installer acceptance"
-WORK_PREFIX = "/var/tmp/apex-trust-"
+WORK_PREFIX = defaults.TRUST_WORK_PREFIX
 TAG_PREFIX = "localhost/apex-trust-fixture:"
 UNEXPECTED_IDENTITY = "localhost/apex-unexpected:fixture"
 EXPECTED_STORE = ["overlay", "/var/lib/containers/storage"]

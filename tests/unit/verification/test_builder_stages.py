@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from pathlib import Path
 from typing import Any
 
@@ -19,14 +20,16 @@ from apex.kernel import commands, identifiers, refusals, safepaths, verdicts
 from apex.pipeline import facts, stages
 from apex.ports import guestshell, portset
 from apex.trust import testsources
-from apex.verification import faults, verifykeys
+from apex.verification import faulting, faults, verifykeys
 from apex.verification.stages import (
     acquire_tests_stage,
     builder_guard_stage,
     fault_stage,
     fingerprint_work_stage,
     import_payload_stage,
+    retain_report_stage,
     target_image_stage,
+    trust_work_stage,
 )
 
 REPOSITORY = Path(__file__).resolve().parents[3]
@@ -251,3 +254,39 @@ def test_a_fault_case_is_asked_with_the_arguments_the_run_holds(
     assert report.case.arguments == {"work": str(WORK)}
     assert guest.requests[-1]["arguments"] == {"work": str(WORK)}
     assert verifykeys.WORK in stage.reads
+
+
+def test_the_trust_work_directory_is_made_for_the_run(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = AnsweringGuest({})
+    run = context(ports, root, guest)
+
+    result = trust_work_stage.apply(run)
+
+    assert isinstance(result, stages.Advance)
+    assert result.facts[verifykeys.WORK] == safepaths.RemotePath(f"/var/tmp/apex-trust-{RUN}")
+    assert guest.runs[0].script.rendered().startswith(f"mkdir -m 700 /var/tmp/apex-trust-{RUN}")
+
+
+def test_a_fault_report_without_a_check_is_kept_under_the_runs_exports(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    case = faults.lookup(identifiers.ProbeId("fault.installer-trust"))
+    report = faulting.report(
+        case, {"status": "PASS", "cases": {"unsigned": "PASS"}}, reply={"unit": str(case.unit)}
+    )
+    run = context(ports, root, AnsweringGuest({}))
+    run = stages.RunContext(
+        facts=run.facts.with_fact(verifykeys.fault_report(case), report, produced_by=SEED),
+        ports=run.ports,
+    )
+
+    result = retain_report_stage.for_case(case).apply(run)
+
+    assert isinstance(result, stages.Advance)
+    kept = result.facts[verifykeys.retained(case)]
+    assert kept.path == root.path / "exports" / str(RUN) / "fault.installer-trust.json"
+    assert json.loads(run.ports.files.read_bytes(kept, limit=1 << 20)) == {
+        "status": "PASS", "cases": {"unsigned": "PASS"}, "verdict": "PASS",
+    }

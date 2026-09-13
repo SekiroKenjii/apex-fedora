@@ -1,5 +1,5 @@
 {
- "digest": "1e6f2b3d202fcf7e2ccc151acf6908d3ffa8dbd320a2883eff95d043db88743c",
+ "digest": "1b8432f6d47b768fec2ecc72db62c0a75e60e0b8e0fee5f444eb1d503fa28ea4",
  "name": "verify-fingerprint-cleanup",
  "stages": [
   {
@@ -87,7 +87,7 @@
     "verification.target"
    ],
    "writes": [
-    "fingerprint.work"
+    "guest.work"
    ]
   },
   {
@@ -99,7 +99,7 @@
    "id": "payload.import",
    "reads": [
     "agent.install",
-    "fingerprint.work",
+    "guest.work",
     "verification.guest",
     "verification.parent"
    ],
@@ -116,7 +116,7 @@
    "id": "fault.fingerprint-cleanup",
    "reads": [
     "agent.install",
-    "fingerprint.work",
+    "guest.work",
     "payload.imported",
     "verification.guest"
    ],

@@ -318,3 +318,20 @@ def test_a_test_machine_is_not_the_builder_a_builder_recipe_needs(
         verify_command.run(request(held, root, "fingerprint-cleanup", "--build", "d" * 32))
 
     assert raised.value.reason is refusals.RefusalReason.MACHINE_ROLE_MISMATCH
+
+
+def test_the_installer_trust_recipe_keeps_its_report_and_mints_nothing(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = AnsweringGuest({"fault.installer-trust": {"status": "PASS"}})
+    held = bundle(ports, guest)
+    running(held, root, machines.VmRole.BUILDER)
+    (root.path / defaults.BUILDER_KEY_NAME).write_bytes(b"key")
+
+    reply = verify_command.run(request(held, root, "installer-trust"))
+
+    assert isinstance(reply.document, dict)
+    assert reply.document["succeeded"] is True and reply.exit_code == 0
+    assert reply.document["attested"] == [] and reply.document["not_tested"] == []
+    assert "retained.fault.installer-trust" in reply.document["facts"]  # type: ignore[operator]
+    assert guest.asked == ["fault.installer-trust"]
