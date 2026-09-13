@@ -19,12 +19,13 @@ def documents(
     parent: identifiers.BuildId = PARENT,
     *,
     status: str = "PASS",
+    image_id: str = IMAGE_ID,
 ) -> identifiers.Digest:
     """Write the record, the image document and the manifest; the image's digest comes back."""
-    manifest = json.dumps({"config": {"digest": f"sha256:{IMAGE_ID}"}}).encode()
+    manifest = json.dumps({"config": {"digest": f"sha256:{image_id}"}}).encode()
     digest = hashing.digest_bytes(manifest)
     image = json.dumps({
-        "profile": "fedora", "digest": str(digest), "image_id": f"sha256:{IMAGE_ID}",
+        "profile": "fedora", "digest": str(digest), "image_id": f"sha256:{image_id}",
     }).encode()
     record = json.dumps({
         "status": status, "kind": "image", "profile": "fedora", "source_sha256": "a" * 64,

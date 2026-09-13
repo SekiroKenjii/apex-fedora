@@ -16,7 +16,7 @@ import dataclasses
 from collections.abc import Callable
 from pathlib import Path
 
-from apex.cli import commands, commandspecs
+from apex.cli import builderaccess, commands, commandspecs
 from apex.config import defaults
 from apex.kernel import encoding, errors, identifiers, refusals, safepaths
 from apex.model import machines, runtimestate
@@ -206,6 +206,7 @@ def _credentials(
 
 
 def _guest(
+    ports: portset.HostPorts,
     root: safepaths.RuntimeRoot,
     role: machines.VmRole,
     arguments: argparse.Namespace,
@@ -219,12 +220,7 @@ def _guest(
                 subject="a builder recipe takes neither --user nor --credentials",
                 remedy="the builder's account and key are the runtime root's own",
             )
-        return guestshell.GuestTarget(
-            user=defaults.BUILDER_USER,
-            port=defaults.BUILDER_SSH_PORT,
-            key=_present(root, defaults.BUILDER_KEY_NAME, remedy="prepare the builder first"),
-            known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
-        )
+        return builderaccess.leased_builder(ports, root)
     key = _present(root, defaults.GUEST_KEY_NAME, remedy="place the guest key beside the store")
     if credentials is not None and credentials.key is not None:
         key = safepaths.SafePath.regular_file(credentials.key, within=root)
@@ -278,7 +274,7 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     credentials = _credentials(ports, root, arguments.credentials)
     inputs = Inputs(
         ports=ports,
-        guest=_guest(root, recipe.role, arguments, credentials),
+        guest=_guest(ports, root, recipe.role, arguments, credentials),
         wheel=_present(
             root, defaults.AGENT_WHEEL_NAME, remedy="build the agent wheel into the root"
         ),

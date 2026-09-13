@@ -83,7 +83,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
      (f'{LEGACY} test-resume "{{{{run_directory}}}}" --without-iso',)),
     ("test-compare-disks", "run_directory",
      (f'{LEGACY} test-compare-disks "{{{{run_directory}}}}"',)),
-    ("report", "", (f"{LEGACY} report",)),
 )
 
 TOOLING: tuple[Plain, ...] = (

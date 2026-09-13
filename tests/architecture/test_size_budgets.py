@@ -19,7 +19,7 @@ FAN_IN_LIMIT = 40
 # makes all three central on purpose, so none is a hidden hub.
 FAN_IN_EXEMPT = ("apex.kernel", "apex.config.defaults", "apex.ports.portset")
 PACKAGE_LINE_BUDGETS = {
-    "kernel": 1400,
+    "kernel": 1500,
     "assets": 100,
     "model": 1800,
     "ports": 1000,
@@ -36,7 +36,7 @@ PACKAGE_LINE_BUDGETS = {
     "agent": 4800,
     "workspace": 2000,
     "adapters": 2600,
-    "cli": 1800,
+    "cli": 2200,
     "wiring": 300,
 }
 

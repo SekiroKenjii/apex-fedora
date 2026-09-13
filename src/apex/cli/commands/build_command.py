@@ -12,15 +12,13 @@ from __future__ import annotations
 import argparse
 import dataclasses
 
-from apex.cli import commands, commandspecs
+from apex.cli import builderaccess, commands, commandspecs
 from apex.composition import exports, keys
 from apex.composition.recipes import disk_artifact_recipe, image_recipe, live_artifact_recipe
-from apex.config import defaults
 from apex.kernel import encoding, errors, identifiers, refusals, safepaths
-from apex.model import builds, machines
+from apex.model import builds
 from apex.pipeline import runner
 from apex.ports import guestshell, portset
-from apex.provisioning import launching
 from apex.wiring import contexts
 
 NAME = "build"
@@ -82,34 +80,6 @@ def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
     return context.root
 
 
-def _builder(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> guestshell.GuestTarget:
-    lease = launching.current(ports, root=root)
-    if lease is None:
-        raise errors.Refusal(
-            refusals.RefusalReason.MACHINE_NOT_RUNNING,
-            subject="no machine is running",
-            remedy="start the builder first",
-        )
-    if lease.intent.role is not machines.VmRole.BUILDER:
-        raise errors.Refusal(
-            refusals.RefusalReason.MACHINE_ROLE_MISMATCH,
-            subject=f"a {lease.intent.role} machine is running",
-            remedy="a build runs in the isolated builder",
-        )
-    key = root.child(defaults.BUILDER_KEY_NAME)
-    if not key.path.is_file():
-        raise errors.PreconditionUnmet(
-            refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE,
-            subject=f"{key}: prepare the builder first",
-        )
-    return guestshell.GuestTarget(
-        user=defaults.BUILDER_USER,
-        port=defaults.BUILDER_SSH_PORT,
-        key=safepaths.SafePath.regular_file(key.path, within=root),
-        known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
-    )
-
-
 def _run(
     ports: portset.HostPorts,
     request: Request,
@@ -156,7 +126,7 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     asked = Request.parse(arguments)
     root = _root(request.context)
     ports = request.context.bundle(root)
-    builder = _builder(ports, root)
+    builder = builderaccess.leased_builder(ports, root)
     outcome = _run(
         ports, asked, repository=request.context.repository, root=root, builder=builder
     )
