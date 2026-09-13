@@ -3736,7 +3736,7 @@ Goal: the rest of what section E ends with. P21 deleted the entry point and the 
 only it used; this slice moves every host flow the older tools still owned into the
 package, one command or recipe each under the justfile names the operator already has,
 and then deletes the tools, the ten library modules they imported, the guest scripts the
-agent's units replaced, and the tests and parity suites that tested them. Seven commits on
+agent's units replaced, and the tests and parity suites that tested them. On
 `work/phase-21-host-tools`, the whole gate green at the head.
 
 ### What moved
