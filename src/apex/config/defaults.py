@@ -148,6 +148,8 @@ class BuilderDefaults:
     disk: quantities.Gib
     minimum_free: quantities.Gib
     ssh_port: quantities.TcpPort
+    firmware_code: str
+    firmware_variables: str
 
 
 BUILDER = BuilderDefaults(
@@ -157,7 +159,13 @@ BUILDER = BuilderDefaults(
     disk=quantities.Gib(160),
     minimum_free=quantities.Gib(180),
     ssh_port=BUILDER_SSH_PORT,
+    firmware_code="/usr/share/OVMF/OVMF_CODE_4M.fd",
+    firmware_variables="/usr/share/OVMF/OVMF_VARS_4M.fd",
 )
+BUILDER_DISK_NAME = "builder.qcow2"
+BUILDER_SEED_NAME = "seed.iso"
+BUILDER_VARIABLES_NAME = "builder-vars.fd"
+BUILDER_SERIAL_LOG_NAME = "builder-serial.log"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from apex.kernel import identifiers, refusals
 from apex.model import release
+from apex.targeting import releases
 
-PROFILE = release.ReleaseProfile(
+PROFILE = releases.declare(release.ReleaseProfile(
     id=identifiers.ProfileId("cachyos"),
     major=44,
     os_id="fedora",
@@ -20,4 +21,4 @@ PROFILE = release.ReleaseProfile(
     architecture="x86_64",
     supported=False,
     refusal=refusals.RefusalReason.PROFILE_NOT_REVIEWED,
-)
+))

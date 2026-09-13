@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 from machinehost import RUN, Host
 
 from apex.adapters.fakes import fake_hypervisor
 from apex.config import defaults
-from apex.kernel import errors, quantities, refusals, timing
+from apex.kernel import claims, errors, quantities, refusals, timing
 from apex.model import machines
 from apex.ports import hypervisor as hypervisor_port
 from apex.ports import locking
@@ -230,3 +232,27 @@ def test_the_monitor_wait_is_bounded_by_the_declared_deadline(host: Host) -> Non
         defaults.MONITOR_APPEARS.budget.seconds
     ) + 1
     assert isinstance(defaults.MONITOR_APPEARS, timing.Deadline)
+
+
+def test_a_fake_hypervisor_witnesses_only_a_simulation(host: Host) -> None:
+    lease = start(host)
+
+    assert lease.intent.witness is claims.EnvironmentKind.SIMULATED
+
+
+@pytest.mark.parametrize(
+    "role,expected",
+    [
+        (machines.VmRole.BUILDER, claims.EnvironmentKind.BUILD),
+        (machines.VmRole.TEST, claims.EnvironmentKind.VM),
+    ],
+)
+def test_a_real_hypervisor_witnesses_by_the_role(
+    host: Host, role: machines.VmRole, expected: claims.EnvironmentKind
+) -> None:
+    declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
+        "environment": claims.EnvironmentKind.BUILD
+    })()
+    ports = dataclasses.replace(host.ports, hypervisor=declared_real)
+
+    assert launching.witness_of(ports, role) is expected

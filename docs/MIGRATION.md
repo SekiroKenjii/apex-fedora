@@ -2719,6 +2719,68 @@ the note that declared them cost two comment lines the budget did not have, so i
 part of the module's docstring.
 `golden_change`: none. `supersedes`: the two migration tools for readiness and the chain.
 
+## P20b. The upgrade planned, and the builder started from the CLI
+
+Goal: two more commands the specification names, one that only reads and one that starts
+the machine every build needs. Three commits on `work/phase-20b-plan-machine`, the whole
+gate green at the head.
+
+### Releases register themselves
+
+`targeting/releases/` is now a registry: a profile declares itself by being imported, the
+registry is sealed once, and exactly one declared profile is supported, the one the image
+is built from; two would be a registration fault, since an upgrade plan needs one side to
+stand on. Adding the next release is adding one file, which the acceptance in the
+specification asks for, and a test does exactly that: it writes the next profile from the
+template the command prints, plans the move in a fresh interpreter, and shows no other
+Python file changed.
+
+### An upgrade is planned, not done
+
+`apex plan upgrade --release <id>` follows the specification's flow. When no module declares
+the target, the module to write is printed, every field carried over from the release in
+use to be revised, with the exit code of an unmet precondition. When one does, four lists
+come back and nothing is written: the profile fields that change, with both values; the
+reviewed locks under `config/` that name the release in use by its dist tag or mock root
+and must be looked at again; the constraints that re-observe themselves, none declared yet;
+the quirks to match again, none declared yet; and every attestation in the store, since the
+candidate digest will differ. `targeting/upgrading.py` is the reading and
+`config/locksurvey.py` reads the locks as text.
+
+### The builder starts from the CLI
+
+`apex machine start --role builder` describes the builder from the settings and the files
+under the runtime root (`provisioning/builderspec.py`: the disk, the seed, the firmware
+variables, the firmware code where the host settings say, the loopback ssh port) and
+launches it through the provisioning context, so the lock, the intent, the process and the
+lease keep their order. `status`, `stop` and `reclaim` read and release through the same
+context. The host settings gained the two firmware paths, since they are facts about the
+host and were hand-coded in the older `project.json`.
+
+The intent now carries the witness: the hypervisor adapter's word, fixed at launch. A real
+hypervisor makes a builder a build environment and a test machine a virtual one; a
+simulated one makes either a simulation. A verification stage that later seeds its witness
+from the lease can claim no more for the guest than its launcher could.
+
+### What this slice did not do
+
+A disposable test machine, with its overlays, its media and its keyboard login, does not
+start from here yet; preparing the builder's storage stays with the older `builder prepare`;
+the verification commands that lease a guest and run a recipe follow.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 312 files, 21027 lines |
+| Commands owned | four: `evidence`, `machine`, `plan`, `readiness` |
+| Fast suite | 2 284 passed, 8 skipped |
+
+`migration_red`: two docstrings narrated with "today" and "the current", which the style
+rule refuses; an unmet precondition carries no remedy and the machine command had offered
+one; the settings loader passed the complexity limit and the path picker moved out of it.
+`golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
