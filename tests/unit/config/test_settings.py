@@ -122,3 +122,15 @@ def test_a_tooling_variable_is_neither_a_setting_nor_a_typo(variable: str) -> No
     settings = loader.load(host_file=None, environment={variable: "anything"})
 
     assert settings.explain("runtime_root") is layers.Layer.DEFAULT
+
+
+def test_the_firmware_paths_come_from_the_host_file_or_the_defaults(tmp_path: Path) -> None:
+    host = tmp_path / "settings.toml"
+    host.write_text('[builder]\nfirmware_code = "~/code.fd"\n')
+
+    settings = loader.load(host_file=host, environment={})
+
+    assert settings.builder.firmware_code == Path("~/code.fd").expanduser()
+    assert settings.explain("builder.firmware_code") is layers.Layer.HOST_FILE
+    assert settings.builder.firmware_variables == Path(defaults.BUILDER.firmware_variables)
+    assert settings.explain("builder.firmware_variables") is layers.Layer.DEFAULT

@@ -12,7 +12,7 @@ import dataclasses
 import enum
 
 from apex.config import defaults
-from apex.kernel import encoding, errors, identifiers, refusals, safepaths
+from apex.kernel import claims, encoding, errors, identifiers, refusals, safepaths
 from apex.model import machines
 from apex.ports import locking, portset, qmp
 from apex.provisioning import leases
@@ -52,6 +52,7 @@ def launch(
             monitor=monitor,
             command=spec.render(),
             written_at=ports.clock.stamp(),
+            witness=witness_of(ports, spec.role),
         )
         leases.write_intent(ports, intent, root=root)
         identity = ports.hypervisor.spawn(
@@ -63,6 +64,15 @@ def launch(
         lease = leases.MachineLease(intent=intent, identity=identity)
         leases.write_lease(ports, lease, root=root)
         return lease
+
+
+def witness_of(ports: portset.HostPorts, role: machines.VmRole) -> claims.EnvironmentKind:
+    """What the launching adapter can vouch for: nothing when simulated, else by the role."""
+    if ports.hypervisor.environment is claims.EnvironmentKind.SIMULATED:
+        return claims.EnvironmentKind.SIMULATED
+    if role is machines.VmRole.BUILDER:
+        return claims.EnvironmentKind.BUILD
+    return claims.EnvironmentKind.VM
 
 
 def current(

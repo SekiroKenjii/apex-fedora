@@ -8,7 +8,7 @@ import pytest
 from machinehost import RUN, Host
 
 from apex.config import defaults
-from apex.kernel import commands, errors, refusals
+from apex.kernel import claims, commands, errors, refusals
 from apex.model import machines
 from apex.ports import clock
 from apex.provisioning import leases
@@ -22,6 +22,7 @@ def intent(host: Host) -> leases.MachineIntent:
         monitor=host.root.child("qmp.sock"),
         command=commands.Argv.of("qemu-system-x86_64", "-name", "apex-test"),
         written_at=clock.Stamp("2026-01-01T00:00:00+00:00"),
+        witness=claims.EnvironmentKind.SIMULATED,
     )
 
 
@@ -93,6 +94,30 @@ def test_an_intent_with_a_command_that_is_not_a_vector_is_refused(host: Host) ->
     host.files.write_atomic(
         host.root.child(defaults.INTENT_NAME),
         json.dumps(document).encode(),
+        mode=defaults.RECORD_MODE,
+    )
+
+    with pytest.raises(errors.Refusal) as raised:
+        leases.read_intent(host.ports, root=host.root)
+
+    assert raised.value.reason is refusals.RefusalReason.LEASE_MALFORMED
+
+
+def test_the_witness_is_on_the_intent_and_reads_back(host: Host) -> None:
+    leases.write_intent(host.ports, intent(host), root=host.root)
+
+    stored = leases.read_intent(host.ports, root=host.root)
+
+    assert stored is not None and stored.witness is claims.EnvironmentKind.SIMULATED
+    document = intent(host).document()
+    assert document["witness"] == "simulated"
+
+
+def test_an_intent_without_a_witness_is_malformed(host: Host) -> None:
+    document = dict(intent(host).document())
+    del document["witness"]
+    host.files.write_atomic(
+        host.root.child(defaults.INTENT_NAME), json.dumps(document).encode(),
         mode=defaults.RECORD_MODE,
     )
 

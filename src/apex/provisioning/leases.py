@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Self
 
 from apex.config import defaults
-from apex.kernel import commands, encoding, errors, identifiers, refusals, safepaths
+from apex.kernel import claims, commands, encoding, errors, identifiers, refusals, safepaths
 from apex.model import machines
 from apex.ports import clock, portset
 
@@ -23,17 +23,26 @@ SCHEMA = 1
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class MachineIntent:
+    """What was meant to start, and the environment the machine will be witnessed as.
+
+    The witness is the hypervisor adapter's word, fixed at launch: a real hypervisor makes a
+    builder a build environment and a test machine a virtual one, and a simulated one makes
+    either a simulation, so no later stage can claim more for the guest than its launcher.
+    """
+
     role: machines.VmRole
     run: identifiers.RunId
     run_directory: safepaths.SafePath
     monitor: safepaths.SafePath
     command: commands.Argv
     written_at: clock.Stamp
+    witness: claims.EnvironmentKind
 
     def document(self) -> encoding.Document:
         return {
             "schema": SCHEMA,
             "role": str(self.role),
+            "witness": str(self.witness),
             "run": str(self.run),
             "run_directory": str(self.run_directory),
             "monitor": str(self.monitor),
@@ -54,6 +63,7 @@ class MachineIntent:
                 monitor=safepaths.SafePath(_path(document["monitor"])),
                 command=commands.Argv.of(*command),
                 written_at=clock.Stamp(str(document["written_at"])),
+                witness=claims.EnvironmentKind(str(document["witness"])),
             )
         except (KeyError, TypeError, ValueError) as error:
             raise errors.Refusal(

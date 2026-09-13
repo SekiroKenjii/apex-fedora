@@ -20,6 +20,8 @@ BUILDER_FIELDS = {
     "reserve_mib": int,
     "disk_gib": int,
     "minimum_free_gib": int,
+    "firmware_code": str,
+    "firmware_variables": str,
 }
 
 
@@ -30,6 +32,8 @@ class BuilderSettings:
     reserve: quantities.Mib
     disk: quantities.Gib
     minimum_free: quantities.Gib
+    firmware_code: Path
+    firmware_variables: Path
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -87,6 +91,25 @@ def _check_environment(environment: Mapping[str, str]) -> dict[str, str]:
     return applied
 
 
+def _pick_path(
+    builder_file: Mapping[str, object],
+    origins: dict[str, layers.Layer],
+    key: str,
+    fallback: str,
+) -> Path:
+    field = f"builder.{key}"
+    if key not in builder_file:
+        origins[field] = layers.Layer.DEFAULT
+        return Path(fallback)
+    supplied = builder_file[key]
+    if not isinstance(supplied, str) or not supplied:
+        raise errors.Refusal(
+            refusals.RefusalReason.INCONSISTENT_SETTINGS, subject=f"builder.{key} must be a path"
+        )
+    origins[field] = layers.Layer.HOST_FILE
+    return Path(supplied).expanduser()
+
+
 def load(*, host_file: Path | None, environment: Mapping[str, str]) -> Settings:
     origins: dict[str, layers.Layer] = {}
     builder_file = _builder_table(host_file)
@@ -105,6 +128,9 @@ def load(*, host_file: Path | None, environment: Mapping[str, str]) -> Settings:
         origins[field] = layers.Layer.HOST_FILE
         return supplied
 
+    def pick_path(key: str, fallback: str) -> Path:
+        return _pick_path(builder_file, origins, key, fallback)
+
     builder = BuilderSettings(
         processors=int(pick("processors", defaults.BUILDER.processors)),
         memory=quantities.Mib(int(pick("memory_mib", defaults.BUILDER.memory.value))),
@@ -113,6 +139,8 @@ def load(*, host_file: Path | None, environment: Mapping[str, str]) -> Settings:
         minimum_free=quantities.Gib(
             int(pick("minimum_free_gib", defaults.BUILDER.minimum_free.value))
         ),
+        firmware_code=pick_path("firmware_code", defaults.BUILDER.firmware_code),
+        firmware_variables=pick_path("firmware_variables", defaults.BUILDER.firmware_variables),
     )
     if builder.reserve.value >= builder.memory.value:
         raise errors.Refusal(
