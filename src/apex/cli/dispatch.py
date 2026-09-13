@@ -23,6 +23,7 @@ def run(
     context_of: Callable[[], contexts.Context],
     stdout: TextIO,
     stderr: TextIO,
+    stdin: TextIO | None = None,
 ) -> int:
     command = commands.lookup(argv[0]) if argv else None
     replacement = legacy_bridge.replacement(argv[0]) if argv else None
@@ -40,7 +41,11 @@ def run(
     if command is None:
         return legacy_bridge.dispatch(list(argv))
     try:
-        reply = command.run(commandspecs.Request(arguments=tuple(argv[1:]), context=context_of()))
+        reply = command.run(commandspecs.Request(
+            arguments=tuple(argv[1:]),
+            context=context_of(),
+            read_input=commandspecs.no_input if stdin is None else stdin.read,
+        ))
     except errors.ApexError as failure:
         reply = commandspecs.Reply(narrative=f"{failure}\n", exit_code=failure.exit_code)
     except SystemExit as stop:

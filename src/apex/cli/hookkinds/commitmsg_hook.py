@@ -30,4 +30,6 @@ def inspect(request: hookspecs.HookRequest) -> Sequence[rulespecs.Finding]:
     return gitguarding.judge_message(subject, rules=gitguarding.registered_message_rules())
 
 
-hookkinds.declare(hookspecs.HookKind(name=NAME, subject=SUBJECT, inspect=inspect))
+hookkinds.declare(
+    hookspecs.HookKind(name=NAME, subject=SUBJECT, remedy="change the message", inspect=inspect)
+)
