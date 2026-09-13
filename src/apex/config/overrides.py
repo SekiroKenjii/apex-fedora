@@ -1,7 +1,12 @@
 """Environment variables this program accepts, declared one by one.
 
 A variable in the namespace that is not declared is a hard error, so a misspelt override is
-refused by name instead of changing nothing in silence.
+refused by name instead of changing nothing in silence. Two sets are named beside the
+overrides so the loader can tell a typo from a concern that is not a setting: the variables
+the guest side reads through its own request document, and the variables the tooling
+around the program reads, the interpreter the recipes run under, the guard's fallback valve
+and the chain key a command reads directly, which a run under the gate must not be refused
+for.
 """
 
 from __future__ import annotations
@@ -38,7 +43,4 @@ GUEST_VARIABLES = frozenset({
     "APEX_WRONG_PUBLIC_KEY",
 })
 
-# Variables the tooling around the program reads, never the program: the interpreter the
-# recipes run under, the guard's fallback valve, and the chain key a command reads directly.
-# Listed so a run under the gate is not refused for the environment the gate itself sets.
 TOOLING_VARIABLES = frozenset({"APEX_PYTHON", "APEX_GUARD", "APEX_CHAIN_KEY"})
