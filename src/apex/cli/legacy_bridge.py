@@ -18,7 +18,7 @@ LEGACY_ENTRY_POINT = LEGACY_TOOLS / "apex.py"
 BRIDGED = frozenset({
     "artifact", "build", "build-nvidia", "builder", "decode-coefficient", "doctor",
     "git-hook", "hardware-snapshot", "hooks", "installer-fixtures", "installer-logs",
-    "readiness", "record", "report", "select-candidate", "sources", "test-artifact",
+    "record", "report", "select-candidate", "sources", "test-artifact",
     "test-compare-disks", "test-fingerprint", "test-hotplug-usb", "test-installer-fault",
     "test-installer-fault-collect", "test-installer-trust", "test-live-check",
     "test-power-loss", "test-resume", "test-vm", "trust-development-key", "ventoy-media",

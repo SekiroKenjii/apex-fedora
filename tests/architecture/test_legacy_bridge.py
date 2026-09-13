@@ -39,10 +39,16 @@ def bridged_at(revision: str) -> frozenset[str] | None:
     return None
 
 
-def test_the_bridge_covers_every_subcommand_the_corpus_exercises() -> None:
+def test_every_subcommand_the_corpus_exercises_is_bridged_or_owned() -> None:
+    from apex.cli import commands
     from migration import golden_corpus
 
-    assert set(golden_corpus.SUBCOMMANDS) == set(legacy_bridge.BRIDGED)
+    exercised: set[str] = set(golden_corpus.SUBCOMMANDS)
+    owned: set[str] = set(commands.names())
+
+    assert exercised >= legacy_bridge.BRIDGED
+    assert exercised - legacy_bridge.BRIDGED <= owned
+    assert not (legacy_bridge.BRIDGED & owned)
 
 
 def test_the_bridge_never_grows() -> None:

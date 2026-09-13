@@ -26,9 +26,14 @@ TIMEOUT = 60
 
 
 def invocation_arguments() -> list[list[str]]:
+    """Every corpus invocation the bridge still answers for; a moved command has its own tests."""
+    from apex.cli import legacy_bridge
+
     arguments = []
     for invocation in golden_corpus.invocations():
         if "<subject>" in invocation.arguments:
+            continue
+        if invocation.arguments and not legacy_bridge.handles(invocation.arguments[0]):
             continue
         arguments.append(list(invocation.arguments))
     return arguments
