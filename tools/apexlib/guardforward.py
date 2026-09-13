@@ -21,24 +21,17 @@ from apexlib import gitguard
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 PACKAGE = REPOSITORY / "src" / "apex" / "__init__.py"
-SWITCH = "APEX_GUARD"
-LEGACY = "legacy"
 FLOOR = (3, 12)
 NOTE = "NOTE: the repository rules did not answer, so the previous guard decided this."
-FOOTER = (
-    f"If this refusal is wrong, set {SWITCH}={LEGACY} and run the same command again "
-    "to ask the previous guard instead."
-)
+FOOTER = "If this refusal is wrong, the rule that refused is named above; change the message."
 
 
-def _unavailable(environment: Mapping[str, str]) -> str:
+def _unavailable(environment: Mapping[str, str]) -> str:  # noqa: ARG001
     """Why the rules cannot answer, decided before anything can raise.
 
-    Every check here runs before the path is touched and before the package is imported, so the
-    switch still works when the package is missing or the interpreter cannot parse it.
+    Every check here runs before the path is touched and before the package is imported, so
+    a missing package or an interpreter that cannot parse it is reported, never raised.
     """
-    if environment.get(SWITCH) == LEGACY:
-        return f"{SWITCH}={LEGACY} is set"
     if sys.version_info[:2] < FLOOR:
         running = ".".join(str(part) for part in sys.version_info[:3])
         needed = ".".join(str(part) for part in FLOOR)

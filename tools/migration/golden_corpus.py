@@ -142,9 +142,6 @@ def run(invocation: Invocation, root: Path, scratch: Path) -> dict[str, object]:
     environment["APEX_EFFECT_TRACE"] = str(trace_file)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     environment["COLUMNS"] = "100"
-    # The corpus records what the guard in this tree does. An operator who has exported
-    # the fallback switch would otherwise replay all 72 invocations against the older one.
-    environment["APEX_GUARD"] = ""
     completed = subprocess.run(
         [sys.executable, str(TRACER), str(ENTRY_POINT), *arguments],
         capture_output=True, text=True, timeout=INVOCATION_TIMEOUT,

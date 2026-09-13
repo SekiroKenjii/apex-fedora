@@ -8,10 +8,10 @@ They check staged content, commit messages and outgoing history. They preserve e
 hooks rather than overwrite another policy. Hooks are local safety checks, not server-side
 access control; do not bypass them.
 
-Commit messages are now checked by the repository rules, which name the rule that refused.
-If a refusal is wrong, put `APEX_GUARD=legacy` in front of the same command to ask the
-previous guard instead. That swaps one implementation for the other and leaves the check on.
-`--no-verify` is the only thing that turns it off, so reach for it last.
+Commit messages are checked by the repository rules, which name the rule that refused.
+The rules decide; there is no switch back to the previous guard, which now answers only
+when the rules cannot load at all and says so. `--no-verify` is the only thing that turns
+the check off, so reach for it last.
 
 Reverting a guard change has one sharp edge worth knowing before you meet it. Reverting the
 most recent commit runs no hooks, so it just works. Reverting an older one can conflict, and

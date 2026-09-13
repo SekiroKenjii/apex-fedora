@@ -89,6 +89,7 @@ class RefusalReason(enum.StrEnum):
     SOCKET_PATH_TOO_LONG = "machine.socket-path-too-long"
     MACHINE_NOT_RUNNING = "machine.not-running"
     MACHINE_ROLE_MISMATCH = "machine.role-mismatch"
+    COMMAND_RETIRED = "command.retired"
     MACHINE_IDENTITY_CHANGED = "machine.identity-changed"
     MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
     MACHINE_RUNNING = "machine.running"

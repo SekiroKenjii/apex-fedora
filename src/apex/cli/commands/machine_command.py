@@ -32,6 +32,8 @@ NAME = "machine"
 SUMMARY = "the one machine the runtime root may run: prepare, start, stop, reclaim, status"
 PREPARE, START, STOP, STATUS, RECLAIM = "prepare", "start", "stop", "status", "reclaim"
 HOTPLUG = "hotplug-usb"
+POWER_LOSS = "power-loss"
+TEST = "test"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -52,6 +54,7 @@ def _parser() -> argparse.ArgumentParser:
     start.add_argument("--boot-usb", type=Path, help="an image booted as emulated usb storage")
     hotplug = actions.add_parser(HOTPLUG, help="attach a usb fixture to the running test machine")
     hotplug.add_argument("--source", type=Path, required=True)
+    actions.add_parser(POWER_LOSS, help="kill the running test machine outright, as a fault")
     actions.add_parser(STOP, help="ask the running machine to power down")
     actions.add_parser(STATUS, help="what is running, if anything")
     actions.add_parser(RECLAIM, help="what was started and left behind")
@@ -139,6 +142,22 @@ def hotplug(
     return {"attached": hotplugging.attach(ports, root=root, source=source).document()}
 
 
+def power_loss(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encoding.Document:
+    lease = launching.current(ports, root=root)
+    if lease is None:
+        raise errors.Refusal(
+            refusals.RefusalReason.MACHINE_NOT_RUNNING,
+            subject="no machine is running",
+            remedy="a power loss is injected into a running test machine",
+        )
+    owned = machines.OwnedTestVm(identity=lease.identity, role=lease.intent.role)
+    launching.power_loss(ports, owned, lease, root=root)
+    return {
+        "terminated": lease.identity.process,
+        "record": str(lease.intent.run_directory.path / defaults.POWER_LOSS_RECORD),
+    }
+
+
 def stop(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encoding.Document:
     lease = launching.current(ports, root=root)
     if lease is None:
@@ -177,6 +196,8 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
         return commandspecs.Reply(document=start_test(request.context, ports, root, arguments))
     if arguments.action == HOTPLUG:
         return commandspecs.Reply(document=hotplug(ports, root, arguments.source))
+    if arguments.action == POWER_LOSS:
+        return commandspecs.Reply(document=power_loss(ports, root))
     if arguments.action == STOP:
         return commandspecs.Reply(document=stop(ports, root))
     if arguments.action == RECLAIM:
@@ -184,4 +205,45 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     return commandspecs.Reply(document=status(ports, root))
 
 
-commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run))
+def _test(*arguments: str) -> tuple[str, ...]:
+    return (NAME, START, "--role", TEST, "--disk", "{{disk}}", *arguments)
+
+
+RECIPES = (
+    commandspecs.Recipe("builder-prepare", (), (NAME, PREPARE)),
+    commandspecs.Recipe("builder-start", (), (NAME, START, "--role", "builder")),
+    commandspecs.Recipe("builder-stop", (), (NAME, STOP)),
+    commandspecs.Recipe("builder-status", (), (NAME, STATUS)),
+    commandspecs.Recipe("test-vm", ("disk",), _test()),
+    commandspecs.Recipe(
+        "test-installer", ("disk", "iso", "other_disk"),
+        _test("--iso", "{{iso}}", "--medium", "installer", "--extra-disk", "{{other_disk}}"),
+    ),
+    commandspecs.Recipe(
+        "test-installer-diagnostic", ("disk", "iso", "other_disk"),
+        _test(
+            "--iso", "{{iso}}", "--medium", "installer", "--extra-disk", "{{other_disk}}",
+            "--serial-console",
+        ),
+    ),
+    commandspecs.Recipe(
+        "test-live-hotplug", ("disk", "iso", "other_disk"),
+        _test(
+            "--iso", "{{iso}}", "--medium", "live", "--extra-disk", "{{other_disk}}",
+            "--serial-console", "--usb-bus",
+        ),
+    ),
+    commandspecs.Recipe(
+        "test-ventoy", ("disk", "other_disk", "usb_image"),
+        _test(
+            "--extra-disk", "{{other_disk}}", "--boot-usb", "{{usb_image}}", "--usb-bus",
+            "--serial-console",
+        ),
+    ),
+    commandspecs.Recipe("test-hotplug-usb", ("source",), (NAME, HOTPLUG, "--source", "{{source}}")),
+    commandspecs.Recipe("test-power-loss", (), (NAME, POWER_LOSS)),
+)
+
+commands.declare(
+    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
+)

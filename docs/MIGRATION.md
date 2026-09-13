@@ -3023,6 +3023,67 @@ provisioning and verification packages passed their budgets, raised to 1800 and 
 `golden_change`: one plan added, `verify-fingerprint-cleanup` changed by the work fact's
 name. `supersedes`: none yet.
 
+## P20g. The justfile from the registry, the bridge narrowed, the guard's switch gone
+
+Goal: the operator's surface rendered from what the commands declare rather than kept by
+hand, the older tree no longer answering for what the new one owns, and the last valve to
+the previous guard removed. Four commits on `work/phase-20g-justfile`, the whole gate
+green at the head.
+
+### The justfile from the registry
+
+A command now says which recipes invoke it (`commandspecs.Recipe`: the recipe's name, its
+parameters as just spells them, and the argument vector with each parameter written as
+`{{name}}`), and `cli/justfile.py` renders the whole `Justfile`: the header, every
+command's recipes as `{{apex}} ...` with each operand quoted, the older tools' recipes kept
+word for word until that tree is deleted, the gate and its tools. `tools/migration/
+generated_justfile.py freeze|check` writes and holds it, and `just justfile` is in the
+gate, so a recipe can never name a command that is gone and a recipe nobody declares
+cannot appear by hand. The frozen operator surface is kept: every recipe the baseline
+had is still there with the same operands, and thirty three were added, among them the
+verification recipes and `test-power-loss`. The machine recipes now run `apex machine`,
+and `test-installer`, `test-installer-diagnostic` and `test-live-hotplug` say which medium
+they boot, which the older `test-vm` left implicit.
+
+### The bridge narrowed
+
+Six names left the bridge and are retired rather than dropped: `builder`, `test-vm`,
+`test-hotplug-usb`, `test-power-loss`, `test-fingerprint` and `test-installer-trust`. A
+retired name is refused at the prompt with its replacement spelt out
+(`command.retired`), never answered by the older tree, so habit is corrected where it
+is typed. `apex machine power-loss` arrived with them: the running test machine killed
+outright as a fault, recorded in its run directory, and refused for the builder by the
+type that owns disposable machines. The bridge holds twenty three names; the corpus test
+now admits a name that is bridged, owned or retired, and nothing else.
+
+### The guard's switch gone
+
+`APEX_GUARD=legacy` is no longer read: the repository rules decide a commit, and the
+previous guard answers only when the rules cannot load at all, saying so. The refusal's
+last line now says the rule that refused is named above; the six golden entries that
+carried the old sentence were re-recorded, and the loader no longer knows the variable
+as a tooling one, so a shell that still exports it is told.
+
+### What this slice did not do
+
+The remaining twenty three bridged names, among them the build recipes the pipeline
+already runs, `test-live-check` with its five cases, `test-compare-disks` and
+`test-resume`; a real first boot of a builder from the generated seed; the older tree's
+deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 343 files, 24136 lines |
+| Justfile | 84 recipes, 51 frozen kept, 33 added |
+| Fast suite | 2 445 passed, 8 skipped |
+
+`migration_red`: the verification command already used the name `RECIPES` for its
+argument choices, and the justfile recipes declared under the same name replaced them
+until the tests said so. `golden_change`: six git-hook entries, the footer sentence.
+`supersedes`: none yet.
+
 ## Commands
 
 ```sh

@@ -324,3 +324,43 @@ def variables_settings(tmp_path: Path) -> loader.Settings:
         f'firmware_variables = "{tmp_path}/OVMF_VARS.fd"\n'
     )
     return loader.load(host_file=host, environment={})
+
+
+def test_power_loss_kills_only_a_running_test_machine_and_records_the_fault(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    settings = variables_settings(tmp_path)
+    (root.path / "target.qcow2").write_bytes(b"")
+    held = dataclasses.replace(bundle(ports), processes=Storage())
+    held.files.write_atomic(
+        safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
+    )
+    machine_command.run(request(
+        held, settings, root, "start", "--role", "test", "--disk", str(root.path / "target.qcow2"),
+    ))
+
+    reply = machine_command.run(request(held, settings, root, "power-loss"))
+    status = machine_command.run(request(held, settings, root, "status"))
+
+    assert isinstance(reply.document, dict)
+    assert str(reply.document["record"]).endswith("/power-loss.json")
+    assert isinstance(status.document, dict) and status.document["running"] is False
+    hypervisor = held.hypervisor
+    assert isinstance(hypervisor, fake_hypervisor.FakeQemu)
+    assert reply.document["terminated"] == hypervisor.spawned[0].identity.process
+
+
+def test_power_loss_is_refused_for_the_builder(
+    ports: portset.HostPorts, prepared: tuple[loader.Settings, safepaths.RuntimeRoot]
+) -> None:
+    settings, root = prepared
+    held = bundle(ports)
+    machine_command.run(request(held, settings, root, "start", "--role", "builder"))
+
+    with pytest.raises(errors.Refusal) as raised:
+        machine_command.run(request(held, settings, root, "power-loss"))
+
+    assert raised.value.reason is refusals.RefusalReason.NOT_A_DISPOSABLE_MACHINE

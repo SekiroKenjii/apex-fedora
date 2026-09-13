@@ -61,4 +61,8 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     )
 
 
-commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run))
+RECIPES = (commandspecs.Recipe("verify-chain", (), (NAME, VERIFY_CHAIN)),)
+
+commands.declare(
+    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
+)
