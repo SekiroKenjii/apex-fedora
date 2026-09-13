@@ -154,7 +154,9 @@ def test_real_pre_commit_blocks_local_file_and_allows_recovery(repo):
     (repo / 'product.txt').write_text('product source')
     git(repo, 'add', 'AGENTS.md', 'product.txt')
     rejected = attempt(repo, 'commit', '-qm', 'build: add product')
-    assert rejected.returncode != 0 and 'Private/local file' in rejected.stderr
+    # Anchored on the refusing rule, as the commit message cases are, now that the
+    # pre-commit hook answers to the rules through the forwarder.
+    assert rejected.returncode != 0 and 'repository.private-document' in rejected.stderr
     assert attempt(repo, 'rev-parse', '--verify', 'HEAD').returncode != 0
     git(repo, 'rm', '--cached', 'AGENTS.md')
     git(repo, 'commit', '-qm', 'build: add product')

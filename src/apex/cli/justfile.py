@@ -41,7 +41,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
     ("observe-fingerprint", "", ("bash tools/observe-fingerprint.sh",)),
     ("test-fingerprint-dialog", "source",
      ('python3 tools/test-fingerprint-dialog.py "{{source}}"',)),
-    ("hooks", "", (f"{LEGACY} hooks",)),
     ("builder-compact", "", ("python3 tools/compact-builder.py --replace-verified",)),
     ("builder-finalize", "compaction_id",
      ('python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"',)),
