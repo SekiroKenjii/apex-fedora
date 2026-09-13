@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from answeringguest import AnsweringGuest
+from monitorfixtures import DrawingMonitor
 
 from apex.adapters.fakes import fake_clock, fake_files, fake_hypervisor, fake_qmp
 from apex.cli import commandspecs
@@ -21,6 +22,8 @@ from apex.wiring import contexts
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 CANDIDATE = "sha256:" + "c" * 64
+HEADER = b"P6\n300 100\n255\n"
+BARS = HEADER + (b"\xe6\x26\x26" * 100 + b"\x26\xbf\x40" * 100 + b"\x26\x4c\xe6" * 100) * 100
 
 
 @pytest.fixture
@@ -166,3 +169,82 @@ def test_a_machine_launched_by_a_fake_is_refused_before_the_guest_is_touched(
     assert isinstance(reply.document, dict)
     assert reply.document["refusal"] == "evidence.environment-not-witnessed"
     assert guest.asked == [] and guest.sent == []
+
+
+def credentials(
+    held: portset.HostPorts, root: safepaths.RuntimeRoot, user: str = "apex-test"
+) -> Path:
+    """The fixture's credentials, on disk for the path check and in the fake files for reading."""
+    directory = root.path / defaults.TEST_ACCESS_DIRECTORY
+    directory.mkdir(mode=0o700, exist_ok=True)
+    path = directory / defaults.CREDENTIALS_NAME
+    payload = json.dumps({"user": user, "password": "Ab-1_", "key": "k"}).encode()
+    path.write_bytes(payload)
+    held.files.write_atomic(safepaths.SafePath(path), payload, mode=defaults.RECORD_MODE)
+    return path
+
+
+def test_the_render_recipe_logs_in_with_the_credentials_and_the_fake_bundle_is_refused(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = AnsweringGuest({
+        "desktop.session": [{"found": False}, {"found": True, "wayland": True}],
+        "desktop.greeter": {"found": True},
+        "desktop.shell-startup": {"found": True, "pid": 1, "event": {}},
+        "desktop.overview": [{"reached": True}, {"reached": True}, {"reached": True}],
+        "desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"},
+    })
+    held = bundle(ports, guest)
+    assert isinstance(held.files, fake_files.MemoryFiles)
+    held = dataclasses.replace(held, monitor=DrawingMonitor(held.files, {"application.ppm": BARS}))
+    running(held, root, machines.VmRole.TEST)
+    path = credentials(held, root)
+
+    reply = verify_command.run(request(held, root, "desktop-render", "--credentials", str(path)))
+
+    assert isinstance(reply.document, dict)
+    assert reply.document["refusal"] == "evidence.simulated-environment"
+    assert reply.document["not_tested"] == ["desktop.password-wayland"]
+    assert guest.asked[:3] == ["desktop.session", "desktop.greeter", "desktop.session"]
+    assert guest.targets[-1].user == "apex-test"
+    assert "Ab-1_" not in json.dumps(reply.document)
+
+
+def test_the_render_recipe_needs_the_credentials(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST)
+
+    with pytest.raises(errors.Refusal) as raised:
+        verify_command.run(request(held, root, "desktop-render", "--user", "tester"))
+
+    assert raised.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+
+
+def test_a_user_that_contradicts_the_credentials_is_refused(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST)
+    path = credentials(held, root)
+
+    with pytest.raises(errors.Refusal) as raised:
+        verify_command.run(
+            request(held, root, "desktop-render", "--user", "other", "--credentials", str(path))
+        )
+
+    assert raised.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert "other" in str(raised.value)
+
+
+def test_without_an_account_from_either_source_the_recipe_is_refused(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST)
+
+    with pytest.raises(errors.Refusal) as raised:
+        verify_command.run(request(held, root, "live-protection"))
+
+    assert raised.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
