@@ -3484,6 +3484,67 @@ the older tree's real pre-commit test, which asserted the older guard's sentence
 anchored on the refusing rule as its commit message cases have been since P13.
 `supersedes`: none yet.
 
+## P20n. The host's own tools: doctor, the hardware snapshot, the coefficient decoder
+
+Goal: the three names the older tree still answered for the physical host, `doctor`,
+`hardware-snapshot` and `decode-coefficient`, on the new tree through the ports. Four
+commits on `work/phase-20n-host`, the whole gate green at the head.
+
+### One method the process port lacked
+
+`ProcessPort.locate(program)` says where a program would be found on the search path, or
+nothing; the real adapter asks the shell's lookup, the scripted one a table, and the
+contract suite holds both. It is what `doctor` and the snapshot needed to say "tool is not
+installed" without running anything.
+
+### The doctor
+
+`apex doctor` (`provisioning/hostcheck.py`) reads the host through the ports: the seven
+tools by `locate`, the kvm device, the available memory and the free space under the
+runtime root through the hypervisor's capacity, the firmware the settings name through the
+file port, and the running lease. The report is the reply whether or not the host is ready,
+so the operator reads all of it; every shortfall is named in the narrative in the order
+the older tool checked (the tools, the firmware, then memory, space, kvm) and the exit
+code is a refusal's when there is one. `machine.host-tool-missing` and
+`machine.firmware-absent` are the two reasons it adds.
+
+### The snapshot and the decoder
+
+`apex hardware snapshot` (`verification/hardwaresnapshot.py`) keeps the older report,
+field for field: the same fixed files, every card's codec dumps and every codec's sysfs
+configuration found by listing through the file port, the same programs run through the
+process port under the same bounds (256 KiB, fifteen seconds), the package query the host
+has, one mixer dump per card, and the fingerprint reader found by its vendor and product
+ids; each read or run is `READ` or `UNAVAILABLE` with its reason, the scope line says what
+the snapshot is not, and the acceptance fields stay NOT TESTED. Each call writes once
+under a fresh token beside the store, never over an earlier capture.
+`apex hardware decode-coefficient <nid> <verb> <parameter>`
+(`verification/hdacoefficient.py`) is the older arithmetic with refusals in place of
+`ValueError`, and its three recorded outputs are the test.
+
+`hardware-snapshot` and `decode-coefficient` are retired; `doctor` is owned under its own
+name; the justfile's `doctor` and `hardware-snapshot` recipes run the new commands. The
+bridge holds two names: `build-nvidia` and `ventoy-media`.
+
+### What this slice did not do
+
+Run the snapshot or the doctor on the M7400QC, which only the operator can (both are proven
+on fakes and the process port's lookup on the real host; NOT TESTED on the machine the
+snapshot is for); `build-nvidia`, `ventoy-media` (P20o); the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 385 files, 27943 lines |
+| Bridge | two names |
+| Fast suite | 2 619 passed, 8 skipped |
+
+`migration_red`: two tests used `doctor` as the example of a name the bridge answers, and
+now use names it still answers; provisioning passed 2000 (2005) and was raised to 2200,
+verification passed 3600 (3691) and was raised to 3800; the parity floor fell to four
+invocations with two names bridged. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
