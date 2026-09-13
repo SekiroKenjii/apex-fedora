@@ -3209,6 +3209,63 @@ itself; the note filed as a proof satisfied the pass rule on its own, so the com
 requires a proof file beyond it; the cli and kernel packages passed their budgets, raised
 to 2200 and 1500. `golden_change`: none. `supersedes`: none yet.
 
+## P20j. The run recorded, then compared or resumed
+
+Goal: the two things a stopped test run could still only have done to it by the older tree,
+its overlays compared with their sources and the machine booted again over them, from the
+CLI and from a record the run itself leaves. Three commits on `work/phase-20j-live-checks`,
+the whole gate green at the head.
+
+### The run's record
+
+A test machine now leaves `run.json` beside its overlays (`provisioning/runrecord.py`): the
+source each overlay layers, the image it booted and its medium, and the switches the
+request carried. The lease says how the machine was started; this says what it was started
+from. A hot-plugged fixture is read back from its own record as one more layer. Like the
+lease it is never deleted, and a run this tree did not start has none, which is how a
+comparison or a resumption of it is refused by name.
+
+### Compared, resumed
+
+`apex machine compare --run <id or run directory>` reads the record, walks every source
+and overlay as a backing chain, and runs the comparison the tree has had since P17,
+writing `disk-comparison.json` in the run directory; the machine must be stopped. `apex
+machine resume --run <id or run directory> [--without-iso]` (`provisioning/resuming.py`)
+rebuilds the same machine over the same overlays and the firmware variables the machine
+wrote, without remaking anything, after stamping copies of the variables, the serial log
+and the record aside so the earlier boot's evidence survives the next; the boot image may
+be left out, which is how an installed disk is booted after its install. A run that
+carried the emulated usb bus is not resumed, because the fixture hot-plugged into it
+cannot be attached again the same way. The machine command dispatches its nine actions
+from a table now.
+
+`test-compare-disks` and `test-resume` are retired; the justfile's `test-compare-disks`
+and `test-resume-installed` recipes take the run directory they always took and hand its
+name to the new command. The bridge holds twelve names.
+
+### What this slice did not do
+
+`test-live-check` and its five probes, which reach the live medium's rescue shell over the
+serial socket; that needs the serial port the port map lists as open, and is the next
+slice on its own. The installer fault and log commands, `installer-fixtures`,
+`ventoy-media`, `build-nvidia`, `doctor`, `hooks`, `git-hook`, `hardware-snapshot`,
+`decode-coefficient`; a real first boot of a builder from the generated seed; the older
+tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 356 files, 25433 lines |
+| Bridge | twelve names |
+| Fast suite | 2 496 passed, 8 skipped |
+
+`migration_red`: the resumption checked the firmware variables on the real disk where the
+tests write them through the fake file port, so it checks them through the port as it
+reads everything else in the run directory; the machine command's dispatcher passed the
+complexity limit with two more actions and became a table; provisioning passed 1800
+(1904) and was raised to 2000. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
