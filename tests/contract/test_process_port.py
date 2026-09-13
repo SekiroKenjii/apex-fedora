@@ -155,3 +155,12 @@ def test_an_unrestricted_run_records_no_restriction(processes: process.ProcessPo
     if isinstance(processes, fake_process.ScriptedProcess):
         assert processes.restrictions[-1] == frozenset()
         assert processes.variables[-1] is None
+
+
+def test_a_program_on_the_search_path_is_located_and_an_absent_one_is_not(
+    processes: process.ProcessPort,
+) -> None:
+    found = processes.locate("sh")
+
+    assert found is not None and found.name == "sh" and found.is_absolute()
+    assert processes.locate("apex-no-such-program") is None

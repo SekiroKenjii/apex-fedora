@@ -62,6 +62,9 @@ class RecordingProcess(process.ProcessPort):
         self.calls.append(list(argv))
         return commands.CompletedRun(exit_code=0, stdout=b"", stderr=b"", truncated=False)
 
+    def locate(self, program: str) -> Path | None:  # noqa: ARG002
+        return None
+
 
 @pytest.fixture
 def root(tmp_path: Path) -> safepaths.RuntimeRoot:

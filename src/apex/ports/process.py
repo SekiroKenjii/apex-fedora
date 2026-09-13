@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Protocol
 
 from apex.kernel import claims, commands, safepaths, timing
@@ -37,4 +38,9 @@ class ProcessPort(Protocol):
         `dropping` removes capabilities from the child's bounding set before it runs; a host
         that cannot apply the restriction fails the run rather than running it unrestricted.
         """
+        ...
+
+    @abstractmethod
+    def locate(self, program: str) -> Path | None:
+        """Where the program would be found on the search path, or nothing when nowhere."""
         ...
