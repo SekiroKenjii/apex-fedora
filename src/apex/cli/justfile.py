@@ -55,7 +55,7 @@ FOLDED: tuple[Plain, ...] = (
 )
 
 TOOLING: tuple[Plain, ...] = (
-    ("test", "", (f"{UV} python tools/check_static.py", PYTEST)),
+    ("test", "", (f"{UV} python tools/migration/check_static.py", PYTEST)),
     ("test-integration", "", (f"{PYTEST} -m integration",)),
     ("runtime-freeze", "", (f"{MIGRATION}/runtime_inventory.py record",)),
     ("runtime-verify", "", (f"{MIGRATION}/runtime_inventory.py verify",)),

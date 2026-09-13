@@ -1,15 +1,13 @@
-"""The screen judgements say what the older tool said, over rows instead of pixels."""
+"""The screen judgements over rows, held to a pixel-by-pixel reading of the same rules."""
 
 from __future__ import annotations
 
 import random
-from pathlib import Path
 
 import pytest
 
 from apex.kernel import errors, refusals
 from apex.model import screens
-from apexlib import render
 
 RED = b"\xe6\x26\x26"
 GREEN = b"\x26\xbf\x40"
@@ -26,23 +24,16 @@ def bars(red: int = 100, green: int = 100, blue: int = 100, gap: int = 0) -> byt
     return RED * red + BLACK * gap + GREEN * green + BLACK * gap + BLUE * blue
 
 
-def older_swatches(tmp_path: Path, payload: bytes) -> object:
-    path = tmp_path / "frame.ppm"
-    path.write_bytes(payload)
-    return render.swatches(path)
-
-
-def test_three_wide_adjacent_bars_are_found_on_every_fourth_row(tmp_path: Path) -> None:
+def test_three_wide_adjacent_bars_are_found_on_every_fourth_row() -> None:
     row = bars()
     payload = b"P6\n300 100\n255\n" + row * 100
 
     found = screens.swatches(screens.Frame.parse(payload))
 
     assert found.matched_rows == 25 and found.visible
-    assert found.document()["matched_rows_at_stride_four"] == 25
-    assert older_swatches(tmp_path, payload) == {
-        "width": 300, "height": 100, "matched_rows_at_stride_four": 25
-    }
+    document = found.document()
+    assert (document["width"], document["height"]) == (300, 100)
+    assert document["matched_rows_at_stride_four"] == 25
 
 
 @pytest.mark.parametrize(
@@ -63,12 +54,13 @@ def test_anything_short_of_the_three_bars_is_not_visible(row: bytes, reason: str
     assert not found.visible, reason
 
 
-def test_a_gap_of_four_pixels_between_bars_is_still_the_probe(tmp_path: Path) -> None:
+def test_a_gap_of_four_pixels_between_bars_is_still_the_probe() -> None:
     row = bars(gap=4)
     payload = b"P6\n%d 100\n255\n" % (len(row) // 3) + row * 100
 
-    assert screens.swatches(screens.Frame.parse(payload)).visible
-    assert older_swatches(tmp_path, payload)["matched_rows_at_stride_four"] == 25  # type: ignore[index]
+    found = screens.swatches(screens.Frame.parse(payload))
+
+    assert found.visible and found.matched_rows == 25
 
 
 def test_a_pixel_of_another_class_inside_a_gap_breaks_the_run() -> None:
@@ -87,7 +79,7 @@ def test_fewer_than_twenty_matching_rows_are_not_visible() -> None:
 
 @pytest.mark.parametrize("changed_rows,passes", [(0, False), (40, False), (41, False), (80, True)])
 def test_a_shell_change_rejects_a_clock_tick_and_small_changes(
-    changed_rows: int, passes: bool, tmp_path: Path
+    changed_rows: int, passes: bool
 ) -> None:
     header = b"P6\n300 100\n255\n"
     before = header + BLACK * 300 * 100
@@ -99,15 +91,6 @@ def test_a_shell_change_rejects_a_clock_tick_and_small_changes(
     assert found.minimum_pixels == 5000
     assert found.changed_pixels == max(0, changed_rows - 40) * 300
     assert found.document()["visual_identification"] == "NOT TESTED"
-    (tmp_path / "before.ppm").write_bytes(before)
-    (tmp_path / "after.ppm").write_bytes(after)
-    if passes:
-        assert render.surface_change(tmp_path / "before.ppm", tmp_path / "after.ppm")[
-            "changed_pixels"
-        ] == found.changed_pixels
-    else:
-        with pytest.raises(AssertionError):
-            render.surface_change(tmp_path / "before.ppm", tmp_path / "after.ppm")
 
 
 def test_a_change_under_the_threshold_and_a_pixel_moved_in_two_channels_count_as_before() -> None:

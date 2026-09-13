@@ -1,7 +1,9 @@
 import importlib.util
 
 import pytest
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('grub_fragment', ROOT / 'guest/fix-grub-fragment.py')
 fragment = importlib.util.module_from_spec(spec)

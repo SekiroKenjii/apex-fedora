@@ -4,7 +4,9 @@ import subprocess
 import sys
 
 import pytest
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('gtk_test_runner', ROOT / 'guest/fingerprint-gtk.py')
 gtk = importlib.util.module_from_spec(spec)

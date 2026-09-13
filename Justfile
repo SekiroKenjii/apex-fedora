@@ -187,6 +187,9 @@ test-fingerprint-rpms build_id:
 test-fingerprint-gtk build_id:
     {{apex}} verify fingerprint-gtk --build "{{build_id}}"
 
+dedupe fixture_id:
+    {{apex}} verify dedupe --build "{{fixture_id}}"
+
 installer-logs-collect run_directory token:
     {{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"
 
@@ -194,7 +197,7 @@ observe-fingerprint:
     { sudo -- /usr/bin/timeout --signal=INT 90s /usr/bin/busctl --system --json=short --match="path_namespace='/net/reactivated/Fprint'" --match="sender='net.reactivated.Fprint'" --match="type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'" monitor; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } | {{apex}} hardware observe-fingerprint --lookup-system-clients
 
 test:
-    uv run --no-project --python {{python}} python tools/check_static.py
+    uv run --no-project --python {{python}} python tools/migration/check_static.py
     uv run --no-project --python {{python}} --with pytest==9.1.1 pytest
 
 test-integration:

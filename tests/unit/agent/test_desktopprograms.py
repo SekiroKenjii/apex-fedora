@@ -1,4 +1,4 @@
-"""The desktop programs are the older files byte for byte, placed and started as the host did."""
+"""The desktop programs are their verbatim assets byte for byte, placed and started as before."""
 
 from __future__ import annotations
 
@@ -11,14 +11,17 @@ from apex.adapters.fakes import fake_files
 from apex.agent import desktopprograms
 
 REPOSITORY = Path(__file__).resolve().parents[3]
+ASSETS = REPOSITORY / "src" / "apex" / "assets" / "verbatim"
 
 
 @pytest.mark.parametrize("program", [desktopprograms.RENDER, desktopprograms.THEME])
-def test_each_program_is_the_older_file_byte_for_byte(program: desktopprograms.Program) -> None:
-    older = (REPOSITORY / "guest" / program.asset).read_bytes()
+def test_each_program_is_its_verbatim_asset_byte_for_byte(
+    program: desktopprograms.Program,
+) -> None:
+    asset = (ASSETS / f"{program.asset}.verbatim").read_bytes()
 
-    assert program.source() == older
-    assert program.digest().hex == hashlib.sha256(older).hexdigest()
+    assert program.source() == asset
+    assert program.digest().hex == hashlib.sha256(asset).hexdigest()
 
 
 def test_a_program_is_placed_where_the_older_host_installed_it_and_private() -> None:

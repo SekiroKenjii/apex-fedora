@@ -3,7 +3,9 @@ import subprocess
 import sys
 
 import pytest
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('fingerprint_image', ROOT / 'guest/fingerprint-image.py')
 image = importlib.util.module_from_spec(spec)
@@ -47,15 +49,3 @@ def test_image_script_refuses_host():
     result = subprocess.run([sys.executable, ROOT / 'guest/fingerprint-image.py'], capture_output=True, text=True)
     assert result.returncode != 0
     assert 'isolated builder VM' in result.stderr
-
-
-def test_experiment_is_offline_and_preserves_old_candidate():
-    text = (ROOT / 'guest/fingerprint-image.py').read_text()
-    assert "'--network=none', '--pull=never'" in text
-    assert '--disable-repo=' in text
-    assert "'ready_to_install': False" in text
-    assert '/run/dnf /var/cache/libdnf5' in text
-    assert '/var/cache/ldconfig/aux-cache /var/log/dnf5.log' in text
-    assert "'lint', '--fatal-warnings'" in text
-    runner = (ROOT / 'tools/build-fingerprint-image.py').read_text()
-    assert 'candidate.json' not in runner

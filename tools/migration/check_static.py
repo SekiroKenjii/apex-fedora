@@ -2,10 +2,10 @@
 """Validate source syntax without running guest scripts or importing host state."""
 import ast
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
-root = Path(__file__).resolve().parent.parent
+root = Path(__file__).resolve().parents[2]
 count = 0
 for name in ('tools', 'guest', 'system_files', 'live', 'config', 'tests'):
     for path in sorted((root / name).rglob('*')):

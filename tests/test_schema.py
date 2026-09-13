@@ -1,5 +1,7 @@
 import importlib.util
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('overrides', ROOT / 'guest/fix-schema-overrides.py')
 module = importlib.util.module_from_spec(spec)

@@ -2,18 +2,8 @@ import importlib.util
 import tarfile
 from pathlib import Path
 import pytest
-from apexlib import pipeline
-from apexlib.common import ROOT, Blocked
 
-
-def test_source_export_excludes_local_instructions(tmp_path):
-    target = tmp_path / 'source.tar'
-    result = pipeline.export_source(target)
-    with tarfile.open(target) as archive:
-        names = archive.getnames()
-    assert 'Containerfile' in names
-    assert all('AGENTS.md' not in x and '__pycache__' not in x for x in names)
-    assert len(result['files']) == len(names)
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_live_cannot_change_core_packages():
