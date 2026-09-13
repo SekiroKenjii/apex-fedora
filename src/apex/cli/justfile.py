@@ -79,10 +79,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
     ("installer-logs-prepare", "", (f"{LEGACY} installer-logs prepare",)),
     ("installer-logs-collect", "run_directory token",
      (f'{LEGACY} installer-logs collect --run "{{{{run_directory}}}}" --token "{{{{token}}}}"',)),
-    ("test-resume-installed", "run_directory",
-     (f'{LEGACY} test-resume "{{{{run_directory}}}}" --without-iso',)),
-    ("test-compare-disks", "run_directory",
-     (f'{LEGACY} test-compare-disks "{{{{run_directory}}}}"',)),
 )
 
 TOOLING: tuple[Plain, ...] = (

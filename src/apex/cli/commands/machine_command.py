@@ -11,19 +11,24 @@ adapter vouched for at launch.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable
 from pathlib import Path
 
 from apex.cli import commands, commandspecs
 from apex.config import builderpins, defaults
-from apex.kernel import encoding, errors, refusals, safepaths
+from apex.kernel import encoding, errors, identifiers, refusals, safepaths
 from apex.model import machines
 from apex.ports import portset
 from apex.provisioning import (
+    backingchain,
     builderprepare,
     builderspec,
+    comparing,
     hotplugging,
     launching,
     leases,
+    resuming,
+    runrecord,
     testspec,
 )
 from apex.wiring import contexts
@@ -33,6 +38,8 @@ SUMMARY = "the one machine the runtime root may run: prepare, start, stop, recla
 PREPARE, START, STOP, STATUS, RECLAIM = "prepare", "start", "stop", "status", "reclaim"
 HOTPLUG = "hotplug-usb"
 POWER_LOSS = "power-loss"
+COMPARE = "compare"
+RESUME = "resume"
 TEST = "test"
 
 
@@ -55,6 +62,13 @@ def _parser() -> argparse.ArgumentParser:
     hotplug = actions.add_parser(HOTPLUG, help="attach a usb fixture to the running test machine")
     hotplug.add_argument("--source", type=Path, required=True)
     actions.add_parser(POWER_LOSS, help="kill the running test machine outright, as a fault")
+    compare = actions.add_parser(
+        COMPARE, help="compare a stopped run's overlays with their sources"
+    )
+    compare.add_argument("--run", required=True, help="the run, by id or by its run directory")
+    resume = actions.add_parser(RESUME, help="boot a stopped run again over its own overlays")
+    resume.add_argument("--run", required=True, help="the run, by id or by its run directory")
+    resume.add_argument("--without-iso", action="store_true", help="leave the boot image out")
     actions.add_parser(STOP, help="ask the running machine to power down")
     actions.add_parser(STATUS, help="what is running, if anything")
     actions.add_parser(RECLAIM, help="what was started and left behind")
@@ -158,6 +172,42 @@ def power_loss(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encodin
     }
 
 
+def _run_id(value: str) -> identifiers.RunId:
+    """A run named by its id, or by the directory the id names, as the older tool took it."""
+    return identifiers.RunId.parse(Path(value).name)
+
+
+def compare(ports: portset.HostPorts, root: safepaths.RuntimeRoot, run: str) -> encoding.Document:
+    run_directory = root.child(f"{defaults.RUNS_DIRECTORY}/{_run_id(run)}")
+    record = runrecord.read(ports, run_directory)
+    layers = record.layers(hotplugging.attached(ports, run_directory))
+    disks = tuple(
+        comparing.Layered(
+            source=backingchain.inspect(ports, layer.source, root=root),
+            overlay=backingchain.inspect(ports, layer.overlay, root=root),
+        )
+        for layer in layers
+    )
+    return comparing.compare(ports, root=root, run_directory=run_directory, disks=disks).document()
+
+
+def resume(
+    context: contexts.Context,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    arguments: argparse.Namespace,
+) -> encoding.Document:
+    prepared = resuming.resume(
+        ports, context.settings, root, _run_id(arguments.run),
+        stamp=ports.identities.token(), without_iso=arguments.without_iso,
+    )
+    lease = launching.launch(
+        ports, root=root, spec=prepared.spec, run=prepared.run,
+        run_directory=prepared.run_directory, medium=prepared.medium,
+    )
+    return {"resumed": lease.document()}
+
+
 def stop(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encoding.Document:
     lease = launching.current(ports, root=root)
     if lease is None:
@@ -184,25 +234,33 @@ def reclaim(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encoding.D
     }
 
 
+Action = Callable[
+    [contexts.Context, portset.HostPorts, safepaths.RuntimeRoot, argparse.Namespace],
+    encoding.Document,
+]
+ACTIONS: dict[str, Action] = {
+    PREPARE: lambda context, ports, root, _: prepare(context, ports, root),
+    START: lambda context, ports, root, arguments: (
+        start_builder(context, ports, root)
+        if arguments.role == str(machines.VmRole.BUILDER)
+        else start_test(context, ports, root, arguments)
+    ),
+    HOTPLUG: lambda _, ports, root, arguments: hotplug(ports, root, arguments.source),
+    POWER_LOSS: lambda _, ports, root, __: power_loss(ports, root),
+    COMPARE: lambda _, ports, root, arguments: compare(ports, root, arguments.run),
+    RESUME: resume,
+    STOP: lambda _, ports, root, __: stop(ports, root),
+    RECLAIM: lambda _, ports, root, __: reclaim(ports, root),
+    STATUS: lambda _, ports, root, __: status(ports, root),
+}
+
+
 def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
     root = _root(request.context)
     ports = request.context.bundle(root)
-    if arguments.action == PREPARE:
-        return commandspecs.Reply(document=prepare(request.context, ports, root))
-    if arguments.action == START and arguments.role == str(machines.VmRole.BUILDER):
-        return commandspecs.Reply(document=start_builder(request.context, ports, root))
-    if arguments.action == START:
-        return commandspecs.Reply(document=start_test(request.context, ports, root, arguments))
-    if arguments.action == HOTPLUG:
-        return commandspecs.Reply(document=hotplug(ports, root, arguments.source))
-    if arguments.action == POWER_LOSS:
-        return commandspecs.Reply(document=power_loss(ports, root))
-    if arguments.action == STOP:
-        return commandspecs.Reply(document=stop(ports, root))
-    if arguments.action == RECLAIM:
-        return commandspecs.Reply(document=reclaim(ports, root))
-    return commandspecs.Reply(document=status(ports, root))
+    document = ACTIONS[str(arguments.action)](request.context, ports, root, arguments)
+    return commandspecs.Reply(document=document)
 
 
 def _test(*arguments: str) -> tuple[str, ...]:
@@ -242,6 +300,13 @@ RECIPES = (
     ),
     commandspecs.Recipe("test-hotplug-usb", ("source",), (NAME, HOTPLUG, "--source", "{{source}}")),
     commandspecs.Recipe("test-power-loss", (), (NAME, POWER_LOSS)),
+    commandspecs.Recipe(
+        "test-compare-disks", ("run_directory",), (NAME, COMPARE, "--run", "{{run_directory}}")
+    ),
+    commandspecs.Recipe(
+        "test-resume-installed", ("run_directory",),
+        (NAME, RESUME, "--run", "{{run_directory}}", "--without-iso"),
+    ),
 )
 
 commands.declare(

@@ -55,6 +55,12 @@ test-hotplug-usb source:
 test-power-loss:
     {{apex}} machine power-loss
 
+test-compare-disks run_directory:
+    {{apex}} machine compare --run "{{run_directory}}"
+
+test-resume-installed run_directory:
+    {{apex}} machine resume --run "{{run_directory}}" --without-iso
+
 plan-artifact kind:
     {{apex}} plan artifact "{{kind}}"
 
@@ -186,12 +192,6 @@ installer-logs-prepare:
 
 installer-logs-collect run_directory token:
     python3 tools/apex.py installer-logs collect --run "{{run_directory}}" --token "{{token}}"
-
-test-resume-installed run_directory:
-    python3 tools/apex.py test-resume "{{run_directory}}" --without-iso
-
-test-compare-disks run_directory:
-    python3 tools/apex.py test-compare-disks "{{run_directory}}"
 
 test:
     uv run --no-project --python {{python}} python tools/check_static.py

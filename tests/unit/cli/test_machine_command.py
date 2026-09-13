@@ -364,3 +364,74 @@ def test_power_loss_is_refused_for_the_builder(
         machine_command.run(request(held, settings, root, "power-loss"))
 
     assert raised.value.reason is refusals.RefusalReason.NOT_A_DISPOSABLE_MACHINE
+
+
+def started_test_run(
+    ports: portset.HostPorts, tmp_path: Path, root: safepaths.RuntimeRoot
+) -> tuple[portset.HostPorts, loader.Settings]:
+    settings = variables_settings(tmp_path)
+    for name in ("target.qcow2", "other.qcow2"):
+        (root.path / name).write_bytes(b"")
+    held = dataclasses.replace(bundle(ports), processes=Storage())
+    held.files.write_atomic(
+        safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
+    )
+    machine_command.run(request(
+        held, settings, root, "start", "--role", "test",
+        "--disk", str(root.path / "target.qcow2"), "--extra-disk", str(root.path / "other.qcow2"),
+    ))
+    machine_command.run(request(held, settings, root, "power-loss"))
+    return held, settings
+
+
+def test_a_stopped_run_is_compared_against_its_sources_by_its_directory(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    held, settings = started_test_run(ports, tmp_path, root)
+    run_directory = next((root.path / "vm-runs").iterdir())
+    tools = held.processes
+    assert isinstance(tools, Storage)
+    for overlay in ("disk.qcow2", "other-1.qcow2"):
+        source = "target.qcow2" if overlay == "disk.qcow2" else "other.qcow2"
+        tools.expect(
+            ("qemu-img", "compare", "-f", "qcow2", "-F", "qcow2",
+             str(root.path / source), str(run_directory / overlay)),
+            fake_process.Reply(exit_code=0, stdout=b"Images are identical."),
+        )
+
+    reply = machine_command.run(
+        request(held, settings, root, "compare", "--run", str(run_directory))
+    )
+
+    assert isinstance(reply.document, dict)
+    disks = reply.document["disks"]
+    assert isinstance(disks, list)
+    assert [item["unchanged"] for item in disks] == [True, True]  # type: ignore[index]
+    assert reply.document["firmware_variables_unchanged"] is True
+
+
+def test_a_stopped_run_is_resumed_by_its_id_over_the_same_overlays(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    held, settings = started_test_run(ports, tmp_path, root)
+    run_directory = next((root.path / "vm-runs").iterdir())
+
+    reply = machine_command.run(
+        request(held, settings, root, "resume", "--run", run_directory.name)
+    )
+    status = machine_command.run(request(held, settings, root, "status"))
+
+    assert isinstance(reply.document, dict)
+    lease = reply.document["resumed"]
+    assert isinstance(lease, dict) and lease["intent"]["run"] == run_directory.name  # type: ignore[index]
+    assert isinstance(status.document, dict) and status.document["running"] is True
+    hypervisor = held.hypervisor
+    assert isinstance(hypervisor, fake_hypervisor.FakeQemu)
+    assert len(hypervisor.spawned) == 2
+    assert list(hypervisor.spawned[1].spec.render()) == list(hypervisor.spawned[0].spec.render())
