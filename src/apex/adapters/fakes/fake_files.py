@@ -11,7 +11,9 @@ from apex.ports import files
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class StoredFile:
-    payload: bytes
+    """Bytes at rest; an appended file keeps a growing buffer so appending stays linear."""
+
+    payload: bytes | bytearray
     mode: quantities.FileMode
 
 
@@ -45,7 +47,7 @@ class MemoryFiles(files.FileSystemPort):
         stored = self._files.get(self._canonical(str(path)))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
-        return bounded.take(stored.payload, bounded.Limit(limit)).data
+        return bounded.take(bytes(stored.payload), bounded.Limit(limit)).data
 
     def write_atomic(
         self, path: safepaths.SafePath, payload: bytes, *, mode: quantities.FileMode
@@ -60,8 +62,14 @@ class MemoryFiles(files.FileSystemPort):
         if self.fail_after is not None and self.appended >= self.fail_after:
             raise errors.PortFailure(port="files", cause="the device is full")
         existing = self._files.get(str(path))
-        body = (existing.payload if existing else b"") + payload + b"\n"
-        self._files[str(path)] = StoredFile(body, existing.mode if existing else mode)
+        if existing is None:
+            buffer = bytearray()
+        elif isinstance(existing.payload, bytearray):
+            buffer = existing.payload
+        else:
+            buffer = bytearray(existing.payload)
+        buffer += payload + b"\n"
+        self._files[str(path)] = StoredFile(buffer, existing.mode if existing else mode)
         self.appended += 1
 
     def make_directory(self, path: safepaths.SafePath, *, mode: quantities.FileMode) -> None:  # noqa: ARG002
@@ -71,7 +79,7 @@ class MemoryFiles(files.FileSystemPort):
         stored = self._files.get(str(source))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{source}: no such file")
-        self._files[str(destination)] = stored
+        self._files[str(destination)] = StoredFile(bytes(stored.payload), stored.mode)
         self.writes.append(str(destination))
 
     def link(self, existing: safepaths.SafePath, new: safepaths.SafePath) -> None:

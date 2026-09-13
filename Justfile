@@ -200,6 +200,15 @@ plans-freeze:
 plans:
     uv run --no-project --python {{python}} python tools/migration/golden_plans.py check
 
+os-freeze:
+    uv run --no-project --python {{python}} python tools/migration/generated_os.py freeze
+
+os:
+    uv run --no-project --python {{python}} python tools/migration/generated_os.py check
+
+benchmarks:
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -q -m benchmark --durations=5
+
 lint:
     uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property tests/support
 
@@ -225,6 +234,7 @@ gate:
     just pyright
     just deadcode
     just plans
+    just os
     just runtime-verify
     just readiness-shadow
     just verify-chain
@@ -233,4 +243,5 @@ gate:
     just test-integration
     just surface
     just ratchet
+    just benchmarks
     uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -q -m golden
