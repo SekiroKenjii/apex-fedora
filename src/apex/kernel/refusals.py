@@ -102,6 +102,8 @@ class RefusalReason(enum.StrEnum):
     MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
     MACHINE_RUNNING = "machine.running"
     HOST_CAPACITY_INSUFFICIENT = "machine.host-capacity-insufficient"
+    HOST_TOOL_MISSING = "machine.host-tool-missing"
+    FIRMWARE_ABSENT = "machine.firmware-absent"
     LEASE_MALFORMED = "machine.lease-malformed"
     LEASE_MISMATCH = "machine.lease-mismatch"
 
