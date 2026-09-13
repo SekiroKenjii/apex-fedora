@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Mapping
+from pathlib import Path
 
 from apex.kernel import bounded, claims, commands, errors, safepaths, timing
 from apex.ports import process
@@ -25,8 +26,14 @@ class Reply:
 class ScriptedProcess(process.ProcessPort):
     environment = claims.EnvironmentKind.SIMULATED
 
-    def __init__(self, replies: dict[tuple[str, ...], Reply] | None = None) -> None:
+    def __init__(
+        self,
+        replies: dict[tuple[str, ...], Reply] | None = None,
+        *,
+        known: Mapping[str, Path] | None = None,
+    ) -> None:
         self._replies = dict(replies or {})
+        self._known = dict(known or {})
         self.calls: list[commands.Argv] = []
         self.transcripts: list[safepaths.SafePath] = []
         self.directories: list[safepaths.SafePath | None] = []
@@ -46,8 +53,12 @@ class ScriptedProcess(process.ProcessPort):
                 ("sleep", "5"): Reply(delay=timing.Elapsed(5)),
                 ("env",): Reply(stdout=b"APEX_CONTRACT=held\n"),
                 ("cat", "/proc/self/status"): Reply(stdout=b"CapBnd:\t000001ffffdfffff\n"),
-            }
+            },
+            known={"sh": Path("/bin/sh")},
         )
+
+    def locate(self, program: str) -> Path | None:
+        return self._known.get(program)
 
     def expect(self, argv: tuple[str, ...], reply: Reply) -> None:
         self._replies[argv] = reply

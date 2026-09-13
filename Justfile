@@ -22,8 +22,14 @@ installer-fixtures:
 select-candidate build_id key:
     {{apex}} candidate select --build "{{build_id}}" --key "{{key}}"
 
+doctor:
+    {{apex}} doctor
+
 verify-chain:
     {{apex}} evidence verify-chain
+
+hardware-snapshot:
+    {{apex}} hardware snapshot
 
 hooks:
     {{apex}} hooks
@@ -132,12 +138,6 @@ installer-logs-prepare:
 
 installer-logs-collect run_directory token:
     {{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"
-
-doctor:
-    python3 tools/apex.py doctor
-
-hardware-snapshot:
-    python3 tools/apex.py hardware-snapshot
 
 observe-fingerprint:
     bash tools/observe-fingerprint.sh

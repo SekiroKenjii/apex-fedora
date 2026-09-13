@@ -38,8 +38,8 @@ def test_every_command_module_declares_one_command_and_the_registry_holds_them_a
 
     assert len(commands.names()) == len(modules)
     assert commands.names() == (
-        "build", "candidate", "evidence", "git-hook", "hooks", "machine", "plan", "readiness",
-        "record", "sources", "trust", "verify",
+        "build", "candidate", "doctor", "evidence", "git-hook", "hardware", "hooks", "machine",
+        "plan", "readiness", "record", "sources", "trust", "verify",
     )
     assert commands.lookup("no-such-command") is None
 
@@ -66,10 +66,10 @@ def test_a_name_the_registry_does_not_hold_goes_to_the_bridge(
     out, err = streams()
 
     code = dispatch.run(
-        ["doctor", "--json"], context_of=lambda: context(ports), stdout=out, stderr=err
+        ["ventoy-media", "--json"], context_of=lambda: context(ports), stdout=out, stderr=err
     )
 
-    assert code == 7 and asked == [["doctor", "--json"]]
+    assert code == 7 and asked == [["ventoy-media", "--json"]]
     assert dispatch.run([], context_of=lambda: context(ports), stdout=out, stderr=err) == 7
 
 

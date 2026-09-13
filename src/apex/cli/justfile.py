@@ -36,8 +36,6 @@ Lines = tuple[str, ...]
 Plain = tuple[str, str, Lines]
 
 OLDER_TOOLS: tuple[Plain, ...] = (
-    ("doctor", "", (f"{LEGACY} doctor",)),
-    ("hardware-snapshot", "", (f"{LEGACY} hardware-snapshot",)),
     ("observe-fingerprint", "", ("bash tools/observe-fingerprint.sh",)),
     ("test-fingerprint-dialog", "source",
      ('python3 tools/test-fingerprint-dialog.py "{{source}}"',)),

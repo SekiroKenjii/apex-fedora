@@ -5,8 +5,10 @@ from __future__ import annotations
 import ctypes
 import dataclasses
 import os
+import shutil
 import subprocess
 from collections.abc import Callable, Mapping
+from pathlib import Path
 from typing import IO
 
 from apex.kernel import bounded, claims, commands, errors, safepaths, timing
@@ -40,6 +42,10 @@ class SubprocessRunner(process.ProcessPort):
             with transcript.path.open("ab") as handle:
                 return self._run(argv, launch, limit=limit, sink=handle)
         return self._run(argv, launch, limit=limit, sink=None)
+
+    def locate(self, program: str) -> Path | None:
+        found = shutil.which(program)
+        return None if found is None else Path(found)
 
     def _run(
         self,
