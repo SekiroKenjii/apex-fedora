@@ -3,7 +3,9 @@
 Three kinds of recipe: the ones the commands declare, rendered as the package's entry point
 with each parameter quoted; the gate and its tools, the same on every machine; and the older
 tools' recipes, kept word for word until the older tree is deleted. The operator's surface
-may grow and never shift, which the surface contract holds against the frozen baseline.
+may grow and never shift, which the surface contract holds against the frozen baseline; a
+recipe whose work folded into another keeps its operands and runs the retired name, so the
+dispatcher's refusal names the replacement at the prompt.
 """
 
 from __future__ import annotations
@@ -56,12 +58,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
      (f'{LEGACY} ventoy-media --live-output "{{{{live_output}}}}" --ubuntu "{{{{ubuntu}}}}" '
       '--trusted-key "{{trusted_key}}" --checksums "{{checksums}}" '
       '--signature "{{signature}}" --keyring "{{keyring}}"',)),
-    ("test-installer-fault", "case", (f'{LEGACY} test-installer-fault "{{{{case}}}}"',)),
-    ("test-installer-wrong-key", "public_key",
-     (f'{LEGACY} test-installer-fault wrong-key --wrong-key "{{{{public_key}}}}"',)),
-    ("test-installer-fault-collect", "run_directory",
-     (f'{LEGACY} test-installer-fault-collect "{{{{run_directory}}}}"',)),
-    ("installer-fixtures", "", (f"{LEGACY} installer-fixtures",)),
     ("update-fixtures", "build_id", ('python3 tools/prepare-update-fixture.py "{{build_id}}"',)),
     ("recovery-disk", "fixture", ('python3 tools/build-recovery-disk.py "{{fixture}}"',)),
     ("test-update", "action fixture access",
@@ -75,9 +71,11 @@ OLDER_TOOLS: tuple[Plain, ...] = (
       '--inspection "{{inspection}}"',)),
     ("test-initramfs-rescue", "fixture access",
      ('python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"',)),
-    ("installer-logs-prepare", "", (f"{LEGACY} installer-logs prepare",)),
+)
+
+FOLDED: tuple[Plain, ...] = (
     ("installer-logs-collect", "run_directory token",
-     (f'{LEGACY} installer-logs collect --run "{{{{run_directory}}}}" --token "{{{{token}}}}"',)),
+     ('{{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"',)),
 )
 
 TOOLING: tuple[Plain, ...] = (
@@ -132,6 +130,7 @@ def render() -> str:
     sections = [
         HEADER,
         *(_command_recipe(recipe) for command in _commands() for recipe in command.recipes),
+        *(_plain(name, parameters, lines) for name, parameters, lines in FOLDED),
         *(_plain(name, parameters, lines) for name, parameters, lines in OLDER_TOOLS),
         *(_plain(name, parameters, lines) for name, parameters, lines in TOOLING),
         _plain("gate", "", GATE),

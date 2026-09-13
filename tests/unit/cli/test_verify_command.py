@@ -6,6 +6,7 @@ import dataclasses
 import json
 from pathlib import Path
 
+import installerruns
 import parentbuild
 import pytest
 from answeringguest import AnsweringGuest
@@ -25,6 +26,7 @@ from apex.kernel import claims, errors, refusals, safepaths
 from apex.model import machines
 from apex.ports import portset
 from apex.provisioning import launching
+from apex.verification import installerfault
 from apex.wiring import contexts
 
 REPOSITORY = Path(__file__).resolve().parents[3]
@@ -474,3 +476,133 @@ def test_the_live_observe_recipe_goes_over_ssh_without_serial(
 
     assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
     assert guest.asked == ["ventoy.observe"] and guest.targets[-1].user == "liveuser"
+
+
+def installer_run(
+    held: portset.HostPorts, root: safepaths.RuntimeRoot, **shape: object
+) -> tuple[safepaths.SafePath, int]:
+    """A leased installer machine over a serial console, with the record the fault reads."""
+    running(held, root, machines.VmRole.TEST, serial_console=True)
+    lease = launching.current(held, root=root)
+    assert lease is not None
+    installerruns.record(held, root, lease.intent.run_directory, **shape)  # type: ignore[arg-type]
+    return lease.intent.run_directory, lease.identity.process
+
+
+def test_the_payload_fault_runs_over_serial_with_its_case_and_leaves_the_records(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    run_directory, process = installer_run(held, root)
+    consoles = Consoles(AnsweringGuest({"fault.installer-payload": installerruns.confirming()}))
+
+    reply = verify_command.run(request(
+        held, root, "installer-payload", "--case", installerruns.CASE, "--serial", serial=consoles
+    ))
+
+    assert isinstance(reply.document, dict)
+    assert reply.document["succeeded"] is True and reply.exit_code == 0
+    assert consoles.guest.asked == ["fault.installer-payload"]
+    assert consoles.guest.requests[0]["arguments"] == {
+        "case": installerruns.CASE, "wrong_public_key": "",
+    }
+    request_file = installerfault.read_request(held, run_directory)
+    assert request_file.case == installerruns.CASE and request_file.process == process
+    assert held.files.exists(safepaths.SafePath(run_directory.path / defaults.FAULT_GUEST_NAME))
+    assert "retained.fault.installer-payload" in reply.document["facts"]  # type: ignore[operator]
+
+
+def test_the_payload_fault_needs_its_case_and_a_second_attempt_is_refused(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    installer_run(held, root)
+    consoles = Consoles(AnsweringGuest({"fault.installer-payload": installerruns.confirming()}))
+
+    with pytest.raises(errors.Refusal) as unnamed:
+        verify_command.run(request(held, root, "installer-payload", "--serial", serial=consoles))
+    first = verify_command.run(request(
+        held, root, "installer-payload", "--case", installerruns.CASE, "--serial", serial=consoles
+    ))
+    again = verify_command.run(request(
+        held, root, "installer-payload", "--case", installerruns.CASE, "--serial", serial=consoles
+    ))
+
+    assert unnamed.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert isinstance(first.document, dict) and first.document["succeeded"] is True
+    assert isinstance(again.document, dict)
+    assert again.document["refusal"] == "fault.already-attempted"
+    assert again.exit_code == errors.Refusal.exit_code
+    assert consoles.guest.asked == ["fault.installer-payload"]
+
+
+def test_the_wrong_key_case_reads_a_public_key_from_the_root_and_only_that_case_takes_one(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    installer_run(held, root)
+    pem = b"-----BEGIN PUBLIC KEY-----\nsynthetic fixture\n"
+    public = root.path / "wrong.pub"
+    public.write_bytes(pem)
+    held.files.write_atomic(safepaths.SafePath(public), pem, mode=defaults.RECORD_MODE)
+    certificate = root.path / "wrong.crt"
+    certificate.write_bytes(b"")
+    held.files.write_atomic(
+        safepaths.SafePath(certificate), b"-----BEGIN CERTIFICATE-----\nnot a key\n",
+        mode=defaults.RECORD_MODE,
+    )
+    consoles = Consoles(AnsweringGuest({
+        "fault.installer-payload": installerruns.confirming("wrong-key"),
+    }))
+
+    with pytest.raises(errors.Refusal) as not_a_key:
+        verify_command.run(request(
+            held, root, "installer-payload", "--case", "wrong-key", "--wrong-key",
+            str(certificate), "--serial", serial=consoles,
+        ))
+    with pytest.raises(errors.Refusal) as unpaired:
+        verify_command.run(request(
+            held, root, "installer-payload", "--case", "corrupt-blob", "--wrong-key", str(public),
+            "--serial", serial=consoles,
+        ))
+    with pytest.raises(errors.Refusal) as stray:
+        verify_command.run(request(
+            held, root, "live-observe", "--case", "corrupt-blob", "--serial", serial=consoles
+        ))
+    reply = verify_command.run(request(
+        held, root, "installer-payload", "--case", "wrong-key", "--wrong-key", str(public),
+        "--serial", serial=consoles,
+    ))
+
+    assert not_a_key.value.reason is refusals.RefusalReason.PUBLIC_KEY_MALFORMED
+    assert unpaired.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert stray.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
+    assert consoles.guest.requests[0]["arguments"] == {
+        "case": "wrong-key", "wrong_public_key": pem.decode(),
+    }
+
+
+def test_the_diagnostics_come_home_in_one_step_and_an_incomplete_log_is_the_run_s_failure(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    installer_run(held, root)
+    truncated = installerruns.whole_log(b"partial")
+    truncated["truncated"] = True
+    consoles = Consoles(AnsweringGuest({"installer.diagnostics": [
+        installerruns.diagnostics(),
+        installerruns.diagnostics(**{"anaconda.log": truncated}),
+    ]}))
+
+    asked = request(held, root, "installer-diagnostics", "--serial", serial=consoles)
+    whole = verify_command.run(asked)
+    partial = verify_command.run(asked)
+
+    assert isinstance(whole.document, dict) and whole.document["succeeded"] is True
+    assert "installer.logs-complete" in whole.document["facts"]  # type: ignore[operator]
+    assert isinstance(partial.document, dict) and partial.document["succeeded"] is False
+    assert partial.narrative.startswith(
+        "installer-diagnostics: installer.logs: anaconda.log truncated"
+    )
+    assert consoles.guest.asked == ["installer.diagnostics", "installer.diagnostics"]

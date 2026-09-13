@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import dataclasses
+import hashlib
+import posixpath
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
 from answeringguest import AnsweringGuest
@@ -231,3 +234,44 @@ def test_without_the_builder_a_build_is_refused(
     with pytest.raises(errors.Refusal) as mismatched:
         build_command.run(request(held, root, repository, "image"))
     assert mismatched.value.reason is refusals.RefusalReason.MACHINE_ROLE_MISMATCH
+
+
+class DeliveringGuest(AnsweringGuest):
+    """A guest whose received directory lands on the disk, as a real copy would."""
+
+    outputs = {"other.qcow2": b"three foreign filesystems", "target.qcow2": b"an empty target"}
+
+    def receive(
+        self, target: Any, *, remote: Any, into: Any, recursive: bool, deadline: Any
+    ) -> None:
+        super().receive(target, remote=remote, into=into, recursive=recursive, deadline=deadline)
+        home = into.path / posixpath.basename(str(remote))
+        home.mkdir(parents=True, exist_ok=True)
+        for name, data in self.outputs.items():
+            (home / name).write_bytes(data)
+
+
+def test_the_installer_fixture_disks_are_built_by_the_agent_in_the_leased_builder(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot
+) -> None:
+    (root.path / defaults.AGENT_WHEEL_NAME).write_bytes(b"wheel")
+    guest = DeliveringGuest({"fixture.installer-disks": {
+        "sha256": {
+            name: hashlib.sha256(data).hexdigest() for name, data in DeliveringGuest.outputs.items()
+        },
+    }})
+    held = bundle(ports, guest)
+    running(held, root, machines.VmRole.BUILDER)
+
+    reply = build_command.run(request(held, root, repository, "fixtures"))
+    with pytest.raises(errors.Refusal) as derived:
+        build_command.run(request(held, root, repository, "fixtures", "--parent", "b" * 32))
+
+    assert reply.exit_code == 0
+    assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
+    assert reply.document["record"] is None
+    assert str(reply.document["fixtures"]).startswith(f"{root.path}/exports/")
+    assert str(reply.document["fixtures"]).endswith("/output")
+    assert guest.asked == ["fixture.installer-disks"]
+    assert [str(item.remote) for item in guest.received][-1].endswith("/output")
+    assert derived.value.reason is refusals.RefusalReason.REQUEST_MALFORMED

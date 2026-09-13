@@ -1,0 +1,94 @@
+{
+ "digest": "e323ee5b15a46639508f15e9810987e2c23eec0ad2582086589a40408fc8ca60",
+ "name": "verify-installer-payload",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "installer.request",
+   "reads": [
+    "installer.case",
+    "machine.process",
+    "machine.run-directory",
+    "runtime.root"
+   ],
+   "writes": [
+    "installer.request"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "fault.installer-payload",
+   "reads": [
+    "agent.install",
+    "installer.case",
+    "installer.request",
+    "installer.wrong-key",
+    "verification.guest"
+   ],
+   "writes": [
+    "fault.fault.installer-payload"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "installer.keep",
+   "reads": [
+    "fault.fault.installer-payload",
+    "installer.request",
+    "machine.run-directory"
+   ],
+   "writes": [
+    "installer.kept"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fault.installer-payload",
+   "reads": [
+    "fault.fault.installer-payload",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fault.installer-payload"
+   ]
+  }
+ ]
+}

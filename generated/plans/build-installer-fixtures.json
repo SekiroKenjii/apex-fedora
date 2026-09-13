@@ -1,0 +1,90 @@
+{
+ "digest": "eb4dd4fd6a5fdb629f0242a48785235cb16769f240d2709c2bf1a832bbb1e8a8",
+ "name": "build-installer-fixtures",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "fixture.installer-disks",
+   "reads": [
+    "agent.install",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "observed.fixture.installer-disks"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "fixture.retrieve",
+   "reads": [
+    "observed.fixture.installer-disks",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "fixture.output"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fixture.installer-disks",
+   "reads": [
+    "observed.fixture.installer-disks",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fixture.installer-disks"
+   ]
+  }
+ ]
+}

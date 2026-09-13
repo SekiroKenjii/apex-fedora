@@ -16,6 +16,9 @@ artifact kind build_id:
 test-disk build_id:
     {{apex}} build qcow2 --parent "{{build_id}}" --test-access
 
+installer-fixtures:
+    {{apex}} build fixtures
+
 select-candidate build_id key:
     {{apex}} candidate select --build "{{build_id}}" --key "{{key}}"
 
@@ -60,6 +63,9 @@ test-compare-disks run_directory:
 
 test-resume-installed run_directory:
     {{apex}} machine resume --run "{{run_directory}}" --without-iso
+
+test-installer-fault-collect run_directory:
+    {{apex}} machine collect --run "{{run_directory}}"
 
 plan-artifact kind:
     {{apex}} plan artifact "{{kind}}"
@@ -112,6 +118,18 @@ test-installer-trust:
 test-live-check case:
     {{apex}} verify "{{case}}" --serial
 
+test-installer-fault case:
+    {{apex}} verify installer-payload --case "{{case}}" --serial
+
+test-installer-wrong-key public_key:
+    {{apex}} verify installer-payload --case wrong-key --wrong-key "{{public_key}}" --serial
+
+installer-logs-prepare:
+    {{apex}} verify installer-diagnostics --serial
+
+installer-logs-collect run_directory token:
+    {{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"
+
 doctor:
     python3 tools/apex.py doctor
 
@@ -154,18 +172,6 @@ test-elan-diagnostics source:
 ventoy-media live_output ubuntu trusted_key checksums signature keyring:
     python3 tools/apex.py ventoy-media --live-output "{{live_output}}" --ubuntu "{{ubuntu}}" --trusted-key "{{trusted_key}}" --checksums "{{checksums}}" --signature "{{signature}}" --keyring "{{keyring}}"
 
-test-installer-fault case:
-    python3 tools/apex.py test-installer-fault "{{case}}"
-
-test-installer-wrong-key public_key:
-    python3 tools/apex.py test-installer-fault wrong-key --wrong-key "{{public_key}}"
-
-test-installer-fault-collect run_directory:
-    python3 tools/apex.py test-installer-fault-collect "{{run_directory}}"
-
-installer-fixtures:
-    python3 tools/apex.py installer-fixtures
-
 update-fixtures build_id:
     python3 tools/prepare-update-fixture.py "{{build_id}}"
 
@@ -186,12 +192,6 @@ test-initramfs-inject fixture access inspection:
 
 test-initramfs-rescue fixture access:
     python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"
-
-installer-logs-prepare:
-    python3 tools/apex.py installer-logs prepare
-
-installer-logs-collect run_directory token:
-    python3 tools/apex.py installer-logs collect --run "{{run_directory}}" --token "{{token}}"
 
 test:
     uv run --no-project --python {{python}} python tools/check_static.py

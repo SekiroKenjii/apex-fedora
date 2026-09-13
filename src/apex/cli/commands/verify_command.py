@@ -9,7 +9,8 @@ from the credentials file a keyboard login needs; the isolated builder for the f
 recipe, whose account is the builder's own and whose target is the build named by `--build`.
 A live medium has no ssh, so `--serial` reaches its rescue shell over the serial socket the
 machine was started with, as root unless `--user` says otherwise; the older live check's
-case names are accepted as spellings of the recipes that took them over.
+case names are accepted as spellings of the recipes that took them over. The installer
+payload fault names its case with `--case`, and only the wrong-key case takes a key.
 """
 
 from __future__ import annotations
@@ -23,10 +24,13 @@ from apex.cli import commands, commandspecs, verifyinputs
 from apex.kernel import encoding, errors, refusals
 from apex.model import machines
 from apex.pipeline import runner
+from apex.verification import installerfault
 from apex.verification.recipes import (
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
+    installer_diagnostics_recipe,
+    installer_payload_recipe,
     installer_trust_recipe,
     live_lock_recipe,
     live_observe_recipe,
@@ -44,9 +48,11 @@ INSTALLER_TRUST = "installer-trust"
 LIVE_OBSERVE = "live-observe"
 VENTOY_OBSERVE = "ventoy-observe"
 LIVE_LOCK = "live-lock"
+INSTALLER_PAYLOAD = "installer-payload"
+INSTALLER_DIAGNOSTICS = "installer-diagnostics"
 RECIPES = (
     LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST,
-    LIVE_OBSERVE, VENTOY_OBSERVE, LIVE_LOCK,
+    LIVE_OBSERVE, VENTOY_OBSERVE, LIVE_LOCK, INSTALLER_PAYLOAD, INSTALLER_DIAGNOSTICS,
 )
 CASES: dict[str, str] = {
     "observe": LIVE_OBSERVE,
@@ -67,6 +73,12 @@ def _parser() -> argparse.ArgumentParser:
         help="the disposable account's credentials file, inside the runtime root",
     )
     parser.add_argument("--build", help="the completed image build a builder recipe tests")
+    parser.add_argument(
+        "--case", choices=installerfault.CASES, help="the damage the installer payload fault does"
+    )
+    parser.add_argument(
+        "--wrong-key", type=Path, help="a public key that is not the payload's, wrong-key only"
+    )
     return parser
 
 
@@ -145,6 +157,26 @@ def _live_lock(inputs: verifyinputs.Inputs) -> runner.Outcome:
     )
 
 
+def _installer_payload(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    if inputs.case is None:
+        raise errors.Refusal(
+            refusals.RefusalReason.REQUEST_MALFORMED,
+            subject=f"{INSTALLER_PAYLOAD} damages the payload in one named way",
+            remedy=f"name it with --case, one of {', '.join(installerfault.CASES)}",
+        )
+    return installer_payload_recipe.verify(
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, root=inputs.root,
+        run_directory=inputs.lease.intent.run_directory, process=inputs.lease.identity.process,
+        case=inputs.case, wrong_key=inputs.wrong_key,
+    )
+
+
+def _installer_diagnostics(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return installer_diagnostics_recipe.verify(
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, root=inputs.root
+    )
+
+
 RUNNERS: dict[str, Recipe] = {
     LIVE_PROTECTION: Recipe(machines.VmRole.TEST, _live_protection),
     DESKTOP_THEME: Recipe(machines.VmRole.TEST, _desktop_theme),
@@ -154,6 +186,8 @@ RUNNERS: dict[str, Recipe] = {
     LIVE_OBSERVE: Recipe(machines.VmRole.TEST, _live_observe),
     VENTOY_OBSERVE: Recipe(machines.VmRole.TEST, _ventoy_observe),
     LIVE_LOCK: Recipe(machines.VmRole.TEST, _live_lock),
+    INSTALLER_PAYLOAD: Recipe(machines.VmRole.TEST, _installer_payload),
+    INSTALLER_DIAGNOSTICS: Recipe(machines.VmRole.TEST, _installer_diagnostics),
 }
 
 
@@ -172,9 +206,15 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
     name = str(CASES.get(arguments.recipe, arguments.recipe))
     recipe = RUNNERS[name]
+    if name != INSTALLER_PAYLOAD and (arguments.case or arguments.wrong_key):
+        raise errors.Refusal(
+            refusals.RefusalReason.REQUEST_MALFORMED,
+            subject=f"{name} takes neither --case nor --wrong-key",
+            remedy=f"those name the {INSTALLER_PAYLOAD} fault's case",
+        )
     asked = verifyinputs.Asked(
         user=arguments.user, credentials=arguments.credentials, build=arguments.build,
-        serial=arguments.serial,
+        serial=arguments.serial, case=arguments.case, wrong_key=arguments.wrong_key,
     )
     inputs = verifyinputs.gather(request.context, role=recipe.role, asked=asked)
     outcome = recipe.run(inputs)
@@ -202,6 +242,16 @@ JUST_RECIPES = (
     ),
     commandspecs.Recipe("test-installer-trust", (), (NAME, INSTALLER_TRUST)),
     commandspecs.Recipe("test-live-check", ("case",), (NAME, "{{case}}", "--serial")),
+    commandspecs.Recipe(
+        "test-installer-fault", ("case",),
+        (NAME, INSTALLER_PAYLOAD, "--case", "{{case}}", "--serial"),
+    ),
+    commandspecs.Recipe(
+        "test-installer-wrong-key", ("public_key",),
+        (NAME, INSTALLER_PAYLOAD, "--case", installerfault.KEY_CASE, "--wrong-key",
+         "{{public_key}}", "--serial"),
+    ),
+    commandspecs.Recipe("installer-logs-prepare", (), (NAME, INSTALLER_DIAGNOSTICS, "--serial")),
 )
 
 commands.declare(
