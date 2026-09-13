@@ -9,13 +9,14 @@ the machine was started with, never through a host device. One fixture per run.
 from __future__ import annotations
 
 import dataclasses
+import json
 from pathlib import Path
 
 from apex.config import defaults
 from apex.kernel import encoding, errors, refusals, safepaths
 from apex.model import machines
 from apex.ports import locking, portset, qmp
-from apex.provisioning import backingchain, launching, leases
+from apex.provisioning import backingchain, launching, leases, runrecord
 
 BLOCKDEV_ADD = "blockdev-add"
 DEVICE_ADD = "device_add"
@@ -148,3 +149,21 @@ def _json(value: object) -> encoding.JsonValue:
     if isinstance(value, str | int | float | bool) or value is None:
         return value
     return str(value)
+
+
+def attached(
+    ports: portset.HostPorts, run_directory: safepaths.SafePath
+) -> runrecord.Layer | None:
+    """The fixture the run hot-plugged, as source and overlay, or nothing when it never did."""
+    path = safepaths.SafePath(run_directory.path / defaults.HOTPLUG_RECORD)
+    if not ports.files.exists(path):
+        return None
+    try:
+        loaded = json.loads(ports.files.read_bytes(path, limit=defaults.DOCUMENT_LIMIT.value))
+        return runrecord.Layer(
+            source=Path(str(loaded["source"])), overlay=Path(str(loaded["overlay"]))
+        )
+    except (json.JSONDecodeError, KeyError, TypeError) as error:
+        raise errors.Refusal(
+            refusals.RefusalReason.LEASE_MALFORMED, subject=f"{path.path.name}: {error}"
+        ) from error

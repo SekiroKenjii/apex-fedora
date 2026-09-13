@@ -15,7 +15,7 @@ from apex.config import defaults, loader
 from apex.kernel import errors, identifiers, refusals, safepaths
 from apex.model import machines
 from apex.ports import portset
-from apex.provisioning import backingchain
+from apex.provisioning import backingchain, runrecord
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -91,27 +91,64 @@ def prepare(
         )
         for index, source in enumerate(request.extra_disks, 1)
     )
+    boot_usb = None
+    boot_layer = None
+    if request.boot_usb is not None:
+        boot_usb = _overlay(
+            ports, request.boot_usb, into=run_directory / defaults.TEST_BOOT_USB_NAME, root=root
+        )
+        boot_layer = runrecord.Layer(request.boot_usb, boot_usb.path)
     variables = _variables(ports, settings, run_directory)
+    record = runrecord.RunRecord(
+        run=run,
+        disk=runrecord.Layer(request.disk, disk.path),
+        extras=tuple(
+            runrecord.Layer(source, overlay.path)
+            for source, overlay in zip(request.extra_disks, extras, strict=True)
+        ),
+        iso=request.iso,
+        medium=request.medium,
+        guest_ssh=request.guest_ssh,
+        serial_console=request.serial_console,
+        usb_bus=request.usb_bus,
+        boot_usb=boot_layer,
+    )
+    runrecord.write(ports, run_directory, record)
+    spec = describe(
+        settings, root, run_directory, disk=disk, extras=extras, variables=variables,
+        iso=request.iso, guest_ssh=request.guest_ssh, serial_console=request.serial_console,
+        usb_bus=request.usb_bus, boot_usb=boot_usb,
+    )
+    return Prepared(run=run, run_directory=run_directory, spec=spec, medium=request.medium)
+
+
+def describe(  # noqa: PLR0913
+    settings: loader.Settings,
+    root: safepaths.RuntimeRoot,
+    run_directory: safepaths.SafePath,
+    *,
+    disk: safepaths.SafePath,
+    extras: tuple[safepaths.SafePath, ...],
+    variables: safepaths.SafePath,
+    iso: Path | None,
+    guest_ssh: bool,
+    serial_console: bool,
+    usb_bus: bool,
+    boot_usb: safepaths.SafePath | None,
+) -> machines.VmSpec:
+    """The machine over the overlays named, whether they were just made or are being resumed."""
     serial_log = run_directory / defaults.TEST_SERIAL_LOG_NAME
     serial: machines.Serial = machines.SerialFile(serial_log)
-    if request.serial_console:
+    if serial_console:
         serial = machines.SerialSocket(root.child(defaults.SERIAL_SOCKET_NAME), log=serial_log)
     code = safepaths.RegularFile.adopt(settings.builder.firmware_code)
-    seed = None
-    if request.iso is not None:
-        seed = safepaths.SafePath.regular_file(request.iso, within=root)
+    seed = None if iso is None else safepaths.SafePath.regular_file(iso, within=root)
     network = None
-    if request.guest_ssh:
+    if guest_ssh:
         network = machines.RestrictedNet(
             forwarded_port=defaults.TEST_MACHINE.ssh_port, role=machines.VmRole.TEST
         )
-    boot_usb = None
-    if request.boot_usb is not None:
-        boot_usb = machines.UsbStorage(
-            _overlay(ports, request.boot_usb, into=run_directory / defaults.TEST_BOOT_USB_NAME,
-                     root=root)
-        )
-    spec = machines.VmSpec.build(
+    return machines.VmSpec.build(
         role=machines.VmRole.TEST,
         resources=machines.VmResources(
             memory=defaults.TEST_MACHINE.memory, processors=defaults.TEST_MACHINE.processors
@@ -123,11 +160,10 @@ def prepare(
         extra_disks=extras,
         seed=seed,
         network=network,
-        usb=machines.UsbController() if request.usb_bus else None,
-        boot_usb=boot_usb,
-        boot_from_cdrom=request.iso is not None,
+        usb=machines.UsbController() if usb_bus else None,
+        boot_usb=None if boot_usb is None else machines.UsbStorage(boot_usb),
+        boot_from_cdrom=iso is not None,
     )
-    return Prepared(run=run, run_directory=run_directory, spec=spec, medium=request.medium)
 
 
 def _overlay(
