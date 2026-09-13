@@ -33,7 +33,7 @@ from apex.ports import containers, files
 
 SCOPE = "packaged daemon and libfprint in the builder VM over a virtual device; no sensor"
 NOT_TESTED = "NOT TESTED"
-WORK_PREFIX = "/var/tmp/apex-fingerprint-"
+WORK_PREFIX = defaults.FINGERPRINT_WORK_PREFIX
 TRAVERSABLE = quantities.FileMode(0o755)
 PLAIN = quantities.FileMode(0o644)
 PACKAGE_COUNT = 2

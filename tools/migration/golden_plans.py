@@ -26,6 +26,7 @@ from apex.pipeline import plans  # noqa: E402
 from apex.verification.recipes import (  # noqa: E402
     desktop_render_recipe,
     desktop_theme_recipe,
+    fingerprint_cleanup_recipe,
     live_protection_recipe,
 )
 
@@ -38,6 +39,7 @@ RECIPES = {
     live_protection_recipe.NAME: live_protection_recipe.PLAN,
     desktop_theme_recipe.NAME: desktop_theme_recipe.PLAN,
     desktop_render_recipe.NAME: desktop_render_recipe.PLAN,
+    fingerprint_cleanup_recipe.NAME: fingerprint_cleanup_recipe.PLAN,
 }
 
 
