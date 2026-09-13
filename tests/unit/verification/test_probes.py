@@ -25,7 +25,11 @@ def test_every_probe_module_declares_one_case_and_the_registry_holds_them_all() 
 
     assert len(probes.registered()) == len(modules)
     assert [str(case.unit) for case in probes.registered()] == [
+        "desktop.greeter",
+        "desktop.overview",
         "desktop.render",
+        "desktop.session",
+        "desktop.shell-startup",
         "desktop.theme-adwaita",
         "desktop.theme-gtk3",
         "desktop.theme-settings",

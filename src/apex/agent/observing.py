@@ -8,14 +8,28 @@ and the host judges.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from apex.agent import agentports
 from apex.config import defaults
-from apex.kernel import commands, encoding, errors, safepaths
+from apex.kernel import commands, encoding, errors, safepaths, timing
 
 OVERREAD = 1
+CLOCK = "clock"
+
+
+def settle(
+    ports: agentports.AgentPorts, condition: Callable[[], bool], policy: timing.WaitPolicy
+) -> bool:
+    """Whether the condition held within the policy; the clock giving up is an observation."""
+    try:
+        ports.clock.wait_until(condition, policy)
+    except errors.PortFailure as failure:
+        if failure.port != CLOCK:
+            raise
+        return False
+    return True
 
 
 def program(ports: agentports.AgentPorts, argv: commands.Argv) -> encoding.Document:

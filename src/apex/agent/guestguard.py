@@ -97,6 +97,18 @@ def require_initramfs(ports: agentports.AgentPorts) -> None:
         raise refuse("the protection latch is already set")
 
 
+def require_session_user(ports: agentports.AgentPorts) -> None:
+    """Not root and virtual: the account's own probes, asked before its desktop exists.
+
+    The login probes read the seat as the account that is about to log in, so they run as
+    that account and never as root, and they cannot ask for the Shell, which is not there
+    until the login they are watching has happened.
+    """
+    if os.geteuid() == ROOT_USER:
+        raise refuse("running as root; the session probes run as the account")
+    require_virtual(ports)
+
+
 def require_shell_session(ports: agentports.AgentPorts) -> None:
     """Not root, virtual, and GNOME Shell on this user's bus: the session the older host used.
 
@@ -104,9 +116,7 @@ def require_shell_session(ports: agentports.AgentPorts) -> None:
     user and never as root, and they ask the user's bus for the Shell's owner the way the
     older host did before it launched anything.
     """
-    if os.geteuid() == ROOT_USER:
-        raise refuse("running as root; the desktop probes run as the session's user")
-    require_virtual(ports)
+    require_session_user(ports)
     completed = ports.processes.run(
         SHELL_OWNER, deadline=defaults.PROBE_DEADLINE, limit=commands.OutputLimit.default()
     )

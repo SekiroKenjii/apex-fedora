@@ -2840,6 +2840,70 @@ chain to refuse a simulated bundle where the minting stage's preflight had alrea
 a simulated witness; the CLI package passed its budget, raised to 1400 with the five
 commands in view. `golden_change`: none. `supersedes`: none yet.
 
+## P20d. The keyboard login through the monitor, and the render check recorded
+
+Goal: the one check the desktop recipes could not reach, `desktop.password-wayland`, which
+needs a password typed at GDM through the hypervisor's keyboard and a Wayland session to
+come of it, before the GTK4 probe's bars mean anything. Four commits on
+`work/phase-20d-keyboard-login`, the whole gate green at the head.
+
+### The seat and the Shell, read as the account
+
+Four guest units run as the disposable account and never as root. `desktop.greeter` waits
+for a session of class greeter on the seat; `desktop.session` says whether the account
+holds a session on the seat, at once or after waiting for a Wayland one;
+`desktop.shell-startup` waits for the Shell's owner on the account's bus and the journal
+entry that says that process finished starting; `desktop.overview` reads whether the
+Overview is open until it shows what the host expects. Each asks the programs the older
+host asked over ssh, under the same deadlines, and reports; none judges. The first three
+stand behind a guard of their own, not root and virtual, because the Shell the desktop
+guard asks for is not there until the login they are watching has happened.
+
+### The login, typed and never filed
+
+`verification/testaccess.py` reads the fixture's `credentials.json` and holds the password
+as a `Secret`, which reveals itself only into a sink. `verification/console.py` learned the
+older console's US layout: a character is a chord of key codes, the whole text is mapped
+before the first key goes, and a secret is typed through the one sink that presses chords.
+The login stage asks whether the account is already on the seat and refuses the run if so,
+because a login it did not perform proves nothing; waits for the greeter and captures it;
+presses Return, types, presses Return; and waits for the account's Wayland session, which
+is the proof of acceptance. The password is in no observation, no proof and no refusal,
+and the tests read every filed byte to say so.
+
+### The Shell settled, the bars judged, one record
+
+The Shell stage waits for the startup event, captures the first frame, sends Escape twice
+for Welcome's Skip, and round-trips the Overview by key, reading its state over the bus
+after each key and stopping at the first key the Shell did not follow. The render bars
+stage from P19h takes its place after it. A stage told which earlier judgements it stands
+on blocks itself when one did not pass, without asking the guest, so the record for
+`desktop.password-wayland` carries the first failure and nothing after it is mistaken for
+a second. `verify-desktop-render` folds the three judgements into one record, frozen as
+the seventh golden plan. `apex verify desktop-render --credentials <file>` takes the
+account from the credentials, or from `--user` when both name the same account, and never
+from two that differ.
+
+### What this slice did not do
+
+The builder's storage prepared from the CLI; the fingerprint and builder fault recipes
+with the builder's work directory; the emulated USB devices of the older test machine;
+the generated justfile and the empty bridge.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 327 files, 22484 lines |
+| Recipes frozen | seven, `verify-desktop-render` new |
+| Fast suite | 2 362 passed, 8 skipped |
+
+`migration_red`: the credentials test module took the basename of a legacy test and was
+renamed; the verify command's first render test drew PNG bytes where the bars stage reads
+a PPM frame and refused the run as a malformed frame; the agent and verification packages
+passed their budgets, raised to 4800 and 2400. `golden_change`: one plan added, none
+changed. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
