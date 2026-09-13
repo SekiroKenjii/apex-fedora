@@ -15,9 +15,12 @@ from typing import Protocol
 
 from apex.attestation import minting
 from apex.kernel import encoding, verdicts
+from apex.pipeline import facts
 
 REPORT_KIND = ".json"
 VERDICT = "verdict"
+BLOCKED_BY = "blocked_by"
+EARLIER_VERDICT = "earlier_verdict"
 
 
 class Evidence(Protocol):
@@ -60,3 +63,22 @@ def judge(
 def capture(payload: bytes, *, name: str) -> minting.Offered:
     """A captured file offered as proof under the kind its name carries."""
     return minting.Offered(payload=payload, kind=Path(name).suffix)
+
+
+def blocked_by(
+    held: facts.FactMap, gates: Sequence[facts.FactKey[Judged]]
+) -> Judged | None:
+    """A BLOCKED judgement naming the first earlier one that did not pass, or nothing.
+
+    A stage that needs the guest in the state an earlier stage proved does not ask the
+    guest for what it cannot do; it blocks itself on that stage's name, so the record
+    carries the first failure and nothing after it is mistaken for a second one.
+    """
+    for gate in gates:
+        earlier = held[gate]
+        if earlier.verdict is not verdicts.PASSED:
+            return judge(
+                {BLOCKED_BY: str(gate), EARLIER_VERDICT: earlier.verdict.stored_name},
+                verdicts.BLOCKED,
+            )
+    return None

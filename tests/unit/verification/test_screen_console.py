@@ -20,7 +20,7 @@ from apex.adapters.fakes import (
     fake_signing,
 )
 from apex.adapters.real import real_files
-from apex.kernel import errors, safepaths
+from apex.kernel import errors, refusals, safepaths, secrets, timing
 from apex.ports import portset
 from apex.verification import console
 
@@ -99,3 +99,58 @@ def test_keys_are_sent_together_as_codes_held_briefly(root: safepaths.RuntimeRoo
         "keys": [{"type": "qcode", "data": "meta_l"}, {"type": "qcode", "data": "s"}],
         "hold-time": 40,
     }
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("a", (("a",),)),
+        ("Z", (("shift", "z"),)),
+        ("7", (("7",),)),
+        ("-_", (("minus",), ("shift", "minus"))),
+        (" \n", (("spc",), ("ret",))),
+        ("!?~", (("shift", "1"), ("shift", "slash"), ("shift", "grave_accent"))),
+        ("[]\\", (("bracket_left",), ("bracket_right",), ("backslash",))),
+    ],
+)
+def test_text_is_mapped_to_the_older_consoles_us_layout_chords(
+    text: str, expected: tuple[tuple[str, ...], ...]
+) -> None:
+    assert console.chords(text) == expected
+
+
+@pytest.mark.parametrize("text", ["ä", "a\x01", "€"])
+def test_a_character_the_layout_cannot_type_is_refused_without_naming_it(text: str) -> None:
+    with pytest.raises(errors.Refusal) as caught:
+        console.chords(text)
+
+    assert caught.value.reason is refusals.RefusalReason.CONSOLE_TEXT_UNSUPPORTED
+    assert text[-1] not in str(caught.value)
+
+
+def test_a_secret_is_typed_chord_by_chord_with_the_older_pause(
+    root: safepaths.RuntimeRoot,
+) -> None:
+    monitor = fake_qmp.ScriptedQmp({"send-key": {}})
+    ports = bundle(monitor)
+
+    console.type_secret(ports, root.child("qmp.sock"), secrets.Secret("Ab-1"))
+
+    assert [
+        [key["data"] for key in command.arguments["keys"]]  # type: ignore[index,union-attr]
+        for command in monitor.executed
+    ] == [["shift", "a"], ["b"], ["minus"], ["1"]]
+    clock = ports.clock
+    assert isinstance(clock, fake_clock.ManualClock)
+    assert clock.slept == [timing.Elapsed(0.1)] * 4
+
+
+def test_an_untypeable_secret_is_refused_before_any_key_is_sent(
+    root: safepaths.RuntimeRoot,
+) -> None:
+    monitor = fake_qmp.ScriptedQmp({"send-key": {}})
+
+    with pytest.raises(errors.Refusal):
+        console.typeable(secrets.Secret("pässword"))
+
+    assert monitor.executed == []

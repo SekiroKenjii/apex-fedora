@@ -1,0 +1,112 @@
+{
+ "digest": "e552fc2ae19d549552499e57c1f99fa38e4c135fd605f915de2bbcd4a89f5e79",
+ "name": "verify-desktop-render",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.login",
+   "reads": [
+    "agent.install",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.credentials",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.login"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.shell-startup",
+   "reads": [
+    "agent.install",
+    "judged.login",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.shell.startup"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.render-bars",
+   "reads": [
+    "agent.install",
+    "judged.login",
+    "judged.shell.startup",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.render.bars"
+   ]
+  },
+  {
+   "attests": [
+    "desktop.password-wayland"
+   ],
+   "effects": [
+    "emits-evidence",
+    "writes-runtime"
+   ],
+   "id": "attest.desktop.password-wayland",
+   "reads": [
+    "candidate.digest",
+    "evidence.recorder",
+    "guest.witness",
+    "judged.login",
+    "judged.render.bars",
+    "judged.shell.startup"
+   ],
+   "writes": [
+    "minted.desktop.password-wayland"
+   ]
+  }
+ ]
+}

@@ -10,7 +10,7 @@ from apex.composition import agentrun
 from apex.kernel import claims, identifiers, safepaths
 from apex.pipeline import facts
 from apex.ports import guestshell
-from apex.verification import faulting, judging, recording
+from apex.verification import faulting, judging, recording, testaccess
 
 GUEST = facts.FactKey[guestshell.GuestTarget]("verification.guest")
 WHEEL = facts.FactKey[safepaths.SafePath]("agent.wheel")
@@ -19,6 +19,7 @@ CANDIDATE = facts.FactKey[identifiers.Digest]("candidate.digest")
 WITNESS = facts.FactKey[claims.EnvironmentKind]("guest.witness")
 RECORDER = facts.FactKey[recording.Recorder]("evidence.recorder")
 MONITOR = facts.FactKey[safepaths.SafePath]("machine.monitor")
+CREDENTIALS = facts.FactKey[testaccess.Credentials]("verification.credentials")
 
 
 def fault_report(case: faulting.FaultCase) -> facts.FactKey[faulting.FaultReport]:
