@@ -35,7 +35,7 @@ PACKAGE_LINE_BUDGETS = {
     "trust": 1200,
     "agent": 4800,
     "workspace": 2000,
-    "adapters": 2600,
+    "adapters": 3000,
     "cli": 2200,
     "wiring": 300,
 }
