@@ -1,10 +1,11 @@
-"""Start, stop, reclaim and look at the one machine the runtime root may run.
+"""Prepare, start, stop, reclaim and look at the one machine the runtime root may run.
 
-The builder starts from prepared storage; a disposable test machine starts from a source
-disk inside the runtime root, over fresh overlays in its own run directory, with the image
-it boots from and what that image is. Every action goes through the provisioning context,
-so the lock, the intent, the process and the lease keep their order, and the lease carries
-the witness the hypervisor adapter vouched for at launch.
+The builder's storage is prepared from the reviewed base image, and the builder starts
+from it; a disposable test machine starts from a source disk inside the runtime root, over
+fresh overlays in its own run directory, with the image it boots from and what that image
+is. Every action goes through the provisioning context, so the lock, the intent, the
+process and the lease keep their order, and the lease carries the witness the hypervisor
+adapter vouched for at launch.
 """
 
 from __future__ import annotations
@@ -13,21 +14,24 @@ import argparse
 from pathlib import Path
 
 from apex.cli import commands, commandspecs
-from apex.config import defaults
+from apex.config import builderpins, defaults
 from apex.kernel import encoding, errors, refusals, safepaths
 from apex.model import machines
 from apex.ports import portset
-from apex.provisioning import builderspec, launching, leases, testspec
+from apex.provisioning import builderprepare, builderspec, launching, leases, testspec
 from apex.wiring import contexts
 
 NAME = "machine"
-SUMMARY = "the one machine the runtime root may run: start, stop, reclaim, status"
-START, STOP, STATUS, RECLAIM = "start", "stop", "status", "reclaim"
+SUMMARY = "the one machine the runtime root may run: prepare, start, stop, reclaim, status"
+PREPARE, START, STOP, STATUS, RECLAIM = "prepare", "start", "stop", "status", "reclaim"
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog=f"apex {NAME}", description=SUMMARY)
     actions = parser.add_subparsers(dest="action", required=True)
+    actions.add_parser(
+        PREPARE, help="make the builder's storage: base image, disk, key, seed, variables"
+    )
     start = actions.add_parser(START, help="launch a machine from prepared storage")
     start.add_argument("--role", choices=[str(role) for role in machines.VmRole], required=True)
     start.add_argument("--disk", type=Path, help="the test machine's source disk")
@@ -53,6 +57,16 @@ def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
 
 def _lease_document(lease: leases.MachineLease | None) -> encoding.JsonValue:
     return None if lease is None else lease.document()
+
+
+def prepare(
+    context: contexts.Context, ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> encoding.Document:
+    reviewed = builderpins.load(context.repository)
+    prepared = builderprepare.prepare(
+        ports, context.settings, root, base=reviewed.source, instance=ports.identities.run_id()
+    )
+    return {"prepared": prepared.document()}
 
 
 def start_builder(
@@ -135,6 +149,8 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
     root = _root(request.context)
     ports = request.context.bundle(root)
+    if arguments.action == PREPARE:
+        return commandspecs.Reply(document=prepare(request.context, ports, root))
     if arguments.action == START and arguments.role == str(machines.VmRole.BUILDER):
         return commandspecs.Reply(document=start_builder(request.context, ports, root))
     if arguments.action == START:

@@ -7,8 +7,17 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from storagefixtures import Storage
 
-from apex.adapters.fakes import fake_clock, fake_files, fake_hypervisor, fake_process, fake_qmp
+from apex.adapters.fakes import (
+    fake_clock,
+    fake_downloading,
+    fake_files,
+    fake_hypervisor,
+    fake_process,
+    fake_qmp,
+)
+from apex.adapters.real import real_files
 from apex.cli import commandspecs
 from apex.cli.commands import machine_command
 from apex.config import loader
@@ -204,3 +213,42 @@ def test_a_test_machine_without_a_disk_is_refused(
         machine_command.run(request(bundle(ports), settings, root, "start", "--role", "test"))
 
     assert raised.value.reason is refusals.RefusalReason.TOPOLOGY_INCONSISTENT
+
+
+def test_prepare_makes_the_builders_storage_from_the_reviewed_base(
+    ports: portset.HostPorts, tmp_path: Path
+) -> None:
+    base = tmp_path / "runtime"
+    base.mkdir(mode=0o700)
+    root = safepaths.RuntimeRoot.adopt(base)
+    (base / "builder-base.qcow2").write_bytes(b"stale bytes")
+    for name in ("OVMF_CODE.fd", "OVMF_VARS.fd"):
+        (tmp_path / name).write_bytes(name.encode())
+    host = tmp_path / "settings.toml"
+    host.write_text(
+        f'[builder]\nfirmware_code = "{tmp_path}/OVMF_CODE.fd"\n'
+        f'firmware_variables = "{tmp_path}/OVMF_VARS.fd"\n'
+    )
+    settings = loader.load(host_file=host, environment={})
+    held = dataclasses.replace(
+        bundle(ports),
+        files=real_files.LocalFiles(),
+        downloads=fake_downloading.PinningFetcher(),
+        processes=Storage(),
+    )
+
+    reply = machine_command.run(request(held, settings, root, "prepare"))
+
+    assert reply.document == {"prepared": {
+        "base": str(base / "builder-base.qcow2"),
+        "base_fetched": True,
+        "disk_created": True,
+        "key_created": True,
+        "seed_created": True,
+        "variables_copied": True,
+    }}
+    fetcher = held.downloads
+    assert isinstance(fetcher, fake_downloading.PinningFetcher)
+    assert str(fetcher.fetched[0][0]).endswith(".qcow2")
+    assert (base / "seed.iso").read_bytes()[16 * 2048 + 40:16 * 2048 + 46] == b"cidata"
+    assert (base / "builder-vars.fd").read_bytes() == b"OVMF_VARS.fd"
