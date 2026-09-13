@@ -1,0 +1,59 @@
+{
+ "digest": "035a66c228fa683a6bfc36a3f5b02a48a907ab68b6bc1b110893fd9f2c093742",
+ "name": "verify-live-observe",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "live.observe",
+   "reads": [
+    "agent.install",
+    "verification.guest"
+   ],
+   "writes": [
+    "observed.live.observe"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.live.observe",
+   "reads": [
+    "observed.live.observe",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.live.observe"
+   ]
+  }
+ ]
+}

@@ -12,7 +12,7 @@ from apex.model import oci
 from apex.pipeline import facts
 from apex.ports import guestshell
 from apex.trust import testsources
-from apex.verification import faulting, judging, recording, testaccess
+from apex.verification import faulting, judging, probing, recording, testaccess
 
 GUEST = facts.FactKey[guestshell.GuestTarget]("verification.guest")
 WHEEL = facts.FactKey[safepaths.SafePath]("agent.wheel")
@@ -43,4 +43,12 @@ def minted(check: identifiers.CheckId) -> facts.FactKey[recording.Recorded]:
 
 
 def retained(case: faulting.FaultCase) -> facts.FactKey[safepaths.SafePath]:
+    return facts.FactKey[safepaths.SafePath](f"retained.{case.unit}")
+
+
+def observed(case: probing.ProbeCase) -> facts.FactKey[probing.Observation]:
+    return facts.FactKey[probing.Observation](f"observed.{case.unit}")
+
+
+def retained_observation(case: probing.ProbeCase) -> facts.FactKey[safepaths.SafePath]:
     return facts.FactKey[safepaths.SafePath](f"retained.{case.unit}")
