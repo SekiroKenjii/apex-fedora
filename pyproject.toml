@@ -39,6 +39,9 @@ line-length = 100
 target-version = "py312"
 src = ["src", "tools"]
 
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
 [tool.ruff.lint]
 select = [
     "E", "W", "F", "I", "N", "UP", "B", "SIM", "RET", "PTH", "ARG", "C4", "TID", "ERA",
@@ -58,6 +61,38 @@ max-statements = 40
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.pylint.similarities]
+min-similarity-lines = 10
+ignore-imports = true
+ignore-signatures = true
+ignore-docstrings = true
+
+[tool.importlinter]
+root_packages = ["apex"]
+
+[[tool.importlinter.contracts]]
+name = "The layers import downward, and never a layer above"
+type = "layers"
+layers = [
+    "apex.agent",
+    "apex.cli",
+    "apex.wiring",
+    "apex.adapters",
+    "apex.verification",
+    "apex.composition",
+    "apex.provisioning",
+    "apex.attestation",
+    "apex.trust",
+    "apex.workspace",
+    "apex.generating",
+    "apex.config | apex.targeting",
+    "apex.pipeline",
+    "apex.registry",
+    "apex.ports",
+    "apex.model",
+    "apex.kernel | apex.assets",
+]
 
 [tool.pyright]
 include = ["src", "tools/migration", "tests/unit", "tests/contract", "tests/architecture", "tests/pipelines", "tests/property", "tests/support"]

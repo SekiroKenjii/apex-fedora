@@ -37,6 +37,9 @@ recovery-disk fixture:
 select-candidate build_id key:
     {{apex}} candidate select --build "{{build_id}}" --key "{{key}}"
 
+check:
+    {{apex}} check
+
 doctor:
     {{apex}} doctor
 
@@ -221,14 +224,26 @@ ratchet-freeze:
 ratchet:
     uv run --no-project --python {{python}} python tools/migration/lint_ratchet.py check
 
+format:
+    {{apex}} check --only format
+
+lint:
+    {{apex}} check --only lint
+
 types:
-    uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
+    {{apex}} check --only types
 
 pyright:
-    uv run --no-project --python {{python}} --with pytest==9.1.1 --with pyright==1.1.407 sh -c 'pyright --pythonpath "$(command -v python)"'
+    {{apex}} check --only pyright
 
 deadcode:
-    uv run --no-project --python {{python}} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property tests/support tests/integration --min-confidence 80
+    {{apex}} check --only deadcode
+
+duplicates:
+    {{apex}} check --only duplicates
+
+imports:
+    {{apex}} check --only imports
 
 agent-wheel out:
     uv run --no-project --python {{python}} python tools/migration/agent_wheel.py "{{out}}"
@@ -254,15 +269,9 @@ justfile:
 benchmarks:
     uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -q -m benchmark --durations=5
 
-lint:
-    uv run --no-project --python {{python}} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit tests/pipelines tests/architecture tests/contract tests/property tests/support
-
 gate:
+    just check
     just test
-    just lint
-    just types
-    just pyright
-    just deadcode
     just plans
     just os
     just justfile

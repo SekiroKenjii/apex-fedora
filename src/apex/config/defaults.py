@@ -269,9 +269,7 @@ class TestMachineDefaults:
 
 
 TEST_MACHINE = TestMachineDefaults(
-    processors=4,
-    memory=quantities.Mib(4096),
-    ssh_port=GUEST_SSH_PORT,
+    processors=4, memory=quantities.Mib(4096), ssh_port=GUEST_SSH_PORT
 )
 
 BOOT_READY = timing.WaitPolicy(
@@ -370,11 +368,16 @@ GTK_REQUEST_NAME = "request.json"
 GTK_LOG_NAME = "execution.log"
 GTK_LOCK_NAME = "test.lock"
 GTK_INPUT_FILES = (
-    "guest/fingerprint-gtk.py", "guest/fingerprint-gtk.c", "guest/fingerprint-gtk-service.py",
-    "config/fingerprint-rpms.lock.json", "rpms/patches/gnome-fingerprint-retain-claim.patch",
+    "guest/fingerprint-gtk.py",
+    "guest/fingerprint-gtk.c",
+    "guest/fingerprint-gtk-service.py",
+    "config/fingerprint-rpms.lock.json",
+    "rpms/patches/gnome-fingerprint-retain-claim.patch",
 )
 SMOKE_SCRIPT_PATH = "guest/fingerprint-rpm-smoke.py"
 
+CHECK_DEADLINE = timing.Deadline(timing.Elapsed(1800))
+CHECK_OUTPUT_LIMIT = bounded.Limit(16 * 1024 * 1024)
 GUEST_READY = timing.WaitPolicy(
     deadline=timing.Deadline(timing.Elapsed(240)),
     backoff=timing.Backoff.exponential(

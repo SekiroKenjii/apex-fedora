@@ -38,8 +38,23 @@ def test_every_command_module_declares_one_command_and_the_registry_holds_them_a
 
     assert len(commands.names()) == len(modules)
     assert commands.names() == (
-        "build", "candidate", "doctor", "evidence", "git-hook", "hardware", "hooks", "machine",
-        "operate", "patch", "plan", "readiness", "record", "sources", "trust", "ventoy-media",
+        "build",
+        "candidate",
+        "check",
+        "doctor",
+        "evidence",
+        "git-hook",
+        "hardware",
+        "hooks",
+        "machine",
+        "operate",
+        "patch",
+        "plan",
+        "readiness",
+        "record",
+        "sources",
+        "trust",
+        "ventoy-media",
         "verify",
     )
     assert commands.lookup("no-such-command") is None
@@ -93,9 +108,7 @@ def test_a_parser_that_stops_the_run_keeps_the_code_it_chose(
     assert "usage: apex plan" in captured.out and "invalid choice" in captured.err
 
 
-def test_a_name_nobody_owns_is_refused_with_the_names_that_exist(
-    ports: portset.HostPorts,
-) -> None:
+def test_a_name_nobody_owns_is_refused_with_the_names_that_exist(ports: portset.HostPorts) -> None:
     out, err = streams()
 
     code = dispatch.run(
