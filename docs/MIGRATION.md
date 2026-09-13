@@ -3596,6 +3596,69 @@ command line is asserted by the pipeline test; the shared record stage's body be
 composition passed 1400 (1606) and was raised to 1800; the parity floor fell to two.
 `golden_change`: none. `supersedes`: none yet.
 
+## P20p. The Ventoy medium prepared from proven inputs, and the bridge empty
+
+Goal: `ventoy-media`, the last name the older tree answered for, on the new tree. The older
+tool accepted the live bundle only against a key supplied from outside it, the Ubuntu image
+only against the checksums Canonical signed with the pinned signer, the Ventoy release only
+at its pinned digest, and the medium only when the builder's report echoed the request and
+the medium carried the reported digest. The same acceptances run through the ports now.
+Four commits on `work/phase-20p-ventoy`, the whole gate green at the head.
+
+### The inputs proven on the host
+
+`verification/ventoymedia.py` reads the reviewed lock
+(`config/ventoy-test.lock.json`) through the file port, accepts the live bundle with the
+trust verifier against the operator's key (the bundle must sit under the runtime root and
+the ISO it carries is `live/Apex-Live.iso`), runs `gpgv` through the process port under a
+home directory the run owns and accepts the checksums only when the pinned signer's valid
+signature is the one it reports, requires the signed checksum line to pin the image as the
+lock does and the image's digest to be that pin, fetches the Ventoy release and its own
+checksum file through the download port at their pins unless the copies already under
+`ventoy-inputs/` carry them, and requires the release's checksum file to name the pinned
+archive. The request names the three inputs by digest with the version, the commit and the
+bundle's digest; the request, the live and Ubuntu verifications and the lock are written
+under the run's exports before the builder is asked (`stages/ventoy_inputs_stage.py`).
+
+The older size check on the Ubuntu image is not carried over: a digest that matches is a
+size that matches.
+
+### The medium made and bound
+
+The work directory is laid out in the builder, `/var/tmp/apex-<run>/ventoy`, with the
+request and the three inputs (`stages/ventoy_work_stage.py`); the `fixture.ventoy` unit
+P19 moved runs over it as a probe; the output comes home and is accepted only when the
+report parses as a passed medium, echoes the request the host wrote, and the QCOW2
+received carries the digest it reports (`stages/ventoy_retrieve_stage.py`); the release's
+checksum file is copied beside the medium and `execution.json` says what the older one
+said, `boot_acceptance` NOT TESTED and no physical medium written. The report is retained
+beside the medium (`verification/recipes/ventoy_media_recipe.py`).
+
+`apex ventoy-media --live-output --ubuntu --trusted-key --checksums --signature --keyring`
+is the command, under its own name, with the operands the justfile always had. The bridge
+holds no name: every command the older tree answered for is the new tree's.
+
+### What this slice did not do
+
+A real medium in the real builder, which only the operator can run (NOT TESTED against the
+real builder and Canonical's real signature); the older tree's deletion, the forwarder's
+with it, and the hook failing closed, which is P21.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 396 files, 29028 lines |
+| Bridge | empty |
+| Fast suite | 2 650 passed, 8 skipped |
+
+`migration_red`: the architecture test read the bridge as a set literal and refused an
+empty `frozenset()`, so it accepts one; two tests used the last bridged name as the example
+of a name the bridge answers and use a name nobody owns; `composition.keys` and
+`ports.guestshell` passed the fan-in limit (44 and 42) and are exempt as the vocabularies
+they are; verification passed 3800 (4267) and was raised to 4400; the parity floor is
+equality alone with nothing bridged. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

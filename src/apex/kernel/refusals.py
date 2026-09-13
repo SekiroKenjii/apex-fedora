@@ -137,6 +137,8 @@ class RefusalReason(enum.StrEnum):
     NVIDIA_COMPILER_MISMATCH = "build.nvidia-compiler-mismatch"
     NVIDIA_REPORT_UNBOUND = "build.nvidia-report-unbound"
     NVIDIA_PACKAGES_INCOMPLETE = "build.nvidia-packages-incomplete"
+    VENTOY_LOCK_MALFORMED = "build.ventoy-lock-malformed"
+    UBUNTU_SIGNER_UNKNOWN = "trust.ubuntu-signer-unknown"
     FROZEN_IMAGE_MISMATCH = "build.frozen-image-mismatch"
     BUILDER_NOT_ISOLATED = "build.builder-not-isolated"
 

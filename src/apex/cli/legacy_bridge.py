@@ -17,9 +17,7 @@ REPOSITORY = Path(__file__).resolve().parents[3]
 LEGACY_TOOLS = REPOSITORY / "tools"
 LEGACY_ENTRY_POINT = LEGACY_TOOLS / "apex.py"
 
-BRIDGED = frozenset({
-    "ventoy-media",
-})
+BRIDGED: frozenset[str] = frozenset()
 RETIRED: dict[str, str] = {
     "artifact": "apex build qcow2|installer|live --parent <id> [--test-access]",
     "builder": "apex machine prepare, start --role builder, stop, status",

@@ -12,7 +12,15 @@ from apex.model import oci
 from apex.pipeline import facts
 from apex.ports import guestshell
 from apex.trust import testsources
-from apex.verification import faulting, installerfault, judging, probing, recording, testaccess
+from apex.verification import (
+    faulting,
+    installerfault,
+    judging,
+    probing,
+    recording,
+    testaccess,
+    ventoymedia,
+)
 
 GUEST = facts.FactKey[guestshell.GuestTarget]("verification.guest")
 WHEEL = facts.FactKey[safepaths.SafePath]("agent.wheel")
@@ -36,6 +44,9 @@ INSTALLER_REQUEST = facts.FactKey[installerfault.Request]("installer.request")
 KEPT = facts.FactKey[safepaths.SafePath]("installer.kept")
 LOGS_COMPLETE = facts.FactKey[bool]("installer.logs-complete")
 FIXTURES = facts.FactKey[safepaths.SafePath]("fixture.output")
+VENTOY_INPUTS = facts.FactKey[ventoymedia.Inputs]("ventoy.inputs")
+VENTOY_PREPARED = facts.FactKey[ventoymedia.Prepared]("ventoy.prepared")
+MEDIA = facts.FactKey[safepaths.SafePath]("ventoy.medium")
 
 
 def fault_report(case: faulting.FaultCase) -> facts.FactKey[faulting.FaultReport]:

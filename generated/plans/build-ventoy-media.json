@@ -1,0 +1,126 @@
+{
+ "digest": "d7e20f93d64d6100f8fab9e01cf34c59162d114f297df80b9d2d49809fefbf97",
+ "name": "build-ventoy-media",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "network-fetch",
+    "writes-runtime"
+   ],
+   "id": "ventoy.inputs",
+   "reads": [
+    "repository",
+    "run.id",
+    "runtime.root",
+    "ventoy.inputs"
+   ],
+   "writes": [
+    "ventoy.prepared"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "ventoy.work",
+   "reads": [
+    "agent.install",
+    "run.id",
+    "runtime.root",
+    "ventoy.prepared",
+    "verification.guest"
+   ],
+   "writes": [
+    "guest.work"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "fixture.ventoy",
+   "reads": [
+    "agent.install",
+    "guest.work",
+    "verification.guest"
+   ],
+   "writes": [
+    "observed.fixture.ventoy"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fixture.ventoy",
+   "reads": [
+    "observed.fixture.ventoy",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fixture.ventoy"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "ventoy.retrieve",
+   "reads": [
+    "guest.work",
+    "observed.fixture.ventoy",
+    "run.id",
+    "runtime.root",
+    "ventoy.prepared",
+    "verification.guest"
+   ],
+   "writes": [
+    "ventoy.medium"
+   ]
+  }
+ ]
+}

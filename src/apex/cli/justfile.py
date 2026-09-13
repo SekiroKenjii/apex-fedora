@@ -50,10 +50,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
      ('python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" '
       '"{{gtk_test}}"',)),
     ("test-elan-diagnostics", "source", ('python3 tools/test-elan-diagnostics.py "{{source}}"',)),
-    ("ventoy-media", "live_output ubuntu trusted_key checksums signature keyring",
-     (f'{LEGACY} ventoy-media --live-output "{{{{live_output}}}}" --ubuntu "{{{{ubuntu}}}}" '
-      '--trusted-key "{{trusted_key}}" --checksums "{{checksums}}" '
-      '--signature "{{signature}}" --keyring "{{keyring}}"',)),
     ("update-fixtures", "build_id", ('python3 tools/prepare-update-fixture.py "{{build_id}}"',)),
     ("recovery-disk", "fixture", ('python3 tools/build-recovery-disk.py "{{fixture}}"',)),
     ("test-update", "action fixture access",

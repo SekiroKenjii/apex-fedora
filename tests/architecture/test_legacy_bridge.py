@@ -17,8 +17,10 @@ BRIDGE_PATH = "src/apex/cli/legacy_bridge.py"
 def _literal_names(node: ast.expr) -> frozenset[str]:
     """Read a set literal, including one wrapped in a `frozenset(...)` call."""
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-        if node.func.id != "frozenset" or len(node.args) != 1:
+        if node.func.id != "frozenset" or len(node.args) > 1:
             raise ValueError("BRIDGED must be a set literal or a frozenset of one")
+        if not node.args:
+            return frozenset()
         node = node.args[0]
     return frozenset(ast.literal_eval(node))
 
@@ -72,7 +74,7 @@ def test_the_bridge_never_grows() -> None:
 
 
 def test_the_bridge_answers_only_for_names_it_holds() -> None:
-    assert legacy_bridge.handles("ventoy-media")
+    assert not legacy_bridge.handles("ventoy-media")
     assert not legacy_bridge.handles("no-such-command")
 
 
