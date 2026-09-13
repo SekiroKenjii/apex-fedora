@@ -88,20 +88,21 @@ def test_a_conventional_subject_is_permitted_silently(tmp_path: Path) -> None:
     assert hook(message) == (0, "", "")
 
 
-def test_the_refusal_says_what_to_do_when_it_is_wrong(tmp_path: Path) -> None:
+def test_the_refusal_names_the_rule_and_offers_no_way_around_it(tmp_path: Path) -> None:
     _, _, err = hook(commit_message(tmp_path, "update product\n"))
 
-    assert f"{SWITCH}={LEGACY}" in err
+    assert f"{SWITCH}={LEGACY}" not in err
+    assert "the rule that refused is named above" in err
 
 
-def test_the_switch_hands_the_verdict_back_to_the_previous_guard(tmp_path: Path) -> None:
+def test_the_retired_switch_changes_nothing(tmp_path: Path) -> None:
     code, _, err = hook(
         commit_message(tmp_path, "update product\n"), environment={SWITCH: LEGACY}
     )
 
     assert code == 2
-    assert "Conventional Commit" in err
-    assert "commit.subject-malformed" not in err
+    assert "commit.subject-malformed" in err
+    assert "Conventional Commit" not in err
 
 
 def test_the_previous_guard_still_decides_when_the_rules_are_absent(tmp_path: Path) -> None:
