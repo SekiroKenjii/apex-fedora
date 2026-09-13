@@ -154,7 +154,12 @@ def normalised(calls: list[list[str]]) -> list[list[str]]:
     return [[HEX_32.sub("<id>", item) for item in call] for call in calls]
 
 
-@pytest.mark.parametrize("kind", list(builds.ArtifactKind))
+# The older NVIDIA build was its own host path, one scp carrying two files; the recipe reuses
+# the shared transfer, and its guest command line is asserted by the pipeline test instead.
+SHARED_KINDS = [kind for kind in builds.ArtifactKind if kind is not builds.ArtifactKind.NVIDIA]
+
+
+@pytest.mark.parametrize("kind", SHARED_KINDS)
 def test_the_recipe_and_the_older_build_issue_the_same_host_commands(
     root: safepaths.RuntimeRoot, monkeypatch: pytest.MonkeyPatch, kind: builds.ArtifactKind
 ) -> None:

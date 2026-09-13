@@ -14,9 +14,10 @@ from apex.pipeline import effects, stages
 from apex.ports import portset
 
 
-def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
-    completed = context.facts[keys.BUILD_RUN]
-    passed = completed.succeeded and context.facts[keys.RETRIEVED]
+def write_record(
+    context: stages.RunContext[portset.HostPorts], *, passed: bool
+) -> builds.BuildRecord:
+    """The run's record, written under its exports with the verdict the caller reached."""
     record = builds.BuildRecord(
         status=builds.BuildStatus.PASS if passed else builds.BuildStatus.FAIL,
         kind=context.facts[keys.KIND],
@@ -26,18 +27,31 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         parent=context.facts[keys.PARENT],
         test_access=context.facts[keys.ACCESS] is not None,
     )
-    root = context.facts[keys.RUNTIME_ROOT]
-    run = context.facts[keys.RUN_ID]
     context.ports.files.write_atomic(
-        exports.inside(root, run, builds.RECORD_NAME),
+        exports.inside(
+            context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID], builds.RECORD_NAME
+        ),
         encoding.canonical(record.document()) + b"\n",
         mode=defaults.RECORD_MODE,
     )
+    return record
+
+
+def failed_guest(context: stages.RunContext[portset.HostPorts]) -> stages.Fail:
+    completed = context.facts[keys.BUILD_RUN]
+    log = exports.inside(
+        context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID], builds.BUILD_LOG
+    )
+    return stages.Fail(
+        cause=f"the guest build exited with {completed.exit_code}; retained log: {log}"
+    )
+
+
+def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
+    passed = context.facts[keys.BUILD_RUN].succeeded and context.facts[keys.RETRIEVED]
+    record = write_record(context, passed=passed)
     if not passed:
-        log = exports.inside(root, run, builds.BUILD_LOG)
-        return stages.Fail(
-            cause=f"the guest build exited with {completed.exit_code}; retained log: {log}"
-        )
+        return failed_guest(context)
     return stages.Advance(facts={keys.BUILD_RECORD: record})
 
 

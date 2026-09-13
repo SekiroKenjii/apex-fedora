@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import json
 import posixpath
 import shutil
 from pathlib import Path
 from typing import Any
 
+import nvidialockfixture as nvidia
 import pytest
 from answeringguest import AnsweringGuest
 from parentbuild import PARENT, documents
@@ -23,6 +25,7 @@ from apex.adapters.fakes import (
 )
 from apex.cli import commandspecs
 from apex.cli.commands import build_command
+from apex.composition import exports
 from apex.config import defaults, loader
 from apex.kernel import claims, errors, refusals, safepaths
 from apex.model import machines
@@ -275,3 +278,58 @@ def test_the_installer_fixture_disks_are_built_by_the_agent_in_the_leased_builde
     assert guest.asked == ["fixture.installer-disks"]
     assert [str(item.remote) for item in guest.received][-1].endswith("/output")
     assert derived.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+
+
+class NvidiaGuest(AnsweringGuest):
+    """A guest whose NVIDIA output lands on the disk and in the file port when retrieved."""
+
+    def __init__(self, filesystem: Any) -> None:
+        super().__init__({})
+        self.filesystem = filesystem
+
+    def receive(
+        self, target: Any, *, remote: Any, into: Any, recursive: bool, deadline: Any
+    ) -> None:
+        super().receive(target, remote=remote, into=into, recursive=recursive, deadline=deadline)
+        home = into.path / posixpath.basename(str(remote)) / defaults.NVIDIA_OUTPUT_DIRECTORY
+        for name, data in nvidia.artifacts().items():
+            (home / name).parent.mkdir(parents=True, exist_ok=True)
+            (home / name).write_bytes(data)
+        self.filesystem.write_atomic(
+            safepaths.SafePath(home / defaults.NVIDIA_REPORT_NAME),
+            json.dumps(nvidia.report(parentbuild_image_id())).encode(), mode=nvidia.PRIVATE,
+        )
+
+
+def parentbuild_image_id() -> str:
+    from parentbuild import IMAGE_ID
+
+    return IMAGE_ID
+
+
+def test_the_nvidia_packages_are_built_for_a_frozen_parent_and_bound_to_it(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot
+) -> None:
+    filesystem = fake_files.MemoryFiles()
+    guest = NvidiaGuest(filesystem)
+    held = dataclasses.replace(bundle(ports, guest), files=filesystem)
+    running(held, root, machines.VmRole.BUILDER)
+    nvidia.write_lock(repository.path, filesystem)
+    documents(filesystem, root, PARENT)
+    filesystem.write_atomic(
+        exports.inside(root, PARENT, f"output/{defaults.KERNEL_CONFIG_NAME}"),
+        nvidia.kernel_config(), mode=nvidia.PRIVATE,
+    )
+
+    reply = build_command.run(request(held, root, repository, "nvidia", "--parent", str(PARENT)))
+    with pytest.raises(errors.Refusal) as orphan:
+        build_command.run(request(held, root, repository, "nvidia"))
+
+    assert reply.exit_code == 0
+    assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
+    record = reply.document["record"]
+    assert isinstance(record, dict) and record["kind"] == "nvidia" and record["status"] == "PASS"
+    verification = reply.document["nvidia"]
+    assert isinstance(verification, dict) and verification["stage"] == "rpm-build"
+    assert any("guest/nvidia-build.py" in run.script.rendered() for run in guest.runs)
+    assert orphan.value.reason is refusals.RefusalReason.BUILD_PARENT_REQUIRED

@@ -3545,6 +3545,57 @@ now use names it still answers; provisioning passed 2000 (2005) and was raised t
 verification passed 3600 (3691) and was raised to 3800; the parity floor fell to four
 invocations with two names bridged. `golden_change`: none. `supersedes`: none yet.
 
+## P20o. The NVIDIA packages built for a frozen image, and bound to it
+
+Goal: `build-nvidia` on the new tree. The older tool packaged the NVIDIA driver in the
+builder for one completed image and refused unless the guest's report was bound to that
+image, to the reviewed lock and to the package set; the same run is one artifact kind of
+the shared build plan now. Four commits on `work/phase-20o-builder`, the whole gate green
+at the head.
+
+### One more artifact kind
+
+`apex build nvidia --parent <id>` derives `ArtifactKind.NVIDIA` from a completed image
+build through the plan every artifact shares: the sources reviewed, acquired, bundled and
+transferred, the parent frozen, the guest asked under its build lock to import the
+frozen payload and run its own `nvidia-build.py` over it, nothing signed. Two stages are
+the kind's own (`composition/recipes/nvidia_recipe.py`). `nvidia.lock`
+(`composition/nvidialock.py`) reads the reviewed lock through the file port with its digest
+and refuses, before anything is sent, a parent whose kernel config does not name the
+compiler the lock names (`build.nvidia-compiler-mismatch`). `nvidia.record` replaces the
+shared record: a guest build that passed is not a passed NVIDIA build until the host has
+bound the report the guest left, a passed `rpm-build` naming this image and this lock,
+claiming no readiness and no test it did not run, every artifact inside the output with
+the digest it reports, the transferred lock the input's, the package set exactly the
+lock's with each vendor package its locked bytes; the record says PASS only then, and
+`nvidia-verification.json` beside it says why either way
+(`build.nvidia-report-unbound`, `build.nvidia-packages-incomplete`). The expected kernel
+module package is spelt from the release catalogue's dist tag, not a literal.
+
+`build-nvidia` is retired; the justfile's `build-nvidia build_id` recipe runs the new
+command. The bridge holds one name: `ventoy-media`.
+
+### What this slice did not do
+
+`ventoy-media` (P20p); a real NVIDIA build in the builder, which only the operator can run
+(NOT TESTED against the real builder); the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 389 files, 28365 lines |
+| Bridge | one name |
+| Fast suite | 2 637 passed, 8 skipped |
+
+`migration_red`: the build parity suite parametrised over every artifact kind and the
+older `_execute` does not know the NVIDIA one, whose older host path was its own (one scp
+carrying two files), so the shared parity runs over the four shared kinds and the guest
+command line is asserted by the pipeline test; the shared record stage's body became
+`write_record` and `failed_guest` so the NVIDIA record could reach its own verdict;
+composition passed 1400 (1606) and was raised to 1800; the parity floor fell to two.
+`golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from apex.composition import accessgrant
+from apex.composition import accessgrant, nvidialock
 from apex.config import sourcepins
-from apex.kernel import commands, identifiers, safepaths
+from apex.kernel import commands, encoding, identifiers, safepaths
 from apex.model import builds, oci
 from apex.pipeline import facts
 from apex.ports import archives, guestshell
@@ -33,3 +33,5 @@ RETRIEVED = facts.FactKey[bool]("build.retrieved")
 BUILD_RECORD = facts.FactKey[builds.BuildRecord]("build.record")
 TEST_ACCESS = facts.FactKey[bool]("build.test-access")
 ACCESS = facts.FactKey[accessgrant.Granted | None]("build.access")
+NVIDIA_LOCK = facts.FactKey[nvidialock.NvidiaLock]("nvidia.lock")
+NVIDIA_REPORT = facts.FactKey[encoding.Document | None]("nvidia.report")

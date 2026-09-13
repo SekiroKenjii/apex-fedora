@@ -133,6 +133,10 @@ class RefusalReason(enum.StrEnum):
     BUILD_PARENT_REQUIRED = "build.parent-required"
     BUILD_PARENT_NOT_COMPLETE = "build.parent-not-complete"
     BUILD_RECORD_MALFORMED = "build.record-malformed"
+    NVIDIA_LOCK_MALFORMED = "build.nvidia-lock-malformed"
+    NVIDIA_COMPILER_MISMATCH = "build.nvidia-compiler-mismatch"
+    NVIDIA_REPORT_UNBOUND = "build.nvidia-report-unbound"
+    NVIDIA_PACKAGES_INCOMPLETE = "build.nvidia-packages-incomplete"
     FROZEN_IMAGE_MISMATCH = "build.frozen-image-mismatch"
     BUILDER_NOT_ISOLATED = "build.builder-not-isolated"
 
