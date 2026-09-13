@@ -223,6 +223,10 @@ PAYLOAD_MANIFEST_NAME = "payload-manifest.json"
 TEST_DISK_NAME = "disk.qcow2"
 TEST_EXTRA_DISK_PREFIX = "other-"
 TEST_SERIAL_LOG_NAME = "test-serial.log"
+TEST_BOOT_USB_NAME = "boot-usb.qcow2"
+HOTPLUG_OVERLAY_NAME = "hotplug-usb.qcow2"
+HOTPLUG_RECORD = "hotplug-request.json"
+TRUST_WORK_PREFIX = "/var/tmp/apex-trust-"
 GUEST_KEY_NAME = "guest_ed25519"
 MAXIMUM_TEST_EXTRA_DISKS = 2
 
