@@ -2647,6 +2647,78 @@ the file splits them three and three; the readiness benchmark first read an empt
 because the reader elects by the mark on disk while the store was in memory; and the fake
 file port appended in quadratic time. `golden_change`: none. `supersedes`: none yet.
 
+## P20a. The CLI from a registry, and the first three commands out of the bridge
+
+Goal: the shape the cutover needs before any command can move, and three commands moved
+through it. Six commits on `work/phase-20a-machine`, four of substance and two that the
+gate on CI asked for, the whole gate green at the head.
+
+### The shape
+
+A command is one file under `cli/commands/`, `*_command.py`, registered by being there and
+looked up by name from a sealed registry; adding one is adding a file, which is the
+extension path the specification declares for commands. `cli/commandspecs.py` says what a
+command is: it receives its arguments and the context the composition root built, and
+returns a reply, the one document standard output carries or the text the operator asked
+for in its place, the narrative for standard error, and the exit code. Nothing in a command
+prints and nothing in a command builds a port. `cli/rendering.py` is the one module that
+prints; it now also emits a reply, the document indented and its keys sorted. `cli/dispatch.py`
+runs a registered name as a command, renders a refusal with the code its kind carries,
+keeps the code a parser chose when it stopped the run, and sends every other name to the
+bridge, so the older tree keeps answering for what has not moved.
+
+`wiring/` is the composition root the specification names, the one place real adapters are
+assembled: `hostbundle.bundle` builds the host bundle from the real adapters and nothing
+else, and a test holds every member to the real adapter package and the bundle to the build
+environment. `hostbundle.load` reads the settings once and resolves the runtime root they
+name, the default base being the permitted base and an override being its own; a root that
+does not exist is none, not a refusal, so a command that reads the store says it skipped.
+The context a command receives lives in `wiring/contexts.py`, below the CLI, since the
+CLI depends on the root and never the reverse.
+
+### Three commands
+
+`apex readiness` reads the store through the versioned reader and folds it: a document by
+default, `--table` for the operator's table, `--strict` to withhold imported passes; an
+intake fault makes the exit code one. `apex evidence verify-chain` replays the chain and
+names the first entry that does not hold. `apex plan artifact <kind>` and
+`apex plan verify <recipe>` print the derived order of a recipe with what each stage reads,
+writes and affects, the same document the frozen copy under `generated/plans/` holds, and
+touch nothing. The two migration tools those first two replaced are gone, and the gate's
+`readiness-table` and `verify-chain` recipes call the CLI. On this machine the new
+`readiness` reads the frozen candidate as 18 passed, 6 blocked and 38 not tested, which is
+what the shadow gate held it to.
+
+`readiness` left the bridge. The corpus still exercises the older entry point for it, so
+G2 holds for the older tree; the entry point parity now compares only the invocations the
+bridge still answers, since a moved command's behaviour is its own and is tested as such.
+The bridge test says every corpus subcommand is either bridged or owned by the registry,
+and never both.
+
+### What this slice did not do
+
+`apex plan upgrade`, the machine commands, the verification commands that lease a guest,
+the generated justfile and the emptying of the bridge follow in the later slices of this
+phase. `just readiness` still runs the older command.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 308 files, 20575 lines |
+| Commands owned | three: `evidence`, `plan`, `readiness` |
+| Bridged | twenty nine |
+| Fast suite | 2 256 passed, 8 skipped |
+
+`migration_red`: the command context first lived in the CLI and the root imported it, which
+the layer rule refused, so it moved below; the readiness test's candidate document lacked
+the build id the version one reader requires; a test basename collided with the kernel's; and the gate on CI refused the first CLI run,
+because CI exports `APEX_PYTHON` and the loader took every undeclared variable in the
+namespace for a typo, so the variables the tooling reads are now declared as such; and
+the note that declared them cost two comment lines the budget did not have, so it is
+part of the module's docstring.
+`golden_change`: none. `supersedes`: the two migration tools for readiness and the chain.
+
 ## Commands
 
 ```sh

@@ -1,12 +1,18 @@
-"""Table to text.
+"""Table to text, and a reply to the two streams.
 
 Presentation sits in the presentation layer, so the projection can be tested without a
-rendering and the rendering without a store.
+rendering and the rendering without a store. Standard output carries one document, or the
+text the operator asked for in its place; the narrative goes to standard error; this is the
+one module that prints.
 """
 
 from __future__ import annotations
 
+import json
+from typing import TextIO
+
 from apex.attestation import columns
+from apex.cli import commandspecs
 
 HEADINGS = ("CHECK", "VERDICT", "ORIGIN", "IMPORT LIMITS")
 GAP = "  "
@@ -45,3 +51,12 @@ def render(table: columns.Table) -> str:
     counted = ", ".join(f"{name} {count}" for name, count in sorted(table.counts.items()))
     lines.append(f"{counted}; imported {table.imported}; ready {table.ready}")
     return "\n".join(lines) + "\n"
+
+
+def emit(reply: commandspecs.Reply, *, stdout: TextIO, stderr: TextIO) -> None:
+    if reply.document is not None:
+        print(json.dumps(reply.document, indent=2, sort_keys=True), file=stdout)
+    elif reply.text is not None:
+        stdout.write(reply.text)
+    if reply.narrative:
+        stderr.write(reply.narrative)

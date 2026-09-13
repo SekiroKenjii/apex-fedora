@@ -33,6 +33,8 @@ FINGERPRINT_TEST_DEADLINE = timing.Deadline(timing.Elapsed(180))
 RPM_NEVRA_FORMAT = "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\\n"
 RPM_EVRA_FORMAT = "%{NAME}-%{EVR}.%{ARCH}\\n"
 RECORD_MODE = quantities.FileMode(0o600)
+RUNTIME_BASE = "~/.local/share/apex-fedora"
+HOST_SETTINGS_FILE = "~/.config/apex-fedora/settings.toml"
 
 DOCUMENT_LIMIT = bounded.Limit(4 * 1024 * 1024)
 PROBE_DEADLINE = timing.Deadline(timing.Elapsed(20))

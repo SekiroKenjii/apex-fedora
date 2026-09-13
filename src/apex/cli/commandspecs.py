@@ -1,0 +1,41 @@
+"""What a command is, separately from which ones exist.
+
+A command receives its arguments and the context the composition root built, and returns a
+reply: the one document standard output carries, or the text the operator asked for in its
+place, the narrative for standard error, and the exit code. Nothing in a command prints, and
+nothing in a command builds a port; both are the presentation layer's and the root's.
+"""
+
+from __future__ import annotations
+
+import dataclasses
+from collections.abc import Sequence
+from typing import Protocol
+
+from apex.kernel import encoding
+from apex.wiring import contexts
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Request:
+    arguments: Sequence[str]
+    context: contexts.Context
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Reply:
+    document: encoding.JsonValue | None = None
+    text: str | None = None
+    narrative: str = ""
+    exit_code: int = 0
+
+
+class Run(Protocol):
+    def __call__(self, request: Request) -> Reply: ...
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Command:
+    name: str
+    summary: str
+    run: Run

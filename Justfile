@@ -216,16 +216,16 @@ readiness-shadow:
     uv run --no-project --python {{python}} python tools/migration/readiness_shadow.py
 
 verify-chain:
-    uv run --no-project --python {{python}} python tools/migration/verify_chain.py
+    PYTHONPATH=src uv run --no-project --python {{python}} python -m apex.cli.main evidence verify-chain
 
 guard-shadow:
     uv run --no-project --python {{python}} python tools/migration/guard_shadow.py --self-test
 
 readiness-table:
-    uv run --no-project --python {{python}} python tools/migration/readiness_table.py
+    PYTHONPATH=src uv run --no-project --python {{python}} python -m apex.cli.main readiness --table
 
 readiness-table-strict:
-    uv run --no-project --python {{python}} python tools/migration/readiness_table.py --strict
+    PYTHONPATH=src uv run --no-project --python {{python}} python -m apex.cli.main readiness --table --strict
 
 gate:
     just test

@@ -60,6 +60,7 @@ KIND_SUFFIXES = {
     "workspace/contentrules": "_rule",
     "workspace/messagerules": "_rule",
     "cli/hookkinds": "_hook",
+    "cli/commands": "_command",
     "attestation/storereaders": "_reader",
     "targeting/releases": "_release",
 }
