@@ -143,6 +143,10 @@ class RefusalReason(enum.StrEnum):
     FROZEN_IMAGE_MISMATCH = "build.frozen-image-mismatch"
     BUILDER_NOT_ISOLATED = "build.builder-not-isolated"
 
+    HOST_RUNS_AS_ROOT = "host.runs-as-root"
+    PATCH_SOURCE_NOT_REVIEWED = "patch.source-not-reviewed"
+    PATCH_SOURCE_UNEXPECTED = "patch.source-unexpected"
+
     UNKNOWN_SETTING = "settings.unknown"
     INCONSISTENT_SETTINGS = "settings.inconsistent"
 

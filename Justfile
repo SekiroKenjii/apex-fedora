@@ -79,6 +79,12 @@ test-resume-installed run_directory:
 test-installer-fault-collect run_directory:
     {{apex}} machine collect --run "{{run_directory}}"
 
+test-fingerprint-dialog source:
+    {{apex}} patch fingerprint-dialog --source "{{source}}"
+
+test-elan-diagnostics source:
+    {{apex}} patch elan-diagnostics --source "{{source}}"
+
 plan-artifact kind:
     {{apex}} plan artifact "{{kind}}"
 
@@ -146,10 +152,7 @@ installer-logs-collect run_directory token:
     {{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"
 
 observe-fingerprint:
-    bash tools/observe-fingerprint.sh
-
-test-fingerprint-dialog source:
-    python3 tools/test-fingerprint-dialog.py "{{source}}"
+    { sudo -- /usr/bin/timeout --signal=INT 90s /usr/bin/busctl --system --json=short --match="path_namespace='/net/reactivated/Fprint'" --match="sender='net.reactivated.Fprint'" --match="type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'" monitor; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } | {{apex}} hardware observe-fingerprint --lookup-system-clients
 
 builder-compact:
     python3 tools/compact-builder.py --replace-verified
@@ -168,9 +171,6 @@ test-fingerprint-gtk build_id:
 
 build-fingerprint-image parent_build rpm_build gtk_test:
     python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" "{{gtk_test}}"
-
-test-elan-diagnostics source:
-    python3 tools/test-elan-diagnostics.py "{{source}}"
 
 update-fixtures build_id:
     python3 tools/prepare-update-fixture.py "{{build_id}}"
