@@ -59,7 +59,7 @@ context that drives them.
 | `guest/build-rpms.sh` | 19 | build shell | called by `build.sh` as shipped; a recipe of its own when the builder carries the agent | P18 host side done |
 | `guest/disk-artifact.sh` | 84 | build shell | runs as shipped from `composition/recipes/disk_artifact_recipe.py` | P18 host side done |
 | `guest/live-artifact.sh` | 35 | build shell | runs as shipped from `composition/recipes/live_artifact_recipe.py` | P18 host side done |
-| `guest/import-payload.sh` | 20 | build shell | runs as shipped, first derived step in `run_build_stage.py` | P18 host side done |
+| `guest/import-payload.sh` | 20 | build shell | runs as shipped as the first derived step in `run_build_stage.py`; `build.import-payload` unit through the engine port for the fingerprint recipe, digest and identifier both checked | P18 host side done, P20e unit done |
 | `guest/image-configure.sh` | 52 | image shell | rendered by `generating/imageinputs.py` from the release profile into `generated/os/image-configure.sh`, held byte-equal (G8) while this file ships | P19i, generated |
 | `guest/installer-configure.sh` | 72 | image shell | rendered by `generating/installerinputs.py` into `generated/os/installer-configure.sh`, held byte-equal (G8) | P19i, generated |
 | `guest/assemble-live-squashfs.sh` | 22 | image shell | rendered by `generating/liveinputs.py` into `generated/os/assemble-live-squashfs.sh`, held byte-equal (G8) | P19i, generated |

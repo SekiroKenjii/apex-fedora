@@ -2904,6 +2904,72 @@ a PPM frame and refused the run as a malformed frame; the agent and verification
 passed their budgets, raised to 4800 and 2400. `golden_change`: one plan added, none
 changed. `supersedes`: none yet.
 
+## P20e. The builder's storage from the CLI, and the fingerprint fault recorded
+
+Goal: the two things the builder still needed the older tree for, its storage prepared and
+its one recorded fault run: `apex machine prepare` and `apex verify fingerprint-cleanup
+--build <id>`, the latter minting `fingerprint.virtual-cleanup`. Four commits on
+`work/phase-20e-builder-prepare`, the whole gate green at the head.
+
+### The builder's storage, piece by piece
+
+`apex machine prepare` makes each piece once and leaves it alone after. The base image is a
+reviewed lock, `config/builder-base.lock.json`, read by `config/builderpins.py`, because a
+release profile names no hash; it is fetched only when the runtime root does not hold it at
+that digest, and must be a standalone QCOW2. The builder's disk is a fresh layer over it at
+the size the settings say, which is what the older `qemu-img create` with a size did. The
+key pair is generated when absent. The NoCloud seed is written from the key's public half:
+`generating/builderseed.py` renders the cloud-config the older tool wrote, one account in
+the wheel group with sudo and the host's key, password login off, root disabled, the
+builder marker written at first boot, PackageKit disabled; and `generating/seedimage.py`
+lays the two documents out as an ISO 9660 volume labelled `cidata`, sector by sector with
+a fixed recording date, so the same key makes the same image. No host tool that writes such
+an image is on every machine, and the older tool fetched a library for it at run time. The
+image was opened with that library once, independently, and listed both files; a real
+first boot of a builder from it has not been done in this slice. The firmware variables are
+copied from where the host settings point.
+
+### The fingerprint fault, in the builder
+
+`verify-fingerprint-cleanup` is the first recipe that runs in the builder. The builder
+proves itself before it is the guest of anything: the same marker and virtual machine
+check the build recipes make, and only then is the agent delivered. The pinned upstream
+tests are fetched on the host, since a guest never downloads. The parent build named by
+`--build` is frozen as the target the way a derived build receives it, and its digest is
+the candidate the record names, because the test is of that image's packages and not of
+the selected candidate. The work directory is laid out in the builder file by file under
+`/var/tmp/apex-fingerprint-<run>`: the tests, the reviewed lock beside them, the target
+document; nothing else is sent, where the older tool unpacked the whole checkout. The
+parent's archive is imported into the builder's store by a unit, `build.import-payload`,
+which is `guest/import-payload.sh` through the engine port: copied with digests preserved,
+the stored manifest hashed against the target's digest and filed, the stored image's
+identifier compared with the target's. Then the fault runs over the work, told where it
+is by the run, and its report is the one proof behind the record.
+
+`apex verify` now names the role each recipe needs: the test machine for the desktop and
+live recipes, the builder for this one, whose account and key are the runtime root's own
+and which takes neither `--user` nor `--credentials`.
+
+### What this slice did not do
+
+The installer trust fault as a recipe, which no catalogue check names; the emulated USB
+devices of the older test machine and the hot-plugged fixture; the generated justfile and
+the empty bridge. The seed image has been read by an independent library, not booted.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 338 files, 23445 lines |
+| Recipes frozen | eight, `verify-fingerprint-cleanup` new |
+| Fast suite | 2 413 passed, 8 skipped |
+
+`migration_red`: the fake process that stands in for `qemu-img` had to report the backing
+file itself as standalone or the chain walk refused before the standalone rule could; the
+fake guest that refuses `mkdir` had to answer with a failed run rather than a substitute
+script; the config package passed its budget with the new lock reader and was raised to
+700. `golden_change`: one plan added, none changed. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

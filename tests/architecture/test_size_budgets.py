@@ -25,7 +25,7 @@ PACKAGE_LINE_BUDGETS = {
     "ports": 1000,
     "registry": 700,
     "pipeline": 1200,
-    "config": 600,
+    "config": 700,
     "targeting": 600,
     "attestation": 3600,
     "composition": 1200,

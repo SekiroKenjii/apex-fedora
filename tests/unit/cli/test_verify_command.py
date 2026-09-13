@@ -6,11 +6,18 @@ import dataclasses
 import json
 from pathlib import Path
 
+import parentbuild
 import pytest
 from answeringguest import AnsweringGuest
 from monitorfixtures import DrawingMonitor
 
-from apex.adapters.fakes import fake_clock, fake_files, fake_hypervisor, fake_qmp
+from apex.adapters.fakes import (
+    fake_clock,
+    fake_downloading,
+    fake_files,
+    fake_hypervisor,
+    fake_qmp,
+)
 from apex.cli import commandspecs
 from apex.cli.commands import verify_command
 from apex.config import defaults, loader
@@ -248,3 +255,66 @@ def test_without_an_account_from_either_source_the_recipe_is_refused(
         verify_command.run(request(held, root, "live-protection"))
 
     assert raised.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+
+
+def test_the_fingerprint_recipe_runs_in_the_builder_and_the_fake_bundle_is_refused(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = AnsweringGuest({
+        "build.import-payload": {"tag": "localhost/apex-payload:x"},
+        "fault.fingerprint-cleanup": {"status": "PASS"},
+    })
+    held = dataclasses.replace(bundle(ports, guest), downloads=fake_downloading.PinningFetcher())
+    running(held, root, machines.VmRole.BUILDER)
+    (root.path / defaults.BUILDER_KEY_NAME).write_bytes(b"key")
+    parentbuild.documents(held.files, root)
+
+    reply = verify_command.run(
+        request(held, root, "fingerprint-cleanup", "--build", str(parentbuild.PARENT))
+    )
+
+    assert isinstance(reply.document, dict)
+    assert reply.document["refusal"] == "evidence.simulated-environment"
+    assert reply.document["not_tested"] == ["fingerprint.virtual-cleanup"]
+    assert guest.asked == ["build.import-payload", "fault.fingerprint-cleanup"]
+    assert guest.targets[-1].user == "builder" and guest.targets[-1].port.value == 22244
+    assert str(guest.targets[-1].key).endswith(defaults.BUILDER_KEY_NAME)
+
+
+def test_the_fingerprint_recipe_needs_the_build_it_tests(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.BUILDER)
+    (root.path / defaults.BUILDER_KEY_NAME).write_bytes(b"key")
+
+    with pytest.raises(errors.Refusal) as raised:
+        verify_command.run(request(held, root, "fingerprint-cleanup"))
+
+    assert raised.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+
+
+def test_a_builder_recipe_takes_no_account_of_its_own(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.BUILDER)
+
+    with pytest.raises(errors.Refusal) as raised:
+        verify_command.run(
+            request(held, root, "fingerprint-cleanup", "--user", "builder", "--build", "d" * 32)
+        )
+
+    assert raised.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+
+
+def test_a_test_machine_is_not_the_builder_a_builder_recipe_needs(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST)
+
+    with pytest.raises(errors.Refusal) as raised:
+        verify_command.run(request(held, root, "fingerprint-cleanup", "--build", "d" * 32))
+
+    assert raised.value.reason is refusals.RefusalReason.MACHINE_ROLE_MISMATCH

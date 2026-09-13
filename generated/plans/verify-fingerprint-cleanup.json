@@ -1,0 +1,147 @@
+{
+ "digest": "1e6f2b3d202fcf7e2ccc151acf6908d3ffa8dbd320a2883eff95d043db88743c",
+ "name": "verify-fingerprint-cleanup",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "network-fetch",
+    "writes-runtime"
+   ],
+   "id": "fingerprint.acquire",
+   "reads": [
+    "repository",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "fingerprint.sources"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "reads-host",
+    "writes-runtime"
+   ],
+   "id": "target.freeze",
+   "reads": [
+    "run.id",
+    "runtime.root",
+    "verification.parent"
+   ],
+   "writes": [
+    "candidate.digest",
+    "verification.target"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "fingerprint.work",
+   "reads": [
+    "agent.install",
+    "fingerprint.sources",
+    "run.id",
+    "runtime.root",
+    "verification.guest",
+    "verification.target"
+   ],
+   "writes": [
+    "fingerprint.work"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "payload.import",
+   "reads": [
+    "agent.install",
+    "fingerprint.work",
+    "verification.guest",
+    "verification.parent"
+   ],
+   "writes": [
+    "payload.imported"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "fault.fingerprint-cleanup",
+   "reads": [
+    "agent.install",
+    "fingerprint.work",
+    "payload.imported",
+    "verification.guest"
+   ],
+   "writes": [
+    "fault.fault.fingerprint-cleanup"
+   ]
+  },
+  {
+   "attests": [
+    "fingerprint.virtual-cleanup"
+   ],
+   "effects": [
+    "emits-evidence",
+    "writes-runtime"
+   ],
+   "id": "attest.fingerprint.virtual-cleanup",
+   "reads": [
+    "candidate.digest",
+    "evidence.recorder",
+    "fault.fault.fingerprint-cleanup",
+    "guest.witness"
+   ],
+   "writes": [
+    "minted.fingerprint.virtual-cleanup"
+   ]
+  }
+ ]
+}

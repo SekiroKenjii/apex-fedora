@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 from apex.config import defaults
-from apex.kernel import commands, errors, refusals, safepaths
+from apex.kernel import commands, errors, quantities, refusals, safepaths
 from apex.ports import portset
 
 QEMU_IMG = "qemu-img"
@@ -81,18 +81,22 @@ def overlay(
     *,
     into: safepaths.SafePath,
     root: safepaths.RuntimeRoot,
+    size: quantities.Gib | None = None,
 ) -> BackingChain:
-    """A fresh copy-on-write layer over `base`, so a guest never writes to the base."""
+    """A fresh copy-on-write layer over `base`, so a guest never writes to the base.
+
+    Given a size, the layer is that large and the guest sees the base grown to it, which
+    is how the builder's disk is made bigger than the cloud image it starts from.
+    """
     if ports.files.exists(into):
         raise errors.Refusal(
             refusals.RefusalReason.DISK_OVERLAY_EXISTS,
             subject=str(into),
             remedy="a run writes each overlay once; choose a fresh run directory",
         )
+    argv = commands.Argv.of(QEMU_IMG, "create", "-f", QCOW2, "-F", QCOW2, "-b", base.disk, into)
     created = ports.processes.run(
-        commands.Argv.of(
-            QEMU_IMG, "create", "-f", QCOW2, "-F", QCOW2, "-b", base.disk, into
-        ),
+        argv if size is None else argv.extended(f"{size.value}G"),
         deadline=defaults.IMAGE_TOOL_DEADLINE,
         limit=commands.OutputLimit.default(),
     )

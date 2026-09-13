@@ -3,9 +3,10 @@
 Everything the recipe needs is taken from the runtime root: the lease says which machine
 runs, where its monitor is and what witness its launcher vouched for; the wheel the guest
 runs is the one placed beside the store; the candidate is the frozen one; the recorder
-opens the store for this run. A builder is refused, since a recipe mutates its guest. The
-guest account comes from `--user`, or from the credentials file a keyboard login needs,
-which also carries the password that is typed and never rendered.
+opens the store for this run. Each recipe names the role it runs against: a disposable
+test machine for the desktop and live recipes, whose guest account comes from `--user` or
+from the credentials file a keyboard login needs; the isolated builder for the fingerprint
+recipe, whose account is the builder's own and whose target is the build named by `--build`.
 """
 
 from __future__ import annotations
@@ -26,16 +27,18 @@ from apex.verification import recording, testaccess
 from apex.verification.recipes import (
     desktop_render_recipe,
     desktop_theme_recipe,
+    fingerprint_cleanup_recipe,
     live_protection_recipe,
 )
 from apex.wiring import contexts
 
 NAME = "verify"
-SUMMARY = "run a verification recipe against the running test machine and record its result"
+SUMMARY = "run a verification recipe against the running machine and record its result"
 LIVE_PROTECTION = "live-protection"
 DESKTOP_THEME = "desktop-theme"
 DESKTOP_RENDER = "desktop-render"
-RECIPES = (LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER)
+FINGERPRINT_CLEANUP = "fingerprint-cleanup"
+RECIPES = (LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -46,6 +49,7 @@ def _parser() -> argparse.ArgumentParser:
         "--credentials", type=Path,
         help="the disposable account's credentials file, inside the runtime root",
     )
+    parser.add_argument("--build", help="the completed image build a builder recipe tests")
     return parser
 
 
@@ -54,11 +58,19 @@ class Inputs:
     ports: portset.HostPorts
     guest: guestshell.GuestTarget
     wheel: safepaths.SafePath
-    candidate: identifiers.Digest
+    candidate: identifiers.Digest | None
     lease: leases.MachineLease
     recorder: recording.Recorder
     root: safepaths.RuntimeRoot
+    repository: safepaths.SourceRoot
     credentials: testaccess.Credentials | None
+    parent: identifiers.BuildId | None
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Recipe:
+    role: machines.VmRole
+    run: Callable[[Inputs], runner.Outcome]
 
 
 def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
@@ -70,23 +82,29 @@ def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
     return context.root
 
 
-def _running_test_machine(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+def _running_machine(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, role: machines.VmRole
 ) -> leases.MachineLease:
     lease = launching.current(ports, root=root)
     if lease is None:
         raise errors.Refusal(
             refusals.RefusalReason.MACHINE_NOT_RUNNING,
             subject="no machine is running",
-            remedy="start a disposable test machine first",
+            remedy=f"start the {role} machine first",
         )
-    if lease.intent.role is not machines.VmRole.TEST:
+    if lease.intent.role is role:
+        return lease
+    if role is machines.VmRole.TEST:
         raise errors.Refusal(
             refusals.RefusalReason.NOT_A_DISPOSABLE_MACHINE,
             subject=f"a {lease.intent.role} machine is running",
-            remedy="verification mutates its guest and runs only against a test machine",
+            remedy="this recipe mutates its guest and runs only against a test machine",
         )
-    return lease
+    raise errors.Refusal(
+        refusals.RefusalReason.MACHINE_ROLE_MISMATCH,
+        subject=f"a {lease.intent.role} machine is running",
+        remedy=f"this recipe runs in the isolated {role}",
+    )
 
 
 def _present(root: safepaths.RuntimeRoot, name: str, *, remedy: str) -> safepaths.SafePath:
@@ -108,21 +126,28 @@ def _candidate(root: safepaths.RuntimeRoot) -> identifiers.Digest:
     return runtimestate.read_candidate(document.path).digest
 
 
-Recipe = Callable[[Inputs], runner.Outcome]
+def _required_candidate(inputs: Inputs) -> identifiers.Digest:
+    if inputs.candidate is None:
+        raise errors.PreconditionUnmet(
+            refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE,
+            subject="no candidate was selected for a test machine recipe",
+        )
+    return inputs.candidate
 
 
 def _live_protection(inputs: Inputs) -> runner.Outcome:
     return live_protection_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, candidate=inputs.candidate,
-        witness=inputs.lease.intent.witness, recorder=inputs.recorder,
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
+        candidate=_required_candidate(inputs), witness=inputs.lease.intent.witness,
+        recorder=inputs.recorder,
     )
 
 
 def _desktop_theme(inputs: Inputs) -> runner.Outcome:
     return desktop_theme_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, candidate=inputs.candidate,
-        witness=inputs.lease.intent.witness, recorder=inputs.recorder,
-        monitor=inputs.lease.intent.monitor, root=inputs.root,
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
+        candidate=_required_candidate(inputs), witness=inputs.lease.intent.witness,
+        recorder=inputs.recorder, monitor=inputs.lease.intent.monitor, root=inputs.root,
     )
 
 
@@ -134,16 +159,32 @@ def _desktop_render(inputs: Inputs) -> runner.Outcome:
             remedy="name the account's credentials file with --credentials",
         )
     return desktop_render_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, candidate=inputs.candidate,
-        witness=inputs.lease.intent.witness, recorder=inputs.recorder,
-        monitor=inputs.lease.intent.monitor, credentials=inputs.credentials, root=inputs.root,
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
+        candidate=_required_candidate(inputs), witness=inputs.lease.intent.witness,
+        recorder=inputs.recorder, monitor=inputs.lease.intent.monitor,
+        credentials=inputs.credentials, root=inputs.root,
+    )
+
+
+def _fingerprint_cleanup(inputs: Inputs) -> runner.Outcome:
+    if inputs.parent is None:
+        raise errors.Refusal(
+            refusals.RefusalReason.REQUEST_MALFORMED,
+            subject=f"{FINGERPRINT_CLEANUP} tests the packages of one completed image build",
+            remedy="name that build with --build",
+        )
+    return fingerprint_cleanup_recipe.verify(
+        inputs.ports, builder=inputs.guest, wheel=inputs.wheel, parent=inputs.parent,
+        witness=inputs.lease.intent.witness, recorder=inputs.recorder, root=inputs.root,
+        repository=inputs.repository,
     )
 
 
 RUNNERS: dict[str, Recipe] = {
-    LIVE_PROTECTION: _live_protection,
-    DESKTOP_THEME: _desktop_theme,
-    DESKTOP_RENDER: _desktop_render,
+    LIVE_PROTECTION: Recipe(machines.VmRole.TEST, _live_protection),
+    DESKTOP_THEME: Recipe(machines.VmRole.TEST, _desktop_theme),
+    DESKTOP_RENDER: Recipe(machines.VmRole.TEST, _desktop_render),
+    FINGERPRINT_CLEANUP: Recipe(machines.VmRole.BUILDER, _fingerprint_cleanup),
 }
 
 
@@ -153,6 +194,38 @@ def _credentials(
     if path is None:
         return None
     return testaccess.read(ports.files, safepaths.SafePath.regular_file(path, within=root))
+
+
+def _guest(
+    root: safepaths.RuntimeRoot,
+    role: machines.VmRole,
+    arguments: argparse.Namespace,
+    credentials: testaccess.Credentials | None,
+) -> guestshell.GuestTarget:
+    """The account and key a recipe reaches its guest with, fixed for the builder."""
+    if role is machines.VmRole.BUILDER:
+        if arguments.user is not None or credentials is not None:
+            raise errors.Refusal(
+                refusals.RefusalReason.REQUEST_MALFORMED,
+                subject="a builder recipe takes neither --user nor --credentials",
+                remedy="the builder's account and key are the runtime root's own",
+            )
+        return guestshell.GuestTarget(
+            user=defaults.BUILDER_USER,
+            port=defaults.BUILDER_SSH_PORT,
+            key=_present(root, defaults.BUILDER_KEY_NAME, remedy="prepare the builder first"),
+            known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
+        )
+    return guestshell.GuestTarget(
+        user=_account(arguments.user, credentials),
+        port=defaults.GUEST_SSH_PORT,
+        key=_present(root, defaults.GUEST_KEY_NAME, remedy="place the guest key beside the store"),
+        known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
+    )
+
+
+def _parent(value: str | None) -> identifiers.BuildId | None:
+    return None if value is None else identifiers.BuildId.parse(value)
 
 
 def _account(user: str | None, credentials: testaccess.Credentials | None) -> str:
@@ -188,29 +261,26 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
     root = _root(request.context)
     ports = request.context.bundle(root)
-    lease = _running_test_machine(ports, root)
+    recipe = RUNNERS[arguments.recipe]
+    lease = _running_machine(ports, root, recipe.role)
     credentials = _credentials(ports, root, arguments.credentials)
-    guest = guestshell.GuestTarget(
-        user=_account(arguments.user, credentials),
-        port=defaults.GUEST_SSH_PORT,
-        key=_present(root, defaults.GUEST_KEY_NAME, remedy="place the guest key beside the store"),
-        known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
-    )
     inputs = Inputs(
         ports=ports,
-        guest=guest,
+        guest=_guest(root, recipe.role, arguments, credentials),
         wheel=_present(
             root, defaults.AGENT_WHEEL_NAME, remedy="build the agent wheel into the root"
         ),
-        candidate=_candidate(root),
+        candidate=_candidate(root) if recipe.role is machines.VmRole.TEST else None,
         lease=lease,
         recorder=recording.Recorder.open(
             root, filesystem=ports.files, identities=ports.identities, clock=ports.clock
         ),
         root=root,
+        repository=request.context.repository,
         credentials=credentials,
+        parent=_parent(arguments.build),
     )
-    outcome = RUNNERS[arguments.recipe](inputs)
+    outcome = recipe.run(inputs)
     if outcome.succeeded:
         return commandspecs.Reply(document=_document(outcome))
     exit_code = errors.Refusal.exit_code if outcome.refusal is not None else 1

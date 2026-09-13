@@ -44,22 +44,30 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         )
     root = context.facts[keys.RUNTIME_ROOT]
     try:
-        frozen = _frozen(context.ports, root, parent)
+        found = frozen(context.ports, root, parent)
     except errors.Refusal as refusal:
         return stages.Refuse(refusal.reason, detail=refusal.subject)
     context.ports.files.write_atomic(
         exports.inside(root, context.facts[keys.RUN_ID], builds.TARGET_DOCUMENT),
-        _read(context.ports, exports.inside(root, parent, _output(builds.IMAGE_DOCUMENT))),
+        image_document(context.ports, root, parent),
         mode=defaults.RECORD_MODE,
     )
     return stages.Advance(
-        facts={keys.FROZEN: frozen, keys.BUILD_PROFILE: builds.Profile(frozen.profile)}
+        facts={keys.FROZEN: found, keys.BUILD_PROFILE: builds.Profile(found.profile)}
     )
 
 
-def _frozen(
+def image_document(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, parent: identifiers.BuildId
+) -> bytes:
+    """The parent's image document as it was written, which becomes a run's target document."""
+    return _read(ports, exports.inside(root, parent, _output(builds.IMAGE_DOCUMENT)))
+
+
+def frozen(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot, parent: identifiers.BuildId
 ) -> oci.FrozenImage:
+    """The parent's frozen image, accepted only when its record, document and manifest agree."""
     names = (builds.RECORD_NAME, _output(builds.IMAGE_DOCUMENT), _output(builds.MANIFEST_DOCUMENT))
     documents = []
     for name in names:

@@ -7,9 +7,11 @@ name the same things here; nothing is renamed to look local.
 from __future__ import annotations
 
 from apex.composition import agentrun
-from apex.kernel import claims, identifiers, safepaths
+from apex.kernel import claims, encoding, identifiers, safepaths
+from apex.model import oci
 from apex.pipeline import facts
 from apex.ports import guestshell
+from apex.trust import testsources
 from apex.verification import faulting, judging, recording, testaccess
 
 GUEST = facts.FactKey[guestshell.GuestTarget]("verification.guest")
@@ -20,6 +22,12 @@ WITNESS = facts.FactKey[claims.EnvironmentKind]("guest.witness")
 RECORDER = facts.FactKey[recording.Recorder]("evidence.recorder")
 MONITOR = facts.FactKey[safepaths.SafePath]("machine.monitor")
 CREDENTIALS = facts.FactKey[testaccess.Credentials]("verification.credentials")
+BUILDER = facts.FactKey[guestshell.GuestTarget]("verification.builder")
+PARENT = facts.FactKey[identifiers.BuildId]("verification.parent")
+TARGET = facts.FactKey[oci.FrozenImage]("verification.target")
+TEST_SOURCES = facts.FactKey[testsources.Acquired]("fingerprint.sources")
+WORK = facts.FactKey[safepaths.RemotePath]("fingerprint.work")
+IMPORTED = facts.FactKey[encoding.Document]("payload.imported")
 
 
 def fault_report(case: faulting.FaultCase) -> facts.FactKey[faulting.FaultReport]:
