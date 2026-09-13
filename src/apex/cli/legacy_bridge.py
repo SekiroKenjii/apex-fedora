@@ -20,9 +20,8 @@ LEGACY_ENTRY_POINT = LEGACY_TOOLS / "apex.py"
 BRIDGED = frozenset({
     "build-nvidia", "decode-coefficient", "doctor",
     "git-hook", "hardware-snapshot", "hooks", "installer-fixtures", "installer-logs",
-    "test-compare-disks", "test-installer-fault",
-    "test-installer-fault-collect", "test-live-check",
-    "test-resume", "ventoy-media",
+    "test-installer-fault", "test-installer-fault-collect", "test-live-check",
+    "ventoy-media",
 })
 RETIRED: dict[str, str] = {
     "artifact": "apex build qcow2|installer|live --parent <id> [--test-access]",
@@ -38,6 +37,8 @@ RETIRED: dict[str, str] = {
     "test-power-loss": "apex machine power-loss",
     "test-fingerprint": "apex verify fingerprint-cleanup --build <id>",
     "test-installer-trust": "apex verify installer-trust",
+    "test-compare-disks": "apex machine compare --run <id or run directory>",
+    "test-resume": "apex machine resume --run <id or run directory> [--without-iso]",
 }
 
 

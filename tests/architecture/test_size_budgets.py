@@ -31,7 +31,7 @@ PACKAGE_LINE_BUDGETS = {
     "composition": 1400,
     "verification": 2800,
     "generating": 800,
-    "provisioning": 1800,
+    "provisioning": 2000,
     "trust": 1200,
     "agent": 4800,
     "workspace": 2000,

@@ -134,3 +134,14 @@ def test_a_monitor_that_refuses_the_device_leaves_the_record_incomplete(host: Ho
         )
     )
     assert written["status"] == "INCOMPLETE" and written["responses"] == [{}]
+
+
+def test_the_attached_fixture_reads_back_as_a_layer_and_nothing_before(host: Host) -> None:
+    held = started(host)
+
+    assert hotplugging.attached(held.ports, held.run_directory) is None
+    report = hotplugging.attach(held.ports, root=held.root, source=fixture(host))
+
+    layer = hotplugging.attached(held.ports, held.run_directory)
+    assert layer is not None
+    assert layer.source == report.source.path and layer.overlay == report.overlay.path
