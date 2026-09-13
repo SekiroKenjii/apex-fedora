@@ -294,3 +294,8 @@ SHUTDOWN = timing.WaitPolicy(
 # the missing rules would have refused, and says nothing about it, which is the one failure of
 # a guard that looks exactly like success.
 REPOSITORY_RULE_FLOOR = (13, 6, 5)
+SOURCE_BLOB_LIMIT = quantities.ByteCount(20 * 1024 * 1024)
+HOOK_GIT_DEADLINE = timing.Deadline(timing.Elapsed(120))
+HOOK_CONTENT_LIMIT = bounded.Limit(64 * 1024 * 1024)
+HOOK_MARKER = "# apex-local-hook"
+HOOK_MODE = quantities.FileMode(0o755)

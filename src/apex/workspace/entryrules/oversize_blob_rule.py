@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from apex.kernel import identifiers, quantities, refusals
+from apex.config import defaults
+from apex.kernel import identifiers, refusals
 from apex.workspace import entryrules, ruleorigins, rulespecs
 
 RULE = identifiers.RuleId("repository.blob-too-large")
-MAXIMUM = quantities.ByteCount(20 * 1024 * 1024)
+MAXIMUM = defaults.SOURCE_BLOB_LIMIT
 
 
 def inspect(subject: rulespecs.EntrySubject) -> Sequence[rulespecs.Finding]:

@@ -182,6 +182,12 @@ class RefusalReason(enum.StrEnum):
     HOOK_ARGUMENT_MISSING = "hook.argument-missing"
     HOOK_RULES_NOT_LOADED = "hook.rules-not-loaded"
     HOOK_KIND_UNKNOWN = "hook.kind-unknown"
+    HOOK_GIT_FAILED = "hook.git-failed"
+    HOOK_CONTENT_UNREAD = "hook.content-unread"
+    HOOK_PATH_CONFIGURED = "hook.path-configured"
+    HOOK_FOREIGN = "hook.foreign-hook"
+    HOOK_NO_REPOSITORY = "hook.no-repository"
+    HOOK_PORTS_UNWIRED = "hook.ports-unwired"
 
     COMMIT_SUBJECT_MALFORMED = "commit.subject-malformed"
     COMMIT_SUBJECT_TOO_LONG = "commit.subject-too-long"
