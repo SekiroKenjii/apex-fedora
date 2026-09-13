@@ -1,21 +1,23 @@
 """Start, stop, reclaim and look at the one machine the runtime root may run.
 
-Only the builder starts from here so far; a disposable test machine needs its overlays and
-its media, which arrive with the next slice. Every action goes through the provisioning
-context, so the lock, the intent, the process and the lease keep their order, and the lease
-carries the witness the hypervisor adapter vouched for at launch.
+The builder starts from prepared storage; a disposable test machine starts from a source
+disk inside the runtime root, over fresh overlays in its own run directory, with the image
+it boots from and what that image is. Every action goes through the provisioning context,
+so the lock, the intent, the process and the lease keep their order, and the lease carries
+the witness the hypervisor adapter vouched for at launch.
 """
 
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 from apex.cli import commands, commandspecs
 from apex.config import defaults
 from apex.kernel import encoding, errors, refusals, safepaths
 from apex.model import machines
 from apex.ports import portset
-from apex.provisioning import builderspec, launching, leases
+from apex.provisioning import builderspec, launching, leases, testspec
 from apex.wiring import contexts
 
 NAME = "machine"
@@ -27,7 +29,13 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog=f"apex {NAME}", description=SUMMARY)
     actions = parser.add_subparsers(dest="action", required=True)
     start = actions.add_parser(START, help="launch a machine from prepared storage")
-    start.add_argument("--role", choices=[str(machines.VmRole.BUILDER)], required=True)
+    start.add_argument("--role", choices=[str(role) for role in machines.VmRole], required=True)
+    start.add_argument("--disk", type=Path, help="the test machine's source disk")
+    start.add_argument("--iso", type=Path, help="an image the test machine boots from")
+    start.add_argument("--medium", choices=[str(medium) for medium in machines.Medium])
+    start.add_argument("--extra-disk", type=Path, action="append", default=[])
+    start.add_argument("--guest-ssh", action="store_true")
+    start.add_argument("--serial-console", action="store_true")
     actions.add_parser(STOP, help="ask the running machine to power down")
     actions.add_parser(STATUS, help="what is running, if anything")
     actions.add_parser(RECLAIM, help="what was started and left behind")
@@ -47,7 +55,7 @@ def _lease_document(lease: leases.MachineLease | None) -> encoding.JsonValue:
     return None if lease is None else lease.document()
 
 
-def start(
+def start_builder(
     context: contexts.Context, ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> encoding.Document:
     run = ports.identities.run_id()
@@ -59,6 +67,40 @@ def start(
         spec=builderspec.spec(context.settings, root),
         run=run,
         run_directory=run_directory,
+    )
+    return {"started": lease.document()}
+
+
+def start_test(
+    context: contexts.Context,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    arguments: argparse.Namespace,
+) -> encoding.Document:
+    if arguments.disk is None:
+        raise errors.Refusal(
+            refusals.RefusalReason.TOPOLOGY_INCONSISTENT,
+            subject="a test machine needs a source disk",
+            remedy="name it with --disk",
+        )
+    request = testspec.TestRequest(
+        disk=arguments.disk,
+        iso=arguments.iso,
+        medium=None if arguments.medium is None else machines.Medium(arguments.medium),
+        extra_disks=tuple(arguments.extra_disk),
+        guest_ssh=arguments.guest_ssh,
+        serial_console=arguments.serial_console,
+    )
+    prepared = testspec.prepare(
+        ports, context.settings, root, request, run=ports.identities.run_id()
+    )
+    lease = launching.launch(
+        ports,
+        root=root,
+        spec=prepared.spec,
+        run=prepared.run,
+        run_directory=prepared.run_directory,
+        medium=prepared.medium,
     )
     return {"started": lease.document()}
 
@@ -93,8 +135,10 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
     root = _root(request.context)
     ports = request.context.bundle(root)
+    if arguments.action == START and arguments.role == str(machines.VmRole.BUILDER):
+        return commandspecs.Reply(document=start_builder(request.context, ports, root))
     if arguments.action == START:
-        return commandspecs.Reply(document=start(request.context, ports, root))
+        return commandspecs.Reply(document=start_test(request.context, ports, root, arguments))
     if arguments.action == STOP:
         return commandspecs.Reply(document=stop(ports, root))
     if arguments.action == RECLAIM:
