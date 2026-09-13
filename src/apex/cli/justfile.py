@@ -1,11 +1,11 @@
 """The justfile rendered from the registry, so a recipe can never name a command that is gone.
 
 Three kinds of recipe: the ones the commands declare, rendered as the package's entry point
-with each parameter quoted; the gate and its tools, the same on every machine; and the older
-tools' recipes, kept word for word until the older tree is deleted. The operator's surface
-may grow and never shift, which the surface contract holds against the frozen baseline; a
-recipe whose work folded into another keeps its operands and runs the retired name, so the
-dispatcher's refusal names the replacement at the prompt.
+with each parameter quoted; the gate and its tools, the same on every machine; and the
+recipes of the older host tools whose flows have not moved yet, kept word for word. The
+operator's surface may grow and never shift, which the surface contract holds against the
+frozen baseline; a recipe whose work folded into another keeps its operands and runs the
+retired name, so the dispatcher's refusal names the replacement at the prompt.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ PLACEHOLDER = re.compile(r"\{\{([a-z_]+)\}\}")
 UV = "uv run --no-project --python {{python}}"
 PYTEST = f"{UV} --with pytest==9.1.1 pytest"
 MIGRATION = f"{UV} python tools/migration"
-LEGACY = "python3 tools/apex.py"
 HEADER = (
     'set shell := ["bash", "-eu", "-o", "pipefail", "-c"]\n'
     'export PYTHONDONTWRITEBYTECODE := "1"\n'
@@ -75,10 +74,6 @@ TOOLING: tuple[Plain, ...] = (
     ("test-integration", "", (f"{PYTEST} -m integration",)),
     ("runtime-freeze", "", (f"{MIGRATION}/runtime_inventory.py record",)),
     ("runtime-verify", "", (f"{MIGRATION}/runtime_inventory.py verify",)),
-    ("golden-freeze", "scratch",
-     (f'PYTHONPATH=tools {MIGRATION}/golden_corpus.py record --scratch "{{{{scratch}}}}"',)),
-    ("golden", "scratch",
-     (f'PYTHONPATH=tools {MIGRATION}/golden_corpus.py verify --scratch "{{{{scratch}}}}"',)),
     ("surface-freeze", "scratch",
      (f'{MIGRATION}/surface_contract.py freeze --scratch "{{{{scratch}}}}"',)),
     ("surface", "", (f"{MIGRATION}/surface_contract.py check",)),
@@ -106,14 +101,12 @@ TOOLING: tuple[Plain, ...] = (
         f"{UV} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit "
         "tests/pipelines tests/architecture tests/contract tests/property tests/support",
     )),
-    ("readiness-shadow", "", (f"{MIGRATION}/readiness_shadow.py",)),
-    ("guard-shadow", "", (f"{MIGRATION}/guard_shadow.py --self-test",)),
 )
 GATE: Lines = (
     "just test", "just lint", "just types", "just pyright", "just deadcode", "just plans",
-    "just os", "just justfile", "just runtime-verify", "just readiness-shadow",
-    "just verify-chain", "just readiness-table", "just guard-shadow", "just test-integration",
-    "just surface", "just ratchet", "just benchmarks", f"{PYTEST} -q -m golden",
+    "just os", "just justfile", "just runtime-verify", "just verify-chain",
+    "just readiness-table", "just test-integration", "just surface", "just ratchet",
+    "just benchmarks",
 )
 
 

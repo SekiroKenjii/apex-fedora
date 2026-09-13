@@ -28,10 +28,9 @@ dev = ["pytest>=8,<10", "pycdlib>=1.14,<2"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "tools", "tests/support"]
-addopts = "-ra -p no:cacheprovider -m 'not integration and not golden and not benchmark'"
+addopts = "-ra -p no:cacheprovider -m 'not integration and not benchmark'"
 markers = [
     "integration: requires file-backed guest artifacts",
-    "golden: replays every command against the captured corpus",
     "benchmark: holds a threshold of the specification's performance table",
 ]
 

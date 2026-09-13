@@ -48,7 +48,6 @@ def test_removing_a_file_entirely_is_allowed() -> None:
     assert lint_ratchet.regressions({"old.py": 3}, {}) == []
 
 
-@pytest.mark.golden
 @pytest.mark.skipif(shutil.which("uv") is None, reason="NOT TESTED: uv is absent")
 def test_the_working_tree_has_no_regression() -> None:
     assert lint_ratchet.check() == 0
