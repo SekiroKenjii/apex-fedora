@@ -29,6 +29,13 @@ class VmRole(enum.StrEnum):
         return self is VmRole.TEST
 
 
+class Medium(enum.StrEnum):
+    """What a disposable machine boots from when it boots from an image: what that image is."""
+
+    LIVE = "live"
+    INSTALLER = "installer"
+
+
 class Device(Protocol):
     def render(self) -> tuple[str, ...]: ...
 

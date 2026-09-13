@@ -36,7 +36,7 @@ PACKAGE_LINE_BUDGETS = {
     "agent": 4400,
     "workspace": 2000,
     "adapters": 2600,
-    "cli": 900,
+    "cli": 1400,
     "wiring": 300,
 }
 

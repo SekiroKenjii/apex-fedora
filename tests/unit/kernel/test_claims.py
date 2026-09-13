@@ -52,3 +52,20 @@ def test_a_claim_binds_its_environment_to_its_scope() -> None:
     )
 
     assert claim.environment is claims.EnvironmentKind.VM
+
+
+@pytest.mark.parametrize(
+    "witness,required,expected",
+    [
+        (claims.EnvironmentKind.LIVE_VM, claims.EnvironmentKind.VM, True),
+        (claims.EnvironmentKind.INSTALLER_VM, claims.EnvironmentKind.VM, True),
+        (claims.EnvironmentKind.VM, claims.EnvironmentKind.LIVE_VM, False),
+        (claims.EnvironmentKind.LIVE_VM, claims.EnvironmentKind.INSTALLER_VM, False),
+        (claims.EnvironmentKind.BUILD, claims.EnvironmentKind.VM, False),
+        (claims.EnvironmentKind.SIMULATED, claims.EnvironmentKind.VM, False),
+    ],
+)
+def test_a_machine_booted_from_a_medium_is_still_a_virtual_machine_and_not_the_reverse(
+    witness: claims.EnvironmentKind, required: claims.EnvironmentKind, expected: bool
+) -> None:
+    assert witness.satisfies(required) is expected

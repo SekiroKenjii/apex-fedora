@@ -256,3 +256,22 @@ def test_a_real_hypervisor_witnesses_by_the_role(
     ports = dataclasses.replace(host.ports, hypervisor=declared_real)
 
     assert launching.witness_of(ports, role) is expected
+
+
+@pytest.mark.parametrize(
+    "medium,expected",
+    [
+        (machines.Medium.LIVE, claims.EnvironmentKind.LIVE_VM),
+        (machines.Medium.INSTALLER, claims.EnvironmentKind.INSTALLER_VM),
+        (None, claims.EnvironmentKind.VM),
+    ],
+)
+def test_a_test_machine_is_witnessed_by_the_medium_it_booted_from(
+    host: Host, medium: machines.Medium | None, expected: claims.EnvironmentKind
+) -> None:
+    declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
+        "environment": claims.EnvironmentKind.BUILD
+    })()
+    ports = dataclasses.replace(host.ports, hypervisor=declared_real)
+
+    assert launching.witness_of(ports, machines.VmRole.TEST, medium) is expected

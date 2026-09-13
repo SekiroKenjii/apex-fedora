@@ -40,6 +40,7 @@ def launch(
     spec: machines.VmSpec,
     run: identifiers.RunId,
     run_directory: safepaths.SafePath,
+    medium: machines.Medium | None = None,
 ) -> leases.MachineLease:
     with ports.locks.acquire(MACHINE, locking.AcquisitionPolicy.immediate()):
         _require_no_machine(ports, root=root)
@@ -52,7 +53,7 @@ def launch(
             monitor=monitor,
             command=spec.render(),
             written_at=ports.clock.stamp(),
-            witness=witness_of(ports, spec.role),
+            witness=witness_of(ports, spec.role, medium),
         )
         leases.write_intent(ports, intent, root=root)
         identity = ports.hypervisor.spawn(
@@ -66,12 +67,19 @@ def launch(
         return lease
 
 
-def witness_of(ports: portset.HostPorts, role: machines.VmRole) -> claims.EnvironmentKind:
-    """What the launching adapter can vouch for: nothing when simulated, else by the role."""
+def witness_of(
+    ports: portset.HostPorts, role: machines.VmRole, medium: machines.Medium | None = None
+) -> claims.EnvironmentKind:
+    """What the launching adapter can vouch for: nothing when simulated, else the role and
+    the medium a disposable machine was booted from."""
     if ports.hypervisor.environment is claims.EnvironmentKind.SIMULATED:
         return claims.EnvironmentKind.SIMULATED
     if role is machines.VmRole.BUILDER:
         return claims.EnvironmentKind.BUILD
+    if medium is machines.Medium.LIVE:
+        return claims.EnvironmentKind.LIVE_VM
+    if medium is machines.Medium.INSTALLER:
+        return claims.EnvironmentKind.INSTALLER_VM
     return claims.EnvironmentKind.VM
 
 
