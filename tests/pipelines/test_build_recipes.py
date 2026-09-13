@@ -6,9 +6,11 @@ the guest lands in the scripted guest's journal, and every refusal happens befor
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -124,7 +126,9 @@ def test_the_plan_puts_every_local_decision_before_the_first_remote_effect() -> 
 
     assert order.index("build.freeze") < order.index("builder.check")
     assert order.index("builder.check") < order.index("sources.acquire")
-    assert order[-4:] == ["guest.transfer", "build.run", "build.retrieve", "build.record"]
+    assert order[-5:] == [
+        "guest.transfer", "access.grant", "build.run", "build.retrieve", "build.record",
+    ]
 
 
 def test_an_image_build_runs_the_older_tree_s_three_guest_scripts(
@@ -281,9 +285,99 @@ def test_every_stage_only_computes_while_the_plan_is_checked(
         (keys.KIND, builds.ArtifactKind.IMAGE),
         (keys.PARENT, None),
         (keys.REQUESTED_PROFILE, builds.Profile.FEDORA),
+        (keys.TEST_ACCESS, False),
     ):
         given = given.with_fact(key, value, produced_by=identifiers.StageId("seed"))
     context = stages.RunContext(facts=given, ports=ports.for_planning())
 
     for stage in image_recipe.PLAN.stages:
         assert stage.preflight(context) == stages.Ready()
+
+
+class AccountGuest(fake_process.ScriptedProcess):
+    """The two host tools a disposable account needs, answered against the fake files."""
+
+    def __init__(self, files: fake_files.MemoryFiles) -> None:
+        super().__init__()
+        self.files = files
+
+    def run(self, argv: Any, **keywords: Any) -> Any:
+        vector = tuple(str(item) for item in argv)
+        if vector[:1] == ("ssh-keygen",):
+            key = Path(vector[-1])
+            for suffix, body in (("", b"private"), (".pub", b"ssh-ed25519 AAAA test\n")):
+                self.files.write_atomic(
+                    safepaths.SafePath(key.with_name(key.name + suffix)), body,
+                    mode=quantities.FileMode(0o600),
+                )
+            self.expect(vector, fake_process.Reply())
+        elif vector[:2] == ("openssl", "passwd"):
+            self.expect(vector, fake_process.Reply(stdout=b"$6$hashed\n"))
+        return super().run(argv, **keywords)
+
+
+def test_the_plan_grants_the_account_after_the_transfer_and_before_the_build() -> None:
+    order = [str(item) for item in disk_artifact_recipe.PLAN.order]
+
+    assert order.index("guest.transfer") < order.index("access.grant") < order.index("build.run")
+
+
+def test_a_qcow2_with_test_access_carries_the_blueprint_and_says_so_in_its_record(
+    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+) -> None:
+    parent_documents(ports, root)
+    held = dataclasses.replace(ports, processes=AccountGuest(memory(ports)))
+
+    outcome = disk_artifact_recipe.derive(
+        held, repository=repository, runtime_root=root, builder=builder(root),
+        kind=builds.ArtifactKind.QCOW2, parent=PARENT, test_access=True,
+    )
+
+    assert outcome.succeeded, outcome.detail
+    run = outcome.facts[keys.RUN_ID]
+    remote = f"/var/tmp/apex-{run}"
+    assert [str(item.remote) for item in guest.sent] == [
+        f"{remote}/source.tar", f"{remote}/target-image.json", f"{remote}/test-blueprint.toml",
+    ]
+    granted = outcome.facts[keys.ACCESS]
+    assert granted is not None
+    access = root.path / "exports" / str(run) / "test-access"
+    assert granted.credentials.path == access / "credentials.json"
+    record = json.loads(
+        memory(ports).read_bytes(exports.inside(root, run, "result.json"), limit=4096)
+    )
+    assert record["test_access"] is True
+    assert scripts(guest)[2].startswith(f"cd {remote} && tar -xf source.tar")
+
+
+def test_test_access_on_anything_but_a_qcow2_is_refused_before_the_guest_is_touched(
+    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+) -> None:
+    parent_documents(ports, root)
+
+    outcome = disk_artifact_recipe.derive(
+        ports, repository=repository, runtime_root=root, builder=builder(root),
+        kind=builds.ArtifactKind.INSTALLER, parent=PARENT, test_access=True,
+    )
+
+    assert outcome.refusal is refusals.RefusalReason.TEST_ACCESS_NOT_QCOW2
+    assert guest.runs == [] and guest.sent == []
+
+
+def test_without_test_access_no_account_is_made_and_the_record_says_so(
+    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+) -> None:
+    parent_documents(ports, root)
+
+    outcome = disk_artifact_recipe.derive(
+        ports, repository=repository, runtime_root=root, builder=builder(root),
+        kind=builds.ArtifactKind.QCOW2, parent=PARENT,
+    )
+
+    assert outcome.succeeded, outcome.detail
+    assert outcome.facts[keys.ACCESS] is None
+    assert outcome.facts[keys.BUILD_RECORD].test_access is False
+    assert not any(str(item.remote).endswith("test-blueprint.toml") for item in guest.sent)

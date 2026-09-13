@@ -13,13 +13,11 @@ import dataclasses
 
 from apex.config import defaults, loader
 from apex.generating import builderseed
-from apex.kernel import commands, encoding, errors, identifiers, refusals, safepaths
+from apex.kernel import encoding, errors, identifiers, refusals, safepaths
 from apex.model import sourcelock
 from apex.ports import portset
-from apex.provisioning import backingchain, launching
+from apex.provisioning import backingchain, launching, sshkeys
 from apex.trust import acquiring
-
-KEYGEN = "ssh-keygen"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -67,7 +65,7 @@ def prepare(
     key = root.child(defaults.BUILDER_KEY_NAME)
     key_created = not ports.files.exists(key)
     if key_created:
-        _generate_key(ports, key)
+        sshkeys.generate(ports, key, comment=defaults.BUILDER_KEY_COMMENT)
     seed_created = _seeded(ports, root, key, instance)
     variables = root.child(defaults.BUILDER_VARIABLES_NAME)
     copied = not ports.files.exists(variables)
@@ -93,21 +91,6 @@ def _fetched(
     return True
 
 
-def _generate_key(ports: portset.HostPorts, key: safepaths.SafePath) -> None:
-    completed = ports.processes.run(
-        commands.Argv.of(
-            KEYGEN, "-q", "-t", defaults.BUILDER_KEY_TYPE, "-N", "", "-C",
-            defaults.BUILDER_KEY_COMMENT, "-f", key,
-        ),
-        deadline=defaults.KEYGEN_DEADLINE,
-        limit=commands.OutputLimit.default(),
-    )
-    if not completed.succeeded:
-        raise errors.PortFailure(
-            port=KEYGEN, cause=completed.stderr.decode(errors="replace").strip()
-        )
-
-
 def _seeded(
     ports: portset.HostPorts,
     root: safepaths.RuntimeRoot,
@@ -117,10 +100,7 @@ def _seeded(
     seed = root.child(defaults.BUILDER_SEED_NAME)
     if ports.files.exists(seed):
         return False
-    public = ports.files.read_bytes(
-        safepaths.SafePath(key.path.with_name(key.path.name + defaults.PUBLIC_KEY_SUFFIX)),
-        limit=defaults.DOCUMENT_LIMIT.value,
-    ).decode().strip()
+    public = sshkeys.public_half(ports, key)
     ports.files.write_atomic(
         root.child(defaults.USER_DATA_NAME), builderseed.user_data(public),
         mode=defaults.RECORD_MODE,

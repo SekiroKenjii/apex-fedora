@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from apex.composition import accessgrant
 from apex.config import sourcepins
 from apex.kernel import commands, identifiers, safepaths
 from apex.model import builds, oci
@@ -30,3 +31,5 @@ TRANSFERRED = facts.FactKey[tuple[safepaths.RemotePath, ...]]("guest.transferred
 BUILD_RUN = facts.FactKey[commands.CompletedRun]("build.run")
 RETRIEVED = facts.FactKey[bool]("build.retrieved")
 BUILD_RECORD = facts.FactKey[builds.BuildRecord]("build.record")
+TEST_ACCESS = facts.FactKey[bool]("build.test-access")
+ACCESS = facts.FactKey[accessgrant.Granted | None]("build.access")

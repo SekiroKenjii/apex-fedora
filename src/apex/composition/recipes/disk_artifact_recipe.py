@@ -21,6 +21,7 @@ def derive(
     builder: guestshell.GuestTarget,
     kind: builds.ArtifactKind,
     parent: identifiers.BuildId,
+    test_access: bool = False,
 ) -> runner.Outcome:
     if kind not in KINDS:
         raise errors.Refusal(
@@ -30,5 +31,5 @@ def derive(
         )
     return buildplan.run(
         PLAN, ports, repository=repository, runtime_root=runtime_root, builder=builder,
-        profile=builds.Profile.FEDORA, kind=kind, parent=parent,
+        profile=builds.Profile.FEDORA, kind=kind, parent=parent, test_access=test_access,
     )

@@ -1,5 +1,5 @@
 {
- "digest": "1def307bdf34f66e2ff8fd9c317f33df82a3a13f89ef0da60d455ae95998d676",
+ "digest": "e1c0e5e349e08b3c6f51a6e24d9b0e0b959e04725897118da2f1ff293084049f",
  "name": "build-live-artifact",
  "stages": [
   {
@@ -155,8 +155,29 @@
     "remote-exec",
     "writes-runtime"
    ],
+   "id": "access.grant",
+   "reads": [
+    "build.kind",
+    "build.test-access",
+    "builder.verified",
+    "guest.remote",
+    "guest.transferred",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.access"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
    "id": "build.run",
    "reads": [
+    "build.access",
     "build.frozen",
     "build.kind",
     "build.parent",
@@ -196,6 +217,7 @@
    ],
    "id": "build.record",
    "reads": [
+    "build.access",
     "build.kind",
     "build.parent",
     "build.profile",

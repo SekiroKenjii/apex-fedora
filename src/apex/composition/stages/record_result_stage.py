@@ -24,7 +24,7 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         source=context.facts[keys.SOURCE_BUNDLE].archive_digest,
         remote=context.facts[keys.REMOTE],
         parent=context.facts[keys.PARENT],
-        test_access=False,
+        test_access=context.facts[keys.ACCESS] is not None,
     )
     root = context.facts[keys.RUNTIME_ROOT]
     run = context.facts[keys.RUN_ID]
@@ -45,7 +45,7 @@ STAGE = stages.SimpleStage(
     id=identifiers.StageId("build.record"),
     reads=(
         keys.BUILD_RUN, keys.RETRIEVED, keys.KIND, keys.BUILD_PROFILE, keys.SOURCE_BUNDLE,
-        keys.REMOTE, keys.PARENT, keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.REMOTE, keys.PARENT, keys.ACCESS, keys.RUNTIME_ROOT, keys.RUN_ID,
     ),
     writes=(keys.BUILD_RECORD,),
     attests=frozenset(),

@@ -1,5 +1,5 @@
 {
- "digest": "e18ecb8391789b84134de8809302c46137021d82faed4bcadf963785c6f23ba7",
+ "digest": "4acc3fcc8e80059fc268fb3d98332bbf8f4af60ec709aef49784b8a3e1ea9329",
  "name": "build-disk-artifact",
  "stages": [
   {
@@ -155,8 +155,29 @@
     "remote-exec",
     "writes-runtime"
    ],
+   "id": "access.grant",
+   "reads": [
+    "build.kind",
+    "build.test-access",
+    "builder.verified",
+    "guest.remote",
+    "guest.transferred",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.access"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
    "id": "build.run",
    "reads": [
+    "build.access",
     "build.frozen",
     "build.kind",
     "build.parent",
@@ -196,6 +217,7 @@
    ],
    "id": "build.record",
    "reads": [
+    "build.access",
     "build.kind",
     "build.parent",
     "build.profile",

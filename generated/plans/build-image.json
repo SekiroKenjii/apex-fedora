@@ -1,5 +1,5 @@
 {
- "digest": "28034be90650f3a04fc8ed483a40ae7b547691640ffe10962386d1c4f1bc219b",
+ "digest": "00c5e836e9a6f13e248d2c872187512fc64c0986d9b75a62295f565fb43661c7",
  "name": "build-image",
  "stages": [
   {
@@ -155,8 +155,29 @@
     "remote-exec",
     "writes-runtime"
    ],
+   "id": "access.grant",
+   "reads": [
+    "build.kind",
+    "build.test-access",
+    "builder.verified",
+    "guest.remote",
+    "guest.transferred",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.access"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
    "id": "build.run",
    "reads": [
+    "build.access",
     "build.frozen",
     "build.kind",
     "build.parent",
@@ -196,6 +217,7 @@
    ],
    "id": "build.record",
    "reads": [
+    "build.access",
     "build.kind",
     "build.parent",
     "build.profile",

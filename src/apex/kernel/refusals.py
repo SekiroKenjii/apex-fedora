@@ -90,6 +90,7 @@ class RefusalReason(enum.StrEnum):
     MACHINE_NOT_RUNNING = "machine.not-running"
     MACHINE_ROLE_MISMATCH = "machine.role-mismatch"
     COMMAND_RETIRED = "command.retired"
+    TEST_ACCESS_NOT_QCOW2 = "build.test-access-not-qcow2"
     MACHINE_IDENTITY_CHANGED = "machine.identity-changed"
     MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
     MACHINE_RUNNING = "machine.running"
