@@ -12,7 +12,8 @@ The desktop preset uses Graphite, Papirus-Dark, Geist, Maple Mono NF and macos-g
 ## Start here
 
 Read [Build](docs/BUILD.md), then [Testing](docs/TESTING.md).
-Run commands from the repository root. `just` recipes wrap `python3 tools/apex.py`.
+Run commands from the repository root. `just` recipes wrap the `apex` command line,
+run as `python -m apex.cli.main` under `uv`.
 
 ```sh
 just hooks

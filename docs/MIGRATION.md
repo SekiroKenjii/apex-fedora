@@ -3659,13 +3659,82 @@ of a name the bridge answers and use a name nobody owns; `composition.keys` and
 they are; verification passed 3800 (4267) and was raised to 4400; the parity floor is
 equality alone with nothing bridged. `golden_change`: none. `supersedes`: none yet.
 
+## P21. The older tree deleted, and the hook fails closed
+
+Goal: what the specification's section E ends with. The new tree has owned every command
+since P20p; this slice deletes the entry point that once answered for them, the library
+only it used, the guest scripts the agent's units replaced, the tests that tested them,
+and the tools that compared the two trees, so nothing older stands behind any decision.
+Four commits on `work/phase-21-older-tree`, the whole gate green at the head.
+
+### What went
+
+`tools/apex.py` and `tools/bootstrap.py`; under `tools/apexlib/` the modules only the
+bridged commands used: `evidence`, `guardforward`, `hardware`, `hda`, `installerfault`,
+`installerlogs`, `livechecks`, `nvidia`, `serialconsole`, `strictview`, `ventoy`;
+`pipeline.py` keeps `export_source` alone and `gitguard.py` keeps the rules it lends to it,
+the hook installer gone. Under `guest/`, the scripts whose rows in `docs/AGENT-MAP.md`
+waited for a recipe to be repointed, all repointed now: `live-probe.py`,
+`live-usb-probe.py`, `ventoy-probe.py`, `live-write-denial.py`, `live-lock-fault.py`,
+`test-installer-fault.py`, `test-installer-trust.py`, `installer-fixtures.py`,
+`ventoy-fixture.py`, `fingerprint-tests.sh`, `test-fingerprint.py` (its verbatim asset is
+the one copy now, and the wrappers carry the asset's digest). Under `tools/migration/`,
+the tools that compared the two trees: the golden corpus and its effect trace and
+normalisers, the entry point parity, the guard shadow and the readiness shadow, with their
+recipes, the `golden` marker and the gate steps that ran them. Under `tests/`, fifteen
+older test modules, ten contract parity suites that loaded a deleted script or the
+deleted pipeline, the corpus, and the two architecture tests of the bridge and the
+parity. Under `src/apex/cli/`, `legacy_bridge.py`; the retired names live in
+`retirednames.py`, and a name nobody owns is refused with the names that exist
+(`command.unknown`) instead of being forwarded.
+
+### What stayed, and why
+
+`tools/apexlib/common.py`, `vm.py`, `sources.py`, `guesttest.py`, `console.py`,
+`render.py`, `signatures.py`, `testaccess.py`, `fprinttrace.py` and `recovery.py` stay
+because the host tools whose flows have not moved still import them: the fingerprint
+package and image builds, the update, recovery and initramfs machines, the builder
+compaction, the ELAN diagnostics and the fingerprint observer, each still a `python3
+tools/<name>.py` recipe in the justfile. Their guest scripts stay with them, and so does
+`guest/installer-diagnostics.py`, which the installer image ships. The contract parity
+suites over those scripts stay, as do the older tests of the modules that stay.
+
+### The hook fails closed
+
+`apex hooks` writes the three hooks where Git says this checkout's hooks live, which
+honours `core.hooksPath` now rather than refusing it; each hook is three lines ending in
+the package's entry point. With the forwarder gone there is no older guard to fall back to:
+a checkout where the rules cannot be imported refuses every commit with the import error
+on standard error, and `APEX_GUARD` in the environment is refused as a setting nobody
+declared. The contract suite drives the entry point as a program for both.
+
+### What this slice did not do
+
+Move the host tools that remain under `tools/`, whose destinations `docs/AGENT-MAP.md`
+still lists as future; run the new hooks, the doctor, the snapshot, the builds and the
+verifications on the operator's machines (NOT TESTED here); the P22 gates.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 396 files, 28985 lines |
+| Older tree | `tools/apex.py`, `tools/bootstrap.py` and eleven library modules gone; ten library modules stay for the flows not yet moved |
+| Fast suite | 2 334 passed, 8 skipped |
+
+`migration_red`: the operator's checkout sends hooks to `core.hooksPath`, which the hook
+installer of P20m refused, so it honours the path Git reports; the `golden` marker still
+sat on the ratchet's working-tree test and the retired switch test expected the forwarder's
+silence where the loader refuses an undeclared setting; the trimmed older test module
+gained two unused imports the ratchet counted. `golden_change`: the corpus is retired
+with the entry point it replayed; G2, G3 and G7 held through P20 and have no older side to
+compare against now. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
 just runtime-freeze         # record the runtime manifest, once
 just runtime-verify         # compare the current root against it
-just golden-freeze <dir>    # record the command corpus, once
-just golden <dir>           # replay every command and diff
 just surface-freeze <dir>   # freeze the operator command surface, once
 just surface                # check the live justfile still covers it
 just ratchet-freeze         # record the per-file lint baseline, once
@@ -3676,10 +3745,8 @@ just deadcode               # unused code at vulture confidence 80
 just plans-freeze           # record every recipe's derived plan, once per change
 just plans                  # check the frozen plans still match the derived ones
 just agent-wheel <dir>      # build the agent as a wheel and print its digest
-just readiness-shadow       # compare the new readiness fold with the old one
 just verify-chain           # replay the attestation chain and name the first break
 just readiness-table        # read the real store through the versioned reader
 just readiness-table-strict # the same, withholding every imported result
-just guard-shadow           # compare the repository rules with the guard they replace
 just gate                   # the standing gate for the current phase
 ```

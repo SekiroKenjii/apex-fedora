@@ -38,8 +38,8 @@ does not establish cold-boot provenance, prior workaround state or hardware acce
 Stop the builder first. Keep every test disk under the external runtime directory.
 
 ```sh
-python3 tools/apex.py builder stop
-python3 tools/apex.py test-vm /absolute/runtime/path/candidate.qcow2
+just builder-stop
+just test-vm /absolute/runtime/path/candidate.qcow2
 ```
 
 Launching a VM does not record a PASS. Use QMP, serial output and `guest/probe.py` inside
@@ -137,7 +137,7 @@ The [virtual Ventoy procedure](VENTOY.md) prepares verified two-ISO media inside
 builder and boots fresh USB-emulated overlays. It retains separate Apex protection
 and Ubuntu rescue observations, including boot and shutdown warnings.
 
-`python3 tools/apex.py test-power-loss` terminates only an owned disposable test VM,
+`just test-power-loss` terminates only an owned disposable test VM,
 using a PID handle. It refuses the builder. This models loss of guest execution and
 RAM, not loss of the physical drive's write cache. Keep that distinction in results.
 The command records the injection but does not declare crash recovery successful.
@@ -217,8 +217,8 @@ Select a signed build for testing with `select-candidate --build BUILD_ID --trus
 Selecting a different digest moves the previous candidate and its evidence into
 `runtime/candidate-history/`. The new candidate starts without acceptance results.
 Reselecting the same digest preserves its current evidence.
-Use `record CHECK STATUS --environment KIND --description DESCRIPTION --proof FILE`
-through `tools/apex.py` to capture evidence. This copies proof files into private runtime
+Use `apex record CHECK STATUS --environment KIND --description DESCRIPTION --proof FILE`
+to capture evidence. This copies proof files into private runtime
 storage, adds a timestamp and archives any previous record for that check. It does not
 decide whether a human observation was correct. Hardware records require `physical` as
 their environment; a VM cannot attest them.

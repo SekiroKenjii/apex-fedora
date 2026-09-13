@@ -11,13 +11,13 @@ For an existing builder that occupies too much host space, see the offline
 and leaves the 180 GiB startup threshold unchanged.
 
 ```sh
-python3 tools/apex.py hooks
-python3 tools/apex.py doctor
-python3 tools/apex.py sources
-python3 tools/apex.py builder prepare
-python3 tools/apex.py builder start
-python3 tools/apex.py builder ssh
-python3 tools/apex.py build fedora
+just hooks
+just doctor
+just sources
+just builder-prepare
+just builder-start
+just builder-status
+just build fedora
 ```
 
 SSH may not be ready immediately after VM startup. Check the builder serial log and
@@ -65,9 +65,9 @@ Review source updates and their checksums in the lockfile before building them.
 Replace the build ID below with the 32-character ID of a completed image run:
 
 ```sh
-python3 tools/apex.py artifact qcow2 --build BUILD_ID
-python3 tools/apex.py artifact installer --build BUILD_ID
-python3 tools/apex.py artifact live --build BUILD_ID
+just artifact qcow2 BUILD_ID
+just artifact installer BUILD_ID
+just artifact live BUILD_ID
 ```
 
 For a private VM fixture, add `--test-access` to the QCOW2 command. This creates a
@@ -151,14 +151,14 @@ Completed artifacts have a signed `artifacts.json` inventory and `artifacts.sig`
 The private development key stays inside the builder VM. The exported public key is
 for out-of-band review, not automatic trust establishment.
 
-For local development, `python3 tools/apex.py trust-development-key` retrieves the
+For local development, `just trust-development-key` retrieves the
 public key through the builder's authenticated SSH connection and records its hash
 under `runtime/trust`. It refuses an unexpected key change. This trusts the local
 builder for testing; it does not select a production release key or change bootc policy.
 
 ```sh
-python3 tools/apex.py verify-artifact OUTPUT_DIRECTORY --trusted-key TRUSTED_PUBLIC_KEY
-python3 tools/apex.py test-artifact OUTPUT_DIRECTORY --trusted-key TRUSTED_PUBLIC_KEY
+just trust-verify BUILD_ID TRUSTED_PUBLIC_KEY
+just trust-exercise BUILD_ID TRUSTED_PUBLIC_KEY
 ```
 
 The trusted public key must come from a location outside the artifact directory and
@@ -175,7 +175,7 @@ Do not weaken the policy to make an update test pass.
 ## Stop
 
 ```sh
-python3 tools/apex.py builder stop
+just builder-stop
 ```
 
 Shutdown uses QMP and gives the guest 45 seconds. If it does not shut down, the command
