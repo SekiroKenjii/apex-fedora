@@ -15,13 +15,16 @@ SOURCE = Path(__file__).resolve().parents[2] / "src" / "apex"
 MODULE_LINE_LIMIT = 400
 FAN_IN_LIMIT = 40
 # The kernel is the shared vocabulary, `config.defaults` is the one place a number lives,
-# `ports.portset` is the bundle every host stage names in its signature, `pipeline.stages` is
-# the stage vocabulary every stage is made of, `composition.keys` is the fact vocabulary the
-# build stages pass to one another, and `ports.guestshell` is the port every stage that asks
-# a guest names; the specification makes all six central on purpose, so none is a hidden hub.
+# `ports.portset` is the bundle every host stage names in its signature, `pipeline.stages` and
+# `pipeline.effects` are the stage vocabulary every stage is made of and answers with,
+# `composition.keys` is the fact vocabulary the build stages pass to one another,
+# `verification.verifykeys` the same for the verification stages, and `ports.guestshell` is
+# the port every stage that asks a guest names; the specification makes all eight central on
+# purpose, so none is a hidden hub.
 FAN_IN_EXEMPT = (
     "apex.kernel", "apex.config.defaults", "apex.ports.portset", "apex.pipeline.stages",
-    "apex.composition.keys", "apex.ports.guestshell",
+    "apex.pipeline.effects", "apex.composition.keys", "apex.verification.verifykeys",
+    "apex.ports.guestshell",
 )
 PACKAGE_LINE_BUDGETS = {
     "kernel": 1500,

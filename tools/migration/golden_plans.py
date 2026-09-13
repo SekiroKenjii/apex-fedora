@@ -19,6 +19,8 @@ sys.path[:0] = [str(REPOSITORY / "src")]
 from apex.composition.recipes import (  # noqa: E402
     disk_artifact_recipe,
     export_source_recipe,
+    fingerprint_image_recipe,
+    fingerprint_rpms_recipe,
     image_recipe,
     live_artifact_recipe,
     nvidia_recipe,
@@ -28,6 +30,8 @@ from apex.verification.recipes import (  # noqa: E402
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
+    fingerprint_gtk_recipe,
+    fingerprint_rpms_test_recipe,
     installer_diagnostics_recipe,
     installer_fixtures_recipe,
     installer_payload_recipe,
@@ -35,6 +39,8 @@ from apex.verification.recipes import (  # noqa: E402
     live_lock_recipe,
     live_observe_recipe,
     live_protection_recipe,
+    recovery_disk_recipe,
+    update_fixtures_recipe,
     ventoy_media_recipe,
     ventoy_observe_recipe,
 )
@@ -58,6 +64,12 @@ RECIPES = {
     installer_diagnostics_recipe.NAME: installer_diagnostics_recipe.PLAN,
     installer_fixtures_recipe.NAME: installer_fixtures_recipe.PLAN,
     ventoy_media_recipe.NAME: ventoy_media_recipe.PLAN,
+    fingerprint_rpms_recipe.NAME: fingerprint_rpms_recipe.PLAN,
+    fingerprint_image_recipe.NAME: fingerprint_image_recipe.PLAN,
+    update_fixtures_recipe.NAME: update_fixtures_recipe.PLAN,
+    recovery_disk_recipe.NAME: recovery_disk_recipe.PLAN,
+    fingerprint_rpms_test_recipe.NAME: fingerprint_rpms_test_recipe.PLAN,
+    fingerprint_gtk_recipe.NAME: fingerprint_gtk_recipe.PLAN,
 }
 
 

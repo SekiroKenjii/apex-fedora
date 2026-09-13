@@ -1,0 +1,144 @@
+{
+ "digest": "3c4290f3224b284481ced3db2aee19b0a84d5209d9b56a04db47003700819202",
+ "name": "build-update-fixtures",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "reads-host",
+    "writes-runtime"
+   ],
+   "id": "target.freeze",
+   "reads": [
+    "run.id",
+    "runtime.root",
+    "verification.parent"
+   ],
+   "writes": [
+    "candidate.digest",
+    "verification.target"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "update.work",
+   "reads": [
+    "agent.install",
+    "repository",
+    "run.id",
+    "runtime.root",
+    "verification.guest",
+    "verification.target"
+   ],
+   "writes": [
+    "guest.work"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "payload.import",
+   "reads": [
+    "agent.install",
+    "guest.work",
+    "verification.guest",
+    "verification.parent"
+   ],
+   "writes": [
+    "payload.imported"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "fixture.update",
+   "reads": [
+    "agent.install",
+    "guest.work",
+    "payload.imported",
+    "verification.guest"
+   ],
+   "writes": [
+    "observed.fixture.update"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fixture.update",
+   "reads": [
+    "observed.fixture.update",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fixture.update"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "update.retrieve",
+   "reads": [
+    "guest.work",
+    "observed.fixture.update",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "fixture.output"
+   ]
+  }
+ ]
+}

@@ -48,7 +48,7 @@ def test_each_action_runs_its_check_and_replies_with_the_report(
 ) -> None:
     seen: list[Path] = []
 
-    def check(held: object, held_root: object, repository: object, source: Path) -> object:
+    def check(_held: object, _root: object, _repository: object, source: Path) -> object:
         seen.append(source)
         return patchbench.Checked(
             document={"status": "PASS", "cases": {"a": {}, "b": {}}},

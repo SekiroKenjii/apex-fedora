@@ -39,20 +39,32 @@ class ArtifactKind(enum.StrEnum):
     INSTALLER = "installer"
     LIVE = "live"
     NVIDIA = "nvidia"
+    FINGERPRINT_RPMS = "fingerprint-rpms"
+    FINGERPRINT_IMAGE = "fingerprint-image"
 
     @property
     def derived(self) -> bool:
-        return self is not ArtifactKind.IMAGE
+        return self not in ROOT_KINDS
+
+    @property
+    def packaged(self) -> bool:
+        """Built by the guest's own program over the payload, and signed by nobody."""
+        return self in PACKAGE_KINDS
 
     @property
     def guest_script(self) -> str:
-        if self is ArtifactKind.IMAGE:
-            return "build.sh"
-        if self is ArtifactKind.LIVE:
-            return "live-artifact.sh"
-        if self is ArtifactKind.NVIDIA:
-            return "nvidia-build.py"
-        return "disk-artifact.sh"
+        return GUEST_SCRIPTS.get(self, "disk-artifact.sh")
+
+
+ROOT_KINDS = frozenset({ArtifactKind.IMAGE, ArtifactKind.FINGERPRINT_RPMS})
+PACKAGE_KINDS = frozenset({ArtifactKind.NVIDIA, ArtifactKind.FINGERPRINT_RPMS})
+GUEST_SCRIPTS = {
+    ArtifactKind.IMAGE: "build.sh",
+    ArtifactKind.LIVE: "live-artifact.sh",
+    ArtifactKind.NVIDIA: "nvidia-build.py",
+    ArtifactKind.FINGERPRINT_RPMS: "fingerprint-rpms.py",
+    ArtifactKind.FINGERPRINT_IMAGE: "fingerprint-image.py",
+}
 
 
 class BuildStatus(enum.StrEnum):

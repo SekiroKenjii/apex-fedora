@@ -98,10 +98,12 @@ def test_a_damaged_record_is_refused(payload: bytes) -> None:
     assert raised.value.reason is refusals.RefusalReason.BUILD_RECORD_MALFORMED
 
 
-def test_only_the_image_kind_is_not_derived() -> None:
-    assert not builds.ArtifactKind.IMAGE.derived
-    others = [kind for kind in builds.ArtifactKind if kind is not builds.ArtifactKind.IMAGE]
-    assert all(kind.derived for kind in others)
+def test_only_the_image_and_the_fingerprint_packages_are_not_derived() -> None:
+    roots = {builds.ArtifactKind.IMAGE, builds.ArtifactKind.FINGERPRINT_RPMS}
+    assert not any(kind.derived for kind in roots)
+    assert all(kind.derived for kind in builds.ArtifactKind if kind not in roots)
+    assert builds.ArtifactKind.FINGERPRINT_RPMS.packaged and not builds.ArtifactKind.QCOW2.packaged
+    assert builds.ArtifactKind.FINGERPRINT_IMAGE.guest_script == "fingerprint-image.py"
     assert builds.ArtifactKind.QCOW2.guest_script == builds.ArtifactKind.INSTALLER.guest_script
 
 

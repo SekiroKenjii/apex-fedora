@@ -1,0 +1,47 @@
+{
+ "digest": "310d3aba22717b4712c8062e0f8acaed53cb1a7a01b6c4d505c9cec5c307d932",
+ "name": "verify-fingerprint-rpms",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "test.fingerprint.rpm-smoke",
+   "reads": [
+    "repository",
+    "run.id",
+    "runtime.root",
+    "verification.guest",
+    "verification.parent"
+   ],
+   "writes": [
+    "report.fingerprint.rpm-smoke",
+    "retained.fingerprint.rpm-smoke"
+   ]
+  }
+ ]
+}

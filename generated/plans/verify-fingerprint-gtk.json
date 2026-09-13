@@ -1,0 +1,47 @@
+{
+ "digest": "9fbfc333bfca7c68ae82758cbc56e53de242fa9c5518a2cc250b53fb50c7f5ac",
+ "name": "verify-fingerprint-gtk",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "test.fingerprint.gtk",
+   "reads": [
+    "repository",
+    "run.id",
+    "runtime.root",
+    "verification.guest",
+    "verification.parent"
+   ],
+   "writes": [
+    "report.fingerprint.gtk",
+    "retained.fingerprint.gtk"
+   ]
+  }
+ ]
+}

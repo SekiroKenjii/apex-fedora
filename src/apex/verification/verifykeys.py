@@ -19,6 +19,7 @@ from apex.verification import (
     probing,
     recording,
     testaccess,
+    updatefixtures,
     ventoymedia,
 )
 
@@ -47,6 +48,8 @@ FIXTURES = facts.FactKey[safepaths.SafePath]("fixture.output")
 VENTOY_INPUTS = facts.FactKey[ventoymedia.Inputs]("ventoy.inputs")
 VENTOY_PREPARED = facts.FactKey[ventoymedia.Prepared]("ventoy.prepared")
 MEDIA = facts.FactKey[safepaths.SafePath]("ventoy.medium")
+FIXTURE = facts.FactKey[updatefixtures.Located]("fixture.located")
+TAGGED = facts.FactKey[encoding.Document]("payload.tagged")
 
 
 def fault_report(case: faulting.FaultCase) -> facts.FactKey[faulting.FaultReport]:
@@ -71,3 +74,11 @@ def observed(case: probing.ProbeCase) -> facts.FactKey[probing.Observation]:
 
 def retained_observation(case: probing.ProbeCase) -> facts.FactKey[safepaths.SafePath]:
     return facts.FactKey[safepaths.SafePath](f"retained.{case.unit}")
+
+
+def test_report(unit: str) -> facts.FactKey[encoding.Document]:
+    return facts.FactKey[encoding.Document](f"report.{unit}")
+
+
+def retained_report(unit: str) -> facts.FactKey[safepaths.SafePath]:
+    return facts.FactKey[safepaths.SafePath](f"retained.{unit}")

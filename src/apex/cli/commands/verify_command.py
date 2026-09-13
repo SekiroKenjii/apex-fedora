@@ -6,7 +6,8 @@ runs is the one placed beside the store; the candidate is the frozen one; the re
 opens the store for this run. Each recipe names the role it runs against: a disposable
 test machine for the desktop and live recipes, whose guest account comes from `--user` or
 from the credentials file a keyboard login needs; the isolated builder for the fingerprint
-recipe, whose account is the builder's own and whose target is the build named by `--build`.
+recipes, whose account is the builder's own and whose target is the build named by `--build`,
+an image build for the cleanup fault and a package build for the smoke and dialog tests.
 A live medium has no ssh, so `--serial` reaches its rescue shell over the serial socket the
 machine was started with, as root unless `--user` says otherwise; the older live check's
 case names are accepted as spellings of the recipes that took them over. The installer
@@ -21,7 +22,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from apex.cli import commands, commandspecs, verifyinputs
-from apex.kernel import encoding, errors, refusals
+from apex.kernel import encoding, errors, identifiers, refusals
 from apex.model import machines
 from apex.pipeline import runner
 from apex.verification import installerfault
@@ -29,6 +30,8 @@ from apex.verification.recipes import (
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
+    fingerprint_gtk_recipe,
+    fingerprint_rpms_test_recipe,
     installer_diagnostics_recipe,
     installer_payload_recipe,
     installer_trust_recipe,
@@ -50,9 +53,12 @@ VENTOY_OBSERVE = "ventoy-observe"
 LIVE_LOCK = "live-lock"
 INSTALLER_PAYLOAD = "installer-payload"
 INSTALLER_DIAGNOSTICS = "installer-diagnostics"
+FINGERPRINT_RPMS = "fingerprint-rpms"
+FINGERPRINT_GTK = "fingerprint-gtk"
 RECIPES = (
     LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST,
     LIVE_OBSERVE, VENTOY_OBSERVE, LIVE_LOCK, INSTALLER_PAYLOAD, INSTALLER_DIAGNOSTICS,
+    FINGERPRINT_RPMS, FINGERPRINT_GTK,
 )
 CASES: dict[str, str] = {
     "observe": LIVE_OBSERVE,
@@ -133,6 +139,30 @@ def _fingerprint_cleanup(inputs: verifyinputs.Inputs) -> runner.Outcome:
     )
 
 
+def _built_packages(inputs: verifyinputs.Inputs, name: str) -> identifiers.BuildId:
+    if inputs.parent is None:
+        raise errors.Refusal(
+            refusals.RefusalReason.REQUEST_MALFORMED,
+            subject=f"{name} tests the packages of one completed package build",
+            remedy="name that build with --build",
+        )
+    return inputs.parent
+
+
+def _fingerprint_rpms(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return fingerprint_rpms_test_recipe.verify(
+        inputs.ports, builder=inputs.guest, parent=_built_packages(inputs, FINGERPRINT_RPMS),
+        root=inputs.root, repository=inputs.repository,
+    )
+
+
+def _fingerprint_gtk(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return fingerprint_gtk_recipe.verify(
+        inputs.ports, builder=inputs.guest, parent=_built_packages(inputs, FINGERPRINT_GTK),
+        root=inputs.root, repository=inputs.repository,
+    )
+
+
 def _installer_trust(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return installer_trust_recipe.verify(
         inputs.ports, builder=inputs.guest, wheel=inputs.wheel, root=inputs.root
@@ -188,6 +218,8 @@ RUNNERS: dict[str, Recipe] = {
     LIVE_LOCK: Recipe(machines.VmRole.TEST, _live_lock),
     INSTALLER_PAYLOAD: Recipe(machines.VmRole.TEST, _installer_payload),
     INSTALLER_DIAGNOSTICS: Recipe(machines.VmRole.TEST, _installer_diagnostics),
+    FINGERPRINT_RPMS: Recipe(machines.VmRole.BUILDER, _fingerprint_rpms),
+    FINGERPRINT_GTK: Recipe(machines.VmRole.BUILDER, _fingerprint_gtk),
 }
 
 
@@ -252,6 +284,12 @@ JUST_RECIPES = (
          "{{public_key}}", "--serial"),
     ),
     commandspecs.Recipe("installer-logs-prepare", (), (NAME, INSTALLER_DIAGNOSTICS, "--serial")),
+    commandspecs.Recipe(
+        "test-fingerprint-rpms", ("build_id",), (NAME, FINGERPRINT_RPMS, "--build", "{{build_id}}")
+    ),
+    commandspecs.Recipe(
+        "test-fingerprint-gtk", ("build_id",), (NAME, FINGERPRINT_GTK, "--build", "{{build_id}}")
+    ),
 )
 
 commands.declare(

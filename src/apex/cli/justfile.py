@@ -51,15 +51,6 @@ HOST_PIPELINES: tuple[Plain, ...] = (
 )
 
 OLDER_TOOLS: tuple[Plain, ...] = (
-    ("build-fingerprint-rpms", "", ("python3 tools/build-fingerprint-rpms.py",)),
-    ("test-fingerprint-rpms", "build_id",
-     ('python3 tools/test-fingerprint-rpms.py "{{build_id}}"',)),
-    ("test-fingerprint-gtk", "build_id", ('python3 tools/test-fingerprint-gtk.py "{{build_id}}"',)),
-    ("build-fingerprint-image", "parent_build rpm_build gtk_test",
-     ('python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" '
-      '"{{gtk_test}}"',)),
-    ("update-fixtures", "build_id", ('python3 tools/prepare-update-fixture.py "{{build_id}}"',)),
-    ("recovery-disk", "fixture", ('python3 tools/build-recovery-disk.py "{{fixture}}"',)),
     ("test-update", "action fixture access",
      ('python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"',)),
     ("test-recovery", "action fixture access",

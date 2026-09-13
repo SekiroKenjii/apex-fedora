@@ -349,3 +349,28 @@ COMPACTION_RESERVE = quantities.Gib(4)
 COMPACTION_DEADLINE = timing.Deadline(timing.Elapsed(4 * 3600))
 COMPRESSION_TYPE = "zstd"
 CONVERT_THREADS = "2"
+FINGERPRINT_RPMS_LOCK_PATH = "config/fingerprint-rpms.lock.json"
+FINGERPRINT_REQUEST_NAME = "fingerprint-request.json"
+FINGERPRINT_INPUTS_DIRECTORY = "inputs"
+FINGERPRINT_PACKAGES_DIRECTORY = "packages"
+FINGERPRINT_MOCK_DIRECTORY = "mock"
+FINGERPRINT_REPODATA_PREFIX = "packages/repodata/"
+FINGERPRINT_VENDOR_SUFFIX = "apex1"
+FINGERPRINT_VERIFICATION_NAME = "verified.json"
+UPDATE_WORK_PREFIX = "/var/tmp/apex-update-"
+GRUB_REPAIR_PATH = "guest/fix-grub-fragment.py"
+RETRY_PRESET_PATH = "system_files/usr/share/apex/greenboot.conf"
+FIXTURE_DISK_NAME = "fixture-disk.json"
+FIXTURE_DISK_SCOPE = "Fresh installed recovery fixture; boot is NOT TESTED"
+FINGERPRINT_TEST_LOCK = safepaths.RemotePath("/run/apex-fingerprint-test.lock")
+SMOKE_SCRIPT_NAME = "test.py"
+SMOKE_INPUTS_NAME = "inputs.json"
+SMOKE_LOG_NAME = "test.log"
+GTK_REQUEST_NAME = "request.json"
+GTK_LOG_NAME = "execution.log"
+GTK_LOCK_NAME = "test.lock"
+GTK_INPUT_FILES = (
+    "guest/fingerprint-gtk.py", "guest/fingerprint-gtk.c", "guest/fingerprint-gtk-service.py",
+    "config/fingerprint-rpms.lock.json", "rpms/patches/gnome-fingerprint-retain-claim.patch",
+)
+SMOKE_SCRIPT_PATH = "guest/fingerprint-rpm-smoke.py"

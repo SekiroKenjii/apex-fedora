@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from apex.composition import accessgrant, nvidialock
+from apex.composition import accessgrant, fingerprintpackages, nvidialock
 from apex.config import sourcepins
 from apex.kernel import commands, encoding, identifiers, safepaths
 from apex.model import builds, oci
@@ -35,3 +35,8 @@ TEST_ACCESS = facts.FactKey[bool]("build.test-access")
 ACCESS = facts.FactKey[accessgrant.Granted | None]("build.access")
 NVIDIA_LOCK = facts.FactKey[nvidialock.NvidiaLock]("nvidia.lock")
 NVIDIA_REPORT = facts.FactKey[encoding.Document | None]("nvidia.report")
+RPM_BUILD = facts.FactKey[identifiers.BuildId]("fingerprint.rpm-build")
+GTK_TEST = facts.FactKey[identifiers.BuildId]("fingerprint.gtk-test")
+FINGERPRINT_REQUEST = facts.FactKey[fingerprintpackages.Request]("fingerprint.request")
+FINGERPRINT_DELIVERED = facts.FactKey[tuple[safepaths.RemotePath, ...]]("fingerprint.delivered")
+FINGERPRINT_REPORT = facts.FactKey[encoding.Document | None]("fingerprint.report")

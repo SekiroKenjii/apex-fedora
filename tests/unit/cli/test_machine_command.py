@@ -566,11 +566,11 @@ def test_compact_runs_the_compaction_and_a_resume_finalises_a_kept_copy(
         )
 
     monkeypatch.setattr(
-        compacting, "compact", lambda held, held_settings, held_root: compacted(None)
+        compacting, "compact", lambda _held, _settings, _root: compacted(None)
     )
     monkeypatch.setattr(
         compacting, "finalise",
-        lambda held, held_settings, held_root, run: compacted(str(run)),
+        lambda _held, _settings, _root, run: compacted(str(run)),
     )
 
     first = machine_command.run(request(bundle(ports), settings, root, "compact"))
