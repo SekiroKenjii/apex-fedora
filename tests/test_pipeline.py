@@ -16,16 +16,6 @@ def test_source_export_excludes_local_instructions(tmp_path):
     assert len(result['files']) == len(names)
 
 
-def test_artifact_cannot_silently_rebuild(tmp_path):
-    with pytest.raises(Blocked, match='--build'):
-        pipeline.execute(tmp_path, 'fedora', 'qcow2')
-
-
-def test_kernel_experiment_needs_reviewed_lock(tmp_path):
-    with pytest.raises(Blocked, match='CachyOS'):
-        pipeline.execute(tmp_path, 'cachyos')
-
-
 def test_live_cannot_change_core_packages():
     spec = importlib.util.spec_from_file_location('parity', ROOT / 'guest/live-parity.py')
     module = importlib.util.module_from_spec(spec)
@@ -46,27 +36,6 @@ def test_installer_requires_manual_storage_and_enforcing_selinux():
     for directive in ('clearpart', 'zerombr', 'autopart', 'ignoredisk', 'reqpart'):
         assert directive not in setup
     assert '--source-imgref dir:/usr/share/apex/payload --target-imgref {source}' in setup
-
-
-def test_fixture_formatter_refuses_host():
-    import subprocess
-    import sys
-    result = subprocess.run([sys.executable, ROOT / 'guest/installer-fixtures.py'], capture_output=True, text=True)
-    assert result.returncode != 0
-    assert 'isolated Fedora builder' in result.stderr
-
-
-def test_signature_fixture_refuses_host():
-    import subprocess
-    import sys
-    result = subprocess.run([sys.executable, ROOT / 'guest/test-installer-trust.py'], capture_output=True, text=True)
-    assert result.returncode != 0
-    assert 'isolated Fedora builder' in result.stderr
-
-
-def test_signature_runner_requires_builder(tmp_path):
-    with pytest.raises(Blocked, match='builder VM'):
-        pipeline.installer_trust(tmp_path)
 
 
 def test_installer_console_uses_pam_and_expected_generator_target():

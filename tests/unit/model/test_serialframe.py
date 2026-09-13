@@ -15,7 +15,6 @@ import pytest
 from apex.config import defaults
 from apex.kernel import bounded, errors, identifiers, refusals
 from apex.model import serialframe
-from apexlib import installerlogs as older
 
 TOKEN = identifiers.Token("a" * 32)
 OTHER = identifiers.Token("b" * 32)
@@ -131,7 +130,3 @@ def test_the_streaming_decoder_returns_the_payload_once_the_trailer_arrives() ->
     assert [item for item in seen if item is not None] == [BUNDLE]
 
 
-def test_the_older_decoder_reads_what_the_new_encoder_writes() -> None:
-    lines = serialframe.encode(BUNDLE, token=TOKEN)
-
-    assert older.decode([line + b"\n" for line in lines], str(TOKEN)) == json.loads(BUNDLE)

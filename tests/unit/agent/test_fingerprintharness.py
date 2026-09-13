@@ -1,4 +1,4 @@
-"""The harness wrapper carries the older file's bytes and reads its report as the older host did."""
+"""The harness wrapper carries the asset's bytes and reads its report as the older host did."""
 
 from __future__ import annotations
 
@@ -23,8 +23,10 @@ def report(**changes: encoding.JsonValue) -> dict[str, encoding.JsonValue]:
     return document
 
 
-def test_the_harness_is_the_older_file_byte_for_byte() -> None:
-    older = (REPOSITORY / "guest" / fingerprintharness.ASSET).read_bytes()
+def test_the_harness_is_the_verbatim_asset_byte_for_byte() -> None:
+    older = (
+        REPOSITORY / "src" / "apex" / "assets" / "verbatim" / f"{fingerprintharness.ASSET}.verbatim"
+    ).read_bytes()
 
     assert fingerprintharness.source() == older
     assert fingerprintharness.digest().hex == hashlib.sha256(older).hexdigest()

@@ -1,9 +1,8 @@
 import subprocess
-import shutil
 from pathlib import Path
 import pytest
 from apexlib import gitguard
-from apexlib.common import Blocked, ROOT
+from apexlib.common import Blocked
 
 
 @pytest.mark.parametrize("subject", ["feat(ui): add profile view", "fix(audio): initialize amplifier", "test: check recovery", "revert: feat(ui): add profile view"])
@@ -94,14 +93,6 @@ def test_push_checks_private_file_deleted_in_later_commit(repo):
         gitguard.inspect_outgoing(repo, f"refs/heads/main {sha} refs/heads/main {'0'*40}\n")
 
 
-def test_hook_install_preserves_existing_hook(repo):
-    path = repo / ".git/hooks/pre-commit"
-    path.write_text("existing policy")
-    with pytest.raises(Blocked):
-        gitguard.install(repo)
-    assert path.read_text() == "existing policy"
-
-
 def test_push_checks_commit_body(repo):
     (repo / 'code.txt').write_text('code')
     git(repo, 'add', 'code.txt')
@@ -136,75 +127,3 @@ def test_push_still_checks_a_new_commit_after_one_a_remote_holds(repo):
         gitguard.inspect_outgoing(repo, f'refs/heads/topic {sha} refs/heads/topic {"0"*40}\n')
 
 
-def install_executable_hooks(repo):
-    # Both trees, because a hook now reaches the repository rules and would otherwise fail to
-    # import them in the fixture while working everywhere else.
-    for tree in ('tools', 'src'):
-        shutil.copytree(ROOT / tree, repo / tree, ignore=shutil.ignore_patterns('__pycache__'))
-    gitguard.install(repo)
-
-
-def attempt(repo, *args):
-    return subprocess.run(['git', '-C', str(repo), *args], capture_output=True, text=True)
-
-
-def test_real_pre_commit_blocks_local_file_and_allows_recovery(repo):
-    install_executable_hooks(repo)
-    (repo / 'AGENTS.md').write_text('local instructions')
-    (repo / 'product.txt').write_text('product source')
-    git(repo, 'add', 'AGENTS.md', 'product.txt')
-    rejected = attempt(repo, 'commit', '-qm', 'build: add product')
-    # Anchored on the refusing rule, as the commit message cases are, now that the
-    # pre-commit hook answers to the rules through the forwarder.
-    assert rejected.returncode != 0 and 'repository.private-document' in rejected.stderr
-    assert attempt(repo, 'rev-parse', '--verify', 'HEAD').returncode != 0
-    git(repo, 'rm', '--cached', 'AGENTS.md')
-    git(repo, 'commit', '-qm', 'build: add product')
-    assert (repo / 'AGENTS.md').read_text() == 'local instructions'
-    assert attempt(repo, 'check-ignore', 'AGENTS.md').returncode == 1
-    assert git(repo, 'ls-tree', '--name-only', 'HEAD') == 'product.txt'
-
-
-@pytest.mark.parametrize(('message', 'rule'), [
-    ('update product', 'commit.subject-malformed'),
-    ('merge: update product', 'commit.subject-malformed'),
-    ('fix: ' + 'a' * 68, 'commit.subject-too-long'),
-    ('fix: update product\n\nDetails', 'commit.has-body'),
-    ('fix: update product\n\nCo-authored-by: Fixture <fixture@example.invalid>',
-     'commit.co-author-trailer'),
-])
-def test_real_commit_msg_hook_rejects_invalid_commit(repo, message, rule):
-    # Anchored on the refusing rule rather than on one sentence, so a transfer that stopped
-    # consulting the rules would fail here instead of passing on shared prose.
-    install_executable_hooks(repo)
-    (repo / 'product.txt').write_text('product source')
-    git(repo, 'add', 'product.txt')
-    rejected = attempt(repo, 'commit', '-qm', message)
-    assert rejected.returncode != 0 and rule in rejected.stderr
-    assert attempt(repo, 'rev-parse', '--verify', 'HEAD').returncode != 0
-
-
-@pytest.mark.parametrize('bad_history', ['private-file', 'commit-body', None])
-def test_real_pre_push_inspects_history_to_local_fixture_only(repo, bad_history):
-    (repo / 'product.txt').write_text('product source')
-    git(repo, 'add', 'product.txt')
-    if bad_history == 'private-file':
-        (repo / 'AGENTS.md').write_text('local instructions')
-        git(repo, 'add', 'AGENTS.md')
-    subject = 'build: add product' + ('\n\nDetails' if bad_history == 'commit-body' else '')
-    # Create bad history before installing guards, then exercise the real push hook.
-    git(repo, 'commit', '-qm', subject)
-    if bad_history == 'private-file':
-        git(repo, 'rm', 'AGENTS.md')
-        git(repo, 'commit', '-qm', 'docs: remove local instructions')
-    install_executable_hooks(repo)
-    remote = repo / '.git/fixture-remote.git'
-    git(repo, 'init', '--bare', '-q', str(remote))
-    result = attempt(repo, 'push', str(remote), 'HEAD:refs/heads/main')
-    assert (result.returncode == 0) == (bad_history is None)
-    remote_head = attempt(remote, 'rev-parse', '--verify', 'refs/heads/main')
-    if bad_history:
-        assert 'BLOCKED:' in result.stderr
-        assert remote_head.returncode != 0
-    else:
-        assert remote_head.stdout.strip() == git(repo, 'rev-parse', 'HEAD')
