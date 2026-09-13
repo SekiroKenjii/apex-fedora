@@ -7,7 +7,8 @@ opens the store for this run. Each recipe names the role it runs against: a disp
 test machine for the desktop and live recipes, whose guest account comes from `--user` or
 from the credentials file a keyboard login needs; the isolated builder for the fingerprint
 recipes, whose account is the builder's own and whose target is the build named by `--build`,
-an image build for the cleanup fault and a package build for the smoke and dialog tests.
+an image build for the cleanup fault, a package build for the smoke and dialog tests and a
+completed update fixture for the blob sharing.
 A live medium has no ssh, so `--serial` reaches its rescue shell over the serial socket the
 machine was started with, as root unless `--user` says otherwise; the older live check's
 case names are accepted as spellings of the recipes that took them over. The installer
@@ -27,6 +28,7 @@ from apex.model import machines
 from apex.pipeline import runner
 from apex.verification import installerfault
 from apex.verification.recipes import (
+    dedupe_recipe,
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
@@ -55,10 +57,11 @@ INSTALLER_PAYLOAD = "installer-payload"
 INSTALLER_DIAGNOSTICS = "installer-diagnostics"
 FINGERPRINT_RPMS = "fingerprint-rpms"
 FINGERPRINT_GTK = "fingerprint-gtk"
+DEDUPE = "dedupe"
 RECIPES = (
     LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST,
     LIVE_OBSERVE, VENTOY_OBSERVE, LIVE_LOCK, INSTALLER_PAYLOAD, INSTALLER_DIAGNOSTICS,
-    FINGERPRINT_RPMS, FINGERPRINT_GTK,
+    FINGERPRINT_RPMS, FINGERPRINT_GTK, DEDUPE,
 )
 CASES: dict[str, str] = {
     "observe": LIVE_OBSERVE,
@@ -143,10 +146,17 @@ def _built_packages(inputs: verifyinputs.Inputs, name: str) -> identifiers.Build
     if inputs.parent is None:
         raise errors.Refusal(
             refusals.RefusalReason.REQUEST_MALFORMED,
-            subject=f"{name} tests the packages of one completed package build",
+            subject=f"{name} works on one completed build",
             remedy="name that build with --build",
         )
     return inputs.parent
+
+
+def _dedupe(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return dedupe_recipe.verify(
+        inputs.ports, builder=inputs.guest, wheel=inputs.wheel,
+        parent=_built_packages(inputs, DEDUPE), root=inputs.root,
+    )
 
 
 def _fingerprint_rpms(inputs: verifyinputs.Inputs) -> runner.Outcome:
@@ -220,6 +230,7 @@ RUNNERS: dict[str, Recipe] = {
     INSTALLER_DIAGNOSTICS: Recipe(machines.VmRole.TEST, _installer_diagnostics),
     FINGERPRINT_RPMS: Recipe(machines.VmRole.BUILDER, _fingerprint_rpms),
     FINGERPRINT_GTK: Recipe(machines.VmRole.BUILDER, _fingerprint_gtk),
+    DEDUPE: Recipe(machines.VmRole.BUILDER, _dedupe),
 }
 
 
@@ -290,6 +301,7 @@ JUST_RECIPES = (
     commandspecs.Recipe(
         "test-fingerprint-gtk", ("build_id",), (NAME, FINGERPRINT_GTK, "--build", "{{build_id}}")
     ),
+    commandspecs.Recipe("dedupe", ("fixture_id",), (NAME, DEDUPE, "--build", "{{fixture_id}}")),
 )
 
 commands.declare(

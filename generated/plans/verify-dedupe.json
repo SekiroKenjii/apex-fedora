@@ -1,0 +1,73 @@
+{
+ "digest": "8a3c2de9cf085f240d48e38a60f5b849aa83472c64b9b052d3e8ff1d1beff70b",
+ "name": "verify-dedupe",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "fixture.dedupe",
+   "reads": [
+    "agent.install",
+    "verification.guest",
+    "verification.parent"
+   ],
+   "writes": [
+    "observed.fixture.dedupe"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fixture.dedupe",
+   "reads": [
+    "observed.fixture.dedupe",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fixture.dedupe"
+   ]
+  }
+ ]
+}

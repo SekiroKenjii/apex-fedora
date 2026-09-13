@@ -301,6 +301,25 @@ def test_a_change_is_inspected_around_and_bound_to_a_with_the_preimage(
     assert wrong.refusal is refusals.RefusalReason.UPDATE_STATE_UNEXPECTED
 
 
+def test_the_collection_is_judged_for_the_two_failure_fallback(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    collected = {
+        "operation": "collect", "records": {},
+        "programs": {"boots": ops.program("boots"), "journal": ops.program("")},
+    }
+    outcome, guest, files = recovery(ports, root, "collect", {
+        "recovery.inspect": [ops.inspection(ops.IMAGE_A), ops.inspection(ops.IMAGE_A)],
+        "recovery.operate": collected,
+    })
+
+    assert outcome.succeeded, outcome.detail
+    assert guest.requests[1]["arguments"] == {"operation": "collect"}
+    report = report_of(files, root, outcome, "recovery")
+    assert report["evaluation"]["status"] == "BLOCKED"
+    assert "fallback boots" in report["evaluation"]["reason"]
+
+
 def test_the_installed_check_and_the_reboot_are_judged_by_the_guest_and_the_request(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:

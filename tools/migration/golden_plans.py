@@ -27,6 +27,7 @@ from apex.composition.recipes import (  # noqa: E402
 )
 from apex.pipeline import plans  # noqa: E402
 from apex.verification.recipes import (  # noqa: E402
+    dedupe_recipe,
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
@@ -78,6 +79,7 @@ RECIPES = {
     update_check_recipe.NAME: update_check_recipe.PLAN,
     recovery_operation_recipe.NAME: recovery_operation_recipe.PLAN,
     initramfs_operation_recipe.NAME: initramfs_operation_recipe.PLAN,
+    dedupe_recipe.NAME: dedupe_recipe.PLAN,
 }
 
 

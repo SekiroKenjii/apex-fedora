@@ -2,7 +2,8 @@
 
 The installed configuration is verified by the unit that compares it with the image; every
 other action reads the boot state first, does its one thing, and reads the state again,
-except the reboot, which ends the shell and is judged by the request alone.
+except the reboot, which ends the shell and is judged by the request alone. The collection
+carries the two-failure fallback judgement over the journal it brought back.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from apex.composition import agentrun
 from apex.composition import keys as composition_keys
 from apex.config import defaults
 from apex.kernel import encoding
-from apex.verification import bootcstatus, operating, recoveryops, verifykeys
+from apex.verification import bootcstatus, gdmfallback, operating, recoveryops, verifykeys
 
 INSPECT = "recovery.inspect"
 INSTALLED = "recovery.installed"
@@ -72,7 +73,12 @@ def body(operation: operating.Operation) -> str | None:
     elif operation.action in recoveryops.MUTATIONS:
         _change(operation, before)
     elif operation.action == recoveryops.COLLECT:
-        operation.report["collected"] = operation.ask(OPERATE, {"operation": "collect"})
+        collected = operation.ask(OPERATE, {"operation": "collect"})
+        operation.report["collected"] = collected
+        operation.report["evaluation"] = gdmfallback.evaluate(
+            gdmfallback.require_journal(collected), good=operation.image("a"),
+            bad=operation.image("b"),
+        )
     operation.report["after"] = operation.ask(INSPECT)
     return None
 
