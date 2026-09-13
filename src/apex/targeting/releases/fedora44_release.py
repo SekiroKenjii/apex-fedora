@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from apex.kernel import identifiers
 from apex.model import release
+from apex.targeting import releases
 
-PROFILE = release.ReleaseProfile(
+PROFILE = releases.declare(release.ReleaseProfile(
     id=identifiers.ProfileId("fedora-44"),
     major=44,
     os_id="fedora",
@@ -19,7 +20,7 @@ PROFILE = release.ReleaseProfile(
     efi_vendor_directory="fedora",
     architecture="x86_64",
     supported=True,
-)
+))
 
 DESKTOP = release.DesktopProfile(
     id=identifiers.ProfileId("gnome-50"),
