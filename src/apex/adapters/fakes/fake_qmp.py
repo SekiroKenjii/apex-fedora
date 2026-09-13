@@ -20,6 +20,7 @@ class ScriptedQmp(qmp.QmpPort, qmp.QmpSession):
         self.executed: list[qmp.QmpCommand] = []
         self.connections: list[safepaths.SafePath] = []
         self._reactions: dict[str, Callable[[], None]] = {}
+        self._listeners: dict[str, Callable[[qmp.QmpCommand], None]] = {}
 
     @classmethod
     def with_shell_probe(cls) -> ScriptedQmp:
@@ -32,6 +33,10 @@ class ScriptedQmp(qmp.QmpPort, qmp.QmpSession):
     def react(self, name: str, effect: Callable[[], None]) -> None:
         """What the guest does when it receives the command, as a test describes it."""
         self._reactions[name] = effect
+
+    def react_to(self, name: str, effect: Callable[[qmp.QmpCommand], None]) -> None:
+        """As `react`, for an effect that depends on the command's arguments."""
+        self._listeners[name] = effect
 
     @contextlib.contextmanager
     def connect(
@@ -50,4 +55,6 @@ class ScriptedQmp(qmp.QmpPort, qmp.QmpSession):
             )
         if command.name in self._reactions:
             self._reactions[command.name]()
+        if command.name in self._listeners:
+            self._listeners[command.name](command)
         return self._replies[command.name]

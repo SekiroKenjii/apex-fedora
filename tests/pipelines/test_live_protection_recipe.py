@@ -7,57 +7,22 @@ simulated run is never recorded, which is the property the whole store rests on.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
+from answeringguest import AnsweringGuest
 
 from apex.adapters.fakes import fake_clock, fake_files, fake_guestshell
 from apex.attestation import ledger, proofs
 from apex.composition import keys as composition_keys
 from apex.config import defaults
-from apex.kernel import claims, commands, identifiers, refusals, safepaths, secrets
-from apex.model import agentwire, serialframe
+from apex.kernel import claims, identifiers, refusals, safepaths, secrets
 from apex.ports import guestshell, portset
 from apex.verification import recording
 from apex.verification.recipes import live_protection_recipe
 
 CANDIDATE = identifiers.Digest("c" * 64)
 CHECK = identifiers.CheckId("live.disk-protection")
-
-
-class AnsweringGuest(fake_guestshell.ScriptedGuest):
-    """Answers a unit request with the observations declared for that unit, framed."""
-
-    def __init__(self, answers: dict[str, dict[str, object]]) -> None:
-        super().__init__()
-        self.answers = answers
-        self.asked: list[str] = []
-
-    def run(
-        self, target: guestshell.GuestTarget, run: guestshell.GuestRun
-    ) -> commands.CompletedRun:
-        text = run.script.rendered()
-        if "--framed" not in text or run.stdin is None:
-            return super().run(target, run)
-        self.runs.append(run)
-        token = identifiers.Token(text.split("--framed ", 1)[1].split("'", 1)[0])
-        unit = str(json.loads(run.stdin)["unit"])
-        self.asked.append(unit)
-        if unit not in self.answers:
-            return commands.CompletedRun(
-                exit_code=2, stdout=b"", stderr=b"BLOCKED: agent.unit-unknown: " + unit.encode(),
-                truncated=False,
-            )
-        document = {
-            "protocol": agentwire.PROTOCOL_VERSION,
-            "unit": unit,
-            "observations": self.answers[unit],
-        }
-        lines = serialframe.encode(json.dumps(document).encode(), token=token)
-        return commands.CompletedRun(
-            exit_code=0, stdout=b"\n".join(lines) + b"\n", stderr=b"", truncated=False
-        )
 
 
 @pytest.fixture

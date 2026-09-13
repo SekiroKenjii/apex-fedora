@@ -30,7 +30,7 @@ from apex.attestation import ledger, minting, proofs
 from apex.kernel import claims, identifiers, refusals, safepaths, secrets, verdicts
 from apex.pipeline import facts, stages
 from apex.ports import portset
-from apex.verification import faulting, faults, recording, verifykeys
+from apex.verification import faulting, faults, judging, recording, verifykeys
 from apex.verification.stages import mint_stage
 
 CHECK = identifiers.CheckId("live.disk-protection")
@@ -181,3 +181,28 @@ def test_a_witness_the_check_cannot_accept_is_refused_at_preflight(
 
     assert isinstance(verdict, stages.RefuseBecause)
     assert verdict.reason is refusals.RefusalReason.ENVIRONMENT_NOT_WITNESSED
+
+
+def test_a_judged_observation_records_with_its_captures_beside_the_report(
+    recorder: recording.Recorder,
+) -> None:
+    ports = pretending_real()
+    run, _ = context(ports, recorder)
+    judged = judging.judge(
+        {"mode": "gtk3", "capture": "gtk3.png"},
+        verdicts.PASSED,
+        extras=[judging.capture(b"png bytes", name="gtk3.png")],
+    )
+    key = verifykeys.judged("window.gtk3")
+    run = stages.RunContext(
+        facts=run.facts.with_fact(key, judged, produced_by=SEED), ports=ports
+    )
+    stage = mint_stage.for_check(identifiers.CheckId("desktop.theme-surfaces"), reports=[key])
+
+    result = stage.apply(run)
+
+    assert isinstance(result, stages.Advance)
+    recorded = result.facts[verifykeys.minted(identifiers.CheckId("desktop.theme-surfaces"))]
+    assert recorded.verdict == verdicts.PASSED
+    assert len(recorded.proofs) == 2
+    assert recorder.store.absorbed == 2
