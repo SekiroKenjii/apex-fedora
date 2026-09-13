@@ -23,7 +23,6 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 PACKAGE = REPOSITORY / "src" / "apex" / "__init__.py"
 FLOOR = (3, 12)
 NOTE = "NOTE: the repository rules did not answer, so the previous guard decided this."
-FOOTER = "If this refusal is wrong, the rule that refused is named above; change the message."
 
 
 def _unavailable(environment: Mapping[str, str]) -> str:  # noqa: ARG001
@@ -60,7 +59,7 @@ def run(kind: str, arguments: Sequence[str], environment: Mapping[str, str]) -> 
             from apex.kernel import errors
 
             if kind in hookkinds.names():
-                code = hookdispatch.main([kind, *arguments], standard_input, FOOTER)
+                code = hookdispatch.main([kind, *arguments], standard_input)
                 if code == errors.Refusal.exit_code:
                     return code
                 if code != 0:

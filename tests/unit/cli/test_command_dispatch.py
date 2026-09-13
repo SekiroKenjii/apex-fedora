@@ -38,8 +38,8 @@ def test_every_command_module_declares_one_command_and_the_registry_holds_them_a
 
     assert len(commands.names()) == len(modules)
     assert commands.names() == (
-        "build", "candidate", "evidence", "machine", "plan", "readiness", "record", "sources",
-        "trust", "verify",
+        "build", "candidate", "evidence", "git-hook", "hooks", "machine", "plan", "readiness",
+        "record", "sources", "trust", "verify",
     )
     assert commands.lookup("no-such-command") is None
 

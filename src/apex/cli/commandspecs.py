@@ -11,17 +11,22 @@ registry and a recipe can never name a command that does not exist.
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from apex.kernel import encoding
 from apex.wiring import contexts
 
 
+def no_input() -> str:
+    return ""
+
+
 @dataclasses.dataclass(frozen=True, slots=True)
 class Request:
     arguments: Sequence[str]
     context: contexts.Context
+    read_input: Callable[[], str] = no_input
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

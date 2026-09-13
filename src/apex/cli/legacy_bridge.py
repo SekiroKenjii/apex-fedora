@@ -18,8 +18,7 @@ LEGACY_TOOLS = REPOSITORY / "tools"
 LEGACY_ENTRY_POINT = LEGACY_TOOLS / "apex.py"
 
 BRIDGED = frozenset({
-    "build-nvidia", "decode-coefficient", "doctor",
-    "git-hook", "hardware-snapshot", "hooks", "ventoy-media",
+    "build-nvidia", "decode-coefficient", "doctor", "hardware-snapshot", "ventoy-media",
 })
 RETIRED: dict[str, str] = {
     "artifact": "apex build qcow2|installer|live --parent <id> [--test-access]",

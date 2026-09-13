@@ -3414,6 +3414,76 @@ passed 2800 (3455) and was raised to 3600, cli passed 2400 (2406) and was raised
 the parity floor fell from twenty invocations to twelve with seven names bridged.
 `golden_change`: none. `supersedes`: none yet.
 
+## P20m. The two remaining hooks answer to the rules, and the hooks are three lines
+
+Goal: finish what P13 began. The commit message hook has answered to the rules since P13;
+the pre-commit and pre-push hooks still ran the older guard because no test could tell
+their transfer from its absence. Both are hook kinds in the registry now, `apex git-hook`
+is a command of the new tree, and `apex hooks` installs hooks that hand every decision to
+it. Four commits on `work/phase-20m-bridge`, the whole gate green at the head.
+
+### Reading Git through a port
+
+A hook asks Git through the process port the request carries
+(`workspace/gitreading.py`): the index rows, a commit's tree rows, the sizes of objects in
+one `cat-file --batch-check`, their bytes in one `cat-file --batch`, a commit's message,
+and the commits a push would add (`rev-list` of the update's range, `--not --remotes`, a
+remote never fetched refused rather than subtracted). A failed git command is a refusal
+carrying git's words; a batch the port had to cut short is refused whole
+(`hook.content-unread`), because a guard that saw half the content and permitted the rest
+would look exactly like one that was working. `workspace/treejudging.py` runs the entry
+rules over every row by path, mode and size, and the content rules over the bytes of every
+blob the size rule would not refuse, so a large file is refused without being read and a
+small one is read once.
+
+### The two kinds
+
+`pre-commit` judges what is staged. `pre-push` judges every outgoing commit's message by
+the message rules and its whole tree by the entry and content rules, naming the commit on
+each finding; a branch deletion asks Git nothing. The footer under a refusal names the
+kind's own remedy: change the message, change what is staged, rewrite the outgoing
+commits. The forwarder in the older tree routes all three kinds to the rules now and
+falls back to the older guard only on a fault, as before; a contract test drives both new
+kinds against a real repository through the real process port.
+
+### The commands
+
+`apex git-hook <kind> [arguments]` answers a hook with the rules' text and their exit code,
+reading standard input only for `pre-push`; the request carries a reader for it, so no
+other command touches standard input. `apex hooks` writes the three hooks, three lines
+each: the interpreter line, the marker, and `exec` of the package's entry point for that
+kind. A checkout whose hooks are sent elsewhere by `core.hooksPath` is refused, a hook
+somebody else installed is left alone and named before anything is written, and the
+context carries a process and a file port of its own for the two commands that need no
+runtime root. `git-hook` and `hooks` leave the bridge as the same names; it holds five:
+`build-nvidia`, `decode-coefficient`, `doctor`, `hardware-snapshot`, `ventoy-media`.
+
+### What this slice did not do
+
+Rewrite the hooks installed in the operator's checkout, which `just hooks` does when the
+operator runs it; make the hook fail closed when the rules cannot answer, which is P21's
+with the forwarder's deletion; `doctor`, `hardware-snapshot`, `decode-coefficient`
+(P20n), `build-nvidia`, `ventoy-media` (P20o); the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 380 files, 27471 lines |
+| Bridge | five names |
+| Fast suite | 2 601 passed, 8 skipped |
+
+`migration_red`: a dataclass field named `files` shadowed the module of the same name in
+its own annotation, so the context's field is `filesystem`; `.env` is refused as a private
+document, not as an environment-file variant, which the new tests first asserted the
+other way round; the installer wrote the first hook before finding a foreign third, so it
+checks all three before writing any; cli passed 2600 (2681) and was raised to 2900.
+`golden_change`: the corpus is unchanged, and the forwarder no longer passes its own footer
+so each kind renders its remedy (the commit message text is byte for byte what it was);
+the older tree's real pre-commit test, which asserted the older guard's sentence, is
+anchored on the refusing rule as its commit message cases have been since P13.
+`supersedes`: none yet.
+
 ## Commands
 
 ```sh

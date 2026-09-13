@@ -25,6 +25,9 @@ select-candidate build_id key:
 verify-chain:
     {{apex}} evidence verify-chain
 
+hooks:
+    {{apex}} hooks
+
 builder-prepare:
     {{apex}} machine prepare
 
@@ -141,9 +144,6 @@ observe-fingerprint:
 
 test-fingerprint-dialog source:
     python3 tools/test-fingerprint-dialog.py "{{source}}"
-
-hooks:
-    python3 tools/apex.py hooks
 
 builder-compact:
     python3 tools/compact-builder.py --replace-verified

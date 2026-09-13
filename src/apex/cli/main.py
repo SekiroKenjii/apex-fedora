@@ -17,6 +17,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         context_of=lambda: hostbundle.context(os.environ),
         stdout=sys.stdout,
         stderr=sys.stderr,
+        stdin=sys.stdin,
     )
 
 
