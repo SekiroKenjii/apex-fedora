@@ -18,12 +18,20 @@ from apex.config import builderpins, defaults
 from apex.kernel import encoding, errors, refusals, safepaths
 from apex.model import machines
 from apex.ports import portset
-from apex.provisioning import builderprepare, builderspec, launching, leases, testspec
+from apex.provisioning import (
+    builderprepare,
+    builderspec,
+    hotplugging,
+    launching,
+    leases,
+    testspec,
+)
 from apex.wiring import contexts
 
 NAME = "machine"
 SUMMARY = "the one machine the runtime root may run: prepare, start, stop, reclaim, status"
 PREPARE, START, STOP, STATUS, RECLAIM = "prepare", "start", "stop", "status", "reclaim"
+HOTPLUG = "hotplug-usb"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -40,6 +48,10 @@ def _parser() -> argparse.ArgumentParser:
     start.add_argument("--extra-disk", type=Path, action="append", default=[])
     start.add_argument("--guest-ssh", action="store_true")
     start.add_argument("--serial-console", action="store_true")
+    start.add_argument("--usb-bus", action="store_true", help="an emulated usb controller")
+    start.add_argument("--boot-usb", type=Path, help="an image booted as emulated usb storage")
+    hotplug = actions.add_parser(HOTPLUG, help="attach a usb fixture to the running test machine")
+    hotplug.add_argument("--source", type=Path, required=True)
     actions.add_parser(STOP, help="ask the running machine to power down")
     actions.add_parser(STATUS, help="what is running, if anything")
     actions.add_parser(RECLAIM, help="what was started and left behind")
@@ -104,6 +116,8 @@ def start_test(
         extra_disks=tuple(arguments.extra_disk),
         guest_ssh=arguments.guest_ssh,
         serial_console=arguments.serial_console,
+        usb_bus=arguments.usb_bus,
+        boot_usb=arguments.boot_usb,
     )
     prepared = testspec.prepare(
         ports, context.settings, root, request, run=ports.identities.run_id()
@@ -117,6 +131,12 @@ def start_test(
         medium=prepared.medium,
     )
     return {"started": lease.document()}
+
+
+def hotplug(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, source: Path
+) -> encoding.Document:
+    return {"attached": hotplugging.attach(ports, root=root, source=source).document()}
 
 
 def stop(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encoding.Document:
@@ -155,6 +175,8 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
         return commandspecs.Reply(document=start_builder(request.context, ports, root))
     if arguments.action == START:
         return commandspecs.Reply(document=start_test(request.context, ports, root, arguments))
+    if arguments.action == HOTPLUG:
+        return commandspecs.Reply(document=hotplug(ports, root, arguments.source))
     if arguments.action == STOP:
         return commandspecs.Reply(document=stop(ports, root))
     if arguments.action == RECLAIM:

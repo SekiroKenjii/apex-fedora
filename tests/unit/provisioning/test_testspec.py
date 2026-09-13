@@ -135,3 +135,61 @@ def test_a_source_disk_outside_the_runtime_root_is_refused(host: Host, tmp_path:
         prepared(host, tmp_path, testspec.TestRequest(disk=outside))
 
     assert raised.value.reason is refusals.RefusalReason.PATH_OUTSIDE_RUNTIME_ROOT
+
+
+def test_the_usb_bus_and_a_boot_image_ride_over_a_fresh_overlay(host: Host, tmp_path: Path) -> None:
+    disk = source(host, "target.qcow2")
+    other = source(host, "other.qcow2")
+    ventoy = source(host, "ventoy.qcow2")
+
+    found = prepared(
+        host, tmp_path,
+        testspec.TestRequest(disk=disk, extra_disks=(other,), usb_bus=True, boot_usb=ventoy),
+    )
+
+    run_directory = host.root.path / "vm-runs" / str(RUN)
+    rendered = list(found.spec.render())
+    assert "qemu-xhci,id=apex-usb" in rendered
+    assert any(
+        item.endswith("bootindex=1") and "serial=apex-ventoy-fixture" in item for item in rendered
+    )
+    assert f"if=none,id=apex-boot-usb,format=qcow2,file={run_directory}/boot-usb.qcow2" in rendered
+    assert (run_directory / "boot-usb.qcow2").is_file()
+
+
+def test_the_usb_bus_alone_adds_only_the_controller(host: Host, tmp_path: Path) -> None:
+    disk = source(host, "target.qcow2")
+
+    found = prepared(host, tmp_path, testspec.TestRequest(disk=disk, usb_bus=True))
+
+    rendered = list(found.spec.render())
+    assert "qemu-xhci,id=apex-usb" in rendered
+    assert not any("usb-storage" in item for item in rendered)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"extra_disks": ("other",)},
+        {"usb_bus": True},
+        {"usb_bus": True, "extra_disks": ("other", "more")},
+        {"usb_bus": True, "extra_disks": ("other",), "guest_ssh": True},
+        {"usb_bus": True, "extra_disks": ("other",), "iso": "apex.iso", "medium": "live"},
+    ],
+)
+def test_a_boot_image_without_its_bus_or_with_more_than_one_other_disk_is_refused(
+    host: Host, changes: dict[str, Any]
+) -> None:
+    disk = source(host, "target.qcow2")
+    ventoy = source(host, "ventoy.qcow2")
+    named: dict[str, Any] = dict(changes)
+    named["extra_disks"] = tuple(source(host, f"{n}.qcow2") for n in changes.get("extra_disks", ()))
+    if "iso" in named:
+        named["iso"] = source(host, named["iso"])
+        named["medium"] = machines.Medium(named["medium"])
+
+    with pytest.raises(errors.Refusal) as raised:
+        testspec.TestRequest(disk=disk, boot_usb=ventoy, **named)
+
+    assert raised.value.reason is refusals.RefusalReason.TOPOLOGY_INCONSISTENT
+    assert not (host.root.path / "vm-runs").exists()

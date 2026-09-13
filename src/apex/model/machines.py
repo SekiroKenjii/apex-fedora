@@ -151,10 +151,16 @@ class Cdrom:
         return ("-drive", f"file={self.path},format=raw,media=cdrom,readonly=on")
 
 
+USB_BUS = "apex-usb"
+USB_ROOT_PORT = f"{USB_BUS}.0"
+USB_CONTROLLER = f"qemu-xhci,id={USB_BUS}"
+USB_FIXTURE_SERIAL = "apex-usb-fixture"
+
+
 @dataclasses.dataclass(frozen=True, slots=True)
 class UsbController:
     def render(self) -> tuple[str, ...]:
-        return ("-device", "qemu-xhci,id=apex-usb")
+        return ("-device", USB_CONTROLLER)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -163,7 +169,7 @@ class UsbStorage:
     boot_first: bool = True
 
     def render(self) -> tuple[str, ...]:
-        options = "usb-storage,bus=apex-usb.0,drive=apex-boot-usb,serial=apex-ventoy-fixture"
+        options = f"usb-storage,bus={USB_ROOT_PORT},drive=apex-boot-usb,serial=apex-ventoy-fixture"
         return (
             "-drive", f"if=none,id=apex-boot-usb,format=qcow2,file={self.path}",
             "-device", options + (",bootindex=1" if self.boot_first else ""),

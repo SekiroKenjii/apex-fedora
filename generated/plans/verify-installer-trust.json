@@ -1,0 +1,89 @@
+{
+ "digest": "12b18c5b86f21a3c7031820a653a59b5facbeb8590d8d4b2e1e63e0b59df3703",
+ "name": "verify-installer-trust",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "trust.work",
+   "reads": [
+    "agent.install",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "guest.work"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "fault.installer-trust",
+   "reads": [
+    "agent.install",
+    "guest.work",
+    "verification.guest"
+   ],
+   "writes": [
+    "fault.fault.installer-trust"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fault.installer-trust",
+   "reads": [
+    "fault.fault.installer-trust",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fault.installer-trust"
+   ]
+  }
+ ]
+}

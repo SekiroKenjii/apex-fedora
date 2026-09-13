@@ -26,7 +26,7 @@ BUILDER = facts.FactKey[guestshell.GuestTarget]("verification.builder")
 PARENT = facts.FactKey[identifiers.BuildId]("verification.parent")
 TARGET = facts.FactKey[oci.FrozenImage]("verification.target")
 TEST_SOURCES = facts.FactKey[testsources.Acquired]("fingerprint.sources")
-WORK = facts.FactKey[safepaths.RemotePath]("fingerprint.work")
+WORK = facts.FactKey[safepaths.RemotePath]("guest.work")
 IMPORTED = facts.FactKey[encoding.Document]("payload.imported")
 
 
@@ -40,3 +40,7 @@ def judged(name: str) -> facts.FactKey[judging.Judged]:
 
 def minted(check: identifiers.CheckId) -> facts.FactKey[recording.Recorded]:
     return facts.FactKey[recording.Recorded](f"minted.{check}")
+
+
+def retained(case: faulting.FaultCase) -> facts.FactKey[safepaths.SafePath]:
+    return facts.FactKey[safepaths.SafePath](f"retained.{case.unit}")

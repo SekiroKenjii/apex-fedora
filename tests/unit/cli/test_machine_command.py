@@ -252,3 +252,75 @@ def test_prepare_makes_the_builders_storage_from_the_reviewed_base(
     assert str(fetcher.fetched[0][0]).endswith(".qcow2")
     assert (base / "seed.iso").read_bytes()[16 * 2048 + 40:16 * 2048 + 46] == b"cidata"
     assert (base / "builder-vars.fd").read_bytes() == b"OVMF_VARS.fd"
+
+
+def test_a_test_machine_boots_an_image_as_usb_storage_over_the_emulated_bus(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    settings = variables_settings(tmp_path)
+    for name in ("target.qcow2", "other.qcow2", "ventoy.qcow2"):
+        (root.path / name).write_bytes(b"")
+    held = dataclasses.replace(bundle(ports), processes=Storage())
+    held.files.write_atomic(
+        safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
+    )
+
+    started = machine_command.run(request(
+        held, settings, root, "start", "--role", "test",
+        "--disk", str(root.path / "target.qcow2"), "--extra-disk", str(root.path / "other.qcow2"),
+        "--usb-bus", "--boot-usb", str(root.path / "ventoy.qcow2"),
+    ))
+
+    assert isinstance(started.document, dict)
+    hypervisor = held.hypervisor
+    assert isinstance(hypervisor, fake_hypervisor.FakeQemu)
+    rendered = list(hypervisor.spawned[0].spec.render())
+    assert "qemu-xhci,id=apex-usb" in rendered
+    assert any("boot-usb.qcow2" in item for item in rendered)
+    assert any(item.endswith("bootindex=1") for item in rendered)
+
+
+def test_a_usb_fixture_is_hot_plugged_into_the_running_test_machine(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    settings = variables_settings(tmp_path)
+    for name in ("target.qcow2", "fixture.qcow2"):
+        (root.path / name).write_bytes(b"")
+    held = dataclasses.replace(bundle(ports), processes=Storage())
+    held.files.write_atomic(
+        safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
+    )
+    monitor = held.monitor
+    assert isinstance(monitor, fake_qmp.ScriptedQmp)
+    monitor.reply("blockdev-add", {})
+    monitor.reply("device_add", {})
+    machine_command.run(request(
+        held, settings, root, "start", "--role", "test",
+        "--disk", str(root.path / "target.qcow2"), "--usb-bus",
+    ))
+
+    reply = machine_command.run(request(
+        held, settings, root, "hotplug-usb", "--source", str(root.path / "fixture.qcow2")
+    ))
+
+    assert isinstance(reply.document, dict)
+    attached = reply.document["attached"]
+    assert isinstance(attached, dict) and attached["status"] == "ATTACHED"
+    assert str(attached["overlay"]).endswith("/hotplug-usb.qcow2")
+    assert [command.name for command in monitor.executed] == ["blockdev-add", "device_add"]
+
+
+def variables_settings(tmp_path: Path) -> loader.Settings:
+    (tmp_path / "OVMF_VARS.fd").write_bytes(b"vars")
+    host = tmp_path / "settings.toml"
+    host.write_text(
+        f'[builder]\nfirmware_code = "{tmp_path}/OVMF_CODE.fd"\n'
+        f'firmware_variables = "{tmp_path}/OVMF_VARS.fd"\n'
+    )
+    return loader.load(host_file=host, environment={})

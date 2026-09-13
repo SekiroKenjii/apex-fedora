@@ -26,8 +26,11 @@ class TestRequest:
     extra_disks: tuple[Path, ...] = ()
     guest_ssh: bool = False
     serial_console: bool = False
+    usb_bus: bool = False
+    boot_usb: Path | None = None
 
     def __post_init__(self) -> None:
+        self._require_usb_consistent()
         if self.medium is not None and self.iso is None:
             raise errors.Refusal(
                 refusals.RefusalReason.TOPOLOGY_INCONSISTENT,
@@ -42,6 +45,23 @@ class TestRequest:
             raise errors.Refusal(
                 refusals.RefusalReason.TOO_MANY_DEVICES,
                 subject=f"{len(self.extra_disks)} extra disks",
+            )
+
+    def _require_usb_consistent(self) -> None:
+        """A bootable usb image rides the emulated bus beside one other disk and nothing else."""
+        if self.boot_usb is None:
+            return
+        if not self.usb_bus:
+            raise errors.Refusal(
+                refusals.RefusalReason.TOPOLOGY_INCONSISTENT,
+                subject="a bootable usb image without the emulated usb bus",
+                remedy="ask for the bus with the image",
+            )
+        if self.iso is not None or self.guest_ssh or len(self.extra_disks) != 1:
+            raise errors.Refusal(
+                refusals.RefusalReason.TOPOLOGY_INCONSISTENT,
+                subject="usb boot",
+                remedy="usb boot takes one other disk, no image to boot and no guest ssh",
             )
 
 
@@ -85,6 +105,12 @@ def prepare(
         network = machines.RestrictedNet(
             forwarded_port=defaults.TEST_MACHINE.ssh_port, role=machines.VmRole.TEST
         )
+    boot_usb = None
+    if request.boot_usb is not None:
+        boot_usb = machines.UsbStorage(
+            _overlay(ports, request.boot_usb, into=run_directory / defaults.TEST_BOOT_USB_NAME,
+                     root=root)
+        )
     spec = machines.VmSpec.build(
         role=machines.VmRole.TEST,
         resources=machines.VmResources(
@@ -97,6 +123,8 @@ def prepare(
         extra_disks=extras,
         seed=seed,
         network=network,
+        usb=machines.UsbController() if request.usb_bus else None,
+        boot_usb=boot_usb,
         boot_from_cdrom=request.iso is not None,
     )
     return Prepared(run=run, run_directory=run_directory, spec=spec, medium=request.medium)

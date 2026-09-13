@@ -27,6 +27,7 @@ from apex.verification.recipes import (  # noqa: E402
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
+    installer_trust_recipe,
     live_protection_recipe,
 )
 
@@ -40,6 +41,7 @@ RECIPES = {
     desktop_theme_recipe.NAME: desktop_theme_recipe.PLAN,
     desktop_render_recipe.NAME: desktop_render_recipe.PLAN,
     fingerprint_cleanup_recipe.NAME: fingerprint_cleanup_recipe.PLAN,
+    installer_trust_recipe.NAME: installer_trust_recipe.PLAN,
 }
 
 

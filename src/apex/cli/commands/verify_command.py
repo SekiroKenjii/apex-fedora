@@ -28,6 +28,7 @@ from apex.verification.recipes import (
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
+    installer_trust_recipe,
     live_protection_recipe,
 )
 from apex.wiring import contexts
@@ -38,7 +39,8 @@ LIVE_PROTECTION = "live-protection"
 DESKTOP_THEME = "desktop-theme"
 DESKTOP_RENDER = "desktop-render"
 FINGERPRINT_CLEANUP = "fingerprint-cleanup"
-RECIPES = (LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP)
+INSTALLER_TRUST = "installer-trust"
+RECIPES = (LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -180,11 +182,18 @@ def _fingerprint_cleanup(inputs: Inputs) -> runner.Outcome:
     )
 
 
+def _installer_trust(inputs: Inputs) -> runner.Outcome:
+    return installer_trust_recipe.verify(
+        inputs.ports, builder=inputs.guest, wheel=inputs.wheel, root=inputs.root
+    )
+
+
 RUNNERS: dict[str, Recipe] = {
     LIVE_PROTECTION: Recipe(machines.VmRole.TEST, _live_protection),
     DESKTOP_THEME: Recipe(machines.VmRole.TEST, _desktop_theme),
     DESKTOP_RENDER: Recipe(machines.VmRole.TEST, _desktop_render),
     FINGERPRINT_CLEANUP: Recipe(machines.VmRole.BUILDER, _fingerprint_cleanup),
+    INSTALLER_TRUST: Recipe(machines.VmRole.BUILDER, _installer_trust),
 }
 
 

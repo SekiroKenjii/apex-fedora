@@ -2970,6 +2970,59 @@ fake guest that refuses `mkdir` had to answer with a failed run rather than a su
 script; the config package passed its budget with the new lock reader and was raised to
 700. `golden_change`: one plan added, none changed. `supersedes`: none yet.
 
+## P20f. The emulated USB devices, and the installer trust fault kept with its run
+
+Goal: the last two things the older test machine could do that the new one could not, an
+emulated USB bus with an image booted from it or a fixture hot-plugged into it, and the
+installer trust fault run in the builder from the CLI. Three commits on
+`work/phase-20f-usb-devices`, the whole gate green at the head.
+
+### The bus, the boot image and the hot-plugged fixture
+
+`apex machine start --role test --usb-bus` attaches the emulated controller the model
+already knew; `--boot-usb <image>` boots a fresh layer of that image as USB storage first,
+beside exactly one other disk, with no image to boot from a cdrom and no guest ssh, which
+is what the older Ventoy test asked for and what the model refuses otherwise; the request
+refuses a contradiction before any overlay is written. `apex machine hotplug-usb --source
+<disk>` attaches one fixture to the running test machine through that controller: a fresh
+layer over the source in the run directory, registered in `hotplug-request.json` before the
+monitor is asked so an attempt the host did not finish is still compared afterwards, then
+`blockdev-add` and `device_add` with the serial the live guard's USB probe looks for, the
+machine's identity checked before each. A builder, a machine without the bus, and a run
+that already has a fixture are each refused by name; never a host device.
+
+### The installer trust fault, with its report kept
+
+`verify-installer-trust` runs `fault.installer-trust` in the builder: the builder proves
+itself, the agent is delivered, a work directory named for the run is made, the fault runs
+over it. No catalogue check names this fault, so nothing is minted and the store is not
+touched; the report and the verdict the host drew from it are written under the run's
+exports, as the older tool kept its results file, by a stage any fault without a check
+can use. The work fact both builder recipes write is named for the guest, not for one
+fault, which changed the frozen fingerprint plan by that one name.
+
+### What this slice did not do
+
+A real first boot of a builder from the generated seed, which needs the operator's host;
+the generated justfile and the empty bridge, with `APEX_GUARD=legacy` removed; the older
+tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 342 files, 23809 lines |
+| Recipes frozen | nine, `verify-installer-trust` new |
+| Fast suite | 2 434 passed, 8 skipped |
+
+`migration_red`: the second-fixture rule could not stand on the overlay's existence, which
+the fake process makes on disk where the fake file port cannot see it, so it stands on the
+run's record instead, which is the better rule; the hotplug report's document had to
+coerce what the monitor was sent and answered into JSON for both checkers; the
+provisioning and verification packages passed their budgets, raised to 1800 and 2800.
+`golden_change`: one plan added, `verify-fingerprint-cleanup` changed by the work fact's
+name. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
