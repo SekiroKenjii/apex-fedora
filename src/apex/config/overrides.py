@@ -37,3 +37,8 @@ GUEST_VARIABLES = frozenset({
     "APEX_UPDATE_ACCESS", "APEX_UPDATE_ACTION", "APEX_UPDATE_FIXTURE", "APEX_WINDOWS",
     "APEX_WRONG_PUBLIC_KEY",
 })
+
+# Variables the tooling around the program reads, never the program: the interpreter the
+# recipes run under, the guard's fallback valve, and the chain key a command reads directly.
+# Listed so a run under the gate is not refused for the environment the gate itself sets.
+TOOLING_VARIABLES = frozenset({"APEX_PYTHON", "APEX_GUARD", "APEX_CHAIN_KEY"})

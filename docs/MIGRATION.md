@@ -2650,7 +2650,7 @@ file port appended in quadratic time. `golden_change`: none. `supersedes`: none 
 ## P20a. The CLI from a registry, and the first three commands out of the bridge
 
 Goal: the shape the cutover needs before any command can move, and three commands moved
-through it. Three commits on `work/phase-20a-machine`, the whole gate green at the head.
+through it. Four commits on `work/phase-20a-machine`, the whole gate green at the head.
 
 ### The shape
 
@@ -2711,8 +2711,10 @@ phase. `just readiness` still runs the older command.
 
 `migration_red`: the command context first lived in the CLI and the root imported it, which
 the layer rule refused, so it moved below; the readiness test's candidate document lacked
-the build id the version one reader requires; a test basename collided with the kernel's.
-`golden_change`: none. `supersedes`: none yet.
+the build id the version one reader requires; a test basename collided with the kernel's; and the gate on CI refused the first CLI run,
+because CI exports `APEX_PYTHON` and the loader took every undeclared variable in the
+namespace for a typo, so the variables the tooling reads are now declared as such.
+`golden_change`: none. `supersedes`: the two migration tools for readiness and the chain.
 
 ## Commands
 

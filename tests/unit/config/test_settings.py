@@ -115,3 +115,10 @@ def test_explaining_an_unknown_field_is_refused(tmp_path: Path) -> None:
 
     with pytest.raises(errors.Refusal):
         settings.explain("builder.wishful")
+
+
+@pytest.mark.parametrize("variable", sorted(overrides.TOOLING_VARIABLES))
+def test_a_tooling_variable_is_neither_a_setting_nor_a_typo(variable: str) -> None:
+    settings = loader.load(host_file=None, environment={variable: "anything"})
+
+    assert settings.explain("runtime_root") is layers.Layer.DEFAULT

@@ -74,7 +74,7 @@ def _check_environment(environment: Mapping[str, str]) -> dict[str, str]:
     for name, value in sorted(environment.items()):
         if not name.startswith(overrides.NAMESPACE):
             continue
-        if name in overrides.GUEST_VARIABLES:
+        if name in overrides.GUEST_VARIABLES or name in overrides.TOOLING_VARIABLES:
             continue
         if name not in declared:
             known = ", ".join(sorted(declared))
