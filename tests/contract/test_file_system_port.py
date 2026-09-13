@@ -358,3 +358,61 @@ def test_a_device_number_is_parsed_from_the_sysfs_spelling() -> None:
 def test_a_device_number_that_is_not_two_integers_is_refused() -> None:
     with pytest.raises(errors.Refusal):
         files_port.DeviceNumber.parse("vda")
+
+
+def test_an_identity_names_the_file_s_size_and_its_one_link(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    path = target(root, "disk.qcow2")
+    files.write_atomic(path, b"abcd", mode=quantities.FileMode(0o600))
+
+    found = files.identity(path)
+
+    assert found.size == 4 and found.links == 1 and found.inode > 0
+    assert found.document()["allocated"] >= 0
+
+
+def test_a_link_shares_the_identity_and_raises_the_link_count(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    path = target(root, "disk.qcow2")
+    files.write_atomic(path, b"abcd", mode=quantities.FileMode(0o600))
+
+    files.link(path, target(root, "second.qcow2"))
+
+    assert files.identity(path).inode == files.identity(target(root, "second.qcow2")).inode
+    assert files.identity(path).links == 2
+
+
+def test_a_rewrite_gives_the_name_another_identity(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    path = target(root, "disk.qcow2")
+    files.write_atomic(path, b"first", mode=quantities.FileMode(0o600))
+    before = files.identity(path)
+
+    files.write_atomic(path, b"second", mode=quantities.FileMode(0o600))
+
+    assert files.identity(path).inode != before.inode
+
+
+def test_replacing_moves_the_bytes_under_the_destination_and_leaves_no_source(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    source, destination = target(root, "copy.qcow2"), target(root, "disk.qcow2")
+    files.write_atomic(source, b"compressed", mode=quantities.FileMode(0o600))
+    files.write_atomic(destination, b"original", mode=quantities.FileMode(0o600))
+    identity = files.identity(source)
+
+    files.replace(source, destination)
+
+    assert files.read_bytes(destination, limit=100) == b"compressed"
+    assert not files.exists(source)
+    assert files.identity(destination).inode == identity.inode
+
+
+def test_replacing_from_an_absent_source_is_a_port_failure(
+    files: files_port.FileSystemPort, root: safepaths.RuntimeRoot
+) -> None:
+    with pytest.raises(errors.PortFailure):
+        files.replace(target(root, "absent"), target(root, "disk.qcow2"))

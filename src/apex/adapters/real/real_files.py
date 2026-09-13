@@ -13,6 +13,7 @@ from apex.kernel import bounded, claims, errors, hashing, identifiers, quantitie
 from apex.ports import files
 
 SECURITY_LABEL = "security.selinux"
+BLOCK = 512
 NO_LABEL = frozenset({errno.ENODATA, errno.ENOTSUP, errno.EOPNOTSUPP})
 
 
@@ -159,6 +160,27 @@ class LocalFiles(files.FileSystemPort):
             return safepaths.SafePath(path.path.resolve(strict=True))
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
+
+    def identity(self, path: safepaths.SafePath) -> files.FileIdentity:
+        try:
+            info = path.path.stat()
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+        return files.FileIdentity(
+            device=info.st_dev, inode=info.st_ino, size=info.st_size,
+            modified_nanoseconds=info.st_mtime_ns, links=info.st_nlink,
+            allocated=info.st_blocks * BLOCK,
+        )
+
+    def replace(self, source: safepaths.SafePath, destination: safepaths.SafePath) -> None:
+        try:
+            with source.path.open("rb") as handle:
+                os.fsync(handle.fileno())
+            source.path.replace(destination.path)
+        except OSError as error:
+            raise errors.PortFailure(port="files", cause=str(error)) from error
+        for directory in {destination.path.parent, source.path.parent}:
+            self._fsync_directory(directory)
 
     def inspect(self, path: safepaths.SafePath) -> files.Inspection:
         try:

@@ -64,6 +64,26 @@ class Inspection:
     device: DeviceNumber | None
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class FileIdentity:
+    """What `stat` says makes a file this file: its inode on its device, its size, when it
+    was last written, how many names it has, and how much of the disk it holds."""
+
+    device: int
+    inode: int
+    size: int
+    modified_nanoseconds: int
+    links: int
+    allocated: int
+
+    def document(self) -> dict[str, int]:
+        return {
+            "device": self.device, "inode": self.inode, "size": self.size,
+            "modified_ns": self.modified_nanoseconds, "links": self.links,
+            "allocated": self.allocated,
+        }
+
+
 class FileSystemPort(Protocol):
     environment: claims.EnvironmentKind
 
@@ -144,3 +164,17 @@ class FileSystemPort(Protocol):
 
     @abstractmethod
     def inspect(self, path: safepaths.SafePath) -> Inspection: ...
+
+    @abstractmethod
+    def identity(self, path: safepaths.SafePath) -> FileIdentity:
+        """The file's identity as `stat` reports it, so a later read can tell it changed."""
+        ...
+
+    @abstractmethod
+    def replace(self, source: safepaths.SafePath, destination: safepaths.SafePath) -> None:
+        """Rename one regular file over another atomically, the bytes flushed first.
+
+        The destination's old bytes are gone once this returns; the source name is gone too.
+        Both directories are flushed, so a crash after the return cannot undo the swap.
+        """
+        ...

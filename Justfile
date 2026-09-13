@@ -49,6 +49,12 @@ builder-stop:
 builder-status:
     {{apex}} machine status
 
+builder-compact:
+    {{apex}} machine compact
+
+builder-finalize compaction_id:
+    {{apex}} machine compact --resume "{{compaction_id}}"
+
 test-vm disk:
     {{apex}} machine start --role test --disk "{{disk}}"
 
@@ -153,12 +159,6 @@ installer-logs-collect run_directory token:
 
 observe-fingerprint:
     { sudo -- /usr/bin/timeout --signal=INT 90s /usr/bin/busctl --system --json=short --match="path_namespace='/net/reactivated/Fprint'" --match="sender='net.reactivated.Fprint'" --match="type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'" monitor; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } | {{apex}} hardware observe-fingerprint --lookup-system-clients
-
-builder-compact:
-    python3 tools/compact-builder.py --replace-verified
-
-builder-finalize compaction_id:
-    python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"
 
 build-fingerprint-rpms:
     python3 tools/build-fingerprint-rpms.py

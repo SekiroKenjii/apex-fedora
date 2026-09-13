@@ -144,6 +144,11 @@ class RefusalReason(enum.StrEnum):
     BUILDER_NOT_ISOLATED = "build.builder-not-isolated"
 
     HOST_RUNS_AS_ROOT = "host.runs-as-root"
+    COMPACTION_INPUT_UNSAFE = "compaction.input-unsafe"
+    COMPACTION_VALIDATION_FAILED = "compaction.validation-failed"
+    COMPACTION_SPACE_INSUFFICIENT = "compaction.space-insufficient"
+    COMPACTION_STATE_CHANGED = "compaction.state-changed"
+    COMPACTION_RETAINED_INELIGIBLE = "compaction.retained-ineligible"
     PATCH_SOURCE_NOT_REVIEWED = "patch.source-not-reviewed"
     PATCH_SOURCE_UNEXPECTED = "patch.source-unexpected"
 

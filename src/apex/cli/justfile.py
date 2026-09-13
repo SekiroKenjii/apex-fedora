@@ -51,9 +51,6 @@ HOST_PIPELINES: tuple[Plain, ...] = (
 )
 
 OLDER_TOOLS: tuple[Plain, ...] = (
-    ("builder-compact", "", ("python3 tools/compact-builder.py --replace-verified",)),
-    ("builder-finalize", "compaction_id",
-     ('python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"',)),
     ("build-fingerprint-rpms", "", ("python3 tools/build-fingerprint-rpms.py",)),
     ("test-fingerprint-rpms", "build_id",
      ('python3 tools/test-fingerprint-rpms.py "{{build_id}}"',)),

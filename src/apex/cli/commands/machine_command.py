@@ -23,6 +23,7 @@ from apex.provisioning import (
     backingchain,
     builderprepare,
     builderspec,
+    compacting,
     comparing,
     hotplugging,
     launching,
@@ -42,6 +43,7 @@ POWER_LOSS = "power-loss"
 COMPARE = "compare"
 COLLECT = "collect"
 RESUME = "resume"
+COMPACT = "compact"
 TEST = "test"
 
 
@@ -75,6 +77,12 @@ def _parser() -> argparse.ArgumentParser:
     resume = actions.add_parser(RESUME, help="boot a stopped run again over its own overlays")
     resume.add_argument("--run", required=True, help="the run, by id or by its run directory")
     resume.add_argument("--without-iso", action="store_true", help="leave the boot image out")
+    compact = actions.add_parser(
+        COMPACT, help="swap the builder's disk for a validated compressed copy"
+    )
+    compact.add_argument(
+        "--resume", help="a kept compaction whose compared copy is swapped in, not converted again"
+    )
     actions.add_parser(STOP, help="ask the running machine to power down")
     actions.add_parser(STATUS, help="what is running, if anything")
     actions.add_parser(RECLAIM, help="what was started and left behind")
@@ -230,6 +238,21 @@ def resume(
     return {"resumed": lease.document()}
 
 
+def compact(
+    context: contexts.Context,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    arguments: argparse.Namespace,
+) -> encoding.Document:
+    if arguments.resume is not None:
+        compacted = compacting.finalise(
+            ports, context.settings, root, identifiers.RunId.parse(arguments.resume)
+        )
+    else:
+        compacted = compacting.compact(ports, context.settings, root)
+    return {"compacted": compacted.document()}
+
+
 def stop(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> encoding.Document:
     lease = launching.current(ports, root=root)
     if lease is None:
@@ -272,6 +295,7 @@ ACTIONS: dict[str, Action] = {
     COMPARE: lambda _, ports, root, arguments: compare(ports, root, arguments.run),
     COLLECT: lambda _, ports, root, arguments: collect(ports, root, arguments.run),
     RESUME: resume,
+    COMPACT: compact,
     STOP: lambda _, ports, root, __: stop(ports, root),
     RECLAIM: lambda _, ports, root, __: reclaim(ports, root),
     STATUS: lambda _, ports, root, __: status(ports, root),
@@ -295,6 +319,10 @@ RECIPES = (
     commandspecs.Recipe("builder-start", (), (NAME, START, "--role", "builder")),
     commandspecs.Recipe("builder-stop", (), (NAME, STOP)),
     commandspecs.Recipe("builder-status", (), (NAME, STATUS)),
+    commandspecs.Recipe("builder-compact", (), (NAME, COMPACT)),
+    commandspecs.Recipe(
+        "builder-finalize", ("compaction_id",), (NAME, COMPACT, "--resume", "{{compaction_id}}")
+    ),
     commandspecs.Recipe("test-vm", ("disk",), _test()),
     commandspecs.Recipe(
         "test-installer", ("disk", "iso", "other_disk"),
