@@ -300,4 +300,23 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     )
 
 
-commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run))
+JUST_RECIPES = (
+    commandspecs.Recipe(
+        "verify-live-protection", ("user",), (NAME, LIVE_PROTECTION, "--user", "{{user}}")
+    ),
+    commandspecs.Recipe(
+        "verify-desktop-theme", ("user",), (NAME, DESKTOP_THEME, "--user", "{{user}}")
+    ),
+    commandspecs.Recipe(
+        "verify-desktop-render", ("credentials",),
+        (NAME, DESKTOP_RENDER, "--credentials", "{{credentials}}"),
+    ),
+    commandspecs.Recipe(
+        "test-fingerprint", ("build_id",), (NAME, FINGERPRINT_CLEANUP, "--build", "{{build_id}}")
+    ),
+    commandspecs.Recipe("test-installer-trust", (), (NAME, INSTALLER_TRUST)),
+)
+
+commands.declare(
+    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=JUST_RECIPES)
+)

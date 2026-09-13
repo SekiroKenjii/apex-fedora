@@ -63,4 +63,12 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     )
 
 
-commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run))
+RECIPES = (
+    commandspecs.Recipe("readiness", (), (NAME,)),
+    commandspecs.Recipe("readiness-table", (), (NAME, "--table")),
+    commandspecs.Recipe("readiness-table-strict", (), (NAME, "--table", "--strict")),
+)
+
+commands.declare(
+    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
+)

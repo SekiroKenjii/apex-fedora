@@ -2,9 +2,79 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 export PYTHONDONTWRITEBYTECODE := "1"
 
 python := env_var_or_default("APEX_PYTHON", "3.14.4")
+apex := "PYTHONPATH=src uv run --no-project --python " + python + " python -m apex.cli.main"
 
 default:
     @just --list
+
+verify-chain:
+    {{apex}} evidence verify-chain
+
+builder-prepare:
+    {{apex}} machine prepare
+
+builder-start:
+    {{apex}} machine start --role builder
+
+builder-stop:
+    {{apex}} machine stop
+
+builder-status:
+    {{apex}} machine status
+
+test-vm disk:
+    {{apex}} machine start --role test --disk "{{disk}}"
+
+test-installer disk iso other_disk:
+    {{apex}} machine start --role test --disk "{{disk}}" --iso "{{iso}}" --medium installer --extra-disk "{{other_disk}}"
+
+test-installer-diagnostic disk iso other_disk:
+    {{apex}} machine start --role test --disk "{{disk}}" --iso "{{iso}}" --medium installer --extra-disk "{{other_disk}}" --serial-console
+
+test-live-hotplug disk iso other_disk:
+    {{apex}} machine start --role test --disk "{{disk}}" --iso "{{iso}}" --medium live --extra-disk "{{other_disk}}" --serial-console --usb-bus
+
+test-ventoy disk other_disk usb_image:
+    {{apex}} machine start --role test --disk "{{disk}}" --extra-disk "{{other_disk}}" --boot-usb "{{usb_image}}" --usb-bus --serial-console
+
+test-hotplug-usb source:
+    {{apex}} machine hotplug-usb --source "{{source}}"
+
+test-power-loss:
+    {{apex}} machine power-loss
+
+plan-artifact kind:
+    {{apex}} plan artifact "{{kind}}"
+
+plan-verify recipe:
+    {{apex}} plan verify "{{recipe}}"
+
+plan-upgrade release:
+    {{apex}} plan upgrade --release "{{release}}"
+
+readiness:
+    {{apex}} readiness
+
+readiness-table:
+    {{apex}} readiness --table
+
+readiness-table-strict:
+    {{apex}} readiness --table --strict
+
+verify-live-protection user:
+    {{apex}} verify live-protection --user "{{user}}"
+
+verify-desktop-theme user:
+    {{apex}} verify desktop-theme --user "{{user}}"
+
+verify-desktop-render credentials:
+    {{apex}} verify desktop-render --credentials "{{credentials}}"
+
+test-fingerprint build_id:
+    {{apex}} verify fingerprint-cleanup --build "{{build_id}}"
+
+test-installer-trust:
+    {{apex}} verify installer-trust
 
 doctor:
     python3 tools/apex.py doctor
@@ -23,18 +93,6 @@ hooks:
 
 sources:
     python3 tools/apex.py sources
-
-builder-prepare:
-    python3 tools/apex.py builder prepare
-
-builder-start:
-    python3 tools/apex.py builder start
-
-builder-stop:
-    python3 tools/apex.py builder stop
-
-builder-status:
-    python3 tools/apex.py builder status
 
 builder-compact:
     python3 tools/compact-builder.py --replace-verified
@@ -66,36 +124,11 @@ artifact kind build_id:
 test-disk build_id:
     python3 tools/apex.py artifact qcow2 --build "{{build_id}}" --test-access
 
-test:
-    uv run --no-project --python {{python}} python tools/check_static.py
-    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest
-
 test-elan-diagnostics source:
     python3 tools/test-elan-diagnostics.py "{{source}}"
 
-test-integration:
-    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -m integration
-
-test-vm disk:
-    python3 tools/apex.py test-vm "{{disk}}"
-
-test-installer disk iso other_disk:
-    python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}"
-
-test-installer-diagnostic disk iso other_disk:
-    python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}" --serial-console
-
-test-live-hotplug disk iso other_disk:
-    python3 tools/apex.py test-vm "{{disk}}" --iso "{{iso}}" --extra-disk "{{other_disk}}" --serial-console --usb-test-bus
-
-test-ventoy disk other_disk usb_image:
-    python3 tools/apex.py test-vm "{{disk}}" --extra-disk "{{other_disk}}" --boot-usb "{{usb_image}}" --serial-console
-
 ventoy-media live_output ubuntu trusted_key checksums signature keyring:
     python3 tools/apex.py ventoy-media --live-output "{{live_output}}" --ubuntu "{{ubuntu}}" --trusted-key "{{trusted_key}}" --checksums "{{checksums}}" --signature "{{signature}}" --keyring "{{keyring}}"
-
-test-hotplug-usb source:
-    python3 tools/apex.py test-hotplug-usb "{{source}}"
 
 test-live-check case:
     python3 tools/apex.py test-live-check "{{case}}"
@@ -111,9 +144,6 @@ test-installer-fault-collect run_directory:
 
 installer-fixtures:
     python3 tools/apex.py installer-fixtures
-
-test-installer-trust:
-    python3 tools/apex.py test-installer-trust
 
 update-fixtures build_id:
     python3 tools/prepare-update-fixture.py "{{build_id}}"
@@ -136,9 +166,6 @@ test-initramfs-inject fixture access inspection:
 test-initramfs-rescue fixture access:
     python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"
 
-test-fingerprint build_id:
-    python3 tools/apex.py test-fingerprint --build "{{build_id}}"
-
 installer-logs-prepare:
     python3 tools/apex.py installer-logs prepare
 
@@ -154,8 +181,12 @@ test-compare-disks run_directory:
 report:
     python3 tools/apex.py report
 
-readiness:
-    python3 tools/apex.py readiness
+test:
+    uv run --no-project --python {{python}} python tools/check_static.py
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest
+
+test-integration:
+    uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -m integration
 
 runtime-freeze:
     uv run --no-project --python {{python}} python tools/migration/runtime_inventory.py record
@@ -184,7 +215,6 @@ ratchet:
 types:
     uv run --no-project --python {{python}} --with mypy==1.18.2 mypy --strict src/apex
 
-# The editor's checker, so a finding in the editor is a finding in the gate and nowhere else.
 pyright:
     uv run --no-project --python {{python}} --with pytest==9.1.1 --with pyright==1.1.407 sh -c 'pyright --pythonpath "$(command -v python)"'
 
@@ -206,6 +236,12 @@ os-freeze:
 os:
     uv run --no-project --python {{python}} python tools/migration/generated_os.py check
 
+justfile-freeze:
+    uv run --no-project --python {{python}} python tools/migration/generated_justfile.py freeze
+
+justfile:
+    uv run --no-project --python {{python}} python tools/migration/generated_justfile.py check
+
 benchmarks:
     uv run --no-project --python {{python}} --with pytest==9.1.1 pytest -q -m benchmark --durations=5
 
@@ -215,17 +251,8 @@ lint:
 readiness-shadow:
     uv run --no-project --python {{python}} python tools/migration/readiness_shadow.py
 
-verify-chain:
-    PYTHONPATH=src uv run --no-project --python {{python}} python -m apex.cli.main evidence verify-chain
-
 guard-shadow:
     uv run --no-project --python {{python}} python tools/migration/guard_shadow.py --self-test
-
-readiness-table:
-    PYTHONPATH=src uv run --no-project --python {{python}} python -m apex.cli.main readiness --table
-
-readiness-table-strict:
-    PYTHONPATH=src uv run --no-project --python {{python}} python -m apex.cli.main readiness --table --strict
 
 gate:
     just test
@@ -235,6 +262,7 @@ gate:
     just deadcode
     just plans
     just os
+    just justfile
     just runtime-verify
     just readiness-shadow
     just verify-chain

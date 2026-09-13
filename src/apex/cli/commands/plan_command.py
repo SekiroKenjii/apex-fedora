@@ -90,4 +90,12 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     return commandspecs.Reply(document=plans.render(plan))
 
 
-commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run))
+RECIPES = (
+    commandspecs.Recipe("plan-artifact", ("kind",), (NAME, ARTIFACT, "{{kind}}")),
+    commandspecs.Recipe("plan-verify", ("recipe",), (NAME, VERIFY, "{{recipe}}")),
+    commandspecs.Recipe("plan-upgrade", ("release",), (NAME, UPGRADE, "--release", "{{release}}")),
+)
+
+commands.declare(
+    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
+)
