@@ -90,13 +90,14 @@ The fixture preflight records free space before and after a filesystem sync, the
 checks that threshold. This lets Btrfs finish reclaiming temporary import extents.
 A failed sync or insufficient space stops the build and leaves a result record.
 
-For an existing completed fixture, run `guest/dedupe-update-blobs.py --fixture ID`
-only inside the idle isolated builder. The helper takes its build lock and first
+For an existing completed fixture, run `just dedupe FIXTURE_ID` while the isolated
+builder is idle. The `fixture.dedupe` unit runs under the builder's lock and first
 tests identical ranges, kernel rejection of different ranges and write isolation
 on generated test files. It checks each complete blob hash before and after the
 operation and preserves inode identity, length, ownership, permissions and link
 count. Unaligned tails are left alone. A partial or failed kernel result stops it.
-No file is removed, and the report records actual free space after synchronization.
+No file is removed, and the report, kept under the run's exports, records actual
+free space after synchronization.
 
 The interface is defined in the kernel's
 [file-deduplication UAPI](https://github.com/torvalds/linux/blob/v7.1/include/uapi/linux/fs.h).

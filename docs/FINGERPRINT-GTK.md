@@ -39,7 +39,8 @@ it does not establish seamless reconnection of the existing enrollment. Every ca
 checks that closing releases ownership and a new dialog can start enrollment.
 
 Reports include source/patch hashes, library versions, individual logs and exit codes.
-They live under `runtime/fingerprint-gtk-tests`. Compiler outputs are exported;
+They live under the run's export directory, the verdict in `fingerprint.gtk.json`
+beside the retrieved output. Compiler outputs are exported;
 the extracted source tree stays in the VM. Source archives can contain directory
 symlinks and must not be recursively copied as report contents.
 

@@ -3730,6 +3730,91 @@ gained two unused imports the ratchet counted. `golden_change`: the corpus is re
 with the entry point it replayed; G2, G3 and G7 held through P20 and have no older side to
 compare against now. `supersedes`: none yet.
 
+## P21b. The host flows moved into the package, and the older tree gone
+
+Goal: the rest of what section E ends with. P21 deleted the entry point and the library
+only it used; this slice moves every host flow the older tools still owned into the
+package, one command or recipe each under the justfile names the operator already has,
+and then deletes the tools, the ten library modules they imported, the guest scripts the
+agent's units replaced, and the tests and parity suites that tested them. Seven commits on
+`work/phase-21-host-tools`, the whole gate green at the head.
+
+### What moved
+
+The bus trace and the patch checks: `apex hardware observe-fingerprint` reads the
+monitor's stream from standard input and keeps `events.jsonl` and `summary.json` under
+`fingerprint-observations/` in the runtime root, `just observe-fingerprint` being the one
+host pipeline the justfile renders (the privileged `busctl` monitor piped into the
+collector, which refuses to run as root); `apex patch fingerprint-dialog` and `apex patch
+elan-diagnostics` compile and run the reviewed harnesses over a source the operator names
+(`verification/fingerprinttrace.py`, `patchbench.py`, `dialogcheck.py`, `elancheck.py`).
+
+The builder's disk compacted and finalised: `apex machine compact` and `--resume`
+(`builder-compact`, `builder-finalize`) in `provisioning/compacting.py`, over two new
+port methods, `FileSystemPort.identity` and `replace`, so the swap is a rename the port
+performs and the ledger compares identities rather than paths.
+
+The fingerprint builds and the fixtures as recipes: `build-fingerprint-rpms`,
+`build-fingerprint-image`, `update-fixtures` and `recovery-disk` are kinds of `apex
+build`, `test-fingerprint-rpms` and `test-fingerprint-gtk` are recipes of `apex verify`;
+the package reports are bound to the lock, the patches and the inventory in
+`composition/fingerprintpackages.py`, the fixture is found by run or directory in
+`verification/updatefixtures.py`, and the payload image is stood in by the new
+`build.tag-payload` unit. Six golden plans.
+
+The guest operations: `apex operate update|recovery|initramfs --action ... --fixture ...
+--access ...`, which `test-update`, `test-recovery`, `test-initramfs-inspect`,
+`test-initramfs-inject` and `test-initramfs-rescue` run under their older names and
+operands. Eight new units carry the guest side step for step (`update.state`,
+`update.provision`, `update.operate`, `update.sentinel`, `recovery.inspect`,
+`recovery.operate`, `fixture.recovery`, `fixture.initramfs`, the last two in a private
+mount namespace); the host asks them as root through the disposable account, sudo reading
+the password from the line before the framed request and the password reaching nothing
+else; the guest is waited for after a reboot; every run keeps `update.json`,
+`recovery.json` or `initramfs.json` under its exports with each request and answer. The
+collection carries the two-failure fallback judgement the older evaluator made
+(`verification/gdmfallback.py`), and an injection is bound to the reviewed inspection of
+the same fixture on the same machine. `just dedupe FIXTURE_ID` asks the builder's
+`fixture.dedupe` unit, which had no host caller before. Five golden plans.
+
+### What went
+
+Under `tools/`, the fifteen host tools and `observe-fingerprint.sh`, the whole of
+`apexlib/` (`common`, `vm`, `sources`, `guesttest`, `console`, `render`, `signatures`,
+`testaccess`, `fprinttrace`, `recovery`, `pipeline`, `gitguard`) and `make_seed.py`;
+`check_static.py` moved to `tools/migration/`, where `just test` runs it. Under `guest/`,
+the nine scripts whose units had been waiting for a caller: `probe.py`,
+`recovery-probe.py`, `installed-recovery-probe.py`, `render-probe.py`, `theme-probe.py`
+(their verbatim assets are the one copy now), `dedupe-update-blobs.py`,
+`update-fixture.py`, `recovery-fixture.py`, `initramfs-fixture.py`. Under `tests/`,
+twenty-one older test modules, eight contract parity suites and the three integration
+cases that drove the deleted tools; the older tests of shipped guest files stay with a
+local `ROOT`. The justfile renderer has no table of older tools; the lint ratchet's
+baseline is refrozen over the tree that remains.
+
+### What this slice did not do
+
+Run any of the moved flows on the operator's machines: the builds, the tests in the
+builder, the update, recovery and initramfs operations on a test guest, the compaction,
+the trace and the patch checks are NOT TESTED here beyond their unit and pipeline suites
+on fakes. The three catalogue notes that name `tools/update-vm.py` and `tools/apexlib`
+are left as written, because the catalogue's text is attested content. P22.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 451 files, 35 353 lines |
+| Older tree | `tools/` holds `migration/` alone; 69 files and 7 224 lines deleted |
+| Default suite | 2 173 passed, 8 skipped, 13 opt-in deselected |
+
+`migration_red`: the fake file port returned an unresolved path for a name that crossed a
+directory link, so `resolve`, `identity` and `inspect` canonicalise as the kernel would;
+the fake archive port learnt to hold members and lay them down on extraction; the fake
+signer wrote a public key into a directory nobody had made; the plan's default order
+put the login before the booted-digest check of `check-a`, kept and written down. `golden_change`:
+eleven new plans, none changed. `supersedes`: none.
+
 ## Commands
 
 ```sh

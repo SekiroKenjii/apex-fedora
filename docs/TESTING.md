@@ -42,8 +42,8 @@ just builder-stop
 just test-vm /absolute/runtime/path/candidate.qcow2
 ```
 
-Launching a VM does not record a PASS. Use QMP, serial output and `guest/probe.py` inside
-the guest to gather observations. A running GDM unit does not prove password login,
+Launching a VM does not record a PASS. Use QMP, serial output and the agent's `guest.state`
+unit inside the guest to gather observations. A running GDM unit does not prove password login,
 a Wayland session or a drawn application window. Capture those separately.
 
 Each test VM keeps its overlay, serial log, QEMU command and before/after OVMF VARS in
@@ -239,8 +239,8 @@ exists. A missing, changed, duplicate or stale proof prevents installation readi
 Changing kernel, firmware, driver, GNOME, PAM or initramfs requires new evidence.
 
 ```sh
-python3 tools/apex.py report
-python3 tools/apex.py readiness
+just report
+just readiness
 ```
 
 Release promotion must select the tested digest. Never rebuild after approval and

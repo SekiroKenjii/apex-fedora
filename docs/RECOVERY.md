@@ -69,10 +69,11 @@ not prove the two-attempt limit.
 
 Source: [GRUB 2.12 lexer rules](https://github.com/rhboot/grub2/blob/grub-2.12/grub-core/script/yylex.l#L123).
 
-`guest/recovery-probe.py` collects these prerequisites without triggering a reboot,
-rollback or failed service. It refuses physical and non-OSTree sessions. Run it through
-the owned VM's private SSH connection and retain its JSON with the VM's digest and
-script checksum. A missing rollback image blocks the A/B recovery tests.
+The agent's `recovery.prerequisites` unit collects these prerequisites without
+triggering a reboot, rollback or failed service. It refuses physical and non-OSTree
+sessions. `just test-update check-a` asks it through the owned VM's private SSH
+connection and keeps its answer in the run's report beside the booted digest and the
+machine. A missing rollback image blocks the A/B recovery tests.
 
 The separately signed September 9 A/B fixture now passes trusted offline update,
 manual rollback, password login and user-data preservation. It also rejects three

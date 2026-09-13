@@ -14,8 +14,9 @@ free inside the builder. No RPM repository refresh occurs.
 A adds the greenboot fragment separator repair, the tested one-retry preset, a
 fixture marker and an offline verification policy. B changes only that marker. Both
 keep the parent's RPM inventory, kernel and driver settings. Build logs, manifests, public key,
-recipes and archive checksum are exported under `runtime/update-fixtures/ID`.
-Signing keys stay in the builder. Stop it before launching any test guest.
+recipes and archive checksum are exported under `exports/RUN/output` in the runtime root,
+where `RUN` is the fixture's identifier. Signing keys stay in the builder. Stop it before
+launching any test guest.
 
 This is a development trust root for the test, not the release-signing key. The
 public key comes through the builder's authenticated SSH connection. Neither a
@@ -47,8 +48,11 @@ Start it with `test-vm --guest-ssh`. The existing VM helper accepts only file-ba
 QCOW2 chains under runtime storage. It binds SSH to localhost and restricts guest
 outbound networking. No builder runs alongside it.
 
-`just test-update ACTION FIXTURE_DIRECTORY ACCESS_DIRECTORY` operates only on that
-running test guest. The access directory is the QCOW2's private `test-access` folder.
+`just test-update ACTION FIXTURE ACCESS_DIRECTORY` operates only on that running test
+guest. The fixture is named by its identifier or its export directory; the access
+directory is the QCOW2's private `test-access` folder, whose credentials and key reach
+the guest as the disposable account, and every privileged step runs through that
+account's password.
 
 1. `provision` transfers and hashes the signed archive, checks every payload file,
    saves the original reject-only policy and installs the fixture policy in this
@@ -65,16 +69,14 @@ running test guest. The access directory is the QCOW2's private `test-access` fo
    `rollback` requests the previous A deployment without rebooting automatically.
    Reboot separately and run `check-a` again with networking still restricted.
 
-Each operation saves a separate result under the VM run directory. A successful
-stage or rollback request does not prove that the next boot succeeds. Keep both
-the request result and the post-reboot check. Inspect screenshots and the retained
-GRUB/greenboot probe, including warnings, before reviewing the loop.
-
-For pytest execution, set `APEX_UPDATE_ACTION`, `APEX_UPDATE_FIXTURE` and
-`APEX_UPDATE_ACCESS`, then run `tests/integration/test_update_operation.py`. This
-uses the same guarded runner and QMP desktop checks. The guest must already be
-running. A failure leaves it available for diagnosis; cleanup and reboot remain
-separate operations. Without those inputs pytest reports SKIP, not acceptance.
+Each operation is one run and saves its report as `update.json` under that run's
+export directory, with every unit request and answer, the state before and after,
+and the failure when it did not pass; a check keeps its screenshots beside it. A
+successful stage or rollback request does not prove that the next boot succeeds. Keep
+both the request result and the post-reboot check. Inspect screenshots and the retained
+GRUB/greenboot probe, including warnings, before reviewing the loop. The guest must
+already be running; a failure leaves it available for diagnosis, and cleanup and
+reboot remain separate operations.
 
 Manual rollback does not establish the two-failure GRUB fallback. GDM, initramfs,
 disk-full and interrupted-update faults still require separate fresh-disk tests.

@@ -27,12 +27,13 @@ cold-boot trial requires an agreed time and operator action.
 Run from the repository in a terminal:
 
 ```sh
-bash tools/observe-fingerprint.sh
+just observe-fingerprint
 ```
 
 Enter your sudo password in that terminal. Only the fixed, 90-second `busctl` monitor
-runs as root. The collector runs as your desktop user. It does not request a Claim,
-activate fprintd, start an enrollment or change daemon configuration.
+runs as root. The collector, `apex hardware observe-fingerprint`, runs as your desktop
+user and refuses to run as root. It does not request a Claim, activate fprintd, start an
+enrollment or change daemon configuration.
 
 While capture runs:
 
@@ -40,8 +41,10 @@ While capture runs:
 2. Reproduce the reported error, then cancel and close Settings. In this first
    capture, do not delete fingerprints or finish an enrollment. If it only waits
    for a finger, cancel and report that instead.
-3. Wait for capture to finish and keep the printed output path. Then run
-   `just hardware-snapshot` to retain the matching fprintd journal.
+3. Wait for capture to finish and keep the printed output path, a directory under
+   `fingerprint-observations` in the runtime root holding `events.jsonl` and
+   `summary.json`. Then run `just hardware-snapshot` to retain the matching fprintd
+   journal.
 
 The collector stores only allowed method names, correlated replies, status codes,
 relevant client disconnects, timestamps and process identity when available. It drops
