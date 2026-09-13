@@ -1,0 +1,59 @@
+{
+ "digest": "a4e33f337eb6b8a84dc42f0033c7078b41e60f4779d5efaaa8f002f603467914",
+ "name": "verify-ventoy-observe",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "ventoy.observe",
+   "reads": [
+    "agent.install",
+    "verification.guest"
+   ],
+   "writes": [
+    "observed.ventoy.observe"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.ventoy.observe",
+   "reads": [
+    "observed.ventoy.observe",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.ventoy.observe"
+   ]
+  }
+ ]
+}

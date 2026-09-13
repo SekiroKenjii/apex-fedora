@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
+from apex.adapters.real import real_serialshell
 from apex.kernel import claims, safepaths
 from apex.wiring import hostbundle
 
@@ -37,3 +38,17 @@ def test_a_root_that_does_not_exist_is_none_rather_than_a_refusal(tmp_path: Path
     loaded = hostbundle.load({"APEX_STATE_DIR": str(tmp_path / "absent")})
 
     assert loaded.root is None
+
+
+def test_the_serial_shell_the_root_wires_is_the_real_one_for_the_leased_process(
+    tmp_path: Path,
+) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir(mode=0o700)
+    context = hostbundle.context({"APEX_STATE_DIR": str(runtime)})
+
+    console = context.serial(safepaths.SafePath(runtime / "serial.sock"), 4242)
+
+    assert isinstance(console, real_serialshell.SerialGuestShell)
+    assert console.expected_process == 4242
+    assert console.environment is claims.EnvironmentKind.BUILD

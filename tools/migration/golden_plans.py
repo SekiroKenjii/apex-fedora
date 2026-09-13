@@ -28,7 +28,10 @@ from apex.verification.recipes import (  # noqa: E402
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
     installer_trust_recipe,
+    live_lock_recipe,
+    live_observe_recipe,
     live_protection_recipe,
+    ventoy_observe_recipe,
 )
 
 DIRECTORY = REPOSITORY / "generated" / "plans"
@@ -42,6 +45,9 @@ RECIPES = {
     desktop_render_recipe.NAME: desktop_render_recipe.PLAN,
     fingerprint_cleanup_recipe.NAME: fingerprint_cleanup_recipe.PLAN,
     installer_trust_recipe.NAME: installer_trust_recipe.PLAN,
+    live_observe_recipe.NAME: live_observe_recipe.PLAN,
+    ventoy_observe_recipe.NAME: ventoy_observe_recipe.PLAN,
+    live_lock_recipe.NAME: live_lock_recipe.PLAN,
 }
 
 

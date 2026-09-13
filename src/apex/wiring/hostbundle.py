@@ -18,11 +18,12 @@ from apex.adapters.real import (
     real_locking,
     real_process,
     real_qmp,
+    real_serialshell,
     real_signing,
 )
 from apex.config import defaults, layers, loader
 from apex.kernel import errors, refusals, safepaths
-from apex.ports import portset
+from apex.ports import guestshell, portset
 from apex.wiring import contexts
 
 REPOSITORY = Path(__file__).resolve().parents[3]
@@ -45,6 +46,11 @@ def bundle(root: safepaths.RuntimeRoot) -> portset.HostPorts:
         monitor=real_qmp.UnixQmp(),
         guest=real_guestshell.OpensshGuestShell(processes),
     )
+
+
+def serial_shell(socket_path: safepaths.SafePath, process: int) -> guestshell.GuestShellPort:
+    """The guest shell over the machine's serial socket, for the one guest without ssh."""
+    return real_serialshell.SerialGuestShell(socket_path, expected_process=process)
 
 
 def runtime_root(settings: loader.Settings) -> safepaths.RuntimeRoot | None:
@@ -82,4 +88,5 @@ def context(environment: Mapping[str, str]) -> contexts.Context:
         root=loaded.root,
         environment=dict(environment),
         bundle=bundle,
+        serial=serial_shell,
     )

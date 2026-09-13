@@ -3266,6 +3266,76 @@ reads everything else in the run directory; the machine command's dispatcher pas
 complexity limit with two more actions and became a table; provisioning passed 1800
 (1904) and was raised to 2000. `golden_change`: none. `supersedes`: none yet.
 
+## P20k. The serial shell and the live checks
+
+Goal: the five live checks, which the older `test-live-check` ran through the medium's
+rescue shell over the serial socket, as verify recipes on the new tree, and the port that
+reaches that shell. Four commits on `work/phase-20k-serial`, the whole gate green at the
+head.
+
+### The serial shell
+
+A live medium has no ssh, only the rescue shell on its serial console. That shell is now a
+second adapter of the same `GuestShellPort` the ssh guest implements
+(`adapters/real/real_serialshell.py`, `SerialGuestShell`), so every stage that asks a
+guest for something asks it the same way and never learns which wire carried the answer.
+The adapter connects to the machine's serial socket, checks the peer's credentials against
+the leased process and the operator's own user, holds a lock file beside the socket so two
+consoles never interleave, and speaks the older protocol: echo off, a ready token from a
+root shell, the script's input carried in as a base64 heredoc, the script run under `bash
+-c` with its streams kept apart, a done marker with the exit code, and the standard error
+carried back as base64. Sending a file is the same heredoc with a digest checked on the
+far side; receiving one is `cat` or `tar` piped through `base64` between two markers.
+Every exchange has a deadline and a byte limit, and a socket that is not the leased
+machine's is refused before a byte is sent. The contract suite drives the real adapter
+against a bash spawned on a local unix socket, so the protocol is exercised without a
+machine. `fake_serialshell.ScriptedSerialShell` is the scripted guest under the serial
+adapter's name.
+
+The composition root wires the serial factory into the context (`Context.serial`); a
+context built without one refuses to open a console rather than opening the wrong thing.
+
+### The live checks
+
+Three recipes keep what the guest said and mint nothing, as the older tool kept its
+results file for the operator to cite when recording the check by hand:
+`verify-live-observe` (`live.observe`), `verify-ventoy-observe` (`ventoy.observe`) and
+`verify-live-lock` (`fault.live-lock`). A probe stage (`stages/probe_stage.py`) holds the
+observation unjudged and the retain stage writes it under the run's exports as the guest
+gave it, with no verdict added; a fault's report is retained with the verdict the host
+drew, as before. The plan for each is one line in `verification/retaining.py`. The two
+write denials were already `verify-live-protection`.
+
+`apex verify <recipe> --serial` reaches the guest over the serial socket as root, or as
+`--user` says; it requires a machine started with `--serial-console`, and takes no
+credentials file and no builder recipe. The older case names `observe`, `write-denial`,
+`usb-write-denial` and `lock-fault` are accepted as spellings of the recipes that took
+them over, so the justfile's `test-live-check case` recipe keeps its operand and runs
+`apex verify "<case>" --serial`. `test-live-check` is retired; the bridge holds eleven
+names.
+
+### What this slice did not do
+
+The installer fault and log commands, `installer-fixtures`, `ventoy-media`,
+`build-nvidia`, `doctor`, `hooks`, `git-hook`, `hardware-snapshot`, `decode-coefficient`;
+a real live check through a real machine's serial socket, which only the operator can run
+(the protocol is proven against a local bash, NOT TESTED against a booted medium); a real
+first boot of a builder from the generated seed; the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 364 files, 26083 lines |
+| Bridge | eleven names |
+| Fast suite | 2 524 passed, 8 skipped |
+
+`migration_red`: the credentials refusal for `--serial` was reached after the console had
+been opened, so the guest is chosen before the serial factory is called; the verify
+command passed 400 lines and its input gathering moved to `cli/verifyinputs.py`; cli
+passed 2200 (2247) and was raised to 2400, adapters passed 2600 (2899) and was raised to
+3000. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

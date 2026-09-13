@@ -109,6 +109,9 @@ test-fingerprint build_id:
 test-installer-trust:
     {{apex}} verify installer-trust
 
+test-live-check case:
+    {{apex}} verify "{{case}}" --serial
+
 doctor:
     python3 tools/apex.py doctor
 
@@ -150,9 +153,6 @@ test-elan-diagnostics source:
 
 ventoy-media live_output ubuntu trusted_key checksums signature keyring:
     python3 tools/apex.py ventoy-media --live-output "{{live_output}}" --ubuntu "{{ubuntu}}" --trusted-key "{{trusted_key}}" --checksums "{{checksums}}" --signature "{{signature}}" --keyring "{{keyring}}"
-
-test-live-check case:
-    python3 tools/apex.py test-live-check "{{case}}"
 
 test-installer-fault case:
     python3 tools/apex.py test-installer-fault "{{case}}"

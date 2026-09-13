@@ -1,0 +1,60 @@
+{
+ "digest": "1f758f949a0a8bd61147f0a1a04035e596e44421665acff15aea92e542971220",
+ "name": "verify-live-lock",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "fault.live-lock",
+   "reads": [
+    "agent.install",
+    "verification.guest"
+   ],
+   "writes": [
+    "fault.fault.live-lock"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.fault.live-lock",
+   "reads": [
+    "fault.fault.live-lock",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.fault.live-lock"
+   ]
+  }
+ ]
+}
