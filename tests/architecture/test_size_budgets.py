@@ -28,7 +28,7 @@ PACKAGE_LINE_BUDGETS = {
     "config": 700,
     "targeting": 600,
     "attestation": 3600,
-    "composition": 1200,
+    "composition": 1400,
     "verification": 2800,
     "generating": 800,
     "provisioning": 1800,

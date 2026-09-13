@@ -114,6 +114,14 @@ GREETER_CLASS = "greeter"
 WAYLAND_SESSION = "wayland"
 SHELL_STARTED_MESSAGE = "f3ea493c22934e26811cd62abe8e203a"
 TEST_ACCESS_DIRECTORY = "test-access"
+TEST_ACCOUNT = "apex-test"
+TEST_ACCOUNT_DESCRIPTION = "Disposable Apex VM test account"
+TEST_KEY_NAME = "id_ed25519"
+TEST_KEY_COMMENT = "apex-disposable-test"
+TEST_BLUEPRINT_NAME = "blueprint.toml"
+REMOTE_BLUEPRINT_NAME = "test-blueprint.toml"
+TEST_KERNEL_APPEND = "systemd.wants=sshd.service"
+PASSWORD_HASH_DEADLINE = timing.Deadline(timing.Elapsed(30))
 CREDENTIALS_NAME = "credentials.json"
 GREETER_APPEARS = timing.WaitPolicy(
     deadline=timing.Deadline(timing.Elapsed(60)),

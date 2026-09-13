@@ -44,6 +44,12 @@ class FactMap:
                 f"{key.name!r} was read before any stage wrote it; the map holds {known}"
             ) from error
 
+    def get[T](self, key: FactKey[T]) -> T | None:
+        """The fact when a stage wrote it, else nothing; for reading an outcome that stopped."""
+        if key not in self:
+            return None
+        return self[key]
+
     def producer(self, key: FactKey[Any]) -> identifiers.StageId:
         return self._entries[key.name].produced_by
 

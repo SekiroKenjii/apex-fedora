@@ -3084,6 +3084,64 @@ argument choices, and the justfile recipes declared under the same name replaced
 until the tests said so. `golden_change`: six git-hook entries, the footer sentence.
 `supersedes`: none yet.
 
+## P20h. The build from the CLI, the account a fixture carries, and `sources`
+
+Goal: the builds the pipeline has run on fakes since P18, run from the CLI against the
+leased builder, with the one thing the composition still lacked, the disposable account a
+private QCOW2 fixture carries; and the reviewed sources fetched by the new tree. Three
+commits on `work/phase-20h-build-command`, the whole gate green at the head.
+
+### The account a fixture carries
+
+`composition/accessgrant.py` makes what the older tool made beside the export: a key pair
+by ssh-keygen, a password that is a token from the identity port, hashed by openssl over
+its standard input so it never stands on a command line, the credentials file the login
+test reads and the blueprint the image builder reads, one account in the wheel group with
+the hashed password and the public key and the kernel argument that starts sshd. The
+`access.grant` stage sits between the transfer and the build, sends the blueprint by the
+name the disk script looks for, and refuses in preflight an account on anything but a
+QCOW2, so a build that could not carry it never opens a session. The record says whether
+the account is there. The three build plans changed by that stage and are frozen again.
+
+### The build from the CLI
+
+`apex build image [--profile]` and `apex build qcow2|installer|live --parent <id>
+[--test-access]` seed the composition's recipes from the operator's choice and the lease
+of the running builder, whose account and key are the runtime root's own; a test machine
+or no machine is refused by name, and a request that contradicts itself, a derived
+artifact without a parent or an image with one, before the root is touched. The reply is
+the run's record with its exports and, when granted, the account; a build the guest
+failed is reported with the log it retained and the refusal's exit code, as the older
+tool exited. `apex sources` fetches the reviewed lock into the runtime root and reports
+each pin. The verification command takes the guest key from the credentials file when
+that file names one, which is where the account's key now lives.
+
+`build` and `sources` are owned under their own names; `artifact` is retired and names
+`apex build`. The justfile's `build`, `artifact`, `test-disk` and `sources` recipes run
+the new commands. The bridge holds twenty names.
+
+### What this slice did not do
+
+`select-candidate`, `verify-artifact`, `trust-development-key`, `test-artifact`, `record`,
+`report`, `test-live-check`, `test-compare-disks`, `test-resume`, the installer fault and
+log commands, `installer-fixtures`, `ventoy-media`, `build-nvidia`, `doctor`, `hooks`,
+`git-hook`, `hardware-snapshot`, `decode-coefficient`; a real first boot of a builder from
+the generated seed; the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 348 files, 24567 lines |
+| Commands owned | eight: `build`, `evidence`, `machine`, `plan`, `readiness`, `sources`, `verify` and the retired names refused |
+| Fast suite | 2 461 passed, 8 skipped |
+
+`migration_red`: two plan tests pinned the last four stages and the preflight seeds, and
+both had to learn the access stage; the fact map gained `get` for reading an outcome that
+stopped before a fact was written; a failed guest build reaches the reply as the runner's
+`stage.failed` refusal, which is the exit the older tool gave. `golden_change`: three build
+plans, one stage added. `supersedes`: none yet.
+
 ## Commands
 
 ```sh

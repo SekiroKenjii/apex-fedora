@@ -7,6 +7,15 @@ apex := "PYTHONPATH=src uv run --no-project --python " + python + " python -m ap
 default:
     @just --list
 
+build profile="fedora":
+    {{apex}} build image --profile "{{profile}}"
+
+artifact kind build_id:
+    {{apex}} build "{{kind}}" --parent "{{build_id}}"
+
+test-disk build_id:
+    {{apex}} build qcow2 --parent "{{build_id}}" --test-access
+
 verify-chain:
     {{apex}} evidence verify-chain
 
@@ -61,6 +70,9 @@ readiness-table:
 readiness-table-strict:
     {{apex}} readiness --table --strict
 
+sources:
+    {{apex}} sources
+
 verify-live-protection user:
     {{apex}} verify live-protection --user "{{user}}"
 
@@ -91,17 +103,11 @@ test-fingerprint-dialog source:
 hooks:
     python3 tools/apex.py hooks
 
-sources:
-    python3 tools/apex.py sources
-
 builder-compact:
     python3 tools/compact-builder.py --replace-verified
 
 builder-finalize compaction_id:
     python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"
-
-build profile="fedora":
-    python3 tools/apex.py build {{profile}}
 
 build-nvidia build_id:
     python3 tools/apex.py build-nvidia --build "{{build_id}}"
@@ -117,12 +123,6 @@ test-fingerprint-gtk build_id:
 
 build-fingerprint-image parent_build rpm_build gtk_test:
     python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" "{{gtk_test}}"
-
-artifact kind build_id:
-    python3 tools/apex.py artifact "{{kind}}" --build "{{build_id}}"
-
-test-disk build_id:
-    python3 tools/apex.py artifact qcow2 --build "{{build_id}}" --test-access
 
 test-elan-diagnostics source:
     python3 tools/test-elan-diagnostics.py "{{source}}"

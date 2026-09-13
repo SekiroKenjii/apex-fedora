@@ -15,6 +15,7 @@ from apex.composition.stages import (
     retrieve_output_stage,
     review_sources_stage,
     run_build_stage,
+    test_access_stage,
     transfer_sources_stage,
     write_manifest_stage,
 )
@@ -34,13 +35,14 @@ STAGES = (
     write_manifest_stage.STAGE,
     prepare_remote_stage.STAGE,
     transfer_sources_stage.STAGE,
+    test_access_stage.STAGE,
     run_build_stage.STAGE,
     retrieve_output_stage.STAGE,
     record_result_stage.STAGE,
 )
 SEEDS = frozenset({
     keys.REPOSITORY, keys.RUNTIME_ROOT, keys.BUILDER, keys.REQUESTED_PROFILE, keys.KIND,
-    keys.PARENT,
+    keys.PARENT, keys.TEST_ACCESS,
 })
 
 
@@ -58,6 +60,7 @@ def run(
     profile: builds.Profile,
     kind: builds.ArtifactKind,
     parent: identifiers.BuildId | None,
+    test_access: bool = False,
 ) -> runner.Outcome:
     return runner.run(
         plan_,
@@ -69,5 +72,6 @@ def run(
             keys.REQUESTED_PROFILE: profile,
             keys.KIND: kind,
             keys.PARENT: parent,
+            keys.TEST_ACCESS: test_access,
         },
     )

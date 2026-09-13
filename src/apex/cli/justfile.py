@@ -40,11 +40,9 @@ OLDER_TOOLS: tuple[Plain, ...] = (
     ("test-fingerprint-dialog", "source",
      ('python3 tools/test-fingerprint-dialog.py "{{source}}"',)),
     ("hooks", "", (f"{LEGACY} hooks",)),
-    ("sources", "", (f"{LEGACY} sources",)),
     ("builder-compact", "", ("python3 tools/compact-builder.py --replace-verified",)),
     ("builder-finalize", "compaction_id",
      ('python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"',)),
-    ("build", 'profile="fedora"', (f"{LEGACY} build {{{{profile}}}}",)),
     ("build-nvidia", "build_id", (f'{LEGACY} build-nvidia --build "{{{{build_id}}}}"',)),
     ("build-fingerprint-rpms", "", ("python3 tools/build-fingerprint-rpms.py",)),
     ("test-fingerprint-rpms", "build_id",
@@ -53,10 +51,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
     ("build-fingerprint-image", "parent_build rpm_build gtk_test",
      ('python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" '
       '"{{gtk_test}}"',)),
-    ("artifact", "kind build_id",
-     (f'{LEGACY} artifact "{{{{kind}}}}" --build "{{{{build_id}}}}"',)),
-    ("test-disk", "build_id",
-     (f'{LEGACY} artifact qcow2 --build "{{{{build_id}}}}" --test-access',)),
     ("test-elan-diagnostics", "source", ('python3 tools/test-elan-diagnostics.py "{{source}}"',)),
     ("ventoy-media", "live_output ubuntu trusted_key checksums signature keyring",
      (f'{LEGACY} ventoy-media --live-output "{{{{live_output}}}}" --ubuntu "{{{{ubuntu}}}}" '

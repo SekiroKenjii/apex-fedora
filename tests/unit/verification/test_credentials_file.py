@@ -29,6 +29,7 @@ def test_the_account_and_its_password_are_read_and_the_password_is_hidden() -> N
 
     assert credentials.user == "apex-test"
     assert credentials.password == secrets.Secret("s3cret-Word")
+    assert credentials.key == Path("k")
     assert "s3cret" not in repr(credentials)
     sink = secrets.CollectingSink()
     credentials.password.reveal_into(sink)
@@ -51,3 +52,13 @@ def test_a_file_of_another_shape_is_refused_without_its_content(payload: bytes) 
 
     assert caught.value.reason is refusals.RefusalReason.CREDENTIALS_MALFORMED
     assert "hunter2" not in str(caught.value)
+
+
+def test_a_file_without_a_key_names_none_and_an_empty_key_is_refused() -> None:
+    without = testaccess.read(stored(json.dumps({"user": "u", "password": "p"}).encode()), PATH)
+
+    assert without.key is None
+    empty = json.dumps({"user": "u", "password": "p", "key": ""}).encode()
+    with pytest.raises(errors.Refusal) as caught:
+        testaccess.read(stored(empty), PATH)
+    assert caught.value.reason is refusals.RefusalReason.CREDENTIALS_MALFORMED
