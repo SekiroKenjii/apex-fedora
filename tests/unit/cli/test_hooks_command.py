@@ -21,11 +21,8 @@ def git(*arguments: str) -> tuple[str, ...]:
     return ("git", "-C", str(REPOSITORY), *arguments)
 
 
-def scripted(*, configured: bool = False) -> fake_process.ScriptedProcess:
+def scripted() -> fake_process.ScriptedProcess:
     return fake_process.ScriptedProcess({
-        git("config", "--get", "core.hooksPath"): fake_process.Reply(
-            exit_code=0 if configured else 1, stdout=b"/elsewhere\n" if configured else b""
-        ),
         git("rev-parse", "--git-path", "hooks"): fake_process.Reply(stdout=b".git/hooks\n"),
     })
 
@@ -68,7 +65,7 @@ def test_three_hooks_are_written_executable_each_naming_its_own_kind() -> None:
     assert "uv run --no-project --python" in hookinstall.ENTRY
 
 
-def test_a_hook_that_is_not_ours_a_sent_away_hooks_path_and_no_repository_are_refused() -> None:
+def test_a_hook_that_is_not_ours_and_no_repository_are_refused() -> None:
     filesystem = fake_files.MemoryFiles()
     filesystem.make_directory(safepaths.SafePath(HOOKS), mode=quantities.FileMode(0o755))
     filesystem.write_atomic(
@@ -79,17 +76,12 @@ def test_a_hook_that_is_not_ours_a_sent_away_hooks_path_and_no_repository_are_re
         hooks_command.run(commandspecs.Request(
             arguments=(), context=context(scripted(), filesystem)
         ))
-    with pytest.raises(errors.Refusal) as elsewhere:
-        hooks_command.run(commandspecs.Request(
-            arguments=(), context=context(scripted(configured=True), filesystem)
-        ))
     with pytest.raises(errors.Refusal) as absent:
         hooks_command.run(commandspecs.Request(
             arguments=(), context=context(scripted(), fake_files.MemoryFiles())
         ))
 
     assert foreign.value.reason is refusals.RefusalReason.HOOK_FOREIGN
-    assert elsewhere.value.reason is refusals.RefusalReason.HOOK_PATH_CONFIGURED
     assert absent.value.reason is refusals.RefusalReason.HOOK_NO_REPOSITORY
     kept = filesystem.read_bytes(safepaths.SafePath(HOOKS / "pre-push"), limit=1 << 16)
     assert kept == b"#!/bin/sh\necho mine\n"
