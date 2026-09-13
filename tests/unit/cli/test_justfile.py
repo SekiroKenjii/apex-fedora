@@ -40,7 +40,7 @@ def test_recipe_names_are_unique_across_commands_tools_and_the_older_tree() -> N
     declared = [
         recipe.name for name in commands.names() for recipe in registered.lookup(name).recipes
     ]
-    plain = [name for name, _, _ in (*justfile.OLDER_TOOLS, *justfile.TOOLING)]
+    plain = [name for name, _, _ in (*justfile.FOLDED, *justfile.OLDER_TOOLS, *justfile.TOOLING)]
     names = [*declared, *plain, "gate", "default"]
 
     assert len(names) == len(set(names))
