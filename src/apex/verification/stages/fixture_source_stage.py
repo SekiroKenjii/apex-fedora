@@ -33,26 +33,37 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         profile=str(builds.Profile.FEDORA), digest=image.digest, image_id=image.config
     )
     target: encoding.Document = {
-        "digest": str(frozen.digest), "image_id": str(frozen.image_id),
-        "profile": frozen.profile, "fixture": str(located.report.run),
+        "digest": str(frozen.digest),
+        "image_id": str(frozen.image_id),
+        "profile": frozen.profile,
+        "fixture": str(located.report.run),
         "ready_to_install": False,
     }
     context.ports.files.write_atomic(
         exports.inside(root, run, builds.TARGET_DOCUMENT),
-        encoding.canonical(target) + b"\n", mode=defaults.RECORD_MODE,
+        encoding.canonical(target) + b"\n",
+        mode=defaults.RECORD_MODE,
     )
     context.ports.files.write_atomic(
         exports.inside(root, run, defaults.FIXTURE_DISK_NAME),
-        encoding.canonical({
-            "parent_fixture": str(located.report.run), "digest": str(frozen.digest),
-            "kind": str(builds.ArtifactKind.QCOW2), "test_access": True,
-            "scope": defaults.FIXTURE_DISK_SCOPE,
-        }) + b"\n",
+        encoding.canonical(
+            {
+                "parent_fixture": str(located.report.run),
+                "digest": str(frozen.digest),
+                "kind": str(builds.ArtifactKind.QCOW2),
+                "test_access": True,
+                "scope": defaults.FIXTURE_DISK_SCOPE,
+            }
+        )
+        + b"\n",
         mode=defaults.RECORD_MODE,
     )
-    return stages.Advance(facts={
-        composition_keys.FROZEN: frozen, composition_keys.BUILD_PROFILE: builds.Profile.FEDORA,
-    })
+    return stages.Advance(
+        facts={
+            composition_keys.FROZEN: frozen,
+            composition_keys.BUILD_PROFILE: builds.Profile.FEDORA,
+        }
+    )
 
 
 STAGE = stages.SimpleStage(

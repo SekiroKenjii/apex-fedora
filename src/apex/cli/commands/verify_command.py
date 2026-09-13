@@ -26,7 +26,7 @@ from apex.cli import commands, commandspecs, verifyinputs
 from apex.kernel import encoding, errors, identifiers, refusals
 from apex.model import machines
 from apex.pipeline import runner
-from apex.verification import installerfault
+from apex.verification import desktopplans, installerfault, testaccess
 from apex.verification.recipes import (
     dedupe_recipe,
     desktop_render_recipe,
@@ -59,9 +59,19 @@ FINGERPRINT_RPMS = "fingerprint-rpms"
 FINGERPRINT_GTK = "fingerprint-gtk"
 DEDUPE = "dedupe"
 RECIPES = (
-    LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST,
-    LIVE_OBSERVE, VENTOY_OBSERVE, LIVE_LOCK, INSTALLER_PAYLOAD, INSTALLER_DIAGNOSTICS,
-    FINGERPRINT_RPMS, FINGERPRINT_GTK, DEDUPE,
+    LIVE_PROTECTION,
+    DESKTOP_THEME,
+    DESKTOP_RENDER,
+    FINGERPRINT_CLEANUP,
+    INSTALLER_TRUST,
+    LIVE_OBSERVE,
+    VENTOY_OBSERVE,
+    LIVE_LOCK,
+    INSTALLER_PAYLOAD,
+    INSTALLER_DIAGNOSTICS,
+    FINGERPRINT_RPMS,
+    FINGERPRINT_GTK,
+    DEDUPE,
 )
 CASES: dict[str, str] = {
     "observe": LIVE_OBSERVE,
@@ -69,16 +79,20 @@ CASES: dict[str, str] = {
     "usb-write-denial": LIVE_PROTECTION,
     "lock-fault": LIVE_LOCK,
 }
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog=f"apex {NAME}", description=SUMMARY)
     parser.add_argument("recipe", choices=(*RECIPES, *CASES))
     parser.add_argument("--user", help="the guest account the shell opens as")
     parser.add_argument(
-        "--serial", action="store_true",
+        "--serial",
+        action="store_true",
         help="reach the guest's rescue shell over the machine's serial socket, not ssh",
     )
     parser.add_argument(
-        "--credentials", type=Path,
+        "--credentials",
+        type=Path,
         help="the disposable account's credentials file, inside the runtime root",
     )
     parser.add_argument("--build", help="the completed image build a builder recipe tests")
@@ -99,18 +113,32 @@ class Recipe:
 
 def _live_protection(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return live_protection_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
-        candidate=verifyinputs.required_candidate(inputs), witness=inputs.lease.intent.witness,
+        inputs.ports,
+        guest=inputs.guest,
+        wheel=inputs.wheel,
+        candidate=verifyinputs.required_candidate(inputs),
+        witness=inputs.lease.intent.witness,
         recorder=inputs.recorder,
     )
 
 
-def _desktop_theme(inputs: verifyinputs.Inputs) -> runner.Outcome:
-    return desktop_theme_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
-        candidate=verifyinputs.required_candidate(inputs), witness=inputs.lease.intent.witness,
-        recorder=inputs.recorder, monitor=inputs.lease.intent.monitor, root=inputs.root,
+def _desktop_inputs(
+    inputs: verifyinputs.Inputs, *, credentials: testaccess.Credentials | None = None
+) -> desktopplans.Inputs:
+    return desktopplans.Inputs(
+        guest=inputs.guest,
+        wheel=inputs.wheel,
+        candidate=verifyinputs.required_candidate(inputs),
+        witness=inputs.lease.intent.witness,
+        recorder=inputs.recorder,
+        monitor=inputs.lease.intent.monitor,
+        root=inputs.root,
+        credentials=credentials,
     )
+
+
+def _desktop_theme(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return desktop_theme_recipe.verify(inputs.ports, _desktop_inputs(inputs))
 
 
 def _desktop_render(inputs: verifyinputs.Inputs) -> runner.Outcome:
@@ -121,10 +149,7 @@ def _desktop_render(inputs: verifyinputs.Inputs) -> runner.Outcome:
             remedy="name the account's credentials file with --credentials",
         )
     return desktop_render_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
-        candidate=verifyinputs.required_candidate(inputs), witness=inputs.lease.intent.witness,
-        recorder=inputs.recorder, monitor=inputs.lease.intent.monitor,
-        credentials=inputs.credentials, root=inputs.root,
+        inputs.ports, _desktop_inputs(inputs, credentials=inputs.credentials)
     )
 
 
@@ -136,8 +161,13 @@ def _fingerprint_cleanup(inputs: verifyinputs.Inputs) -> runner.Outcome:
             remedy="name that build with --build",
         )
     return fingerprint_cleanup_recipe.verify(
-        inputs.ports, builder=inputs.guest, wheel=inputs.wheel, parent=inputs.parent,
-        witness=inputs.lease.intent.witness, recorder=inputs.recorder, root=inputs.root,
+        inputs.ports,
+        builder=inputs.guest,
+        wheel=inputs.wheel,
+        parent=inputs.parent,
+        witness=inputs.lease.intent.witness,
+        recorder=inputs.recorder,
+        root=inputs.root,
         repository=inputs.repository,
     )
 
@@ -154,22 +184,31 @@ def _built_packages(inputs: verifyinputs.Inputs, name: str) -> identifiers.Build
 
 def _dedupe(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return dedupe_recipe.verify(
-        inputs.ports, builder=inputs.guest, wheel=inputs.wheel,
-        parent=_built_packages(inputs, DEDUPE), root=inputs.root,
+        inputs.ports,
+        builder=inputs.guest,
+        wheel=inputs.wheel,
+        parent=_built_packages(inputs, DEDUPE),
+        root=inputs.root,
     )
 
 
 def _fingerprint_rpms(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return fingerprint_rpms_test_recipe.verify(
-        inputs.ports, builder=inputs.guest, parent=_built_packages(inputs, FINGERPRINT_RPMS),
-        root=inputs.root, repository=inputs.repository,
+        inputs.ports,
+        builder=inputs.guest,
+        parent=_built_packages(inputs, FINGERPRINT_RPMS),
+        root=inputs.root,
+        repository=inputs.repository,
     )
 
 
 def _fingerprint_gtk(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return fingerprint_gtk_recipe.verify(
-        inputs.ports, builder=inputs.guest, parent=_built_packages(inputs, FINGERPRINT_GTK),
-        root=inputs.root, repository=inputs.repository,
+        inputs.ports,
+        builder=inputs.guest,
+        parent=_built_packages(inputs, FINGERPRINT_GTK),
+        root=inputs.root,
+        repository=inputs.repository,
     )
 
 
@@ -205,9 +244,14 @@ def _installer_payload(inputs: verifyinputs.Inputs) -> runner.Outcome:
             remedy=f"name it with --case, one of {', '.join(installerfault.CASES)}",
         )
     return installer_payload_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, root=inputs.root,
-        run_directory=inputs.lease.intent.run_directory, process=inputs.lease.identity.process,
-        case=inputs.case, wrong_key=inputs.wrong_key,
+        inputs.ports,
+        guest=inputs.guest,
+        wheel=inputs.wheel,
+        root=inputs.root,
+        run_directory=inputs.lease.intent.run_directory,
+        process=inputs.lease.identity.process,
+        case=inputs.case,
+        wrong_key=inputs.wrong_key,
     )
 
 
@@ -256,8 +300,12 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
             remedy=f"those name the {INSTALLER_PAYLOAD} fault's case",
         )
     asked = verifyinputs.Asked(
-        user=arguments.user, credentials=arguments.credentials, build=arguments.build,
-        serial=arguments.serial, case=arguments.case, wrong_key=arguments.wrong_key,
+        user=arguments.user,
+        credentials=arguments.credentials,
+        build=arguments.build,
+        serial=arguments.serial,
+        case=arguments.case,
+        wrong_key=arguments.wrong_key,
     )
     inputs = verifyinputs.gather(request.context, role=recipe.role, asked=asked)
     outcome = recipe.run(inputs)
@@ -277,7 +325,8 @@ JUST_RECIPES = (
         "verify-desktop-theme", ("user",), (NAME, DESKTOP_THEME, "--user", "{{user}}")
     ),
     commandspecs.Recipe(
-        "verify-desktop-render", ("credentials",),
+        "verify-desktop-render",
+        ("credentials",),
         (NAME, DESKTOP_RENDER, "--credentials", "{{credentials}}"),
     ),
     commandspecs.Recipe(
@@ -286,13 +335,22 @@ JUST_RECIPES = (
     commandspecs.Recipe("test-installer-trust", (), (NAME, INSTALLER_TRUST)),
     commandspecs.Recipe("test-live-check", ("case",), (NAME, "{{case}}", "--serial")),
     commandspecs.Recipe(
-        "test-installer-fault", ("case",),
+        "test-installer-fault",
+        ("case",),
         (NAME, INSTALLER_PAYLOAD, "--case", "{{case}}", "--serial"),
     ),
     commandspecs.Recipe(
-        "test-installer-wrong-key", ("public_key",),
-        (NAME, INSTALLER_PAYLOAD, "--case", installerfault.KEY_CASE, "--wrong-key",
-         "{{public_key}}", "--serial"),
+        "test-installer-wrong-key",
+        ("public_key",),
+        (
+            NAME,
+            INSTALLER_PAYLOAD,
+            "--case",
+            installerfault.KEY_CASE,
+            "--wrong-key",
+            "{{public_key}}",
+            "--serial",
+        ),
     ),
     commandspecs.Recipe("installer-logs-prepare", (), (NAME, INSTALLER_DIAGNOSTICS, "--serial")),
     commandspecs.Recipe(
@@ -304,6 +362,4 @@ JUST_RECIPES = (
     commandspecs.Recipe("dedupe", ("fixture_id",), (NAME, DEDUPE, "--build", "{{fixture_id}}")),
 )
 
-commands.declare(
-    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=JUST_RECIPES)
-)
+commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=JUST_RECIPES))

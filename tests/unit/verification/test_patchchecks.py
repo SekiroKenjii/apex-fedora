@@ -56,14 +56,17 @@ def host(ports: portset.HostPorts, processes: fake_process.ScriptedProcess) -> p
 
 
 def test_root_is_refused_before_the_source_is_read(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, monkeypatch: pytest.MonkeyPatch,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     monkeypatch.setattr(patchbench.os, "geteuid", lambda: 0)
 
     with pytest.raises(errors.Refusal) as raised:
-        dialogcheck.check(host(ports, fake_process.ScriptedProcess()), root, REPOSITORY,
-                          tmp_path / "absent.c")
+        dialogcheck.check(
+            host(ports, fake_process.ScriptedProcess()), root, REPOSITORY, tmp_path / "absent.c"
+        )
 
     assert raised.value.reason is refusals.RefusalReason.HOST_RUNS_AS_ROOT
 
@@ -95,8 +98,13 @@ def test_a_handler_is_extracted_whole_and_a_duplicate_is_refused() -> None:
 def dialog_results(variant: str, case: str) -> dict[str, object]:
     patched = variant == "patched"
     counts = {
-        "release_calls": 1, "stop_calls": 1, "cancel_calls": 0, "claim_calls": 0,
-        "state_after_signal": 68, "state_after_callback": 4, "cancelled_callback": False,
+        "release_calls": 1,
+        "stop_calls": 1,
+        "cancel_calls": 0,
+        "claim_calls": 0,
+        "state_after_signal": 68,
+        "state_after_callback": 4,
+        "cancelled_callback": False,
     }
     if case in dialogcheck.CALLBACK_CASES:
         counts["stop_calls"] = 0
@@ -131,10 +139,21 @@ def dialog_processes(root: safepaths.RuntimeRoot, checkout: Path) -> fake_proces
         ("pkg-config", "--modversion", "gio-2.0"): fake_process.Reply(stdout=b"2.88.3\n"),
     }
     for variant in ("unpatched", "patched"):
-        replies[(
-            "cc", "-std=c11", "-O0", "-Wall", "-Werror", "-Wno-unused-parameter",
-            "-Wno-unused-function", f"{work}/{variant}.c", "-o", f"{work}/{variant}", *FLAGS,
-        )] = fake_process.Reply()
+        replies[
+            (
+                "cc",
+                "-std=c11",
+                "-O0",
+                "-Wall",
+                "-Werror",
+                "-Wno-unused-parameter",
+                "-Wno-unused-function",
+                f"{work}/{variant}.c",
+                "-o",
+                f"{work}/{variant}",
+                *FLAGS,
+            )
+        ] = fake_process.Reply()
         for case in dialogcheck.CASES:
             replies[(f"{work}/{variant}", case)] = fake_process.Reply(
                 stdout=json.dumps(dialog_results(variant, case)).encode()
@@ -250,8 +269,18 @@ def elan_processes(root: safepaths.RuntimeRoot, checkout: Path) -> fake_process.
             fake_process.Reply()
         ),
         ("patch", "--batch", "--fuzz=0", "-R", "-p1", "-i", str(patch)): fake_process.Reply(),
-        ("cc", "-std=c11", "-O0", "-Wall", "-Werror", "-Wno-unused-parameter",
-         f"{work}/harness.c", "-o", binary, *FLAGS): fake_process.Reply(),
+        (
+            "cc",
+            "-std=c11",
+            "-O0",
+            "-Wall",
+            "-Werror",
+            "-Wno-unused-parameter",
+            f"{work}/harness.c",
+            "-o",
+            binary,
+            *FLAGS,
+        ): fake_process.Reply(),
         ("cc", "--version"): fake_process.Reply(stdout=b"cc (GCC) 15.1\n"),
         ("pkg-config", "--modversion", "gio-2.0"): fake_process.Reply(stdout=b"2.88.3\n"),
     }
@@ -261,7 +290,7 @@ def elan_processes(root: safepaths.RuntimeRoot, checkout: Path) -> fake_process.
         replies[(binary, case)] = fake_process.Reply(stdout=(elan_line(-1) + "\n").encode())
     for case in elancheck.STATUS:
         replies[(binary, case)] = fake_process.Reply(
-            stdout=(elan_line(int(case[len("status-"):])) + "\n").encode()
+            stdout=(elan_line(int(case[len("status-") :])) + "\n").encode()
         )
     replies[(binary, elancheck.BUDGET)] = fake_process.Reply(
         stdout=((elan_line(-1) + "\n") * elancheck.BUDGET_LINES).encode()
@@ -335,8 +364,10 @@ def test_the_shipped_elan_patch_is_opt_in_bounded_and_not_in_the_image() -> None
     assert "error->message" not in added
     assert added.count("transfer->buffer[0]") == 1
     for condition in (
-        "!error && self->cmd == &pre_scan_cmd", "transfer->endpoint == ELAN_EP_CMD_IN",
-        "transfer->length == 1 && transfer->actual_length == 1", "transfer->buffer != NULL",
+        "!error && self->cmd == &pre_scan_cmd",
+        "transfer->endpoint == ELAN_EP_CMD_IN",
+        "transfer->length == 1 && transfer->actual_length == 1",
+        "transfer->buffer != NULL",
     ):
         assert condition in added
     assert "FP_DEBUG_TRANSFER" in added and "G_MESSAGES_DEBUG" in added

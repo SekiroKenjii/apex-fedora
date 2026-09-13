@@ -86,9 +86,7 @@ class StoreLocation:
 class ProofStore:
     """Absorb bytes, hand back a citation, and refuse to return anything that changed."""
 
-    def __init__(
-        self, *, location: StoreLocation, filesystem: files.FileSystemPort
-    ) -> None:
+    def __init__(self, *, location: StoreLocation, filesystem: files.FileSystemPort) -> None:
         self._location = location
         self._files = filesystem
         self.absorbed = 0

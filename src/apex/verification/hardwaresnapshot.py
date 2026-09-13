@@ -24,9 +24,15 @@ NOT_TESTED = "NOT TESTED"
 READ = "READ"
 UNAVAILABLE = "UNAVAILABLE"
 FIXED_PATHS = (
-    "/etc/os-release", "/proc/sys/kernel/random/boot_id", "/proc/uptime", "/proc/cmdline",
-    "/proc/asound/cards", "/proc/asound/pcm", "/sys/class/dmi/id/sys_vendor",
-    "/sys/class/dmi/id/product_name", "/sys/class/dmi/id/board_name",
+    "/etc/os-release",
+    "/proc/sys/kernel/random/boot_id",
+    "/proc/uptime",
+    "/proc/cmdline",
+    "/proc/asound/cards",
+    "/proc/asound/pcm",
+    "/sys/class/dmi/id/sys_vendor",
+    "/sys/class/dmi/id/product_name",
+    "/sys/class/dmi/id/board_name",
     "/sys/module/snd_hda_intel/parameters/model",
 )
 ASOUND = Path("/proc/asound")
@@ -35,8 +41,15 @@ USB_DEVICES = Path("/sys/bus/usb/devices")
 CARD = re.compile(r"card[0-9]+")
 CODEC = re.compile(r"hwC[0-9]+D[0-9]+")
 CODEC_FILES = (
-    "init_pin_configs", "driver_pin_configs", "user_pin_configs", "init_verbs", "hints",
-    "modelname", "subsystem_id", "vendor_id", "power/runtime_status",
+    "init_pin_configs",
+    "driver_pin_configs",
+    "user_pin_configs",
+    "init_verbs",
+    "hints",
+    "modelname",
+    "subsystem_id",
+    "vendor_id",
+    "power/runtime_status",
 )
 FINGERPRINT_VENDOR = "04f3"
 FINGERPRINT_PRODUCT = "0c6e"
@@ -44,20 +57,51 @@ COMMANDS: Mapping[str, tuple[str, ...]] = {
     "kernel": ("uname", "-r"),
     "pipewire": ("wpctl", "status"),
     "fingerprint-unit": (
-        "systemctl", "show", "fprintd.service", "-p", "ActiveState", "-p", "MainPID",
-        "-p", "ExecMainStartTimestampMonotonic", "-p", "NRestarts",
+        "systemctl",
+        "show",
+        "fprintd.service",
+        "-p",
+        "ActiveState",
+        "-p",
+        "MainPID",
+        "-p",
+        "ExecMainStartTimestampMonotonic",
+        "-p",
+        "NRestarts",
     ),
     "fingerprint-owner": (
-        "busctl", "--system", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-        "org.freedesktop.DBus", "GetNameOwner", "s", "net.reactivated.Fprint",
+        "busctl",
+        "--system",
+        "call",
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        "GetNameOwner",
+        "s",
+        "net.reactivated.Fprint",
     ),
     "fingerprint-journal": (
-        "journalctl", "-b", "-u", "fprintd.service", "-n", "400", "-o", "short-monotonic",
+        "journalctl",
+        "-b",
+        "-u",
+        "fprintd.service",
+        "-n",
+        "400",
+        "-o",
+        "short-monotonic",
         "--no-pager",
     ),
     "audio-kernel-journal": (
-        "journalctl", "-b", "-k", "-g", "snd_hda|hdaudio|ALC294|audio", "-n", "300", "-o",
-        "short-monotonic", "--no-pager",
+        "journalctl",
+        "-b",
+        "-k",
+        "-g",
+        "snd_hda|hdaudio|ALC294|audio",
+        "-n",
+        "300",
+        "-o",
+        "short-monotonic",
+        "--no-pager",
     ),
     "audio-routing": ("pactl", "--format=json", "list", "sinks"),
 }
@@ -118,7 +162,8 @@ def paths(ports: portset.HostPorts) -> tuple[Path, ...]:
     found = [Path(item) for item in FIXED_PATHS]
     for card in _cards(ports):
         found.extend(
-            ASOUND / card / name for name in _entries(ports, ASOUND / card)
+            ASOUND / card / name
+            for name in _entries(ports, ASOUND / card)
             if name.startswith("codec#")
         )
     for codec in _entries(ports, SOUND_CLASS):
@@ -135,7 +180,7 @@ def programs(ports: portset.HostPorts) -> dict[str, tuple[str, ...]]:
     elif ports.processes.locate("rpm") is not None:
         found["packages"] = ("rpm", "-q", *RPM_PACKAGES)
     for card in _cards(ports):
-        found[f"{card}-mixer"] = ("amixer", "-c", card[len("card"):], "contents")
+        found[f"{card}-mixer"] = ("amixer", "-c", card[len("card") :], "contents")
     return found
 
 
@@ -149,12 +194,14 @@ def usb_devices(ports: portset.HostPorts) -> list[encoding.JsonValue]:
             str(vendor.get("text", "")).strip() == FINGERPRINT_VENDOR
             and str(product.get("text", "")).strip() == FINGERPRINT_PRODUCT
         ):
-            found.append({
-                "path": str(device),
-                "id": f"{FINGERPRINT_VENDOR}:{FINGERPRINT_PRODUCT}",
-                "product": read(ports, device / "product"),
-                "runtime_status": read(ports, device / "power/runtime_status"),
-            })
+            found.append(
+                {
+                    "path": str(device),
+                    "id": f"{FINGERPRINT_VENDOR}:{FINGERPRINT_PRODUCT}",
+                    "product": read(ports, device / "product"),
+                    "runtime_status": read(ports, device / "power/runtime_status"),
+                }
+            )
     return found
 
 

@@ -44,9 +44,7 @@ def test_a_condition_that_becomes_true_is_awaited(clocks: clock_port.ClockPort) 
     assert remaining[0] <= 0
 
 
-def test_a_condition_that_never_holds_raises_a_port_failure(
-    clocks: clock_port.ClockPort,
-) -> None:
+def test_a_condition_that_never_holds_raises_a_port_failure(clocks: clock_port.ClockPort) -> None:
     with pytest.raises(errors.PortFailure) as raised:
         clocks.wait_until(lambda: False, policy(0.05, "the guest answers"))
 

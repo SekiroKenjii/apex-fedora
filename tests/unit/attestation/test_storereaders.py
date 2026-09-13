@@ -79,9 +79,7 @@ def test_two_readers_claiming_one_mark_fail_the_seal_naming_both_modules() -> No
     collector.add(key, specification(), at=provenance.Provenance("first_reader", "read", 1))
 
     with pytest.raises(errors.RegistrationError) as raised:
-        collector.add(
-            key, specification(), at=provenance.Provenance("second_reader", "read", 1)
-        )
+        collector.add(key, specification(), at=provenance.Provenance("second_reader", "read", 1))
 
     assert "first_reader" in str(raised.value)
     assert "second_reader" in str(raised.value)

@@ -15,12 +15,7 @@ class LinuxBlockDevices(blockdevices.BlockDevicePort):
     environment = claims.EnvironmentKind.BUILD
 
     def rewrite(
-        self,
-        node: safepaths.SafePath,
-        *,
-        expected: files.DeviceNumber,
-        offset: int,
-        length: int,
+        self, node: safepaths.SafePath, *, expected: files.DeviceNumber, offset: int, length: int
     ) -> blockdevices.Rewrite:
         try:
             descriptor = os.open(node.path, FLAGS)

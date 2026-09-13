@@ -42,8 +42,7 @@ class Basename:
                 refusals.RefusalReason.FILENAME_NOT_PLAIN,
                 subject=self.value or "(empty)",
                 remedy=(
-                    "a filename is one path component of letters, digits, dot, dash and "
-                    "underscore"
+                    "a filename is one path component of letters, digits, dot, dash and underscore"
                 ),
             )
 

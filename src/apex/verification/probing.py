@@ -59,7 +59,12 @@ def observe(
     token: identifiers.Token,
 ) -> Observation:
     reply = agentrun.run_unit(
-        ports, target, install, unit=case.unit, arguments=case.arguments, token=token,
+        ports,
+        target,
+        install,
+        unit=case.unit,
+        arguments=case.arguments,
+        token=token,
         privileged=case.privileged,
     )
     return Observation(

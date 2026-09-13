@@ -59,9 +59,7 @@ def test_the_second_hash_of_an_unchanged_file_is_served_from_the_cache(
     assert digests.reads == before
 
 
-def test_a_changed_file_is_read_again(
-    digests: CountsReads, root: safepaths.RuntimeRoot
-) -> None:
+def test_a_changed_file_is_read_again(digests: CountsReads, root: safepaths.RuntimeRoot) -> None:
     path = written(root, "a.bin", b"before")
     digests.file(path)
     before = digests.reads

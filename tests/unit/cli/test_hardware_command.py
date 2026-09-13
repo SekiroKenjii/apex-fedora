@@ -19,22 +19,27 @@ from apex.wiring import contexts
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 CALL = {
-    "type": "method_call", "cookie": 2, "timestamp-realtime": 100, "sender": ":1.2",
-    "destination": "net.reactivated.Fprint", "path": "/net/reactivated/Fprint/Device/0",
-    "interface": "net.reactivated.Fprint.Device", "member": "Claim",
+    "type": "method_call",
+    "cookie": 2,
+    "timestamp-realtime": 100,
+    "sender": ":1.2",
+    "destination": "net.reactivated.Fprint",
+    "path": "/net/reactivated/Fprint/Device/0",
+    "interface": "net.reactivated.Fprint.Device",
+    "member": "Claim",
     "payload": {"type": "s", "data": ["PRIVATE"]},
 }
 REPLY = {
-    "type": "method_return", "reply_cookie": 2, "timestamp-realtime": 101, "sender": ":1.10",
+    "type": "method_return",
+    "reply_cookie": 2,
+    "timestamp-realtime": 101,
+    "sender": ":1.10",
     "destination": ":1.2",
 }
 
 
 def request(
-    ports: portset.HostPorts,
-    root: safepaths.RuntimeRoot | None,
-    *arguments: str,
-    stdin: str = "",
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot | None, *arguments: str, stdin: str = ""
 ) -> commandspecs.Request:
     return commandspecs.Request(
         arguments=arguments,
@@ -61,8 +66,11 @@ def test_a_coefficient_is_decoded_without_a_root_or_a_device(ports: portset.Host
 
     assert reply.exit_code == 0
     assert reply.document == {
-        "nid": "0x20", "hwdep_word": "0x20050000", "canonical_verb": "0x500",
-        "effective_parameter": "0x0000", "parameter_changed_by_overlap": False,
+        "nid": "0x20",
+        "hwdep_word": "0x20050000",
+        "canonical_verb": "0x500",
+        "effective_parameter": "0x0000",
+        "parameter_changed_by_overlap": False,
         "device_access": False,
     }
 

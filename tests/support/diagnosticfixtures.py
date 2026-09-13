@@ -31,10 +31,15 @@ def bundle(
     process: fake_process.ScriptedProcess, files: fake_files.MemoryFiles
 ) -> agentports.AgentPorts:
     return agentports.AgentPorts(
-        processes=process, files=files, clock=fake_clock.ManualClock(),
-        containers=fake_containers.FakeRegistry(), digests=fake_digesting.CountingDigests(),
-        archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        processes=process,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 
@@ -63,9 +68,7 @@ def installer() -> fake_files.MemoryFiles:
         b'{"reference": "localhost/apex-payload:' + b"b" * 64 + b'"}',
         mode=PUBLIC,
     )
-    files.write_atomic(
-        safepaths.SafePath(Path(defaults.BOOT_ID)), b"fixture-boot\n", mode=PUBLIC
-    )
+    files.write_atomic(safepaths.SafePath(Path(defaults.BOOT_ID)), b"fixture-boot\n", mode=PUBLIC)
     files.write_atomic(
         safepaths.SafePath(Path("/tmp/anaconda.log")), b"anaconda started\n", mode=PUBLIC
     )

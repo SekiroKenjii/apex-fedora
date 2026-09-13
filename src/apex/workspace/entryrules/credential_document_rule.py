@@ -24,7 +24,6 @@ def inspect(subject: rulespecs.EntrySubject) -> Sequence[rulespecs.Finding]:
     )
 
 
-
 entryrules.declare(
     rulespecs.EntryRule(
         id=RULE,

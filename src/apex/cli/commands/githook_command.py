@@ -30,8 +30,10 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     standard_input = request.read_input() if arguments.kind == READS_INPUT else ""
     try:
         code, text = hookdispatch.run(
-            [str(arguments.kind), *arguments.arguments], standard_input,
-            processes=processes, repository=request.context.repository.path,
+            [str(arguments.kind), *arguments.arguments],
+            standard_input,
+            processes=processes,
+            repository=request.context.repository.path,
         )
     except errors.ApexError as failure:
         return commandspecs.Reply(narrative=f"{failure}\n", exit_code=failure.exit_code)

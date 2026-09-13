@@ -37,9 +37,7 @@ class RuntimeRoot:
                 remedy="choose a location below one of the permitted bases",
             )
         if not resolved.is_dir():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(resolved)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(resolved))
         observed = stat.S_IMODE(resolved.stat().st_mode)
         if observed != PRIVATE_DIRECTORY_MODE.value:
             raise errors.Refusal(
@@ -58,14 +56,10 @@ class RuntimeRoot:
         every containment rule below it optional.
         """
         if path.is_symlink():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(path)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(path))
         resolved = path.resolve()
         if not resolved.is_dir():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path))
         observed = stat.S_IMODE(resolved.stat().st_mode)
         if observed != PRIVATE_DIRECTORY_MODE.value:
             raise errors.Refusal(
@@ -78,9 +72,7 @@ class RuntimeRoot:
     def child(self, relative: str) -> SafePath:
         target = (self.path / relative).resolve()
         if not target.is_relative_to(self.path):
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_OUTSIDE_RUNTIME_ROOT, subject=relative
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_OUTSIDE_RUNTIME_ROOT, subject=relative)
         return SafePath(target)
 
 
@@ -97,9 +89,7 @@ class SafePath:
     @classmethod
     def regular_file(cls, candidate: Path, *, within: RuntimeRoot) -> Self:
         if candidate.is_symlink():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(candidate)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(candidate))
         resolved = candidate.resolve()
         if not resolved.is_relative_to(within.path):
             raise errors.Refusal(
@@ -135,9 +125,7 @@ class RegularFile:
     @classmethod
     def adopt(cls, candidate: Path) -> Self:
         if candidate.is_symlink():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(candidate)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(candidate))
         resolved = candidate.resolve()
         if not resolved.is_file():
             raise errors.Refusal(
@@ -161,14 +149,10 @@ class SourceRoot:
     @classmethod
     def adopt(cls, path: Path) -> Self:
         if path.is_symlink():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(path)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=str(path))
         resolved = path.resolve()
         if not resolved.is_dir():
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_NOT_A_DIRECTORY, subject=str(path))
         return cls(resolved)
 
 

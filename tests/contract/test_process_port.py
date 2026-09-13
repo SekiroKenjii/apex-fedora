@@ -35,9 +35,7 @@ def test_a_failing_run_reports_its_exit_code(processes: process.ProcessPort) -> 
 
 def test_output_beyond_the_limit_is_cut_and_declared(processes: process.ProcessPort) -> None:
     completed = processes.run(
-        commands.Argv.of("printf", "abcdefghij"),
-        deadline=short(),
-        limit=commands.OutputLimit(4),
+        commands.Argv.of("printf", "abcdefghij"), deadline=short(), limit=commands.OutputLimit(4)
     )
 
     assert completed.stdout == b"abcd"
@@ -117,7 +115,9 @@ def test_variables_reach_the_program_on_top_of_the_inherited_environment(
     processes: process.ProcessPort,
 ) -> None:
     completed = processes.run(
-        commands.Argv.of("env"), deadline=short(), limit=commands.OutputLimit.default(),
+        commands.Argv.of("env"),
+        deadline=short(),
+        limit=commands.OutputLimit.default(),
         variables={"APEX_CONTRACT": "held"},
     )
 

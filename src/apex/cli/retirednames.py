@@ -16,7 +16,7 @@ RETIRED: dict[str, str] = {
     "trust-development-key": "apex trust development-key",
     "verify-artifact": "apex trust verify --build <id> --key <public key>",
     "test-vm": "apex machine start --role test --disk <qcow2> [--iso --medium --extra-disk "
-               "--guest-ssh --serial-console --usb-bus --boot-usb]",
+    "--guest-ssh --serial-console --usb-bus --boot-usb]",
     "test-hotplug-usb": "apex machine hotplug-usb --source <qcow2>",
     "test-power-loss": "apex machine power-loss",
     "test-fingerprint": "apex verify fingerprint-cleanup --build <id>",

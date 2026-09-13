@@ -21,21 +21,25 @@ WHEEL = "wheel"
 
 def user_data(public_key: str) -> bytes:
     document: encoding.Document = {
-        "users": [{
-            "name": defaults.BUILDER_USER,
-            "groups": [WHEEL],
-            "sudo": [SUDO],
-            "shell": SHELL,
-            "lock_passwd": True,
-            "ssh_authorized_keys": [public_key],
-        }],
+        "users": [
+            {
+                "name": defaults.BUILDER_USER,
+                "groups": [WHEEL],
+                "sudo": [SUDO],
+                "shell": SHELL,
+                "lock_passwd": True,
+                "ssh_authorized_keys": [public_key],
+            }
+        ],
         "ssh_pwauth": False,
         "disable_root": True,
-        "write_files": [{
-            "path": defaults.BUILDER_MARKER,
-            "permissions": defaults.BUILDER_MARKER_MODE,
-            "content": defaults.BUILDER_MARKER_TEXT + "\n",
-        }],
+        "write_files": [
+            {
+                "path": defaults.BUILDER_MARKER,
+                "permissions": defaults.BUILDER_MARKER_MODE,
+                "content": defaults.BUILDER_MARKER_TEXT + "\n",
+            }
+        ],
         "runcmd": [["systemctl", "disable", "--now", defaults.PACKAGEKIT_UNIT]],
     }
     return CLOUD_CONFIG + encoding.canonical(document) + b"\n"

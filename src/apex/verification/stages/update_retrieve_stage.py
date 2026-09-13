@@ -62,8 +62,11 @@ def for_case(case: probing.ProbeCase) -> stages.SimpleStage[portset.HostPorts]:
         _own(context, output)
         try:
             context.ports.guest.receive(
-                context.facts[verifykeys.GUEST], remote=output, into=exports.directory(root, run),
-                recursive=True, deadline=defaults.TRANSFER_DEADLINE,
+                context.facts[verifykeys.GUEST],
+                remote=output,
+                into=exports.directory(root, run),
+                recursive=True,
+                deadline=defaults.TRANSFER_DEADLINE,
             )
         except errors.PortFailure as failure:
             return stages.Fail(cause=failure.cause)
@@ -76,7 +79,10 @@ def for_case(case: probing.ProbeCase) -> stages.SimpleStage[portset.HostPorts]:
     return stages.SimpleStage(
         id=identifiers.StageId("update.retrieve"),
         reads=(
-            verifykeys.GUEST, verifykeys.WORK, observed, composition_keys.RUNTIME_ROOT,
+            verifykeys.GUEST,
+            verifykeys.WORK,
+            observed,
+            composition_keys.RUNTIME_ROOT,
             composition_keys.RUN_ID,
         ),
         writes=(verifykeys.FIXTURES,),

@@ -40,8 +40,11 @@ def request(ports: portset.HostPorts, *arguments: str) -> commandspecs.Request:
 def test_an_artifact_kind_names_its_recipe_and_the_document_is_the_frozen_one(
     ports: portset.HostPorts,
 ) -> None:
-    for kind, recipe in (("image", image_recipe), ("qcow2", disk_artifact_recipe),
-                         ("installer", disk_artifact_recipe)):
+    for kind, recipe in (
+        ("image", image_recipe),
+        ("qcow2", disk_artifact_recipe),
+        ("installer", disk_artifact_recipe),
+    ):
         reply = plan_command.run(request(ports, "artifact", kind))
 
         assert reply.document == plans.render(recipe.PLAN), kind
@@ -50,9 +53,7 @@ def test_an_artifact_kind_names_its_recipe_and_the_document_is_the_frozen_one(
         assert reply.exit_code == 0 and reply.narrative == ""
 
 
-def test_a_verification_recipe_is_planned_by_the_check_it_records(
-    ports: portset.HostPorts,
-) -> None:
+def test_a_verification_recipe_is_planned_by_the_check_it_records(ports: portset.HostPorts) -> None:
     reply = plan_command.run(request(ports, "verify", "desktop-theme"))
 
     assert reply.document == plans.render(desktop_theme_recipe.PLAN)
@@ -74,7 +75,9 @@ def test_an_upgrade_to_a_declared_release_prints_the_four_lists_and_writes_nothi
     ports: portset.HostPorts, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     later = dataclasses.replace(
-        fedora44_release.PROFILE, id=identifiers.ProfileId("fedora-45"), major=45,
+        fedora44_release.PROFILE,
+        id=identifiers.ProfileId("fedora-45"),
+        major=45,
         dist_tag=release.DistTag("fc45"),
     )
     monkeypatch.setattr(

@@ -55,12 +55,19 @@ ERRORS = {
 DISKS = {
     "blockdevices": [
         {
-            "name": "vda", "size": 48 * 1024**3, "type": "disk", "serial": "target",
+            "name": "vda",
+            "size": 48 * 1024**3,
+            "type": "disk",
+            "serial": "target",
             "mountpoints": [None],
         },
         {
-            "name": "vdb", "size": 4 * 1024**3, "type": "disk", "serial": "apex-other-1",
-            "mountpoints": [None], "children": [{"name": "vdb1", "mountpoints": [None]}],
+            "name": "vdb",
+            "size": 4 * 1024**3,
+            "type": "disk",
+            "serial": "apex-other-1",
+            "mountpoints": [None],
+            "children": [{"name": "vdb1", "mountpoints": [None]}],
         },
         {"name": "zram0", "size": 1024**3, "type": "disk", "mountpoints": ["[SWAP]"]},
     ]
@@ -136,7 +143,8 @@ class Installer(fake_process.ScriptedProcess):
             record = {"status": spec.preflight_status, "error": error}
             self.files.write_atomic(
                 safepaths.SafePath(Path(defaults.INSTALLER_PREFLIGHT_RECORD)),
-                json.dumps(record).encode(), mode=PUBLIC,
+                json.dumps(record).encode(),
+                mode=PUBLIC,
             )
             if spec.creates_log:
                 self.files.write_atomic(
@@ -158,10 +166,15 @@ def installer_guest(
         files.make_directory(safepaths.SafePath(Path("/sys/class/net") / interface), mode=PUBLIC)
     process = Installer(spec, files, case)
     ports = agentports.AgentPorts(
-        processes=process, files=files, clock=fake_clock.ManualClock(),
-        containers=fake_containers.FakeRegistry(), digests=fake_digesting.CountingDigests(),
-        archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        processes=process,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return process, files, ports
 

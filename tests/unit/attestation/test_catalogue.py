@@ -109,8 +109,7 @@ def test_a_malformed_entry_is_a_registration_fault() -> None:
         catalogue.parse("vm", {"id": "boot.ten-cycles", "environment": "vm"})
     with pytest.raises(errors.RegistrationError):
         catalogue.parse(
-            "vm",
-            {"id": "boot.ten-cycles", "environment": "orbit", "summary": "ten boots in a row"},
+            "vm", {"id": "boot.ten-cycles", "environment": "orbit", "summary": "ten boots in a row"}
         )
     with pytest.raises(errors.RegistrationError):
         catalogue.parse(

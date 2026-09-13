@@ -28,12 +28,26 @@ FUNCTION_HEAD = "\nstatic void\n"
 DIALOG_STATE = re.compile(r"typedef enum \{[^}]+\} DialogState;")
 SOURCE_PATH = "panels/system/users/cc-fingerprint-dialog.c"
 HANDLERS = (
-    "handle_enroll_signal", "enroll_stop_cb", "enroll_stop", "on_device_owner_changed",
-    "cancel_button_clicked_cb", "cc_fingerprint_dialog_close_attempt",
+    "handle_enroll_signal",
+    "enroll_stop_cb",
+    "enroll_stop",
+    "on_device_owner_changed",
+    "cancel_button_clicked_cb",
+    "cc_fingerprint_dialog_close_attempt",
 )
 CASES = (
-    "disconnect", "cancel", "retry", "complete", "unknown-error", "unclaimed", "daemon-gone",
-    "daemon-present", "stop-success", "stop-error", "cancel-twice", "close-pending",
+    "disconnect",
+    "cancel",
+    "retry",
+    "complete",
+    "unknown-error",
+    "unclaimed",
+    "daemon-gone",
+    "daemon-present",
+    "stop-success",
+    "stop-error",
+    "cancel-twice",
+    "close-pending",
 )
 SIGNAL_CASES = ("disconnect", "cancel", "retry", "complete", "unknown-error")
 CALLBACK_CASES = ("stop-success", "stop-error", "cancel-twice")
@@ -120,7 +134,8 @@ RULES: tuple[tuple[str, Rule], ...] = (
     (
         "Repeated-cancel regression was not reproduced and fixed",
         lambda before, after: _count(before, "cancel-twice", "state_after_callback")
-        == STOPPING_ENROLLING and not _flag(after, "cancel-twice", "cancelled_callback"),
+        == STOPPING_ENROLLING
+        and not _flag(after, "cancel-twice", "cancelled_callback"),
     ),
     (
         "Close did not cancel its pending callback and release",
@@ -150,8 +165,7 @@ def _variant(
     program = bench.work / f"{name}.c"
     extracted = "\n".join(function(content, handler) for handler in HANDLERS)
     patchbench.write(
-        ports, program,
-        template.replace(STATE_MARKER, enum).replace(HANDLERS_MARKER, extracted),
+        ports, program, template.replace(STATE_MARKER, enum).replace(HANDLERS_MARKER, extracted)
     )
     binary = bench.work / name
     patchbench.compile_program(ports, bench, program, binary, *QUIETED)
@@ -169,8 +183,13 @@ def check(
 ) -> patchbench.Checked:
     patchbench.require_not_root()
     bench = patchbench.open_bench(
-        ports, root, repository, directory_name=defaults.DIALOG_TESTS_DIRECTORY,
-        lock_path=defaults.DIALOG_LOCK_PATH, entries_key="reviewed_sources", source=source,
+        ports,
+        root,
+        repository,
+        directory_name=defaults.DIALOG_TESTS_DIRECTORY,
+        lock_path=defaults.DIALOG_LOCK_PATH,
+        entries_key="reviewed_sources",
+        source=source,
     )
     template = patchbench.text(ports, repository.path / defaults.DIALOG_HARNESS_PATH)
     content = patchbench.text(ports, bench.source.path)

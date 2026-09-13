@@ -116,9 +116,7 @@ def _verify(
 
 
 def run(
-    ports: agentports.AgentPorts,
-    *,
-    arguments: Mapping[str, encoding.JsonValue],
+    ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     guestguard.require_installed(ports)
     expected = identifiers.Digest.parse(_argument(arguments, EXPECTED_ARGUMENT))
@@ -149,4 +147,3 @@ def run(
 
 
 units.declare(units.Unit(id=identifiers.ProbeId("recovery.installed"), run=run))
-

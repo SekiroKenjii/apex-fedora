@@ -228,9 +228,10 @@ def test_the_monitor_wait_is_bounded_by_the_declared_deadline(host: Host) -> Non
     start(host)
 
     assert isinstance(host.hypervisor, fake_hypervisor.FakeQemu)
-    assert host.hypervisor.spawned[0].identity.boot_ticks == int(
-        defaults.MONITOR_APPEARS.budget.seconds
-    ) + 1
+    assert (
+        host.hypervisor.spawned[0].identity.boot_ticks
+        == int(defaults.MONITOR_APPEARS.budget.seconds) + 1
+    )
     assert isinstance(defaults.MONITOR_APPEARS, timing.Deadline)
 
 
@@ -250,9 +251,9 @@ def test_a_fake_hypervisor_witnesses_only_a_simulation(host: Host) -> None:
 def test_a_real_hypervisor_witnesses_by_the_role(
     host: Host, role: machines.VmRole, expected: claims.EnvironmentKind
 ) -> None:
-    declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
-        "environment": claims.EnvironmentKind.BUILD
-    })()
+    declared_real = type(
+        "RealQemu", (fake_hypervisor.FakeQemu,), {"environment": claims.EnvironmentKind.BUILD}
+    )()
     ports = dataclasses.replace(host.ports, hypervisor=declared_real)
 
     assert launching.witness_of(ports, role) is expected
@@ -269,9 +270,9 @@ def test_a_real_hypervisor_witnesses_by_the_role(
 def test_a_test_machine_is_witnessed_by_the_medium_it_booted_from(
     host: Host, medium: machines.Medium | None, expected: claims.EnvironmentKind
 ) -> None:
-    declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
-        "environment": claims.EnvironmentKind.BUILD
-    })()
+    declared_real = type(
+        "RealQemu", (fake_hypervisor.FakeQemu,), {"environment": claims.EnvironmentKind.BUILD}
+    )()
     ports = dataclasses.replace(host.ports, hypervisor=declared_real)
 
     assert launching.witness_of(ports, machines.VmRole.TEST, medium) is expected

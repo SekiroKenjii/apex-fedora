@@ -17,10 +17,10 @@ from collections.abc import Mapping
 from apex.attestation import minting
 from apex.composition import keys as composition_keys
 from apex.config import defaults
-from apex.kernel import encoding, errors, identifiers, refusals, secrets, verdicts
-from apex.pipeline import effects, stages
+from apex.kernel import encoding, errors, refusals, secrets, verdicts
+from apex.pipeline import stages
 from apex.ports import portset
-from apex.verification import console, judging, probing, testaccess, verifykeys
+from apex.verification import console, desktopstages, judging, probing, testaccess, verifykeys
 
 KEY = verifykeys.judged("login")
 IMAGE = "greeter.png"
@@ -42,21 +42,7 @@ def for_cases(
         except errors.PortFailure as failure:
             return stages.Fail(cause=failure.cause)
 
-    return stages.SimpleStage(
-        id=identifiers.StageId("desktop.login"),
-        reads=(
-            verifykeys.GUEST, verifykeys.AGENT, verifykeys.MONITOR, verifykeys.CREDENTIALS,
-            composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID,
-        ),
-        writes=(KEY,),
-        attests=frozenset(),
-        effects=frozenset({
-            effects.Effect.REMOTE_EXEC, effects.Effect.MUTATES_GUEST,
-            effects.Effect.WRITES_RUNTIME,
-        }),
-        preflight=stages.always_ready,
-        apply=apply,
-    )
+    return desktopstages.stage("desktop.login", KEY, apply, reads=(verifykeys.CREDENTIALS,))
 
 
 def _login(
@@ -76,7 +62,10 @@ def _login(
     proofs = [before.proof, waited.proof]
     if waited.observations.get(FOUND) is not True:
         return _advance(
-            credentials.user, verdicts.FAILED, greeter=waited.observations, after=None,
+            credentials.user,
+            verdicts.FAILED,
+            greeter=waited.observations,
+            after=None,
             proofs=proofs,
         )
     proofs.append(_typed(context, credentials.password))
@@ -84,8 +73,11 @@ def _login(
     proofs.append(after.proof)
     accepted = after.observations.get(WAYLAND) is True
     return _advance(
-        credentials.user, verdicts.PASSED if accepted else verdicts.FAILED,
-        greeter=waited.observations, after=after.observations, proofs=proofs,
+        credentials.user,
+        verdicts.PASSED if accepted else verdicts.FAILED,
+        greeter=waited.observations,
+        after=after.observations,
+        proofs=proofs,
     )
 
 
@@ -96,8 +88,11 @@ def _observe(
 ) -> probing.Observation:
     ports = context.ports
     return probing.observe(
-        ports, context.facts[verifykeys.GUEST], context.facts[verifykeys.AGENT],
-        dataclasses.replace(case, arguments=dict(arguments)), token=ports.identities.token(),
+        ports,
+        context.facts[verifykeys.GUEST],
+        context.facts[verifykeys.AGENT],
+        dataclasses.replace(case, arguments=dict(arguments)),
+        token=ports.identities.token(),
     )
 
 
@@ -109,8 +104,7 @@ def _typed(
     monitor = context.facts[verifykeys.MONITOR]
     ports.clock.sleep(defaults.GREETER_SETTLE)
     into = console.capture_into(
-        context.facts[composition_keys.RUNTIME_ROOT], context.facts[composition_keys.RUN_ID],
-        IMAGE,
+        context.facts[composition_keys.RUNTIME_ROOT], context.facts[composition_keys.RUN_ID], IMAGE
     )
     image = console.capture(ports, monitor, into=into)
     console.press(ports, monitor, defaults.RETURN_KEY)

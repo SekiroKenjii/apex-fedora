@@ -46,7 +46,10 @@ class Recipe:
 def dump(justfile: Path) -> dict[str, Recipe]:
     completed = subprocess.run(
         ["just", "--justfile", str(justfile), "--dump", "--dump-format", "json"],
-        capture_output=True, text=True, check=True, cwd=justfile.parent,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=justfile.parent,
     )
     document = json.loads(completed.stdout)
     recipes = {}
@@ -64,7 +67,10 @@ def dump(justfile: Path) -> dict[str, Recipe]:
 def baseline_justfile(revision: str, scratch: Path) -> Path:
     content = subprocess.run(
         ["git", "show", f"{revision}:Justfile"],
-        capture_output=True, text=True, check=True, cwd=REPOSITORY,
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=REPOSITORY,
     ).stdout
     scratch.mkdir(parents=True, exist_ok=True)
     target = scratch / "Justfile"
@@ -114,8 +120,12 @@ def check() -> int:
     problems = violations(frozen, live)
     print(
         json.dumps(
-            {"frozen": len(frozen), "live": len(live), "added": len(live) - len(frozen),
-             "violations": len(problems)},
+            {
+                "frozen": len(frozen),
+                "live": len(live),
+                "added": len(live) - len(frozen),
+                "violations": len(problems),
+            },
             indent=2,
         )
     )

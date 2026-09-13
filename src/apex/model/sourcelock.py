@@ -35,9 +35,7 @@ class LockedImage:
             raise errors.Refusal(refusals.RefusalReason.LOCK_IMAGE_MISSING, subject=name)
         digest = entry.get("digest")
         if not isinstance(digest, str) or not PREFIXED_DIGEST.fullmatch(digest):
-            raise errors.Refusal(
-                refusals.RefusalReason.LOCK_IMAGE_DIGEST_MALFORMED, subject=name
-            )
+            raise errors.Refusal(refusals.RefusalReason.LOCK_IMAGE_DIGEST_MALFORMED, subject=name)
         reference = entry.get("reference")
         if (
             not isinstance(reference, str)

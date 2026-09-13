@@ -25,11 +25,18 @@ TARGET = identifiers.ProfileId("fedora-45")
 
 def apex(*arguments: str) -> subprocess.CompletedProcess[str]:
     environment = {
-        **os.environ, "PYTHONPATH": str(REPOSITORY / "src"), "PYTHONDONTWRITEBYTECODE": "1",
+        **os.environ,
+        "PYTHONPATH": str(REPOSITORY / "src"),
+        "PYTHONDONTWRITEBYTECODE": "1",
     }
     return subprocess.run(
         [sys.executable, "-m", "apex.cli.main", *arguments],
-        capture_output=True, text=True, env=environment, cwd=REPOSITORY, check=False, timeout=120,
+        capture_output=True,
+        text=True,
+        env=environment,
+        cwd=REPOSITORY,
+        check=False,
+        timeout=120,
     )
 
 

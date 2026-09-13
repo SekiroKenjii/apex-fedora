@@ -41,8 +41,15 @@ def test_the_render_probe_is_placed_started_and_waited_for() -> None:
     assert [tuple(call) for call in process.calls] == [
         VIRTUAL,
         SHELL_OWNER,
-        ("systemd-run", "--user", "--unit=apex-render-probe", "--collect",
-         "--setenv=GDK_BACKEND=wayland", "python3", "/var/tmp/apex-render-probe.py"),
+        (
+            "systemd-run",
+            "--user",
+            "--unit=apex-render-probe",
+            "--collect",
+            "--setenv=GDK_BACKEND=wayland",
+            "python3",
+            "/var/tmp/apex-render-probe.py",
+        ),
         JOURNAL,
         JOURNAL,
     ]
@@ -75,8 +82,7 @@ def test_a_program_that_fails_to_start_is_reported_without_polling() -> None:
 
 
 @pytest.mark.parametrize(
-    "unit,mode",
-    [(desktop_theme_gtk3_unit, "gtk3"), (desktop_theme_adwaita_unit, "adwaita")],
+    "unit,mode", [(desktop_theme_gtk3_unit, "gtk3"), (desktop_theme_adwaita_unit, "adwaita")]
 )
 def test_a_theme_probe_presents_its_mode_and_stops_on_request(unit: object, mode: str) -> None:
     process, files, _, ports = session(SessionSpec())
@@ -91,15 +97,27 @@ def test_a_theme_probe_presents_its_mode_and_stops_on_request(unit: object, mode
     assert files.mode_of(desktopprograms.THEME.installed).value == 0o600
     launch = shown["launch"]
     assert isinstance(launch, dict) and launch["argv"] == [
-        "systemd-run", "--user", f"--unit=apex-theme-{mode}", "--collect",
-        "--setenv=GDK_BACKEND=wayland", "python3", "/var/tmp/apex-theme-probe.py", mode,
+        "systemd-run",
+        "--user",
+        f"--unit=apex-theme-{mode}",
+        "--collect",
+        "--setenv=GDK_BACKEND=wayland",
+        "python3",
+        "/var/tmp/apex-theme-probe.py",
+        mode,
     ]
     stop = dismissed["stop"]
     assert isinstance(stop, dict) and stop["argv"] == [
-        "systemctl", "--user", "stop", f"apex-theme-{mode}"
+        "systemctl",
+        "--user",
+        "stop",
+        f"apex-theme-{mode}",
     ]
     assert [tuple(call) for call in process.calls][-1] == (
-        "systemctl", "--user", "stop", f"apex-theme-{mode}"
+        "systemctl",
+        "--user",
+        "stop",
+        f"apex-theme-{mode}",
     )
 
 

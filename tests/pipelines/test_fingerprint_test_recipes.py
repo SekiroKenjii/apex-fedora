@@ -54,7 +54,8 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 
 def builder(root: safepaths.RuntimeRoot) -> guestshell.GuestTarget:
     return guestshell.GuestTarget(
-        user=defaults.BUILDER_USER, port=defaults.BUILDER_SSH_PORT,
+        user=defaults.BUILDER_USER,
+        port=defaults.BUILDER_SSH_PORT,
         key=safepaths.SafePath.regular_file(root.path / "builder_ed25519", within=root),
         known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
     )
@@ -76,7 +77,9 @@ def smoke_inputs() -> dict[str, str]:
 
 def smoke_report(**changes: Any) -> dict[str, Any]:
     return {
-        "status": "PASS", "rpm_sha256": smoke_inputs(), "hardware": "NOT TESTED",
+        "status": "PASS",
+        "rpm_sha256": smoke_inputs(),
+        "hardware": "NOT TESTED",
         "cases": {"fpi-ssm": {"status": "PASS"}, "fpi-device": {"status": "PASS"}},
         **changes,
     }
@@ -90,8 +93,11 @@ def test_the_smoke_test_sends_the_two_packages_by_digest_and_judges_the_report(
     guest = DeliveringGuest(files, {"results.json": json.dumps(smoke_report()).encode()})
 
     outcome = fingerprint_rpms_test_recipe.verify(
-        held(ports, files, guest), builder=builder(root), parent=fingerprintbuilds.RPM_BUILD,
-        root=root, repository=REPOSITORY,
+        held(ports, files, guest),
+        builder=builder(root),
+        parent=fingerprintbuilds.RPM_BUILD,
+        root=root,
+        repository=REPOSITORY,
     )
 
     assert outcome.succeeded, outcome.detail
@@ -102,7 +108,8 @@ def test_the_smoke_test_sends_the_two_packages_by_digest_and_judges_the_report(
     assert f"{remote}/inputs.json" in sent and f"{remote}/test.py" in sent
     assert any(
         r.script.rendered() == f"cd {remote} && sudo flock -n /run/apex-fingerprint-test.lock "
-        "python3 test.py" for r in guest.runs
+        "python3 test.py"
+        for r in guest.runs
     )
     kept = outcome.facts[verifykeys.retained_report("fingerprint.rpm-smoke")]
     document = json.loads(files.read_bytes(kept, limit=1 << 20))
@@ -119,8 +126,11 @@ def test_a_smoke_report_naming_other_packages_fails_and_is_kept(
     )
 
     outcome = fingerprint_rpms_test_recipe.verify(
-        held(ports, files, guest), builder=builder(root), parent=fingerprintbuilds.RPM_BUILD,
-        root=root, repository=REPOSITORY,
+        held(ports, files, guest),
+        builder=builder(root),
+        parent=fingerprintbuilds.RPM_BUILD,
+        root=root,
+        repository=REPOSITORY,
     )
 
     assert outcome.refusal is refusals.RefusalReason.STAGE_FAILED
@@ -141,7 +151,9 @@ def gtk_outputs(inputs: dict[str, str]) -> dict[str, bytes]:
             cases[case] = {"status": "PASS", "log_sha256": hashlib.sha256(log).hexdigest()}
         variants[variant] = cases
     report = {
-        "status": "PASS", "inputs": inputs, "variants": variants,
+        "status": "PASS",
+        "inputs": inputs,
+        "variants": variants,
         "patch_sha256": fingerprintbuilds.patch_digests()["gnome-control-center"],
     }
     outputs["results.json"] = json.dumps(report).encode()
@@ -167,8 +179,11 @@ def test_the_dialog_test_sends_the_checkout_s_files_and_the_archive_and_checks_e
     guest = DeliveringGuest(files, gtk_outputs(gtk_inputs(root)))
 
     outcome = fingerprint_gtk_recipe.verify(
-        held(ports, files, guest), builder=builder(root), parent=fingerprintbuilds.RPM_BUILD,
-        root=root, repository=REPOSITORY,
+        held(ports, files, guest),
+        builder=builder(root),
+        parent=fingerprintbuilds.RPM_BUILD,
+        root=root,
+        repository=REPOSITORY,
     )
 
     assert outcome.succeeded, outcome.detail
@@ -181,9 +196,11 @@ def test_the_dialog_test_sends_the_checkout_s_files_and_the_archive_and_checks_e
         r.script.rendered() == f"cd {remote} && flock -n test.lock python3 guest/fingerprint-gtk.py"
         for r in guest.runs
     )
-    kept = json.loads(files.read_bytes(
-        outcome.facts[verifykeys.retained_report("fingerprint.gtk")], limit=1 << 20
-    ))
+    kept = json.loads(
+        files.read_bytes(
+            outcome.facts[verifykeys.retained_report("fingerprint.gtk")], limit=1 << 20
+        )
+    )
     assert kept["verdict"] == "PASS" and len(kept["inputs_sent"]) == 6
 
 
@@ -197,8 +214,11 @@ def test_a_dialog_log_that_differs_from_its_digest_fails_the_run(
     guest = DeliveringGuest(files, outputs)
 
     outcome = fingerprint_gtk_recipe.verify(
-        held(ports, files, guest), builder=builder(root), parent=fingerprintbuilds.RPM_BUILD,
-        root=root, repository=REPOSITORY,
+        held(ports, files, guest),
+        builder=builder(root),
+        parent=fingerprintbuilds.RPM_BUILD,
+        root=root,
+        repository=REPOSITORY,
     )
 
     assert outcome.refusal is refusals.RefusalReason.STAGE_FAILED

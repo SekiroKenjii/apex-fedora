@@ -84,14 +84,19 @@ class Guest:
 
     def ports(self) -> agentports.AgentPorts:
         return agentports.AgentPorts(
-            processes=self.process, files=self.files, clock=fake_clock.ManualClock(),
-            containers=fake_containers.FakeRegistry(), digests=fake_digesting.CountingDigests(),
-            archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-            extents=fake_extents.FakeExtents(), blocks=self.blocks,
+            processes=self.process,
+            files=self.files,
+            clock=fake_clock.ManualClock(),
+            containers=fake_containers.FakeRegistry(),
+            digests=fake_digesting.CountingDigests(),
+            archives=fake_archives.MemoryArchives(),
+            identities=fake_ids.SequenceIdentities(),
+            extents=fake_extents.FakeExtents(),
+            blocks=self.blocks,
         )
 
 
-GUARD_TEXT = b"#!/bin/sh\nblockdev --setro \"$1\" || { : > /run/apex-protection-failed; exit 1; }\n"
+GUARD_TEXT = b'#!/bin/sh\nblockdev --setro "$1" || { : > /run/apex-protection-failed; exit 1; }\n'
 
 
 def guest(

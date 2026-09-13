@@ -47,7 +47,9 @@ def test_locks_that_name_the_current_release_must_be_reviewed_and_others_are_lef
 
 def test_the_plan_carries_the_four_lists_and_declares_no_writes() -> None:
     planned = upgrading.plan(
-        fedora44_release.PROFILE, LATER, locks=LOCKS,
+        fedora44_release.PROFILE,
+        LATER,
+        locks=LOCKS,
         attestations=["boot.ten-cycles", "audio.speakers"],
     )
 

@@ -48,9 +48,7 @@ class _Stated:
     standing_on_imported: bool
 
 
-def _blocked(
-    reason: refusals.RefusalReason, check: identifiers.CheckId, detail: str
-) -> str:
+def _blocked(reason: refusals.RefusalReason, check: identifiers.CheckId, detail: str) -> str:
     return f"{reason.value}: {check} {detail}"
 
 
@@ -69,9 +67,7 @@ def _judge(
         )
     if not record.proofs_intact:
         return BLOCKED, _blocked(
-            refusals.RefusalReason.PROOF_ALTERED,
-            record.check,
-            "has a proof that no longer matches",
+            refusals.RefusalReason.PROOF_ALTERED, record.check, "has a proof that no longer matches"
         )
     if not record.environment.satisfies(required_environment):
         return BLOCKED, _blocked(
@@ -101,9 +97,7 @@ def _one_record_per_known_check(
             )
         elif name in seen:
             faults.append(
-                _blocked(
-                    refusals.RefusalReason.DUPLICATE_EVIDENCE, record.check, "has two records"
-                )
+                _blocked(refusals.RefusalReason.DUPLICATE_EVIDENCE, record.check, "has two records")
             )
         else:
             seen[name] = record

@@ -42,8 +42,17 @@ def expected_steps(root: Path) -> list[tuple[str, ...]]:
     mount = f"{work}/mnt"
     steps: list[tuple[str, ...]] = [
         ("systemd-detect-virt", "--vm"),
-        ("dnf5", "-y", "install", "dosfstools", "e2fsprogs", "ntfs-3g", "ntfsprogs", "qemu-img",
-         "util-linux-core"),
+        (
+            "dnf5",
+            "-y",
+            "install",
+            "dosfstools",
+            "e2fsprogs",
+            "ntfs-3g",
+            "ntfsprogs",
+            "qemu-img",
+            "util-linux-core",
+        ),
         ("truncate", "-s", "4G", raw),
         ("sfdisk", raw),
         ("losetup", "--find", "--show", "--partscan", raw),
@@ -56,8 +65,15 @@ def expected_steps(root: Path) -> list[tuple[str, ...]]:
     for index, argv in enumerate(formats, 1):
         steps += [
             argv,
-            ("mount", "-t", argv[-2] if index != 2 else "ntfs-3g", "-o", "nosuid,nodev,noexec",
-             f"{LOOP}p{index}", mount),
+            (
+                "mount",
+                "-t",
+                argv[-2] if index != 2 else "ntfs-3g",
+                "-o",
+                "nosuid,nodev,noexec",
+                f"{LOOP}p{index}",
+                mount,
+            ),
             ("umount", mount),
         ]
     steps[6] = ("mount", "-t", "vfat", "-o", "nosuid,nodev,noexec", f"{LOOP}p1", mount)
@@ -89,7 +105,8 @@ def bundle(root: Path, *, builder: bool = True) -> agentports.AgentPorts:
     files.write_atomic(safepaths.SafePath(Path(defaults.BUILDER_MARKER)), marker, mode=PRIVATE)
     files.write_atomic(
         safepaths.SafePath(Path("/sys/class/block/loop0/loop/backing_file")),
-        f"{root}/work/other.raw\n".encode(), mode=PRIVATE,
+        f"{root}/work/other.raw\n".encode(),
+        mode=PRIVATE,
     )
     for index in (1, 2, 3):
         files.write_atomic(safepaths.SafePath(Path(f"{LOOP}p{index}")), b"", mode=PRIVATE)
@@ -101,7 +118,8 @@ def bundle(root: Path, *, builder: bool = True) -> agentports.AgentPorts:
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 
@@ -160,7 +178,8 @@ def test_a_loop_device_that_is_not_ours_is_refused_and_detached(
     assert isinstance(ports.files, fake_files.MemoryFiles)
     ports.files.write_atomic(
         safepaths.SafePath(Path("/sys/class/block/loop0/loop/backing_file")),
-        b"/var/tmp/somebody-else.raw\n", mode=PRIVATE,
+        b"/var/tmp/somebody-else.raw\n",
+        mode=PRIVATE,
     )
 
     with pytest.raises(errors.Refusal) as raised:

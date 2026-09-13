@@ -83,10 +83,7 @@ def _attestation(sealed: ledger.Sealed, store: proofs.ProofStore) -> attesting.A
 
 
 def read(
-    runtime_root: Path,
-    *,
-    spec: readerspecs.StoreReaderSpec,
-    files: files_port.FileSystemPort,
+    runtime_root: Path, *, spec: readerspecs.StoreReaderSpec, files: files_port.FileSystemPort
 ) -> readerspecs.StoreReading:
     legacy = v1_reader.read(runtime_root, spec=v1_reader.SPEC, files=files)
     location = proofs.StoreLocation(root=safepaths.RuntimeRoot.adopt(runtime_root))

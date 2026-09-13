@@ -10,7 +10,7 @@ import fingerprintbuilds
 import pytest
 from mirroredfiles import MirroredFiles
 
-from apex.composition import exports, fingerprintpackages
+from apex.composition import artifactchecks, exports, fingerprintpackages
 from apex.kernel import errors, identifiers, refusals, safepaths
 
 REPOSITORY = safepaths.SourceRoot.adopt(Path(__file__).resolve().parents[3])
@@ -51,7 +51,7 @@ def test_a_transferred_report_and_its_artifacts_are_verified(
     report = fingerprintbuilds.rpm_build(files, root)
 
     parsed = fingerprintpackages.parse_rpm_report(report, lock(), patches())
-    fingerprintpackages.require_artifacts(
+    artifactchecks.require_artifacts(
         ports, root, exports.inside(root, fingerprintbuilds.RPM_BUILD, "output"), parsed.artifacts
     )
 
@@ -95,7 +95,7 @@ def test_a_tampered_artifact_is_a_checksum_mismatch(
     parsed = fingerprintpackages.parse_rpm_report(report, lock(), patches())
 
     with pytest.raises(errors.Refusal) as raised:
-        fingerprintpackages.require_artifacts(ports, root, home, parsed.artifacts)
+        artifactchecks.require_artifacts(ports, root, home, parsed.artifacts)
 
     assert raised.value.reason is refusals.RefusalReason.ARTIFACT_CHECKSUM_MISMATCH
 
@@ -120,7 +120,9 @@ def test_a_dialog_report_names_its_logs_and_a_lost_log_is_refused(
 def test_the_smoke_judgement_needs_both_programs_the_sent_packages_and_no_hardware_claim() -> None:
     inputs = {"a.rpm": "1" * 64, "b.rpm": "2" * 64}
     passed = {
-        "status": "PASS", "rpm_sha256": inputs, "hardware": "NOT TESTED",
+        "status": "PASS",
+        "rpm_sha256": inputs,
+        "hardware": "NOT TESTED",
         "cases": {"fpi-ssm": {"status": "PASS"}, "fpi-device": {"status": "PASS"}},
     }
 

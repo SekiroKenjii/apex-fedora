@@ -89,8 +89,16 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("build.run"),
     reads=(
-        keys.BUILDER_VERIFIED, keys.REMOTE, keys.TRANSFERRED, keys.ACCESS, keys.KIND,
-        keys.BUILD_PROFILE, keys.FROZEN, keys.PARENT, keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.BUILDER_VERIFIED,
+        keys.REMOTE,
+        keys.TRANSFERRED,
+        keys.ACCESS,
+        keys.KIND,
+        keys.BUILD_PROFILE,
+        keys.FROZEN,
+        keys.PARENT,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
     ),
     writes=(keys.BUILD_RUN,),
     attests=frozenset(),

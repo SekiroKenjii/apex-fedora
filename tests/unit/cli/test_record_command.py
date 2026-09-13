@@ -95,10 +95,22 @@ def test_a_pass_with_proof_is_minted_with_the_note_filed_first(
     ports = pretending_real()
     cited = proof(ports, tmp_path)
 
-    reply = record_command.run(request(
-        ports, root, "boot.ten-cycles", "PASS", "--environment", "vm",
-        "--description", "Ten offline boots", "--proof", str(cited), "--reason", "normal boots",
-    ))
+    reply = record_command.run(
+        request(
+            ports,
+            root,
+            "boot.ten-cycles",
+            "PASS",
+            "--environment",
+            "vm",
+            "--description",
+            "Ten offline boots",
+            "--proof",
+            str(cited),
+            "--reason",
+            "normal boots",
+        )
+    )
 
     assert isinstance(reply.document, dict)
     recorded = reply.document["recorded"]
@@ -118,10 +130,20 @@ def test_a_hardware_result_from_a_machine_is_refused(
     cited = proof(ports, tmp_path)
 
     with pytest.raises(errors.Refusal) as raised:
-        record_command.run(request(
-            ports, root, "audio.speakers", "PASS", "--environment", "vm",
-            "--description", "d", "--proof", str(cited),
-        ))
+        record_command.run(
+            request(
+                ports,
+                root,
+                "audio.speakers",
+                "PASS",
+                "--environment",
+                "vm",
+                "--description",
+                "d",
+                "--proof",
+                str(cited),
+            )
+        )
 
     assert raised.value.reason is refusals.RefusalReason.HARDWARE_REQUIRES_PHYSICAL
 
@@ -130,19 +152,29 @@ def test_a_pass_needs_a_proof_beyond_the_note(root: safepaths.RuntimeRoot) -> No
     ports = pretending_real()
 
     with pytest.raises(errors.Refusal) as raised:
-        record_command.run(request(
-            ports, root, "boot.ten-cycles", "PASS", "--environment", "vm", "--description", "d",
-        ))
+        record_command.run(
+            request(
+                ports, root, "boot.ten-cycles", "PASS", "--environment", "vm", "--description", "d"
+            )
+        )
 
     assert raised.value.reason is refusals.RefusalReason.PASS_REQUIRES_PROOF
 
 
 def test_an_unknown_check_is_refused(root: safepaths.RuntimeRoot) -> None:
     with pytest.raises(errors.Refusal) as raised:
-        record_command.run(request(
-            pretending_real(), root, "no.such.check", "BLOCKED", "--environment", "vm",
-            "--description", "d",
-        ))
+        record_command.run(
+            request(
+                pretending_real(),
+                root,
+                "no.such.check",
+                "BLOCKED",
+                "--environment",
+                "vm",
+                "--description",
+                "d",
+            )
+        )
 
     assert raised.value.reason is refusals.RefusalReason.UNKNOWN_CHECK
 
@@ -152,7 +184,15 @@ def test_without_a_candidate_nothing_is_recorded(tmp_path: Path) -> None:
     base.mkdir(mode=0o700)
 
     with pytest.raises(errors.PreconditionUnmet):
-        record_command.run(request(
-            pretending_real(), safepaths.RuntimeRoot.adopt(base), "boot.ten-cycles", "BLOCKED",
-            "--environment", "vm", "--description", "d",
-        ))
+        record_command.run(
+            request(
+                pretending_real(),
+                safepaths.RuntimeRoot.adopt(base),
+                "boot.ten-cycles",
+                "BLOCKED",
+                "--environment",
+                "vm",
+                "--description",
+                "d",
+            )
+        )

@@ -69,12 +69,11 @@ def test_a_damaged_installer_report_is_refused(change: dict[str, object]) -> Non
 
 
 def test_a_ventoy_report_parses_and_a_touched_medium_is_refused() -> None:
-    request = {
-        "files": dict.fromkeys(ventoy_fixture.INPUTS, HEX_64),
-        "ventoy_version": "1.1.05",
-    }
+    request = {"files": dict.fromkeys(ventoy_fixture.INPUTS, HEX_64), "ventoy_version": "1.1.05"}
     document = {
-        "status": "PASS", "request": request, "image_sha256": HEX_64,
+        "status": "PASS",
+        "request": request,
+        "image_sha256": HEX_64,
         "physical_media_accessed": False,
     }
 
@@ -88,8 +87,11 @@ def test_a_ventoy_report_parses_and_a_touched_medium_is_refused() -> None:
 def update_report() -> dict[str, object]:
     image = {"digest": f"sha256:{HEX_64}", "config": f"sha256:{HEX_64}", "identity": "x"}
     return {
-        "status": "PASS", "id": RUN, "images": {"a": image, "b": image},
-        "files": {"a/manifest.json": HEX_64}, "public_key_sha256": HEX_64,
+        "status": "PASS",
+        "id": RUN,
+        "images": {"a": image, "b": image},
+        "files": {"a/manifest.json": HEX_64},
+        "public_key_sha256": HEX_64,
         "archive_sha256": HEX_64,
     }
 
@@ -151,9 +153,7 @@ def test_dedupe_spans_cover_the_aligned_prefix_only() -> None:
 
     spans = extents.spans(size)
 
-    assert [item.length for item in spans] == [
-        extents.CHUNK.bytes, extents.CHUNK.bytes, 4096
-    ]
+    assert [item.length for item in spans] == [extents.CHUNK.bytes, extents.CHUNK.bytes, 4096]
     assert extents.shareable_length(size) == size - 100
 
 

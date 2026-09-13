@@ -25,10 +25,25 @@ HELPERS_START = "/* This opt-in diagnostic never prints"
 HELPERS_END = "static void\nelan_cmd_done ("
 SOURCE_PATH = "libfprint/drivers/elan.c"
 CHECK = "elan-diagnostics"
-SILENT = ("disabled", "wrong-opt-in", "debug-transfer", "debug-messages", "wrong-device",
-          "wrong-vendor")
-EXCLUDED = ("image", "other-command", "wrong-endpoint", "outgoing", "zero", "overlong",
-            "wrong-expected", "null-buffer", "failed")
+SILENT = (
+    "disabled",
+    "wrong-opt-in",
+    "debug-transfer",
+    "debug-messages",
+    "wrong-device",
+    "wrong-vendor",
+)
+EXCLUDED = (
+    "image",
+    "other-command",
+    "wrong-endpoint",
+    "outgoing",
+    "zero",
+    "overlong",
+    "wrong-expected",
+    "null-buffer",
+    "failed",
+)
 STATUS = ("status-0", "status-85", "status-175", "status-255")
 BUDGET = "budget"
 BUDGET_LINES = 16
@@ -88,7 +103,7 @@ def judge_case(case: str, lines: list[str], output: str) -> None:
         raise _failed(f"{case}: the fixed metadata format", "a line that differs")
     if SENTINEL in output:
         raise _failed(f"{case}: no payload in the output", SENTINEL)
-    status = int(case[len("status-"):]) if case in STATUS else NO_STATUS
+    status = int(case[len("status-") :]) if case in STATUS else NO_STATUS
     if any(item is not None and int(item[3]) != status for item in matched):
         raise _failed(f"{case}: status {status}", "another status")
 
@@ -101,16 +116,19 @@ def check(
 ) -> patchbench.Checked:
     patchbench.require_not_root()
     bench = patchbench.open_bench(
-        ports, root, repository, directory_name=defaults.ELAN_TESTS_DIRECTORY,
-        lock_path=defaults.ELAN_LOCK_PATH, entries_key="sources", source=source,
+        ports,
+        root,
+        repository,
+        directory_name=defaults.ELAN_TESTS_DIRECTORY,
+        lock_path=defaults.ELAN_LOCK_PATH,
+        entries_key="sources",
+        source=source,
     )
     target = bench.work / SOURCE_PATH
     patchbench.write(ports, target, patchbench.text(ports, bench.source.path))
     patchbench.run(ports, bench.work, "git", "init", "-q")
     patchbench.run(ports, bench.work, "git", "add", "--", SOURCE_PATH)
-    patchbench.run(
-        ports, bench.work, "git", "apply", "--check", "--index", "-p1", str(bench.patch)
-    )
+    patchbench.run(ports, bench.work, "git", "apply", "--check", "--index", "-p1", str(bench.patch))
     patchbench.apply_patch(ports, bench)
     content = patchbench.text(ports, target.path)
     helpers = helpers_of(content)

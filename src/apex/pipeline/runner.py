@@ -42,9 +42,7 @@ class _Progress[P]:
         return tuple(sorted(self.attested, key=str))
 
 
-def _unreached[P](
-    plan: plans.Plan[P], completed: set[str]
-) -> tuple[identifiers.CheckId, ...]:
+def _unreached[P](plan: plans.Plan[P], completed: set[str]) -> tuple[identifiers.CheckId, ...]:
     pending: set[identifiers.CheckId] = set()
     for stage in plan.stages:
         if str(stage.id) not in completed:
@@ -53,10 +51,7 @@ def _unreached[P](
 
 
 def run[P: portset.PortBundle](
-    plan: plans.Plan[P],
-    *,
-    ports: P,
-    seeds: Mapping[FactKey[Any], object] | None = None,
+    plan: plans.Plan[P], *, ports: P, seeds: Mapping[FactKey[Any], object] | None = None
 ) -> Outcome:
     """Seeds are the facts the caller already holds, credited to a stage named `seed`."""
     given = _seeded(seeds or {})
@@ -74,18 +69,14 @@ def _seeded(seeds: Mapping[FactKey[Any], object]) -> FactMap:
     return facts
 
 
-def _preflight[P](
-    plan: plans.Plan[P], *, planning: P, given: FactMap
-) -> list[stages.Preflight]:
+def _preflight[P](plan: plans.Plan[P], *, planning: P, given: FactMap) -> list[stages.Preflight]:
     context = stages.RunContext(facts=given, ports=planning)
     verdicts: list[stages.Preflight] = []
     for stage in plan.stages:
         try:
             verdicts.append(stage.preflight(context))
         except errors.InternalDefect as defect:
-            raise errors.InternalDefect(
-                f"{stage.id} acted during preflight: {defect}"
-            ) from defect
+            raise errors.InternalDefect(f"{stage.id} acted during preflight: {defect}") from defect
     return verdicts
 
 
@@ -129,9 +120,7 @@ def _apply[P](
     )
 
 
-def _step[P](
-    plan: plans.Plan[P], stage: stages.Stage[P], progress: _Progress[P]
-) -> Outcome | None:
+def _step[P](plan: plans.Plan[P], stage: stages.Stage[P], progress: _Progress[P]) -> Outcome | None:
     result = stage.apply(progress.context)
     if isinstance(result, stages.Advance):
         progress.context = progress.context.with_facts(result.facts, by=stage.id)

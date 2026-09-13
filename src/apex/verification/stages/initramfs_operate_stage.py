@@ -16,7 +16,9 @@ FIXTURE = "fixture.initramfs"
 
 def body(operation: operating.Operation) -> str | None:
     arguments: dict[str, encoding.JsonValue] = {
-        "action": operation.action, "good": operation.image("a"), "bad": operation.image("b"),
+        "action": operation.action,
+        "good": operation.image("a"),
+        "bad": operation.image("b"),
     }
     if operation.action == initramfsops.INJECT:
         inspection = operation.context.facts[verifykeys.INSPECTION]
@@ -26,7 +28,9 @@ def body(operation: operating.Operation) -> str | None:
                 subject="review an inspection result before injecting",
             )
         plan = initramfsops.require_inspection(
-            inspection, fixture=operation.fixture, images=operation.images,
+            inspection,
+            fixture=operation.fixture,
+            images=operation.images,
             process=operation.context.facts[verifykeys.MACHINE_PROCESS],
         )
         arguments["run_id"] = str(operation.context.facts[composition_keys.RUN_ID])

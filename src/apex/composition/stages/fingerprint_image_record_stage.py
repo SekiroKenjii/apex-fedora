@@ -30,7 +30,8 @@ def _verified(
     )
     try:
         verified = verifying.verify_bundle(
-            context.ports, location=location,
+            context.ports,
+            location=location,
             anchor=fingerprint_inputs_stage.development_anchor(root),
         )
     except (errors.Refusal, errors.PortFailure) as problem:
@@ -52,7 +53,8 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
     verification: encoding.Document = report or {"status": str(record.status), "reason": why}
     context.ports.files.write_atomic(
         exports.inside(
-            context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID],
+            context.facts[keys.RUNTIME_ROOT],
+            context.facts[keys.RUN_ID],
             defaults.FINGERPRINT_VERIFICATION_NAME,
         ),
         encoding.canonical(verification) + b"\n",
@@ -68,8 +70,16 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("fingerprint.image-record"),
     reads=(
-        keys.BUILD_RUN, keys.RETRIEVED, keys.KIND, keys.BUILD_PROFILE, keys.SOURCE_BUNDLE,
-        keys.REMOTE, keys.PARENT, keys.ACCESS, keys.FINGERPRINT_REQUEST, keys.RUNTIME_ROOT,
+        keys.BUILD_RUN,
+        keys.RETRIEVED,
+        keys.KIND,
+        keys.BUILD_PROFILE,
+        keys.SOURCE_BUNDLE,
+        keys.REMOTE,
+        keys.PARENT,
+        keys.ACCESS,
+        keys.FINGERPRINT_REQUEST,
+        keys.RUNTIME_ROOT,
         keys.RUN_ID,
     ),
     writes=(keys.BUILD_RECORD, keys.FINGERPRINT_REPORT),

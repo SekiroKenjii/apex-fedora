@@ -26,7 +26,8 @@ def answer(ports: portset.HostPorts, target: guestshell.GuestTarget) -> list[str
         completed = ports.guest.run(
             target,
             guestshell.GuestRun(
-                script=SCRIPT, deadline=defaults.PROBE_DEADLINE,
+                script=SCRIPT,
+                deadline=defaults.PROBE_DEADLINE,
                 limit=commands.OutputLimit.default(),
             ),
         )
@@ -37,8 +38,10 @@ def answer(ports: portset.HostPorts, target: guestshell.GuestTarget) -> list[str
 
 def ready(lines: list[str] | None) -> bool:
     return (
-        lines is not None and len(lines) == 2
-        and lines[0] in defaults.VIRTUALISERS and lines[1] in defaults.SYSTEM_STATES
+        lines is not None
+        and len(lines) == 2
+        and lines[0] in defaults.VIRTUALISERS
+        and lines[1] in defaults.SYSTEM_STATES
     )
 
 

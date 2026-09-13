@@ -49,9 +49,7 @@ class HotplugReport:
         }
 
 
-def attach(
-    ports: portset.HostPorts, *, root: safepaths.RuntimeRoot, source: Path
-) -> HotplugReport:
+def attach(ports: portset.HostPorts, *, root: safepaths.RuntimeRoot, source: Path) -> HotplugReport:
     with ports.locks.acquire(launching.MACHINE, locking.AcquisitionPolicy.immediate()):
         lease = _test_machine_with_bus(ports, root)
         run_directory = lease.intent.run_directory
@@ -66,8 +64,11 @@ def attach(
             ports, chain, into=run_directory / defaults.HOTPLUG_OVERLAY_NAME, root=root
         )
         report = HotplugReport(
-            source=chain.disk, overlay=overlay.disk, requests=_requests(overlay.disk),
-            responses=(), status=INCOMPLETE,
+            source=chain.disk,
+            overlay=overlay.disk,
+            requests=_requests(overlay.disk),
+            responses=(),
+            status=INCOMPLETE,
         )
         _record(ports, run_directory, report)
         responses: list[encoding.JsonValue] = []
@@ -116,19 +117,25 @@ def _test_machine_with_bus(
 
 def _requests(overlay: safepaths.SafePath) -> tuple[qmp.QmpCommand, ...]:
     return (
-        qmp.QmpCommand(BLOCKDEV_ADD, {
-            "driver": backingchain.QCOW2,
-            "node-name": NODE,
-            "read-only": False,
-            "file": {"driver": "file", "filename": str(overlay)},
-        }),
-        qmp.QmpCommand(DEVICE_ADD, {
-            "driver": "usb-storage",
-            "id": DEVICE,
-            "bus": machines.USB_ROOT_PORT,
-            "drive": NODE,
-            "serial": machines.USB_FIXTURE_SERIAL,
-        }),
+        qmp.QmpCommand(
+            BLOCKDEV_ADD,
+            {
+                "driver": backingchain.QCOW2,
+                "node-name": NODE,
+                "read-only": False,
+                "file": {"driver": "file", "filename": str(overlay)},
+            },
+        ),
+        qmp.QmpCommand(
+            DEVICE_ADD,
+            {
+                "driver": "usb-storage",
+                "id": DEVICE,
+                "bus": machines.USB_ROOT_PORT,
+                "drive": NODE,
+                "serial": machines.USB_FIXTURE_SERIAL,
+            },
+        ),
     )
 
 
@@ -151,9 +158,7 @@ def _json(value: object) -> encoding.JsonValue:
     return str(value)
 
 
-def attached(
-    ports: portset.HostPorts, run_directory: safepaths.SafePath
-) -> runrecord.Layer | None:
+def attached(ports: portset.HostPorts, run_directory: safepaths.SafePath) -> runrecord.Layer | None:
     """The fixture the run hot-plugged, as source and overlay, or nothing when it never did."""
     path = safepaths.SafePath(run_directory.path / defaults.HOTPLUG_RECORD)
     if not ports.files.exists(path):

@@ -72,8 +72,7 @@ class SubprocessRunner(process.ProcessPort):
         except subprocess.SubprocessError as error:
             if isinstance(error, subprocess.TimeoutExpired):
                 raise errors.PortFailure(
-                    port="process",
-                    cause=f"{argv.arguments[0]} exceeded {deadline.budget.seconds}s",
+                    port="process", cause=f"{argv.arguments[0]} exceeded {deadline.budget.seconds}s"
                 ) from error
             raise errors.PortFailure(
                 port="process", cause=f"{argv.arguments[0]}: cannot restrict the child"
@@ -112,7 +111,11 @@ def _dropper(capabilities: frozenset[commands.Capability]) -> Callable[[], None]
     def drop() -> None:
         libc = ctypes.CDLL(None, use_errno=True)
         libc.prctl.argtypes = [
-            ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong,
+            ctypes.c_int,
+            ctypes.c_ulong,
+            ctypes.c_ulong,
+            ctypes.c_ulong,
+            ctypes.c_ulong,
         ]
         libc.prctl.restype = ctypes.c_int
         for capability in sorted(capabilities):

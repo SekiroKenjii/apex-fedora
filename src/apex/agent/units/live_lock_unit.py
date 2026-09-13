@@ -58,13 +58,15 @@ class Run:
             variables=LOCALE,
             dropping=frozenset({commands.Capability.SYS_ADMIN}) if restricted else frozenset(),
         )
-        self.log.append({
-            "argv": list(argv),
-            "restricted_child": restricted,
-            "returncode": completed.exit_code,
-            "stdout": completed.stdout.decode(errors="replace"),
-            "stderr": completed.stderr.decode(errors="replace"),
-        })
+        self.log.append(
+            {
+                "argv": list(argv),
+                "restricted_child": restricted,
+                "returncode": completed.exit_code,
+                "stdout": completed.stdout.decode(errors="replace"),
+                "stderr": completed.stderr.decode(errors="replace"),
+            }
+        )
         if check and not completed.succeeded:
             raise Halt(f"fixture command failed: {' '.join(argv)}")
         return completed
@@ -117,7 +119,9 @@ def _exercise(run: Run, target: str) -> None:
     run.report["ro_before_denial"] = before
     script = (
         'sed -n "/^CapEff:/p; /^CapBnd:/p" /proc/self/status; exec '
-        + shlex.quote(str(GUARD)) + " " + shlex.quote(device)
+        + shlex.quote(str(GUARD))
+        + " "
+        + shlex.quote(device)
     )
     completed = run.invoke(commands.Argv.of("/bin/sh", "-c", script), check=False, restricted=True)
     caps = dict(CAPABILITY_LINES.findall(completed.stdout.decode(errors="replace")))
@@ -139,9 +143,7 @@ def _restore(run: Run, target: str) -> None:
 
 
 def run(
-    ports: agentports.AgentPorts,
-    *,
-    arguments: Mapping[str, encoding.JsonValue],
+    ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     guestguard.require_initramfs(ports)
     digest = _guard_digest(ports, arguments.get(GUARD_ARGUMENT))

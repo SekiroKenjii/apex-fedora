@@ -66,21 +66,25 @@ def record(
     layer = runrecord.Layer(
         source=root.path / "disk.qcow2", overlay=run_directory.path / "disk.qcow2"
     )
-    runrecord.write(ports, run_directory, runrecord.RunRecord(
-        run=identifiers.RunId.parse(run_directory.path.name),
-        disk=layer,
-        extras=tuple(
-            runrecord.Layer(
-                source=root.path / f"other-{index}.qcow2",
-                overlay=run_directory.path / f"other-{index}.qcow2",
-            )
-            for index in range(1, extras + 1)
+    runrecord.write(
+        ports,
+        run_directory,
+        runrecord.RunRecord(
+            run=identifiers.RunId.parse(run_directory.path.name),
+            disk=layer,
+            extras=tuple(
+                runrecord.Layer(
+                    source=root.path / f"other-{index}.qcow2",
+                    overlay=run_directory.path / f"other-{index}.qcow2",
+                )
+                for index in range(1, extras + 1)
+            ),
+            iso=iso,
+            medium=medium,
+            guest_ssh=False,
+            serial_console=serial_console,
+            usb_bus=False,
+            boot_usb=None,
         ),
-        iso=iso,
-        medium=medium,
-        guest_ssh=False,
-        serial_console=serial_console,
-        usb_bus=False,
-        boot_usb=None,
-    ))
+    )
     return iso

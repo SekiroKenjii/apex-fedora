@@ -47,15 +47,17 @@ STAGES = (
     fault_stage.for_case(CASE, arguments=_arguments, after=(verifykeys.WORK, verifykeys.IMPORTED)),
     mint_stage.for_check(CHECK, reports=[verifykeys.fault_report(CASE)]),
 )
-SEEDS = frozenset({
-    verifykeys.BUILDER,
-    verifykeys.WHEEL,
-    verifykeys.WITNESS,
-    verifykeys.RECORDER,
-    verifykeys.PARENT,
-    composition_keys.RUNTIME_ROOT,
-    composition_keys.REPOSITORY,
-})
+SEEDS = frozenset(
+    {
+        verifykeys.BUILDER,
+        verifykeys.WHEEL,
+        verifykeys.WITNESS,
+        verifykeys.RECORDER,
+        verifykeys.PARENT,
+        composition_keys.RUNTIME_ROOT,
+        composition_keys.REPOSITORY,
+    }
+)
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 

@@ -81,7 +81,9 @@ def prepare(
     private, public = signedbundle.keys(ports, root)
     laid = inputs_support.lay_out(ports, root, private, public)
     ports = dataclasses.replace(
-        ports, processes=gpgv or inputs_support.Gpgv(), downloads=inputs_support.fetcher(),
+        ports,
+        processes=gpgv or inputs_support.Gpgv(),
+        downloads=inputs_support.fetcher(),
         guest=guest,
     )
     outcome = ventoy_media_recipe.prepare(
@@ -117,7 +119,9 @@ def test_the_builder_gets_the_request_and_the_three_inputs_and_the_medium_comes_
     assert guest.asked == ["fixture.ventoy"]
     assert guest.requests[0]["arguments"] == {"work": work}
     assert [str(item.remote) for item in guest.sent][-4:] == [
-        f"{work}/request.json", f"{work}/ventoy.tar.gz", f"{work}/Apex-Live.iso",
+        f"{work}/request.json",
+        f"{work}/ventoy.tar.gz",
+        f"{work}/Apex-Live.iso",
         f"{work}/Ubuntu.iso",
     ]
     assert [str(item.remote) for item in guest.received] == [f"{work}/output"]

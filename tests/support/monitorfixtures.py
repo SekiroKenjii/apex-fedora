@@ -30,7 +30,8 @@ class DrawingMonitor(fake_qmp.ScriptedQmp):
     def _draw(self, files: fake_files.MemoryFiles, command: qmp.QmpCommand) -> None:
         path = Path(str(command.arguments["filename"]))
         files.write_atomic(
-            safepaths.SafePath(path), self.frames.get(path.name, PNG_BYTES),
+            safepaths.SafePath(path),
+            self.frames.get(path.name, PNG_BYTES),
             mode=defaults.RECORD_MODE,
         )
 

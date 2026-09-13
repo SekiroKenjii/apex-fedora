@@ -53,9 +53,7 @@ def test_no_context_imports_a_later_context() -> None:
 def test_the_declared_order_covers_every_context_directory() -> None:
     """A context added without a position here would be ordered by nothing."""
     present = {
-        path.name
-        for path in SOURCE.iterdir()
-        if path.is_dir() and (path / "__init__.py").is_file()
+        path.name for path in SOURCE.iterdir() if path.is_dir() and (path / "__init__.py").is_file()
     }
     contexts = present & set(ORDER)
 

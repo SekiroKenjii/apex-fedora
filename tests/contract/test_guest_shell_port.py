@@ -82,8 +82,7 @@ def test_a_file_sent_to_the_guest_comes_back_intact(
 
     guests.send(target(root), local=sent, remote=remote, deadline=defaults.TRANSFER_DEADLINE)
     guests.receive(
-        target(root), remote=remote, into=into, recursive=False,
-        deadline=defaults.TRANSFER_DEADLINE,
+        target(root), remote=remote, into=into, recursive=False, deadline=defaults.TRANSFER_DEADLINE
     )
 
     if isinstance(guests, fake_guestshell.ScriptedGuest):

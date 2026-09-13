@@ -29,10 +29,14 @@ def bundle(
     process: fake_process.ScriptedProcess, files: fake_files.MemoryFiles | None = None
 ) -> agentports.AgentPorts:
     return agentports.AgentPorts(
-        processes=process, files=files or fake_files.MemoryFiles(),
-        clock=fake_clock.ManualClock(), containers=fake_containers.FakeRegistry(),
-        digests=fake_digesting.CountingDigests(), archives=fake_archives.MemoryArchives(),
-        identities=fake_ids.SequenceIdentities(), extents=fake_extents.FakeExtents(),
+        processes=process,
+        files=files or fake_files.MemoryFiles(),
+        clock=fake_clock.ManualClock(),
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
         blocks=fake_blockdevices.FakeBlockDevices(),
     )
 

@@ -9,7 +9,6 @@ is read, because these checks compile and run code the operator supplied.
 from __future__ import annotations
 
 import dataclasses
-import json
 import os
 import shlex
 from collections.abc import Mapping
@@ -127,8 +126,12 @@ def open_bench(
     work = directory / defaults.PATCH_WORK_DIRECTORY
     ports.files.make_directory(work, mode=safepaths.PRIVATE_DIRECTORY_MODE)
     return Bench(
-        directory=directory, work=work, source=adopted, source_digest=digest,
-        source_label=label, patch=patch,
+        directory=directory,
+        work=work,
+        source=adopted,
+        source_digest=digest,
+        source_label=label,
+        patch=patch,
         patch_digest=ports.digests.file(safepaths.SafePath(patch.path)),
         flags=tuple(shlex.split(output(ports, work, PKG_CONFIG, "--cflags", "--libs", GIO))),
     )
@@ -193,7 +196,6 @@ def environment(ports: portset.HostPorts, bench: Bench) -> encoding.Document:
 def report(ports: portset.HostPorts, bench: Bench, found: encoding.Document) -> safepaths.SafePath:
     proof = bench.directory / defaults.RESULTS_NAME
     ports.files.write_atomic(
-        proof, json.dumps(found, indent=2, sort_keys=True).encode() + b"\n",
-        mode=defaults.RECORD_MODE,
+        proof, encoding.readable(found).encode() + b"\n", mode=defaults.RECORD_MODE
     )
     return proof

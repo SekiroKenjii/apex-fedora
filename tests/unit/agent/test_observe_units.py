@@ -70,10 +70,15 @@ def bundle(
     scripted: fake_process.ScriptedProcess, files: fake_files.MemoryFiles
 ) -> agentports.AgentPorts:
     return agentports.AgentPorts(
-        processes=scripted, files=files, clock=fake_clock.ManualClock(),
-        containers=fake_containers.FakeRegistry(), digests=fake_digesting.CountingDigests(),
-        archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        processes=scripted,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 
@@ -93,13 +98,17 @@ def test_the_live_probe_reports_every_older_section_and_claims_nothing() -> None
     commands = report["commands"]
     assert isinstance(commands, dict) and set(commands) == set(live_observe_unit.COMMANDS)
     assert commands["kernel"] == {
-        "argv": ["uname", "-r"], "returncode": 0, "stdout": "answer\n", "stderr": "",
+        "argv": ["uname", "-r"],
+        "returncode": 0,
+        "stdout": "answer\n",
+        "stderr": "",
         "truncated": False,
     }
     files = report["files"]
     assert isinstance(files, dict) and set(files) == set(live_observe_unit.FILES)
     assert files[GUARD] == {
-        "text": "#!/bin/sh\n", "truncated": False,
+        "text": "#!/bin/sh\n",
+        "truncated": False,
         "sha256": hashlib.sha256(b"#!/bin/sh\n").hexdigest(),
     }
     absent = "/run/apex-disks-protected"
@@ -107,7 +116,10 @@ def test_the_live_probe_reports_every_older_section_and_claims_nothing() -> None
     metadata = report["executable_metadata"]
     assert isinstance(metadata, dict)
     assert metadata["/usr/libexec/flatpak-system-helper"] == {
-        "uid": 0, "gid": 0, "mode": "0o444", "selinux": None,
+        "uid": 0,
+        "gid": 0,
+        "mode": "0o444",
+        "selinux": None,
     }
     absent_helper = metadata["/run/rootfsbase/usr/libexec/flatpak-system-helper"]
     assert isinstance(absent_helper, dict) and "error" in absent_helper
@@ -137,9 +149,7 @@ def test_the_ventoy_probe_reports_topology_with_no_slaves_for_a_partition() -> N
     assert isinstance(commands, dict) and set(commands) == set(ventoy_observe_unit.COMMANDS)
     blocks = report["blocks"]
     assert isinstance(blocks, dict)
-    assert blocks["vda"] == {
-        "path": str(DEVICES / "vda"), "ro": "1", "dev": "253:0", "slaves": [],
-    }
+    assert blocks["vda"] == {"path": str(DEVICES / "vda"), "ro": "1", "dev": "253:0", "slaves": []}
     part = blocks["vda1"]
     assert isinstance(part, dict) and part["slaves"] is None
     files = report["files"]
@@ -159,5 +169,7 @@ def test_a_program_that_is_missing_is_recorded_as_an_observation() -> None:
     commands = report["commands"]
     assert isinstance(commands, dict)
     assert commands["firmware-entries"] == {
-        "argv": ["efibootmgr", "-v"], "returncode": None, "error": "efibootmgr: not found",
+        "argv": ["efibootmgr", "-v"],
+        "returncode": None,
+        "error": "efibootmgr: not found",
     }

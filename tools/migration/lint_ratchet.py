@@ -34,7 +34,9 @@ def configuration_digest() -> str:
 def counts() -> dict[str, int]:
     completed = subprocess.run(
         [*RUFF, "check", *TARGETS, "--output-format", "json"],
-        capture_output=True, text=True, cwd=REPOSITORY,
+        capture_output=True,
+        text=True,
+        cwd=REPOSITORY,
     )
     if completed.returncode not in (0, 1):
         raise RuntimeError(completed.stderr.strip())
@@ -51,7 +53,9 @@ def freeze() -> int:
     with BASELINE.open("w") as handle:
         json.dump(
             {"configuration": configuration_digest(), "files": dict(sorted(tally.items()))},
-            handle, indent=1, sort_keys=True,
+            handle,
+            indent=1,
+            sort_keys=True,
         )
         handle.write("\n")
     print(json.dumps({"files": len(tally), "findings": sum(tally.values())}, indent=2))

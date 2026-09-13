@@ -14,16 +14,22 @@ MOUNTS = (
 CONFIGURE = "image-configure.sh"
 GREENBOOT = ("greenboot", "0.16.4", "0")
 PACKAGES = (
-    "papirus-icon-theme", "papirus-icon-theme-dark",
-    "gnome-shell-extension-user-theme", "gnome-shell-extension-dash-to-dock",
-    "fprintd", "fprintd-pam", "ptyxis", "firefox", "alsa-utils", "libva-utils",
+    "papirus-icon-theme",
+    "papirus-icon-theme-dark",
+    "gnome-shell-extension-user-theme",
+    "gnome-shell-extension-dash-to-dock",
+    "fprintd",
+    "fprintd-pam",
+    "ptyxis",
+    "firefox",
+    "alsa-utils",
+    "libva-utils",
 )
 MASKED = ("bootc-fetch-apply-updates.timer", "bootc-fetch-apply-updates.service")
 USER_UNIT = "apex-desktop-defaults.service"
 ICON_THEME = "Papirus-Dark"
 CACHYOS_REFUSAL = (
-    "CachyOS profile blocked: a reviewed kernel RPM and matching NVIDIA package lock are "
-    "required"
+    "CachyOS profile blocked: a reviewed kernel RPM and matching NVIDIA package lock are required"
 )
 
 
@@ -36,7 +42,7 @@ def containerfile() -> str:
         "FROM ${BASE_IMAGE}\n"
         f"ARG KERNEL_PROFILE={DEFAULT_PROFILE}\n"
         "RUN" + mounts[3:] + " \\\n"
-        f"    bash {MOUNTS[1][1]}/{CONFIGURE} \"${{KERNEL_PROFILE}}\" && "
+        f'    bash {MOUNTS[1][1]}/{CONFIGURE} "${{KERNEL_PROFILE}}" && '
         "bootc container lint --fatal-warnings\n"
     )
 

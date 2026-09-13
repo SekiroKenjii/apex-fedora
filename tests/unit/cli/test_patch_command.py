@@ -43,8 +43,11 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
     "action,module", [("fingerprint-dialog", dialogcheck), ("elan-diagnostics", elancheck)]
 )
 def test_each_action_runs_its_check_and_replies_with_the_report(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, monkeypatch: pytest.MonkeyPatch,
-    action: str, module: object,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    module: object,
 ) -> None:
     seen: list[Path] = []
 
@@ -61,7 +64,9 @@ def test_each_action_runs_its_check_and_replies_with_the_report(
 
     assert reply.exit_code == 0
     assert reply.document == {
-        "status": "PASS", "cases": 2, "report": str(root.path / "results.json"),
+        "status": "PASS",
+        "cases": 2,
+        "report": str(root.path / "results.json"),
     }
     assert seen == [Path("/tmp/x.c")]
 

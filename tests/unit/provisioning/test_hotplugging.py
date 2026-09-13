@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from machinehost import RUN, Host
@@ -36,11 +37,14 @@ def spec(
     )
 
 
-def started(host: Host, **changes: object) -> Host:
+def started(host: Host, **changes: Any) -> Host:
     held = dataclasses.replace(host, ports=dataclasses.replace(host.ports, processes=Storage()))
     host.run_directory.path.mkdir(parents=True, exist_ok=True)
     launching.launch(
-        held.ports, root=held.root, spec=spec(held, **changes), run=RUN,  # type: ignore[arg-type]
+        held.ports,
+        root=held.root,
+        spec=spec(held, **changes),
+        run=RUN,  # type: ignore[arg-type]
         run_directory=held.run_directory,
     )
     host.monitor.reply(hotplugging.BLOCKDEV_ADD, {})

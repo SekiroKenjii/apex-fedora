@@ -42,9 +42,7 @@ def _line(finding: rulespecs.Finding) -> str:
     return f"{stated}; {finding.remedy}" if finding.remedy else stated
 
 
-def report(
-    findings: Sequence[rulespecs.Finding], *, subject: str, footer: str = ""
-) -> str:
+def report(findings: Sequence[rulespecs.Finding], *, subject: str, footer: str = "") -> str:
     """Sorted by rule, so what the operator reads never depends on import order."""
     ordered = sorted(findings, key=lambda finding: str(finding.rule))
     if len(ordered) == 1:

@@ -76,9 +76,17 @@ def test_a_key_that_did_not_sign_the_inventory_is_refused(root: safepaths.Runtim
     )
 
     with pytest.raises(errors.Refusal) as raised:
-        trust_command.run(request(
-            ports, root, "verify", "--build", str(BUILD), "--key", str(root.path / "keys/other.pub")
-        ))
+        trust_command.run(
+            request(
+                ports,
+                root,
+                "verify",
+                "--build",
+                str(BUILD),
+                "--key",
+                str(root.path / "keys/other.pub"),
+            )
+        )
 
     assert raised.value.reason is refusals.RefusalReason.SIGNATURE_REJECTED
 
@@ -91,10 +99,17 @@ def test_a_key_inside_the_bundle_cannot_establish_its_trust(root: safepaths.Runt
     )
 
     with pytest.raises(errors.Refusal) as raised:
-        trust_command.run(request(
-            ports, root, "verify", "--build", str(BUILD),
-            "--key", str(directory / "development-signing.pub"),
-        ))
+        trust_command.run(
+            request(
+                ports,
+                root,
+                "verify",
+                "--build",
+                str(BUILD),
+                "--key",
+                str(directory / "development-signing.pub"),
+            )
+        )
 
     assert raised.value.reason is refusals.RefusalReason.TRUST_ANCHOR_FROM_BUNDLE
 
@@ -114,7 +129,9 @@ def test_the_exercise_refuses_every_negative_and_files_its_results(
     assert reply.document["status"] == "PASS"
     checks = reply.document["checks"]
     assert isinstance(checks, dict) and set(checks) == {
-        "trust.bundled-key", "trust.changed-manifest", "trust.changed-payload",
+        "trust.bundled-key",
+        "trust.changed-manifest",
+        "trust.changed-payload",
         "trust.untrusted-key",
     }
     assert all(value == "PASS" for value in checks.values())

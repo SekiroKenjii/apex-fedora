@@ -40,9 +40,7 @@ def _decoded(name: bytes) -> str:
 def _row(meta: bytes, name: bytes, *, staged: bool) -> Row:
     fields = meta.decode("utf-8", errors="replace").split()
     if len(fields) < FIELD_COUNT:
-        raise errors.Refusal(
-            refusals.RefusalReason.MALFORMED_TREE_ROW, subject=repr(meta)
-        )
+        raise errors.Refusal(refusals.RefusalReason.MALFORMED_TREE_ROW, subject=repr(meta))
     if staged and fields[2] != MERGED_STAGE:
         raise errors.Refusal(
             refusals.RefusalReason.REPOSITORY_INDEX_UNMERGED,

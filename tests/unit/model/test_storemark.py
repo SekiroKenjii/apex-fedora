@@ -41,9 +41,7 @@ def test_a_symlinked_mark_is_refused_before_it_is_followed(tmp_path: Path) -> No
     assert isinstance(storemark.read_mark(tmp_path), storemark.Unreadable)
 
 
-def test_a_mark_larger_than_the_limit_is_unreadable_rather_than_truncated(
-    tmp_path: Path,
-) -> None:
+def test_a_mark_larger_than_the_limit_is_unreadable_rather_than_truncated(tmp_path: Path) -> None:
     padding = " " * (storemark.MARK_BYTE_LIMIT + 1)
     (tmp_path / storemark.MARK_NAME).write_text(
         json.dumps({storemark.SCHEMA_KEY: 1, "note": padding})
@@ -52,9 +50,7 @@ def test_a_mark_larger_than_the_limit_is_unreadable_rather_than_truncated(
     assert isinstance(storemark.read_mark(tmp_path), storemark.Unreadable)
 
 
-def test_a_mark_written_with_either_schema_or_version_reads_as_that_version(
-    tmp_path: Path,
-) -> None:
+def test_a_mark_written_with_either_schema_or_version_reads_as_that_version(tmp_path: Path) -> None:
     for key in (storemark.SCHEMA_KEY, storemark.VERSION_KEY):
         (tmp_path / storemark.MARK_NAME).write_text(json.dumps({key: 4}))
 

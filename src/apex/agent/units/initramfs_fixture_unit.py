@@ -74,8 +74,11 @@ def _armed_state(ports: agentports.AgentPorts, good: str, bad: str) -> deploymen
     status = deployments.read(ports)
     rollback = status.rollback.image if status.rollback is not None else None
     if (
-        status.booted is None or status.booted.image != good or status.staged is not None
-        or rollback != bad or not status.rollback_queued
+        status.booted is None
+        or status.booted.image != good
+        or status.staged is not None
+        or rollback != bad
+        or not status.rollback_queued
     ):
         raise deployments.unexpected("finalize signed B through its services while A is booted")
     for unit in FINALISERS:
@@ -107,9 +110,11 @@ def inspect(ports: agentports.AgentPorts, good: str, bad: str) -> encoding.Docum
         safepaths.SafePath(Path(defaults.BOOT_ID)), limit=defaults.DOCUMENT_LIMIT.value
     )
     return {
-        "bootc": status.document, "grubenv": dict(held),
+        "bootc": status.document,
+        "grubenv": dict(held),
         "entries": {version: one.document() for version, one in bound.items()},
-        "protected": bootentries.protected(ports, bound), "boot_id": boot_id.decode().strip(),
+        "protected": bootentries.protected(ports, bound),
+        "boot_id": boot_id.decode().strip(),
     }
 
 
@@ -124,9 +129,13 @@ def _entries(plan: encoding.Document) -> dict[str, bootentries.Bound]:
             raise deployments.unexpected("the plan's entries are malformed")
         text = str(item.get("text"))
         found[version] = bootentries.Bound(
-            version=version, path=str(item.get("path")), text=text,
-            entry=initramfs_fixture.parse_entry(text), deployment=str(item.get("deployment")),
-            marker={}, boot_files={str(k): str(v) for k, v in files_held.items()},
+            version=version,
+            path=str(item.get("path")),
+            text=text,
+            entry=initramfs_fixture.parse_entry(text),
+            deployment=str(item.get("deployment")),
+            marker={},
+            boot_files={str(k): str(v) for k, v in files_held.items()},
         )
     return found
 
@@ -185,8 +194,10 @@ def inject(
     after = initramfs_fixture.modified_entry(b.text, f"/{bad_reference}")
     bootentries.unchanged(ports, protected, except_for="")
     initramfs_fixture.require_isolated(
-        entries["a"].entry, b.entry,
-        a_initrd=entries["a"].boot_files["initrd"], b_initrd=b.boot_files["initrd"],
+        entries["a"].entry,
+        b.entry,
+        a_initrd=entries["a"].boot_files["initrd"],
+        b_initrd=b.boot_files["initrd"],
     )
     proof = safepaths.SafePath(Path(initramfs_fixture.TEST_DIRECTORY) / run_id)
     if ports.files.exists(proof):
@@ -200,10 +211,16 @@ def inject(
     _swap_entry(ports, target, after, protected[str(target)], run_id)
     bootentries.unchanged(ports, protected, except_for=str(target))
     result: encoding.Document = {
-        "status": PASS, "scope": SCOPE, "plan_sha256": expected, "directory": str(proof),
-        "bad_file": str(bad_file), "bad_file_identity": bootentries.fingerprint(ports, bad_file),
-        "changed_bls": str(target), "bls_after": after,
-        "bls_after_sha256": ports.digests.file(target).hex, "other_boot_inputs_unchanged": True,
+        "status": PASS,
+        "scope": SCOPE,
+        "plan_sha256": expected,
+        "directory": str(proof),
+        "bad_file": str(bad_file),
+        "bad_file_identity": bootentries.fingerprint(ports, bad_file),
+        "changed_bls": str(target),
+        "bls_after": after,
+        "bls_after_sha256": ports.digests.file(target).hex,
+        "other_boot_inputs_unchanged": True,
     }
     ports.files.write_atomic(proof / "result.json", encoding.canonical(result), mode=PRIVATE_FILE)
     deployments.output(ports, commands.Argv.of("sync", "-f", str(proof)))

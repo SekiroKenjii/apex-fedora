@@ -10,9 +10,7 @@ from __future__ import annotations
 from apex.attestation import readerspecs
 from apex.registry import decorators, discovery, registry
 
-_collector: registry.Registry[str, readerspecs.StoreReaderSpec] = registry.Registry(
-    "store reader"
-)
+_collector: registry.Registry[str, readerspecs.StoreReaderSpec] = registry.Registry("store reader")
 _sealed: registry.SealedRegistry[str, readerspecs.StoreReaderSpec] | None = None
 
 

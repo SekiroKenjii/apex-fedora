@@ -24,15 +24,21 @@ def judge_rows(
 ) -> tuple[rulespecs.Finding, ...]:
     findings: list[rulespecs.Finding] = []
     for row in rows:
-        findings.extend(gitguarding.judge_entry(
-            rulespecs.EntrySubject(path=row.path, mode=row.mode, size=sizes.get(row.object_name)),
-            rules=entry_rules,
-        ))
+        findings.extend(
+            gitguarding.judge_entry(
+                rulespecs.EntrySubject(
+                    path=row.path, mode=row.mode, size=sizes.get(row.object_name)
+                ),
+                rules=entry_rules,
+            )
+        )
         payload = contents.get(row.object_name)
         if row.mode.carries_blob and payload is not None:
-            findings.extend(gitguarding.judge_content(
-                rulespecs.ContentSubject(path=row.path, payload=payload), rules=content_rules
-            ))
+            findings.extend(
+                gitguarding.judge_content(
+                    rulespecs.ContentSubject(path=row.path, payload=payload), rules=content_rules
+                )
+            )
     return tuple(findings)
 
 

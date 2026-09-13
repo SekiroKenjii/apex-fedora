@@ -31,12 +31,9 @@ def test_a_permitted_source_file_with_plain_bytes_raises_no_finding() -> None:
 def test_each_row_is_judged_by_what_the_rules_can_see() -> None:
     private = judge((row(".env", "abc"),), {"abc": 3}, {"abc": b"A=1"})
     link = judge((row("link", "abc", treerows.EntryMode.SYMLINK),), {}, {})
-    too_large = judge(
-        (row("blob.bin", "big"),), {"big": defaults.SOURCE_BLOB_LIMIT.value + 1}, {}
-    )
+    too_large = judge((row("blob.bin", "big"),), {"big": defaults.SOURCE_BLOB_LIMIT.value + 1}, {})
     secret = judge(
-        (row("notes.txt", "abc"),), {"abc": 30},
-        {"abc": b"-----BEGIN " + b"PRIVATE KEY-----\nx\n"},
+        (row("notes.txt", "abc"),), {"abc": 30}, {"abc": b"-----BEGIN " + b"PRIVATE KEY-----\nx\n"}
     )
 
     assert "repository.private-document" in private

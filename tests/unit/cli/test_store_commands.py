@@ -34,14 +34,18 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 def recorded_store(root: safepaths.RuntimeRoot, checks: int) -> fake_files.MemoryFiles:
     files = fake_files.MemoryFiles()
     recorder = recording.Recorder.open(
-        root, filesystem=files, identities=fake_ids.SequenceIdentities(),
+        root,
+        filesystem=files,
+        identities=fake_ids.SequenceIdentities(),
         clock=fake_clock.ManualClock(),
     )
     for spec in list(catalogue.sealed().values())[:checks]:
         recorder.record(
-            check=spec.id, verdict=verdicts.PASSED,
+            check=spec.id,
+            verdict=verdicts.PASSED,
             offered=[minting.Offered(payload=b"proof", kind=spec.accepted_proof_kinds[0])],
-            candidate=CANDIDATE, witnessed=spec.environment,
+            candidate=CANDIDATE,
+            witnessed=spec.environment,
         )
     (root.path / storemark.MARK_NAME).write_bytes(storemark.document(storemark.SECOND_VERSION))
     candidate = json.dumps({"digest": str(CANDIDATE), "build_id": "b" * 32}).encode()
@@ -51,7 +55,9 @@ def recorded_store(root: safepaths.RuntimeRoot, checks: int) -> fake_files.Memor
 
 
 def request(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot | None, *arguments: str,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot | None,
+    *arguments: str,
     environment: dict[str, str] | None = None,
 ) -> commandspecs.Request:
     return commandspecs.Request(

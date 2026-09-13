@@ -39,8 +39,14 @@ def run(
     work = _directory(arguments, "work")
     output = _directory(arguments, "output")
     token = str(arguments.get("token", ""))
-    _run(ports, "dnf5", "-y", "install", *installer_fixture.PACKAGES,
-         deadline=defaults.PACKAGE_INSTALL_DEADLINE)
+    _run(
+        ports,
+        "dnf5",
+        "-y",
+        "install",
+        *installer_fixture.PACKAGES,
+        deadline=defaults.PACKAGE_INSTALL_DEADLINE,
+    )
     ports.files.make_directory(work, mode=DIRECTORY_MODE)
     raw = safepaths.SafePath(work.path / installer_fixture.RAW_IMAGE)
     _run(ports, "truncate", "-s", f"{installer_fixture.OTHER_SIZE.value}G", str(raw))
@@ -57,10 +63,28 @@ def run(
     ports.files.make_directory(output, mode=DIRECTORY_MODE)
     other = safepaths.SafePath(output.path / installer_fixture.OTHER_IMAGE)
     target = safepaths.SafePath(output.path / installer_fixture.TARGET_IMAGE)
-    _run(ports, backingchain.QEMU_IMG, "convert", "-f", "raw", "-O", "qcow2", str(raw), str(other),
-         deadline=defaults.IMAGE_TOOL_DEADLINE)
-    _run(ports, backingchain.QEMU_IMG, "create", "-f", "qcow2", str(target),
-         f"{installer_fixture.TARGET_SIZE.value}G", deadline=defaults.IMAGE_TOOL_DEADLINE)
+    _run(
+        ports,
+        backingchain.QEMU_IMG,
+        "convert",
+        "-f",
+        "raw",
+        "-O",
+        "qcow2",
+        str(raw),
+        str(other),
+        deadline=defaults.IMAGE_TOOL_DEADLINE,
+    )
+    _run(
+        ports,
+        backingchain.QEMU_IMG,
+        "create",
+        "-f",
+        "qcow2",
+        str(target),
+        f"{installer_fixture.TARGET_SIZE.value}G",
+        deadline=defaults.IMAGE_TOOL_DEADLINE,
+    )
     table = _run(ports, "sfdisk", "--json", str(raw)).stdout.decode(errors="replace")
     report: encoding.Document = {
         "purpose": installer_fixture.PURPOSE,
@@ -106,8 +130,16 @@ def _prepare(
     node = safepaths.SafePath(Path(device))
     ports.clock.wait_until(lambda: ports.files.exists(node), defaults.PARTITION_APPEARS)
     _run(ports, *partition.format_argv(device), deadline=defaults.IMAGE_TOOL_DEADLINE)
-    _run(ports, "mount", "-t", partition.filesystem, "-o", installer_fixture.MOUNT_OPTIONS,
-         device, str(mount))
+    _run(
+        ports,
+        "mount",
+        "-t",
+        partition.filesystem,
+        "-o",
+        installer_fixture.MOUNT_OPTIONS,
+        device,
+        str(mount),
+    )
     try:
         sentinel = safepaths.SafePath(mount.path / partition.sentinel)
         content = f"Disposable Apex installer fixture {partition.index}: {token}\n".encode()

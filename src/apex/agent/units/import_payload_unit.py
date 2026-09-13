@@ -38,8 +38,10 @@ def run(
     tag = f"{defaults.PAYLOAD_TAG_PREFIX}{frozen.digest.hex}"
     stored = containers.ImageReference.stored(tag)
     ports.containers.copy(
-        containers.ImageReference(containers.Transport.OCI_ARCHIVE, str(archive)), stored,
-        policy=None, signing=None,
+        containers.ImageReference(containers.Transport.OCI_ARCHIVE, str(archive)),
+        stored,
+        policy=None,
+        signing=None,
     )
     manifest = ports.containers.manifest(stored)
     output = work / builds.OUTPUT_DIRECTORY

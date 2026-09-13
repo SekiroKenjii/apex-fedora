@@ -35,8 +35,11 @@ class Bound:
 
     def document(self) -> encoding.Document:
         return {
-            "path": self.path, "text": self.text, "fields": dataclasses.asdict(self.entry),
-            "files": dict(self.boot_files), "deployment": self.deployment,
+            "path": self.path,
+            "text": self.text,
+            "fields": dataclasses.asdict(self.entry),
+            "files": dict(self.boot_files),
+            "deployment": self.deployment,
             "marker": dict(self.marker),
         }
 
@@ -47,9 +50,14 @@ def fingerprint(ports: agentports.AgentPorts, path: safepaths.SafePath) -> encod
         raise deployments.unexpected(f"expected a regular final file: {path}")
     identity = ports.files.identity(path)
     return {
-        "sha256": ports.digests.file(path).hex, "size": identity.size,
-        "inode": identity.inode, "device": identity.device, "links": identity.links,
-        "mode": seen.mode.value, "uid": seen.owner, "gid": seen.group,
+        "sha256": ports.digests.file(path).hex,
+        "size": identity.size,
+        "inode": identity.inode,
+        "device": identity.device,
+        "links": identity.links,
+        "mode": seen.mode.value,
+        "uid": seen.owner,
+        "gid": seen.group,
     }
 
 
@@ -74,9 +82,7 @@ def _inside_boot(path: safepaths.SafePath) -> bool:
     return str(path).startswith(initramfs_fixture.BOOT_DIRECTORY + "/")
 
 
-def boot_files(
-    ports: agentports.AgentPorts, entry: initramfs_fixture.BootEntry
-) -> dict[str, str]:
+def boot_files(ports: agentports.AgentPorts, entry: initramfs_fixture.BootEntry) -> dict[str, str]:
     """The kernel and initramfs the entry names, resolved below the boot filesystem."""
     found: dict[str, str] = {}
     for key, value in ((BOOT_FILES[0], entry.linux), (BOOT_FILES[1], entry.initrd)):
@@ -111,8 +117,12 @@ def _bind_one(
     if ports.files.inspect(path).kind is files.EntryKind.SYMLINK or not _inside_boot(actual):
         raise deployments.unexpected("BLS entry escapes the boot filesystem")
     return Bound(
-        version=matches[0], path=str(actual), text=text, entry=entry,
-        deployment=str(destination), marker=found,
+        version=matches[0],
+        path=str(actual),
+        text=text,
+        entry=entry,
+        deployment=str(destination),
+        marker=found,
         boot_files={} if allow_fault else boot_files(ports, entry),
     )
 
@@ -144,7 +154,8 @@ def protected(
         safepaths.SafePath(Path(initramfs_fixture.GRUB_CONFIG)),
         safepaths.SafePath(Path(initramfs_fixture.GRUB_ENVIRONMENT)),
         *(
-            efi / item.relative for item in ports.files.list_tree(efi)
+            efi / item.relative
+            for item in ports.files.list_tree(efi)
             if item.kind is files.EntryKind.REGULAR
         ),
     ]

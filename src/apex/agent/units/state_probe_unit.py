@@ -17,8 +17,13 @@ OBSERVATIONS: Mapping[str, commands.Argv] = {
     "bootc": commands.Argv.of("bootc", "status", "--format", "json"),
     "gdm": commands.Argv.of("systemctl", "is-active", "gdm"),
     "dbus": commands.Argv.of(
-        "busctl", "--system", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-        "org.freedesktop.DBus", "GetId",
+        "busctl",
+        "--system",
+        "call",
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        "GetId",
     ),
     "root_mount": commands.Argv.of(
         "findmnt", "--noheadings", "--output", "TARGET,SOURCE,FSTYPE,OPTIONS", "/"

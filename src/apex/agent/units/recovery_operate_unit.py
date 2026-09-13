@@ -22,8 +22,16 @@ MIGRATION = commands.Argv.of("bootupctl", "migrate-static-grub-config")
 COLLECTION: Mapping[str, commands.Argv] = {
     "boots": commands.Argv.of("journalctl", "--list-boots", "--no-pager"),
     "journal": commands.Argv.of(
-        "journalctl", "-u", "gdm", "-u", "greenboot-healthcheck",
-        "-u", "greenboot-set-rollback-trigger", "--no-pager", "-o", "json",
+        "journalctl",
+        "-u",
+        "gdm",
+        "-u",
+        "greenboot-healthcheck",
+        "-u",
+        "greenboot-set-rollback-trigger",
+        "--no-pager",
+        "-o",
+        "json",
     ),
 }
 RECORD_SUFFIX = ".json"

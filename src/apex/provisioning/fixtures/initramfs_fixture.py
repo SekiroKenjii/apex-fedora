@@ -73,9 +73,7 @@ def parse_entry(text: str, *, allow_fault: bool = False) -> BootEntry:
 def modified_entry(text: str, new_initrd: str) -> str:
     entry = parse_entry(text)
     if not FAULT_PATH.fullmatch(new_initrd):
-        raise errors.Refusal(
-            refusals.RefusalReason.FIXTURE_PATH_NOT_ISOLATED, subject=new_initrd
-        )
+        raise errors.Refusal(refusals.RefusalReason.FIXTURE_PATH_NOT_ISOLATED, subject=new_initrd)
     old = f"initrd {entry.initrd}\n"
     if not text.endswith("\n") or text.count(old) != 1:
         raise _malformed("unknown initrd line layout")
@@ -84,7 +82,7 @@ def modified_entry(text: str, new_initrd: str) -> str:
 
 def corrupted_head(head: bytes) -> bytes:
     """The first bytes of the fault image: the marker over the start of the real one."""
-    return MARKER + head[len(MARKER):]
+    return MARKER + head[len(MARKER) :]
 
 
 def require_isolated(a: BootEntry, b: BootEntry, *, a_initrd: str, b_initrd: str) -> None:

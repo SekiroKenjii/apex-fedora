@@ -43,13 +43,22 @@ def request(
 
 
 def completed(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, private: Path,
-    build: identifiers.BuildId = BUILD, *, status: str = "PASS", image_id: str = "b" * 64,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    private: Path,
+    build: identifiers.BuildId = BUILD,
+    *,
+    status: str = "PASS",
+    image_id: str = "b" * 64,
 ) -> identifiers.Digest:
     digest = documents(ports.files, root, build, status=status, image_id=image_id)
     output = root.path / "exports" / str(build) / "output"
     signed_output(
-        ports, root, private, build=build, digest=str(digest),
+        ports,
+        root,
+        private,
+        build=build,
+        digest=str(digest),
         extra={
             "image.json": (output / "image.json").read_bytes(),
             "manifest.json": (output / "manifest.json").read_bytes(),

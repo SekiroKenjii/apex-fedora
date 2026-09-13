@@ -65,7 +65,8 @@ def test_a_run_without_a_record_is_refused_by_name(host: Host) -> None:
 )
 def test_a_record_of_another_shape_is_refused(host: Host, payload: bytes) -> None:
     host.files.write_atomic(
-        safepaths.SafePath(host.run_directory.path / defaults.RUN_RECORD_NAME), payload,
+        safepaths.SafePath(host.run_directory.path / defaults.RUN_RECORD_NAME),
+        payload,
         mode=defaults.RECORD_MODE,
     )
 

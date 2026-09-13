@@ -28,12 +28,17 @@ def for_case(
 
     def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         ports = context.ports
-        asked = case if arguments is None else dataclasses.replace(
-            case, arguments=dict(arguments(context))
+        asked = (
+            case
+            if arguments is None
+            else dataclasses.replace(case, arguments=dict(arguments(context)))
         )
         try:
             found = probing.observe(
-                ports, context.facts[verifykeys.GUEST], context.facts[verifykeys.AGENT], asked,
+                ports,
+                context.facts[verifykeys.GUEST],
+                context.facts[verifykeys.AGENT],
+                asked,
                 token=ports.identities.token(),
             )
         except errors.Refusal as refusal:

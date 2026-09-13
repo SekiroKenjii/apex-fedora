@@ -24,8 +24,11 @@ RUN = identifiers.RunId("a" * 32)
 
 def base() -> sourcelock.LockedSource:
     return sourcelock.LockedSource(
-        name="base_image", url=locators.HttpsUrl(URL), sha256=hashing.digest_bytes(BODY),
-        filename=locators.Basename("builder-base.qcow2"), commit=None,
+        name="base_image",
+        url=locators.HttpsUrl(URL),
+        sha256=hashing.digest_bytes(BODY),
+        filename=locators.Basename("builder-base.qcow2"),
+        commit=None,
     )
 
 
@@ -81,11 +84,27 @@ def test_a_fresh_root_gets_every_piece_and_says_so(
     assert (root.path / "builder-base.qcow2").read_bytes() == BODY
     calls = [tuple(call) for call in process.calls]
     assert (
-        "qemu-img", "create", "-f", "qcow2", "-F", "qcow2", "-b",
-        str(root.path / "builder-base.qcow2"), str(root.path / "builder.qcow2"), "160G",
+        "qemu-img",
+        "create",
+        "-f",
+        "qcow2",
+        "-F",
+        "qcow2",
+        "-b",
+        str(root.path / "builder-base.qcow2"),
+        str(root.path / "builder.qcow2"),
+        "160G",
     ) in calls
     assert (
-        "ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "apex-local-builder", "-f",
+        "ssh-keygen",
+        "-q",
+        "-t",
+        "ed25519",
+        "-N",
+        "",
+        "-C",
+        "apex-local-builder",
+        "-f",
         str(root.path / "builder_ed25519"),
     ) in calls
     assert (root.path / "seed.iso").read_bytes() == builderseed.seed(PUBLIC_KEY, RUN)

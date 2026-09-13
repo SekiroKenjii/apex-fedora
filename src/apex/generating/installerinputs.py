@@ -7,8 +7,11 @@ from apex.model import release
 SOURCE = "/apex-installer-source"
 ANACONDA_VARIANT = "silverblue"
 MASKED = (
-    "gdm.service", "greenboot-healthcheck.service", "greenboot-reboot.service",
-    "greenboot-rollback.service", "bootc-fetch-apply-updates.service",
+    "gdm.service",
+    "greenboot-healthcheck.service",
+    "greenboot-reboot.service",
+    "greenboot-rollback.service",
+    "bootc-fetch-apply-updates.service",
     "bootc-fetch-apply-updates.timer",
 )
 UNIT_DROPINS = (
@@ -113,5 +116,5 @@ def configure(profile: release.ReleaseProfile) -> str:
         f"test -s {efi}/gcdx64.efi\n"
         "test -s /etc/selinux/targeted/contexts/files/file_contexts\n"
         "test \"$(sed -n 's/^SELINUX=//p' /etc/selinux/config)\" = enforcing\n"
-        f"for tool in {' '.join(TOOLS)}; do command -v \"$tool\"; done\n"
+        f'for tool in {" ".join(TOOLS)}; do command -v "$tool"; done\n'
     )

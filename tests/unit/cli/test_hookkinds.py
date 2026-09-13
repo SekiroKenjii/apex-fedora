@@ -34,32 +34,41 @@ def request(processes: fake_process.ScriptedProcess, stdin: str = "") -> hookspe
 
 
 def test_pre_commit_reads_the_index_once_the_sizes_once_and_the_small_blobs_once() -> None:
-    processes = fake_process.ScriptedProcess({
-        git("ls-files", "--stage", "-z"): fake_process.Reply(
-            stdout=b"100644 abc 0\tsrc/a.py\x00100644 abc 0\tsrc/b.py\x00"
-        ),
-        git("cat-file", "--batch-check"): fake_process.Reply(stdout=b"abc blob 10\n"),
-        git("cat-file", "--batch"): fake_process.Reply(stdout=b"abc blob 10\nvalue = 1\n\n"),
-    })
+    processes = fake_process.ScriptedProcess(
+        {
+            git("ls-files", "--stage", "-z"): fake_process.Reply(
+                stdout=b"100644 abc 0\tsrc/a.py\x00100644 abc 0\tsrc/b.py\x00"
+            ),
+            git("cat-file", "--batch-check"): fake_process.Reply(stdout=b"abc blob 10\n"),
+            git("cat-file", "--batch"): fake_process.Reply(stdout=b"abc blob 10\nvalue = 1\n\n"),
+        }
+    )
 
     findings = kind("pre-commit").inspect(request(processes))
 
     assert findings == ()
     assert [tuple(call)[3:] for call in processes.calls] == [
-        ("ls-files", "--stage", "-z"), ("cat-file", "--batch-check"), ("cat-file", "--batch"),
+        ("ls-files", "--stage", "-z"),
+        ("cat-file", "--batch-check"),
+        ("cat-file", "--batch"),
     ]
 
 
 def test_pre_commit_refuses_a_private_file_and_a_secret_by_their_rules() -> None:
-    processes = fake_process.ScriptedProcess({
-        git("ls-files", "--stage", "-z"): fake_process.Reply(
-            stdout=b"100644 aaa 0\t.env\x00100644 bbb 0\tnotes.txt\x00"
-        ),
-        git("cat-file", "--batch-check"): fake_process.Reply(stdout=b"aaa blob 3\nbbb blob 32\n"),
-        git("cat-file", "--batch"): fake_process.Reply(
-            stdout=b"aaa blob 3\nA=1\nbbb blob 32\n-----BEGIN " + b"PRIVATE KEY-----\nsecret\n\n"
-        ),
-    })
+    processes = fake_process.ScriptedProcess(
+        {
+            git("ls-files", "--stage", "-z"): fake_process.Reply(
+                stdout=b"100644 aaa 0\t.env\x00100644 bbb 0\tnotes.txt\x00"
+            ),
+            git("cat-file", "--batch-check"): fake_process.Reply(
+                stdout=b"aaa blob 3\nbbb blob 32\n"
+            ),
+            git("cat-file", "--batch"): fake_process.Reply(
+                stdout=b"aaa blob 3\nA=1\nbbb blob 32\n-----BEGIN "
+                + b"PRIVATE KEY-----\nsecret\n\n"
+            ),
+        }
+    )
 
     rules = sorted(str(item.rule) for item in kind("pre-commit").inspect(request(processes)))
 
@@ -68,11 +77,9 @@ def test_pre_commit_refuses_a_private_file_and_a_secret_by_their_rules() -> None
 
 
 def test_pre_commit_stops_at_an_unmerged_index() -> None:
-    processes = fake_process.ScriptedProcess({
-        git("ls-files", "--stage", "-z"): fake_process.Reply(
-            stdout=b"100644 abc 1\tsrc/a.py\x00"
-        ),
-    })
+    processes = fake_process.ScriptedProcess(
+        {git("ls-files", "--stage", "-z"): fake_process.Reply(stdout=b"100644 abc 1\tsrc/a.py\x00")}
+    )
 
     with pytest.raises(errors.Refusal) as refused:
         kind("pre-commit").inspect(request(processes))

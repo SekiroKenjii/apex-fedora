@@ -29,13 +29,22 @@ from apex.trust import preflight
 WORK = "/var/tmp/apex-trust-" + "a" * 32
 PRIVATE = quantities.FileMode(0o600)
 REJECTING = {
-    "wrong-policy.json", "wrong-identity-policy.json", "unsigned-policy.json",
-    "tampered-signature-policy.json", "tampered-manifest-policy.json",
+    "wrong-policy.json",
+    "wrong-identity-policy.json",
+    "unsigned-policy.json",
+    "tampered-signature-policy.json",
+    "tampered-manifest-policy.json",
     "unexpected-source-policy.json",
 }
 EXPECTED_CASES = {
-    "signed-roundtrip", "same-store-preflight", "wrong-key", "wrong-identity", "unsigned",
-    "tampered-signature", "tampered-manifest", "unexpected-source",
+    "signed-roundtrip",
+    "same-store-preflight",
+    "wrong-key",
+    "wrong-identity",
+    "unsigned",
+    "tampered-signature",
+    "tampered-manifest",
+    "unexpected-source",
 }
 
 
@@ -86,9 +95,9 @@ def engine(files: fake_files.MemoryFiles) -> fake_containers.FakeRegistry:
     return registry
 
 
-def bundle(*, store: str = "overlay /var/lib/containers/storage") -> tuple[
-    fake_process.ScriptedProcess, fake_files.MemoryFiles, agentports.AgentPorts
-]:
+def bundle(
+    *, store: str = "overlay /var/lib/containers/storage"
+) -> tuple[fake_process.ScriptedProcess, fake_files.MemoryFiles, agentports.AgentPorts]:
     process = fake_process.ScriptedProcess()
     process.expect(("systemd-detect-virt", "--vm"), fake_process.Reply(stdout=b"kvm\n"))
     process.expect(("skopeo", "--version"), fake_process.Reply(stdout=b"skopeo version 1.20\n"))
@@ -99,17 +108,24 @@ def bundle(*, store: str = "overlay /var/lib/containers/storage") -> tuple[
     files = fake_files.MemoryFiles()
     files.write_atomic(
         safepaths.SafePath(Path(defaults.BUILDER_MARKER)),
-        f"{defaults.BUILDER_MARKER_TEXT}\n".encode(), mode=PRIVATE,
+        f"{defaults.BUILDER_MARKER_TEXT}\n".encode(),
+        mode=PRIVATE,
     )
     files.write_atomic(
-        safepaths.SafePath(Path(defaults.CONTAINER_POLICY)), b'{"default": [{"type": "reject"}]}',
+        safepaths.SafePath(Path(defaults.CONTAINER_POLICY)),
+        b'{"default": [{"type": "reject"}]}',
         mode=PRIVATE,
     )
     ports = agentports.AgentPorts(
-        processes=process, files=files, clock=fake_clock.ManualClock(),
-        containers=engine(files), digests=fake_digesting.CountingDigests(),
-        archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        processes=process,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=engine(files),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return process, files, ports
 
@@ -140,9 +156,14 @@ def test_every_case_passes_and_the_report_is_written(proxy: Proxy) -> None:
     assert registry.builds[0].layers is False and registry.builds[0].network_none is False
     assert [key.prefix.path.name for key in registry.keys] == ["trusted", "wrong"]
     assert [item[1] for item in proxy.opened] == [
-        "trusted-policy.json", "trusted-policy.json", "wrong-policy.json",
-        "wrong-identity-policy.json", "unsigned-policy.json", "tampered-signature-policy.json",
-        "tampered-manifest-policy.json", "unexpected-source-policy.json",
+        "trusted-policy.json",
+        "trusted-policy.json",
+        "wrong-policy.json",
+        "wrong-identity-policy.json",
+        "unsigned-policy.json",
+        "tampered-signature-policy.json",
+        "tampered-manifest-policy.json",
+        "unexpected-source-policy.json",
     ]
 
 
@@ -165,8 +186,12 @@ def test_the_copies_run_in_the_older_order(proxy: Proxy) -> None:
     ]
     assert copies[0].signing is not None and copies[0].signing.identity == tag
     assert [item.destination.name.rsplit("/", 1)[-1] for item in copies[4:]] == [
-        "rejected-wrong-key", "rejected-wrong-identity", "rejected-unsigned",
-        "rejected-tampered-signature", "rejected-tampered-manifest", "rejected-unexpected-source",
+        "rejected-wrong-key",
+        "rejected-wrong-identity",
+        "rejected-unsigned",
+        "rejected-tampered-signature",
+        "rejected-tampered-manifest",
+        "rejected-unexpected-source",
     ]
 
 

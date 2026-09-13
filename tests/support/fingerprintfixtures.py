@@ -163,16 +163,22 @@ def fingerprint_guest(
         write(sources.path / name, body)
     registry = fake_containers.FakeRegistry()
     registry.reply(
-        IMAGE_ID, NEVRA_QUERY,
+        IMAGE_ID,
+        NEVRA_QUERY,
         commands.CompletedRun(
             exit_code=0, stdout=spec.target_rpms.encode(), stderr=b"", truncated=False
         ),
     )
     process = Builder(spec, write)
     ports = agentports.AgentPorts(
-        processes=process, files=files, clock=fake_clock.ManualClock(), containers=registry,
-        digests=fake_digesting.CountingDigests(), archives=fake_archives.MemoryArchives(),
-        identities=fake_ids.SequenceIdentities(), extents=fake_extents.FakeExtents(),
+        processes=process,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=registry,
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
         blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return process, files, ports

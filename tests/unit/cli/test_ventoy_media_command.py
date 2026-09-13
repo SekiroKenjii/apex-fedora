@@ -19,7 +19,9 @@ from apex.wiring import contexts
 
 
 def request(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    repository: safepaths.SourceRoot,
     *arguments: str,
 ) -> commandspecs.Request:
     return commandspecs.Request(
@@ -36,9 +38,18 @@ def request(
 
 def options(laid: inputs_support.Laid) -> tuple[str, ...]:
     return (
-        "--live-output", str(laid.live_output), "--ubuntu", str(laid.ubuntu),
-        "--trusted-key", str(laid.trusted_key), "--checksums", str(laid.checksums),
-        "--signature", str(laid.signature), "--keyring", str(laid.keyring),
+        "--live-output",
+        str(laid.live_output),
+        "--ubuntu",
+        str(laid.ubuntu),
+        "--trusted-key",
+        str(laid.trusted_key),
+        "--checksums",
+        str(laid.checksums),
+        "--signature",
+        str(laid.signature),
+        "--keyring",
+        str(laid.keyring),
     )
 
 
@@ -75,7 +86,12 @@ def test_the_recipe_declares_the_six_operand_justfile_recipe_it_always_had() -> 
 
     assert recipe.name == "ventoy-media"
     assert recipe.parameters == (
-        "live_output", "ubuntu", "trusted_key", "checksums", "signature", "keyring",
+        "live_output",
+        "ubuntu",
+        "trusted_key",
+        "checksums",
+        "signature",
+        "keyring",
     )
     assert recipe.argv[0] == "ventoy-media"
     assert recipe.argv[1:3] == ("--live-output", "{{live_output}}")

@@ -57,7 +57,8 @@ OPERANDS: dict[str, tuple[frozenset[str], frozenset[str]]] = {
     str(builds.ArtifactKind.NVIDIA): (DERIVED, DERIVED),
     str(builds.ArtifactKind.FINGERPRINT_RPMS): (frozenset(), frozenset()),
     str(builds.ArtifactKind.FINGERPRINT_IMAGE): (
-        frozenset({PARENT, RPM_BUILD, GTK_TEST}), frozenset({PARENT, RPM_BUILD, GTK_TEST}),
+        frozenset({PARENT, RPM_BUILD, GTK_TEST}),
+        frozenset({PARENT, RPM_BUILD, GTK_TEST}),
     ),
     FIXTURES: (frozenset(), frozenset()),
     UPDATE_FIXTURES: (DERIVED, DERIVED),
@@ -69,14 +70,17 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog=f"apex {NAME}", description=SUMMARY)
     parser.add_argument("kind", choices=KINDS)
     parser.add_argument(
-        "--profile", choices=[str(profile) for profile in builds.Profile],
-        default=str(builds.Profile.FEDORA), help="the image's profile; an image build only",
+        "--profile",
+        choices=[str(profile) for profile in builds.Profile],
+        default=str(builds.Profile.FEDORA),
+        help="the image's profile; an image build only",
     )
     parser.add_argument(
         f"--{PARENT}", help="the completed image build a derived artifact comes from"
     )
     parser.add_argument(
-        f"--{TEST_ACCESS}", action="store_true",
+        f"--{TEST_ACCESS}",
+        action="store_true",
         help="a disposable account with a key and a password; a qcow2 only",
     )
     parser.add_argument(f"--{RPM_BUILD}", help="the completed fingerprint package build")
@@ -101,11 +105,15 @@ class Request:
     def parse(cls, arguments: argparse.Namespace) -> Request:
         kind = str(arguments.kind)
         given = {
-            name for name, value in (
-                (PARENT, arguments.parent), (TEST_ACCESS, arguments.test_access),
-                (RPM_BUILD, arguments.rpm_build), (GTK_TEST, arguments.gtk_test),
+            name
+            for name, value in (
+                (PARENT, arguments.parent),
+                (TEST_ACCESS, arguments.test_access),
+                (RPM_BUILD, arguments.rpm_build),
+                (GTK_TEST, arguments.gtk_test),
                 (FIXTURE, arguments.fixture),
-            ) if value
+            )
+            if value
         }
         required, permitted = OPERANDS[kind]
         if PARENT in required - given:
@@ -121,9 +129,12 @@ class Request:
                 remedy=f"given: {_spelt(frozenset(given))}",
             )
         return cls(
-            kind=kind, profile=builds.Profile(str(arguments.profile)),
-            parent=_build_id(arguments.parent), test_access=bool(arguments.test_access),
-            rpm_build=_build_id(arguments.rpm_build), gtk_test=_build_id(arguments.gtk_test),
+            kind=kind,
+            profile=builds.Profile(str(arguments.profile)),
+            parent=_build_id(arguments.parent),
+            test_access=bool(arguments.test_access),
+            rpm_build=_build_id(arguments.rpm_build),
+            gtk_test=_build_id(arguments.gtk_test),
             fixture=arguments.fixture,
         )
 
@@ -164,30 +175,43 @@ class Seeds:
 
 def _image(seeds: Seeds) -> runner.Outcome:
     return image_recipe.build(
-        seeds.ports, repository=seeds.repository, runtime_root=seeds.root,
-        builder=seeds.builder, profile=seeds.request.profile,
+        seeds.ports,
+        repository=seeds.repository,
+        runtime_root=seeds.root,
+        builder=seeds.builder,
+        profile=seeds.request.profile,
     )
 
 
 def _disk(seeds: Seeds) -> runner.Outcome:
     return disk_artifact_recipe.derive(
-        seeds.ports, repository=seeds.repository, runtime_root=seeds.root,
-        builder=seeds.builder, kind=builds.ArtifactKind(seeds.request.kind),
-        parent=seeds.parent(), test_access=seeds.request.test_access,
+        seeds.ports,
+        repository=seeds.repository,
+        runtime_root=seeds.root,
+        builder=seeds.builder,
+        kind=builds.ArtifactKind(seeds.request.kind),
+        parent=seeds.parent(),
+        test_access=seeds.request.test_access,
     )
 
 
 def _live(seeds: Seeds) -> runner.Outcome:
     return live_artifact_recipe.derive(
-        seeds.ports, repository=seeds.repository, runtime_root=seeds.root,
-        builder=seeds.builder, parent=seeds.parent(),
+        seeds.ports,
+        repository=seeds.repository,
+        runtime_root=seeds.root,
+        builder=seeds.builder,
+        parent=seeds.parent(),
     )
 
 
 def _nvidia(seeds: Seeds) -> runner.Outcome:
     return nvidia_recipe.build(
-        seeds.ports, repository=seeds.repository, runtime_root=seeds.root,
-        builder=seeds.builder, parent=seeds.parent(),
+        seeds.ports,
+        repository=seeds.repository,
+        runtime_root=seeds.root,
+        builder=seeds.builder,
+        parent=seeds.parent(),
     )
 
 
@@ -202,8 +226,13 @@ def _fingerprint_image(seeds: Seeds) -> runner.Outcome:
     if rpm_build is None or gtk_test is None:
         raise errors.InternalDefect("a fingerprint image request without its tests passed parsing")
     return fingerprint_image_recipe.build(
-        seeds.ports, repository=seeds.repository, runtime_root=seeds.root,
-        builder=seeds.builder, parent=seeds.parent(), rpm_build=rpm_build, gtk_test=gtk_test,
+        seeds.ports,
+        repository=seeds.repository,
+        runtime_root=seeds.root,
+        builder=seeds.builder,
+        parent=seeds.parent(),
+        rpm_build=rpm_build,
+        gtk_test=gtk_test,
     )
 
 
@@ -215,16 +244,24 @@ def _fixtures(seeds: Seeds) -> runner.Outcome:
 
 def _update_fixtures(seeds: Seeds) -> runner.Outcome:
     return update_fixtures_recipe.build(
-        seeds.ports, builder=seeds.builder, wheel=seeds.wheel(), parent=seeds.parent(),
-        root=seeds.root, repository=seeds.repository,
+        seeds.ports,
+        builder=seeds.builder,
+        wheel=seeds.wheel(),
+        parent=seeds.parent(),
+        root=seeds.root,
+        repository=seeds.repository,
     )
 
 
 def _recovery_disk(seeds: Seeds) -> runner.Outcome:
     located = updatefixtures.locate(seeds.ports, seeds.root, str(seeds.request.fixture))
     return recovery_disk_recipe.build(
-        seeds.ports, repository=seeds.repository, runtime_root=seeds.root,
-        builder=seeds.builder, wheel=seeds.wheel(), fixture=located,
+        seeds.ports,
+        repository=seeds.repository,
+        runtime_root=seeds.root,
+        builder=seeds.builder,
+        wheel=seeds.wheel(),
+        fixture=located,
     )
 
 
@@ -267,7 +304,10 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     root = _root(request.context)
     ports = request.context.bundle(root)
     seeds = Seeds(
-        ports=ports, request=asked, repository=request.context.repository, root=root,
+        ports=ports,
+        request=asked,
+        repository=request.context.repository,
+        root=root,
         builder=builderaccess.leased_builder(ports, root),
     )
     outcome = RECIPES_BY_KIND[asked.kind](seeds)
@@ -286,22 +326,31 @@ RECIPES = (
         "artifact", ("kind", "build_id"), (NAME, "{{kind}}", f"--{PARENT}", "{{build_id}}")
     ),
     commandspecs.Recipe(
-        "test-disk", ("build_id",),
+        "test-disk",
+        ("build_id",),
         (NAME, str(builds.ArtifactKind.QCOW2), f"--{PARENT}", "{{build_id}}", f"--{TEST_ACCESS}"),
     ),
     commandspecs.Recipe("installer-fixtures", (), (NAME, FIXTURES)),
     commandspecs.Recipe(
-        "build-nvidia", ("build_id",),
+        "build-nvidia",
+        ("build_id",),
         (NAME, str(builds.ArtifactKind.NVIDIA), f"--{PARENT}", "{{build_id}}"),
     ),
     commandspecs.Recipe(
         "build-fingerprint-rpms", (), (NAME, str(builds.ArtifactKind.FINGERPRINT_RPMS))
     ),
     commandspecs.Recipe(
-        "build-fingerprint-image", ("parent_build", "rpm_build", "gtk_test"),
+        "build-fingerprint-image",
+        ("parent_build", "rpm_build", "gtk_test"),
         (
-            NAME, str(builds.ArtifactKind.FINGERPRINT_IMAGE), f"--{PARENT}", "{{parent_build}}",
-            f"--{RPM_BUILD}", "{{rpm_build}}", f"--{GTK_TEST}", "{{gtk_test}}",
+            NAME,
+            str(builds.ArtifactKind.FINGERPRINT_IMAGE),
+            f"--{PARENT}",
+            "{{parent_build}}",
+            f"--{RPM_BUILD}",
+            "{{rpm_build}}",
+            f"--{GTK_TEST}",
+            "{{gtk_test}}",
         ),
     ),
     commandspecs.Recipe(

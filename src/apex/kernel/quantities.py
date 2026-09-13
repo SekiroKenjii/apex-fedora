@@ -57,9 +57,7 @@ class TcpPort:
 
     def __post_init__(self) -> None:
         if not 1 <= self.value <= HIGHEST_TCP_PORT:
-            raise errors.Refusal(
-                refusals.RefusalReason.PORT_OUT_OF_RANGE, subject=str(self.value)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PORT_OUT_OF_RANGE, subject=str(self.value))
 
     def __str__(self) -> str:
         return str(self.value)
@@ -71,9 +69,7 @@ class FileMode:
 
     def __post_init__(self) -> None:
         if not 0 <= self.value <= PERMISSION_BITS:
-            raise errors.Refusal(
-                refusals.RefusalReason.MODE_OUT_OF_RANGE, subject=oct(self.value)
-            )
+            raise errors.Refusal(refusals.RefusalReason.MODE_OUT_OF_RANGE, subject=oct(self.value))
 
     def __str__(self) -> str:
         return f"{self.value:04o}"

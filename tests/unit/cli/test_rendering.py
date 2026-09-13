@@ -31,19 +31,12 @@ def table(*, strict: bool, faults: tuple[str, ...] = ()) -> columns.Table:
         version=1, attestations=(attestation("build.one"),), candidate=CANDIDATE, faults=faults
     )
     outcome = readiness.Outcome(
-        ready=False,
-        verdicts={"build.one": verdicts.PASSED},
-        counts={"PASS": 1},
-        faults=(),
+        ready=False, verdicts={"build.one": verdicts.PASSED}, counts={"PASS": 1}, faults=()
     )
     withheld: tuple[retracting.Withheld, ...] = ()
     if strict:
-        outcome, withheld = retracting.retract(
-            outcome, attestations=list(reading.attestations)
-        )
-    return columns.tabulate(
-        reading=reading, outcome=outcome, withheld=withheld, strict=strict
-    )
+        outcome, withheld = retracting.retract(outcome, attestations=list(reading.attestations))
+    return columns.tabulate(reading=reading, outcome=outcome, withheld=withheld, strict=strict)
 
 
 def test_the_rendering_names_every_heading() -> None:

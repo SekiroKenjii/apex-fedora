@@ -38,9 +38,7 @@ def test_a_guest_command_carries_a_deadline_and_an_output_limit() -> None:
 
 
 def test_a_completed_run_reports_truncation_explicitly() -> None:
-    completed = commands.CompletedRun(
-        exit_code=0, stdout=b"x" * 10, stderr=b"", truncated=True
-    )
+    completed = commands.CompletedRun(exit_code=0, stdout=b"x" * 10, stderr=b"", truncated=True)
 
     assert completed.truncated
     assert completed.succeeded
@@ -56,8 +54,7 @@ def test_the_default_output_limit_matches_the_guest_probes() -> None:
 
 def test_a_planned_command_renders_without_revealing_a_secret() -> None:
     planned = commands.PlannedCommand(
-        argv=commands.Argv.of("ssh", "-p", str(quantities.TcpPort(22245))),
-        redacted=("password",),
+        argv=commands.Argv.of("ssh", "-p", str(quantities.TcpPort(22245))), redacted=("password",)
     )
 
     assert "password" not in planned.rendered

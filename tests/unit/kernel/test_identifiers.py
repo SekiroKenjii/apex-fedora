@@ -26,8 +26,12 @@ def test_a_digest_renders_the_prefixed_form() -> None:
 @pytest.mark.parametrize(
     "value",
     [
-        "", "sha256:", BARE_DIGEST[:-1], BARE_DIGEST + "a",
-        BARE_DIGEST.upper(), "sha512:" + BARE_DIGEST,
+        "",
+        "sha256:",
+        BARE_DIGEST[:-1],
+        BARE_DIGEST + "a",
+        BARE_DIGEST.upper(),
+        "sha512:" + BARE_DIGEST,
     ],
 )
 def test_a_malformed_digest_is_refused(value: str) -> None:

@@ -16,7 +16,7 @@ from apex.adapters.fakes import fake_guestshell
 from apex.composition import keys as composition_keys
 from apex.kernel import refusals, safepaths
 from apex.ports import portset
-from apex.verification import updateops, verifykeys
+from apex.verification import operationplans, updatefixtures, updateops, verifykeys
 from apex.verification.recipes import (
     initramfs_operation_recipe,
     recovery_operation_recipe,
@@ -43,6 +43,27 @@ def wheel(root: safepaths.RuntimeRoot) -> safepaths.SafePath:
     return safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root)
 
 
+def inputs(
+    root: safepaths.RuntimeRoot,
+    located: updatefixtures.Located,
+    action: str,
+    *,
+    monitor: safepaths.SafePath | None = None,
+    inspection: dict[str, Any] | None = None,
+) -> operationplans.Inputs:
+    return operationplans.Inputs(
+        guest=ops.guest_target(root),
+        wheel=wheel(root),
+        fixture=located,
+        action=action,
+        credentials=ops.credentials(),
+        process=PROCESS,
+        root=root,
+        monitor=monitor,
+        inspection=inspection,
+    )
+
+
 def report_of(
     files: MirroredFiles, root: safepaths.RuntimeRoot, outcome: Any, name: str
 ) -> dict[str, Any]:
@@ -57,14 +78,7 @@ def update(
     located = ops.exported_fixture(ports, files, root)
     guest = ops.answering(answers)
     outcome = update_operation_recipe.verify(
-        ops.held(ports, files, guest),
-        guest=ops.guest_target(root),
-        wheel=wheel(root),
-        fixture=located,
-        action=action,
-        credentials=ops.credentials(),
-        process=PROCESS,
-        root=root,
+        ops.held(ports, files, guest), inputs(root, located, action)
     )
     return outcome, guest, files
 
@@ -168,17 +182,10 @@ def test_a_rollback_needs_b_booted_with_a_behind_it_and_a_policy_that_is_the_fix
         ports,
         root,
         "rollback",
-        {
-            "update.state": ops.state(ops.IMAGE_B, rollback=ops.IMAGE_A, policy="0" * 64),
-        },
+        {"update.state": ops.state(ops.IMAGE_B, rollback=ops.IMAGE_A, policy="0" * 64)},
     )
     wrong_slot, _, _ = update(
-        ports,
-        root,
-        "rollback",
-        {
-            "update.state": ops.state(ops.IMAGE_A, rollback=ops.IMAGE_B),
-        },
+        ports, root, "rollback", {"update.state": ops.state(ops.IMAGE_A, rollback=ops.IMAGE_B)}
     )
 
     assert rolled.succeeded, rolled.detail
@@ -213,15 +220,7 @@ def test_the_check_logs_in_reads_the_health_and_the_marker_and_the_sentinel(
     held = dataclasses.replace(held, monitor=DrawingMonitor(files, {"application.ppm": BARS}))
 
     outcome = update_check_recipe.verify(
-        held,
-        guest=ops.guest_target(root),
-        wheel=wheel(root),
-        fixture=located,
-        action="check-a",
-        credentials=ops.credentials(),
-        process=PROCESS,
-        monitor=root.child("qmp.sock"),
-        root=root,
+        held, inputs(root, located, "check-a", monitor=root.child("qmp.sock"))
     )
 
     assert outcome.succeeded, outcome.detail
@@ -253,14 +252,7 @@ def recovery(
             "sudo -k -S -p '' systemctl reboot", fake_guestshell.GuestReply(exit_code=reboot_exit)
         )
     outcome = recovery_operation_recipe.verify(
-        ops.held(ports, files, guest),
-        guest=ops.guest_target(root),
-        wheel=wheel(root),
-        fixture=located,
-        action=action,
-        credentials=ops.credentials(),
-        process=PROCESS,
-        root=root,
+        ops.held(ports, files, guest), inputs(root, located, action)
     )
     return outcome, guest, files
 
@@ -305,13 +297,19 @@ def test_the_collection_is_judged_for_the_two_failure_fallback(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
     collected = {
-        "operation": "collect", "records": {},
+        "operation": "collect",
+        "records": {},
         "programs": {"boots": ops.program("boots"), "journal": ops.program("")},
     }
-    outcome, guest, files = recovery(ports, root, "collect", {
-        "recovery.inspect": [ops.inspection(ops.IMAGE_A), ops.inspection(ops.IMAGE_A)],
-        "recovery.operate": collected,
-    })
+    outcome, guest, files = recovery(
+        ports,
+        root,
+        "collect",
+        {
+            "recovery.inspect": [ops.inspection(ops.IMAGE_A), ops.inspection(ops.IMAGE_A)],
+            "recovery.operate": collected,
+        },
+    )
 
     assert outcome.succeeded, outcome.detail
     assert guest.requests[1]["arguments"] == {"operation": "collect"}
@@ -327,17 +325,13 @@ def test_the_installed_check_and_the_reboot_are_judged_by_the_guest_and_the_requ
         ports,
         root,
         "verify-installed",
-        {
-            "recovery.installed": {"status": "FAIL", "failure": "SELinux is not enforcing"},
-        },
+        {"recovery.installed": {"status": "FAIL", "failure": "SELinux is not enforcing"}},
     )
     rebooted, _, reboot_files = recovery(
         ports,
         root,
         "reboot",
-        {
-            "recovery.inspect": ops.inspection(ops.IMAGE_A, staged=ops.IMAGE_B),
-        },
+        {"recovery.inspect": ops.inspection(ops.IMAGE_A, staged=ops.IMAGE_B)},
         reboot_exit=255,
     )
     unstaged, _, _ = recovery(
@@ -366,15 +360,7 @@ def initramfs(
     located = ops.exported_fixture(ports, files, root)
     guest = ops.answering({"fixture.initramfs": answer})
     outcome = initramfs_operation_recipe.verify(
-        ops.held(ports, files, guest),
-        guest=ops.guest_target(root),
-        wheel=wheel(root),
-        fixture=located,
-        action=action,
-        credentials=ops.credentials(),
-        process=PROCESS,
-        inspection=inspection,
-        root=root,
+        ops.held(ports, files, guest), inputs(root, located, action, inspection=inspection)
     )
     return outcome, guest, files
 

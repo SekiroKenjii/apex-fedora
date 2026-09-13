@@ -62,9 +62,7 @@ class LocalFiles(files.FileSystemPort):
         directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         existed = path.path.exists()
         try:
-            descriptor = os.open(
-                path.path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, mode.value
-            )
+            descriptor = os.open(path.path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, mode.value)
             try:
                 os.write(descriptor, payload + b"\n")
                 os.fsync(descriptor)
@@ -151,9 +149,7 @@ class LocalFiles(files.FileSystemPort):
             names = sorted(entry.name for entry in base.iterdir())
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
-        return tuple(
-            files.TreeEntry(relative=name, kind=_kind_of(base / name)) for name in names
-        )
+        return tuple(files.TreeEntry(relative=name, kind=_kind_of(base / name)) for name in names)
 
     def resolve(self, path: safepaths.SafePath) -> safepaths.SafePath:
         try:
@@ -167,8 +163,11 @@ class LocalFiles(files.FileSystemPort):
         except OSError as error:
             raise errors.PortFailure(port="files", cause=str(error)) from error
         return files.FileIdentity(
-            device=info.st_dev, inode=info.st_ino, size=info.st_size,
-            modified_nanoseconds=info.st_mtime_ns, links=info.st_nlink,
+            device=info.st_dev,
+            inode=info.st_ino,
+            size=info.st_size,
+            modified_nanoseconds=info.st_mtime_ns,
+            links=info.st_nlink,
             allocated=info.st_blocks * BLOCK,
         )
 

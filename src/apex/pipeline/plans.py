@@ -48,11 +48,7 @@ class Plan[P]:
 
 def render(plan: Plan[Any]) -> encoding.Document:
     """The plan as an operator reads it and as the golden copy records it."""
-    return {
-        "name": plan.name,
-        "digest": plan.digest.hex,
-        "stages": _describe(plan.stages),
-    }
+    return {"name": plan.name, "digest": plan.digest.hex, "stages": _describe(plan.stages)}
 
 
 def _digest(name: str, ordered: Sequence[Stage[Any]]) -> identifiers.Digest:

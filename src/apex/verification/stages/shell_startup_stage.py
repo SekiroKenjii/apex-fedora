@@ -16,10 +16,10 @@ from collections.abc import Mapping, Sequence
 from apex.attestation import minting
 from apex.composition import keys as composition_keys
 from apex.config import defaults
-from apex.kernel import encoding, errors, identifiers, verdicts
-from apex.pipeline import effects, facts, stages
+from apex.kernel import encoding, errors, verdicts
+from apex.pipeline import facts, stages
 from apex.ports import portset
-from apex.verification import console, judging, probing, verifykeys
+from apex.verification import console, desktopstages, judging, probing, verifykeys
 
 KEY = verifykeys.judged("shell.startup")
 STARTUP = "shell-startup.png"
@@ -30,7 +30,9 @@ FOUND = "found"
 REACHED = "reached"
 EXPECTED = "expected"
 ROUNDTRIP: tuple[tuple[str | None, bool], ...] = (
-    (None, False), (defaults.OVERVIEW_KEY, True), (defaults.ESCAPE_KEY, False),
+    (None, False),
+    (defaults.OVERVIEW_KEY, True),
+    (defaults.ESCAPE_KEY, False),
 )
 
 
@@ -51,21 +53,7 @@ def for_cases(
         except errors.PortFailure as failure:
             return stages.Fail(cause=failure.cause)
 
-    return stages.SimpleStage(
-        id=identifiers.StageId("desktop.shell-startup"),
-        reads=(
-            verifykeys.GUEST, verifykeys.AGENT, verifykeys.MONITOR,
-            composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID, *gates,
-        ),
-        writes=(KEY,),
-        attests=frozenset(),
-        effects=frozenset({
-            effects.Effect.REMOTE_EXEC, effects.Effect.MUTATES_GUEST,
-            effects.Effect.WRITES_RUNTIME,
-        }),
-        preflight=stages.always_ready,
-        apply=apply,
-    )
+    return desktopstages.stage("desktop.shell-startup", KEY, apply, reads=gates)
 
 
 def _prepare(
@@ -88,7 +76,9 @@ def _prepare(
     passed = len(followed) == len(ROUNDTRIP) and all(followed)
     return _advance(
         verdicts.PASSED if passed else verdicts.FAILED,
-        startup=started.observations, followed=followed, proofs=proofs,
+        startup=started.observations,
+        followed=followed,
+        proofs=proofs,
     )
 
 
@@ -121,8 +111,11 @@ def _observe(
 ) -> probing.Observation:
     ports = context.ports
     return probing.observe(
-        ports, context.facts[verifykeys.GUEST], context.facts[verifykeys.AGENT],
-        dataclasses.replace(case, arguments=dict(arguments)), token=ports.identities.token(),
+        ports,
+        context.facts[verifykeys.GUEST],
+        context.facts[verifykeys.AGENT],
+        dataclasses.replace(case, arguments=dict(arguments)),
+        token=ports.identities.token(),
     )
 
 

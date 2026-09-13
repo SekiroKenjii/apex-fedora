@@ -1,5 +1,5 @@
 {
- "configuration": "5c6d6a6c23c6dcf91a555bc969845ce44f4f1e011290088251bfb559458fcbec",
+ "configuration": "530f9f75d676ec22fe7bfc4daa3216bbac7a3057a94aae8d238d8d5534cdcf04",
  "files": {
   "guest/clean-image.py": 3,
   "guest/compose-shell-theme.py": 2,

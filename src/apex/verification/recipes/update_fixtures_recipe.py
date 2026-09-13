@@ -47,10 +47,15 @@ STAGES = (
     update_retrieve_stage.for_case(CASE),
     retain_report_stage.for_probe(CASE),
 )
-SEEDS = frozenset({
-    verifykeys.BUILDER, verifykeys.WHEEL, verifykeys.PARENT, composition_keys.RUNTIME_ROOT,
-    composition_keys.REPOSITORY,
-})
+SEEDS = frozenset(
+    {
+        verifykeys.BUILDER,
+        verifykeys.WHEEL,
+        verifykeys.PARENT,
+        composition_keys.RUNTIME_ROOT,
+        composition_keys.REPOSITORY,
+    }
+)
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 

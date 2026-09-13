@@ -8,7 +8,7 @@ digest to what it reported. The request written beside the run names all of it b
 
 from __future__ import annotations
 
-from apex.composition import exports, fingerprintpackages, keys
+from apex.composition import artifactchecks, exports, fingerprintpackages, keys
 from apex.config import defaults
 from apex.kernel import encoding, errors, identifiers, refusals, safepaths
 from apex.model import builds, oci
@@ -34,8 +34,10 @@ def development_anchor(root: safepaths.RuntimeRoot) -> anchors.TrustAnchor:
 
 
 def _require_signed_parent(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot,
-    parent: identifiers.BuildId, frozen: oci.FrozenImage,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    parent: identifiers.BuildId,
+    frozen: oci.FrozenImage,
 ) -> None:
     verified = verifying.verify_bundle(
         ports,
@@ -56,14 +58,16 @@ def _read(ports: portset.HostPorts, path: safepaths.SafePath) -> dict[str, encod
 
 
 def _rpms(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot,
-    report: fingerprintpackages.RpmBuildReport, home: safepaths.SafePath,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    report: fingerprintpackages.RpmBuildReport,
+    home: safepaths.SafePath,
     lock: fingerprintpackages.PackageLock,
 ) -> dict[str, identifiers.Digest]:
     found: dict[str, identifiers.Digest] = {}
     for name in fingerprintpackages.image_rpms(lock):
         relative = f"{defaults.FINGERPRINT_PACKAGES_DIRECTORY}/{name}"
-        fingerprintpackages.require_artifacts(
+        artifactchecks.require_artifacts(
             ports, root, home, {relative: report.artifacts.get(relative, "")}
         )
         found[name] = identifiers.Digest(report.artifacts[relative])
@@ -109,7 +113,8 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         return stages.Fail(cause=str(failure))
     context.ports.files.write_atomic(
         exports.inside(
-            context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID],
+            context.facts[keys.RUNTIME_ROOT],
+            context.facts[keys.RUN_ID],
             defaults.FINGERPRINT_REQUEST_NAME,
         ),
         encoding.canonical(request.document()) + b"\n",
@@ -121,8 +126,13 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("fingerprint.inputs"),
     reads=(
-        keys.PARENT, keys.FROZEN, keys.RPM_BUILD, keys.GTK_TEST, keys.REPOSITORY,
-        keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.PARENT,
+        keys.FROZEN,
+        keys.RPM_BUILD,
+        keys.GTK_TEST,
+        keys.REPOSITORY,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
     ),
     writes=(keys.FINGERPRINT_REQUEST,),
     attests=frozenset(),

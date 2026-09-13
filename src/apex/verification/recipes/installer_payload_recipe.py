@@ -40,21 +40,24 @@ STAGES = (
     deliver_agent_stage.STAGE,
     installer_request_stage.STAGE,
     fault_stage.for_case(
-        CASE, arguments=_arguments,
+        CASE,
+        arguments=_arguments,
         after=(verifykeys.INSTALLER_REQUEST, verifykeys.FAULT_CASE, verifykeys.WRONG_KEY),
     ),
     installer_keep_stage.for_case(CASE),
     retain_report_stage.for_case(CASE),
 )
-SEEDS = frozenset({
-    verifykeys.GUEST,
-    verifykeys.WHEEL,
-    verifykeys.MACHINE_RUN,
-    verifykeys.MACHINE_PROCESS,
-    verifykeys.FAULT_CASE,
-    verifykeys.WRONG_KEY,
-    composition_keys.RUNTIME_ROOT,
-})
+SEEDS = frozenset(
+    {
+        verifykeys.GUEST,
+        verifykeys.WHEEL,
+        verifykeys.MACHINE_RUN,
+        verifykeys.MACHINE_PROCESS,
+        verifykeys.FAULT_CASE,
+        verifykeys.WRONG_KEY,
+        composition_keys.RUNTIME_ROOT,
+    }
+)
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 

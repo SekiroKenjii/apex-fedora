@@ -68,11 +68,16 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
 
 RECIPES = (
     commandspecs.Recipe(
-        NAME, tuple(option.replace("-", "_") for option in OPTIONS),
-        (NAME, *(
-            word for option in OPTIONS
-            for word in (f"--{option}", "{{" + option.replace("-", "_") + "}}")
-        )),
+        NAME,
+        tuple(option.replace("-", "_") for option in OPTIONS),
+        (
+            NAME,
+            *(
+                word
+                for option in OPTIONS
+                for word in (f"--{option}", "{{" + option.replace("-", "_") + "}}")
+            ),
+        ),
     ),
 )
 

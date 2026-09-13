@@ -125,9 +125,7 @@ class Nevra:
     def parse(cls, value: str) -> Self:
         matched = _NEVRA_QUERY.fullmatch(value)
         if matched is None:
-            raise errors.Refusal(
-                refusals.RefusalReason.MALFORMED_PACKAGE_COORDINATE, subject=value
-            )
+            raise errors.Refusal(refusals.RefusalReason.MALFORMED_PACKAGE_COORDINATE, subject=value)
         return cls(
             name=matched["name"],
             epoch=int(matched["epoch"]),

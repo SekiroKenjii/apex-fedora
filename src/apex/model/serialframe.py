@@ -44,9 +44,7 @@ def encode(payload: bytes, *, token: identifiers.Token) -> list[bytes]:
 class FrameDecoder:
     """Feed it bytes as they arrive. It answers with the payload once, when the trailer holds."""
 
-    def __init__(
-        self, *, token: identifiers.Token, limit: bounded.Limit = TRANSFER_LIMIT
-    ) -> None:
+    def __init__(self, *, token: identifiers.Token, limit: bounded.Limit = TRANSFER_LIMIT) -> None:
         name = str(token).encode()
         self._chunk_prefix = SEPARATOR.join((CHUNK_PREFIX, name)) + SEPARATOR
         self._trailer_prefix = SEPARATOR.join((TRAILER_PREFIX, name)) + SEPARATOR

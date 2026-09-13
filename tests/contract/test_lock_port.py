@@ -30,9 +30,7 @@ def test_a_lease_records_who_holds_it(locks: locking_port.LockPort) -> None:
         assert lease.holder
 
 
-def test_the_holder_is_readable_while_the_lock_is_held(
-    locks: locking_port.LockPort,
-) -> None:
+def test_the_holder_is_readable_while_the_lock_is_held(locks: locking_port.LockPort) -> None:
     with locks.acquire(scope(), immediate()) as lease:
         assert locks.holder(scope()) == lease.holder
 
@@ -56,9 +54,7 @@ def test_a_contended_lock_refuses_immediately_and_names_the_holder(
     assert holder in str(raised.value)
 
 
-def test_a_bounded_wait_gives_up_rather_than_hanging(
-    locks: locking_port.LockPort,
-) -> None:
+def test_a_bounded_wait_gives_up_rather_than_hanging(locks: locking_port.LockPort) -> None:
     with locks.acquire(scope(), immediate()), pytest.raises(errors.Refusal):
         locks.acquire(scope(), bounded_wait()).__enter__()
 

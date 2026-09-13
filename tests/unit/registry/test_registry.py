@@ -17,9 +17,7 @@ class Widget:
 
 
 def where(line: int = 1) -> provenance.Provenance:
-    return provenance.Provenance(
-        module="apex.example.widget", qualname="WIDGET", line=line
-    )
+    return provenance.Provenance(module="apex.example.widget", qualname="WIDGET", line=line)
 
 
 def test_a_registration_is_readable_after_sealing() -> None:

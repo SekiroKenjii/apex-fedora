@@ -37,14 +37,18 @@ def bundle(*, free: int = 100, raw: bytes = RAW) -> agentports.AgentPorts:
     files.free = quantities.Gib(free).as_bytes()
     files.write_atomic(
         safepaths.SafePath(Path(defaults.BUILDER_MARKER)),
-        f"{defaults.BUILDER_MARKER_TEXT}\n".encode(), mode=PRIVATE,
+        f"{defaults.BUILDER_MARKER_TEXT}\n".encode(),
+        mode=PRIVATE,
     )
     files.write_atomic(
         safepaths.SafePath(Path(WORK) / "target-image.json"),
-        json.dumps({
-            "profile": "fedora", "digest": str(hashing.digest_bytes(RAW)),
-            "image_id": "sha256:" + "c" * 64,
-        }).encode(),
+        json.dumps(
+            {
+                "profile": "fedora",
+                "digest": str(hashing.digest_bytes(RAW)),
+                "image_id": "sha256:" + "c" * 64,
+            }
+        ).encode(),
         mode=PRIVATE,
     )
     registry = fake_containers.FakeRegistry()
@@ -60,7 +64,8 @@ def bundle(*, free: int = 100, raw: bytes = RAW) -> agentports.AgentPorts:
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 

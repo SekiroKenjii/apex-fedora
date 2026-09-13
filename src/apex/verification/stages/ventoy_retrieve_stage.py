@@ -37,12 +37,19 @@ def for_case(case: probing.ProbeCase) -> stages.SimpleStage[portset.HostPorts]:
         )
         try:
             context.ports.guest.receive(
-                guest, remote=output, into=exports.directory(root, run), recursive=True,
+                guest,
+                remote=output,
+                into=exports.directory(root, run),
+                recursive=True,
                 deadline=defaults.TRANSFER_DEADLINE,
             )
             image, _ = ventoymedia.bind(
-                context.ports, root, run, context.facts[verifykeys.VENTOY_PREPARED],
-                context.facts[observed].observations, remote=context.facts[verifykeys.WORK],
+                context.ports,
+                root,
+                run,
+                context.facts[verifykeys.VENTOY_PREPARED],
+                context.facts[observed].observations,
+                remote=context.facts[verifykeys.WORK],
             )
         except errors.PortFailure as failure:
             return stages.Fail(cause=failure.cause)
@@ -53,8 +60,12 @@ def for_case(case: probing.ProbeCase) -> stages.SimpleStage[portset.HostPorts]:
     return stages.SimpleStage(
         id=identifiers.StageId("ventoy.retrieve"),
         reads=(
-            verifykeys.GUEST, observed, verifykeys.WORK, verifykeys.VENTOY_PREPARED,
-            composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID,
+            verifykeys.GUEST,
+            observed,
+            verifykeys.WORK,
+            verifykeys.VENTOY_PREPARED,
+            composition_keys.RUNTIME_ROOT,
+            composition_keys.RUN_ID,
         ),
         writes=(verifykeys.MEDIA,),
         attests=frozenset(),

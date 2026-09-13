@@ -49,7 +49,8 @@ class DeliveringGuest(fake_guestshell.ScriptedGuest):
             (home / name).write_bytes(data)
         self.filesystem.write_atomic(
             safepaths.SafePath(home / defaults.NVIDIA_REPORT_NAME),
-            json.dumps(self.report).encode(), mode=fixture.PRIVATE,
+            json.dumps(self.report).encode(),
+            mode=fixture.PRIVATE,
         )
 
 
@@ -92,7 +93,8 @@ def prepared(
     parentbuild.documents(filesystem, root, PARENT)
     filesystem.write_atomic(
         exports.inside(root, PARENT, f"output/{defaults.KERNEL_CONFIG_NAME}"),
-        fixture.kernel_config(compiler), mode=fixture.PRIVATE,
+        fixture.kernel_config(compiler),
+        mode=fixture.PRIVATE,
     )
     guest = DeliveringGuest(filesystem, fixture.report(IMAGE_ID) if report is None else report)
     return dataclasses.replace(
@@ -136,11 +138,16 @@ def test_the_packages_are_built_over_the_imported_payload_and_the_report_is_boun
     assert str(record.kind) == "nvidia" and str(record.status) == "PASS"
     assert record.parent == PARENT and record.test_access is False
     assert outcome.facts[keys.NVIDIA_REPORT]["stage"] == "rpm-build"
-    verification = json.loads(held.files.read_bytes(
-        exports.inside(root, run, defaults.NVIDIA_VERIFICATION_NAME), limit=4096
-    ))
+    verification = json.loads(
+        held.files.read_bytes(
+            exports.inside(root, run, defaults.NVIDIA_VERIFICATION_NAME), limit=4096
+        )
+    )
     assert verification == {
-        "status": "PASS", "reason": "", "parent_build": str(PARENT), "ready_to_install": False,
+        "status": "PASS",
+        "reason": "",
+        "parent_build": str(PARENT),
+        "ready_to_install": False,
     }
 
 
@@ -167,9 +174,11 @@ def test_a_report_the_host_cannot_bind_leaves_a_failed_record_and_says_why(
     run = outcome.facts[keys.RUN_ID]
     record = json.loads(held.files.read_bytes(exports.inside(root, run, "result.json"), limit=4096))
     assert record["status"] == "FAIL" and record["kind"] == "nvidia"
-    verification = json.loads(held.files.read_bytes(
-        exports.inside(root, run, defaults.NVIDIA_VERIFICATION_NAME), limit=4096
-    ))
+    verification = json.loads(
+        held.files.read_bytes(
+            exports.inside(root, run, defaults.NVIDIA_VERIFICATION_NAME), limit=4096
+        )
+    )
     assert verification["status"] == "FAIL" and "claims a test" in verification["reason"]
 
 
@@ -193,7 +202,9 @@ def test_a_failed_guest_build_is_recorded_with_its_log_and_nothing_is_bound(
     run = outcome.facts[keys.RUN_ID]
     record = json.loads(held.files.read_bytes(exports.inside(root, run, "result.json"), limit=4096))
     assert record["status"] == "FAIL"
-    verification = json.loads(held.files.read_bytes(
-        exports.inside(root, run, defaults.NVIDIA_VERIFICATION_NAME), limit=4096
-    ))
+    verification = json.loads(
+        held.files.read_bytes(
+            exports.inside(root, run, defaults.NVIDIA_VERIFICATION_NAME), limit=4096
+        )
+    )
     assert verification["reason"] == "the guest build failed"

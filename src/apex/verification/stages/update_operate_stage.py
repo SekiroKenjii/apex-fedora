@@ -23,8 +23,11 @@ def _provision(operation: operating.Operation, before: encoding.Document) -> Non
     installed_a = operation.action == updateops.PROVISION_A
     parent = operation.located.document.get("parent")
     expected = (
-        operation.image("a") if installed_a
-        else str(parent.get("digest")) if isinstance(parent, dict) else ""
+        operation.image("a")
+        if installed_a
+        else str(parent.get("digest"))
+        if isinstance(parent, dict)
+        else ""
     )
     bootcstatus.require_booted(before["bootc"], expected)
     ports = operation.context.ports
@@ -36,16 +39,22 @@ def _provision(operation: operating.Operation, before: encoding.Document) -> Non
         raise bootcstatus.unexpected("payload archive checksum mismatch")
     upload = safepaths.RemotePath(f"{defaults.UPDATE_UPLOAD_PREFIX}{operation.fixture}.tar")
     ports.guest.send(
-        operation.context.facts[verifykeys.GUEST], local=archive, remote=upload,
+        operation.context.facts[verifykeys.GUEST],
+        local=archive,
+        remote=upload,
         deadline=defaults.TRANSFER_DEADLINE,
     )
-    operation.report["provisioned"] = operation.ask(PROVISION, {
-        "fixture": operation.fixture, "archive": str(upload),
-        "archive_sha256": operation.located.report.archive.hex,
-        "public_key_sha256": operation.located.report.public_key.hex,
-        "policy_sha256": operation.located.report.files[updateops.POLICY_FILE].hex,
-        "installed_a": installed_a,
-    })
+    operation.report["provisioned"] = operation.ask(
+        PROVISION,
+        {
+            "fixture": operation.fixture,
+            "archive": str(upload),
+            "archive_sha256": operation.located.report.archive.hex,
+            "public_key_sha256": operation.located.report.public_key.hex,
+            "policy_sha256": operation.located.report.files[updateops.POLICY_FILE].hex,
+            "installed_a": installed_a,
+        },
+    )
     operation.report["sentinel_creation"] = operation.ask(
         SENTINEL, {"action": "create"}, privileged=False
     )
@@ -55,10 +64,13 @@ def _switch(operation: operating.Operation, before: encoding.Document) -> None:
     source = updateops.SOURCES[operation.action]
     if operation.action != updateops.SWITCH_A:
         bootcstatus.require_booted(before["bootc"], operation.image("a"))
-    switched = operation.ask(OPERATE, {
-        "operation": "switch",
-        "source": updateops.source_directory(operation.fixture, operation.action),
-    })
+    switched = operation.ask(
+        OPERATE,
+        {
+            "operation": "switch",
+            "source": updateops.source_directory(operation.fixture, operation.action),
+        },
+    )
     after = operation.ask(STATE)
     operation.report["after"] = after["bootc"]
     if source in updateops.REJECTIONS:

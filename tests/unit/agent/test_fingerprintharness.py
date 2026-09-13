@@ -17,7 +17,11 @@ WORK = safepaths.SafePath(Path("/var/tmp/apex-fingerprint-" + "a" * 32))
 
 def report(**changes: encoding.JsonValue) -> dict[str, encoding.JsonValue]:
     document: dict[str, encoding.JsonValue] = {
-        "status": "PASS", "tests_run": 8, "skipped": [], "failures": [], "errors": [],
+        "status": "PASS",
+        "tests_run": 8,
+        "skipped": [],
+        "failures": [],
+        "errors": [],
     }
     document.update(changes)
     return document
@@ -49,8 +53,16 @@ def test_the_harness_runs_as_the_builder_user_without_bytecode() -> None:
     )
 
     assert list(argv) == [
-        "runuser", "-u", "builder", "--", "env", "PYTHONDONTWRITEBYTECODE=1", "python3",
-        f"{WORK}/test-fingerprint.py", f"{WORK}/fingerprint-sources", f"{WORK}/output",
+        "runuser",
+        "-u",
+        "builder",
+        "--",
+        "env",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "python3",
+        f"{WORK}/test-fingerprint.py",
+        f"{WORK}/fingerprint-sources",
+        f"{WORK}/output",
     ]
 
 

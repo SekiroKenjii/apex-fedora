@@ -37,6 +37,7 @@ def stage(
         log.events.append(f"apply:{name}")
         finaliser = None
         if acquires:
+
             def release() -> None:
                 log.events.append(f"release:{name}")
 
@@ -153,7 +154,10 @@ def test_a_run_that_stops_records_not_tested_for_every_unreached_check(
         [
             stage("fail", writes=(TOKEN,), log=log, outcome="refuse"),
             stage(
-                "later", reads=(TOKEN,), writes=(ARTIFACT,), log=log,
+                "later",
+                reads=(TOKEN,),
+                writes=(ARTIFACT,),
+                log=log,
                 attests=frozenset({"image.lint"}),
             ),
         ],

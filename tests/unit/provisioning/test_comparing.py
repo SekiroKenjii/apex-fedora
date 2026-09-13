@@ -23,7 +23,8 @@ def chain(host: Host, name: str) -> backingchain.BackingChain:
 def variables(host: Host, *, initial: bytes, final: bytes) -> None:
     host.files.write_atomic(
         safepaths.SafePath(host.run_directory.path / defaults.INITIAL_VARIABLES_NAME),
-        initial, mode=PRIVATE,
+        initial,
+        mode=PRIVATE,
     )
     host.files.write_atomic(
         safepaths.SafePath(host.run_directory.path / defaults.VARIABLES_NAME), final, mode=PRIVATE
@@ -35,8 +36,14 @@ def expect_compare(
 ) -> None:
     host.processes.expect(
         (
-            "qemu-img", "compare", "-f", "qcow2", "-F", "qcow2",
-            str(host.root.path / source), str(host.root.path / overlay),
+            "qemu-img",
+            "compare",
+            "-f",
+            "qcow2",
+            "-F",
+            "qcow2",
+            str(host.root.path / source),
+            str(host.root.path / overlay),
         ),
         fake_process.Reply(exit_code=exit_code, stdout=output),
     )
@@ -45,11 +52,17 @@ def expect_compare(
 def test_each_disk_is_compared_and_the_record_is_written(host: Host) -> None:
     variables(host, initial=b"vars", final=b"vars")
     expect_compare(
-        host, "base.qcow2", f"vm-runs/{RUN}/disk.qcow2", exit_code=0,
+        host,
+        "base.qcow2",
+        f"vm-runs/{RUN}/disk.qcow2",
+        exit_code=0,
         output=b"Images are identical.",
     )
     expect_compare(
-        host, "other.qcow2", f"vm-runs/{RUN}/other-1.qcow2", exit_code=1,
+        host,
+        "other.qcow2",
+        f"vm-runs/{RUN}/other-1.qcow2",
+        exit_code=1,
         output=b"Content mismatch at offset 0!",
     )
 
@@ -58,9 +71,7 @@ def test_each_disk_is_compared_and_the_record_is_written(host: Host) -> None:
         root=host.root,
         run_directory=host.run_directory,
         disks=(
-            comparing.Layered(
-                chain(host, "base.qcow2"), chain(host, f"vm-runs/{RUN}/disk.qcow2")
-            ),
+            comparing.Layered(chain(host, "base.qcow2"), chain(host, f"vm-runs/{RUN}/disk.qcow2")),
             comparing.Layered(
                 chain(host, "other.qcow2"), chain(host, f"vm-runs/{RUN}/other-1.qcow2")
             ),

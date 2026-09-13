@@ -19,8 +19,7 @@ from apex.ports import portset
 PARENT = identifiers.BuildId("d" * 32)
 IMAGE_ID = "b" * 64
 FROZEN = oci.FrozenImage(
-    profile="fedora", digest=identifiers.Digest("c" * 64),
-    image_id=identifiers.ImageId(IMAGE_ID),
+    profile="fedora", digest=identifiers.Digest("c" * 64), image_id=identifiers.ImageId(IMAGE_ID)
 )
 
 
@@ -53,10 +52,12 @@ def test_the_lock_is_read_with_its_digest_and_names_every_expected_package(
     assert lock.version == fixture.VERSION and lock.kernel_release == fixture.KERNEL
     assert lock.compiler_text == fixture.COMPILER and lock.digest.hex == expected
     assert lock.kmod_path == fixture.KMOD
-    assert lock.expected_rpms == frozenset({
-        *(f"packages/{name}-{fixture.VERSION}-1.fc44.x86_64.rpm" for name in fixture.VENDOR),
-        fixture.KMOD,
-    })
+    assert lock.expected_rpms == frozenset(
+        {
+            *(f"packages/{name}-{fixture.VERSION}-1.fc44.x86_64.rpm" for name in fixture.VENDOR),
+            fixture.KMOD,
+        }
+    )
 
 
 def test_a_lock_that_is_missing_or_malformed_is_refused_by_name(
@@ -97,8 +98,11 @@ def test_the_parent_s_compiler_must_be_the_lock_s(
 
 
 def output(
-    bundle: portset.HostPorts, root: safepaths.RuntimeRoot, report: dict[str, object],
-    *, artifacts: dict[str, bytes] | None = None,
+    bundle: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    report: dict[str, object],
+    *,
+    artifacts: dict[str, bytes] | None = None,
 ) -> safepaths.SafePath:
     """The guest's output on the disk, for the digests, and its report in the file port."""
     home = root.child(f"exports/{'e' * 32}/output/{defaults.NVIDIA_OUTPUT_DIRECTORY}")
@@ -108,7 +112,8 @@ def output(
         target.write_bytes(data)
     bundle.files.write_atomic(
         safepaths.SafePath(home.path / defaults.NVIDIA_REPORT_NAME),
-        json.dumps(report).encode(), mode=fixture.PRIVATE,
+        json.dumps(report).encode(),
+        mode=fixture.PRIVATE,
     )
     return home
 
@@ -138,8 +143,11 @@ def test_a_report_bound_to_the_image_the_lock_and_every_package_is_accepted(
     ],
 )
 def test_a_report_that_claims_more_or_names_another_input_is_unbound(
-    ports: portset.HostPorts, repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
-    overrides: dict[str, object], reason: refusals.RefusalReason,
+    ports: portset.HostPorts,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
+    overrides: dict[str, object],
+    reason: refusals.RefusalReason,
 ) -> None:
     bundle = held(ports)
     fixture.write_lock(repository.path, bundle.files)
@@ -173,8 +181,11 @@ def test_the_artifacts_must_all_be_present_inside_the_output_with_the_reported_d
         )
     with pytest.raises(errors.Refusal) as mismatch:
         nvidialock.verify_report(
-            bundle, root, output(bundle, root, fixture.report(IMAGE_ID), artifacts=damaged),
-            frozen=FROZEN, lock=lock,
+            bundle,
+            root,
+            output(bundle, root, fixture.report(IMAGE_ID), artifacts=damaged),
+            frozen=FROZEN,
+            lock=lock,
         )
     with pytest.raises(errors.Refusal) as incomplete:
         nvidialock.verify_report(
@@ -204,13 +215,19 @@ def test_the_package_set_must_be_the_lock_s_and_each_vendor_package_its_locked_b
 
     with pytest.raises(errors.Refusal) as stray:
         nvidialock.verify_report(
-            bundle, root, output(bundle, root, with_extra, artifacts=extra),
-            frozen=FROZEN, lock=lock,
+            bundle,
+            root,
+            output(bundle, root, with_extra, artifacts=extra),
+            frozen=FROZEN,
+            lock=lock,
         )
     with pytest.raises(errors.Refusal) as differs:
         nvidialock.verify_report(
-            bundle, root, output(bundle, root, swapped_report, artifacts=swapped),
-            frozen=FROZEN, lock=lock,
+            bundle,
+            root,
+            output(bundle, root, swapped_report, artifacts=swapped),
+            frozen=FROZEN,
+            lock=lock,
         )
 
     assert stray.value.reason is refusals.RefusalReason.NVIDIA_PACKAGES_INCOMPLETE

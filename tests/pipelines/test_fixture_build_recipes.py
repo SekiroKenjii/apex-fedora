@@ -35,15 +35,18 @@ MANIFEST_B = b'{"config": {"digest": "sha256:' + b"2" * 64 + b'"}}'
 
 def fixture_report() -> dict[str, Any]:
     return {
-        "status": "PASS", "id": FIXTURE,
+        "status": "PASS",
+        "id": FIXTURE,
         "images": {
             "a": {
                 "digest": "sha256:" + hashlib.sha256(MANIFEST_A).hexdigest(),
-                "config": "sha256:" + "1" * 64, "identity": f"localhost/apex-recovery-{FIXTURE}:a",
+                "config": "sha256:" + "1" * 64,
+                "identity": f"localhost/apex-recovery-{FIXTURE}:a",
             },
             "b": {
                 "digest": "sha256:" + hashlib.sha256(MANIFEST_B).hexdigest(),
-                "config": "sha256:" + "2" * 64, "identity": f"localhost/apex-recovery-{FIXTURE}:b",
+                "config": "sha256:" + "2" * 64,
+                "identity": f"localhost/apex-recovery-{FIXTURE}:b",
             },
         },
         "files": {"a/manifest.json": hashlib.sha256(MANIFEST_A).hexdigest()},
@@ -83,7 +86,8 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 
 def builder(root: safepaths.RuntimeRoot) -> guestshell.GuestTarget:
     return guestshell.GuestTarget(
-        user=defaults.BUILDER_USER, port=defaults.BUILDER_SSH_PORT,
+        user=defaults.BUILDER_USER,
+        port=defaults.BUILDER_SSH_PORT,
         key=safepaths.SafePath.regular_file(root.path / "builder_ed25519", within=root),
         known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
     )
@@ -97,7 +101,10 @@ def held(
     ports: portset.HostPorts, files: MirroredFiles, guest: DeliveringGuest
 ) -> portset.HostPorts:
     return dataclasses.replace(
-        ports, files=files, guest=guest, downloads=fake_downloading.PinningFetcher(),
+        ports,
+        files=files,
+        guest=guest,
+        downloads=fake_downloading.PinningFetcher(),
         digests=real_digesting.CachedDigests(),
     )
 
@@ -110,13 +117,20 @@ def test_the_update_fixtures_are_made_by_the_agent_over_the_imported_payload(
     guest = DeliveringGuest(
         files,
         {"build.import-payload": {"tag": "x"}, "fixture.update": fixture_report()},
-        {"results.json": json.dumps(fixture_report()).encode(), "payloads.tar": PAYLOADS,
-         "trusted.pub": PUBLIC_KEY},
+        {
+            "results.json": json.dumps(fixture_report()).encode(),
+            "payloads.tar": PAYLOADS,
+            "trusted.pub": PUBLIC_KEY,
+        },
     )
 
     outcome = update_fixtures_recipe.build(
-        held(ports, files, guest), builder=builder(root), wheel=wheel(root),
-        parent=parentbuild.PARENT, root=root, repository=REPOSITORY,
+        held(ports, files, guest),
+        builder=builder(root),
+        wheel=wheel(root),
+        parent=parentbuild.PARENT,
+        root=root,
+        repository=REPOSITORY,
     )
 
     assert outcome.succeeded, outcome.detail
@@ -148,8 +162,12 @@ def test_an_archive_that_lost_bytes_fails_the_fixture_run(
     )
 
     outcome = update_fixtures_recipe.build(
-        held(ports, files, guest), builder=builder(root), wheel=wheel(root),
-        parent=parentbuild.PARENT, root=root, repository=REPOSITORY,
+        held(ports, files, guest),
+        builder=builder(root),
+        wheel=wheel(root),
+        parent=parentbuild.PARENT,
+        root=root,
+        repository=REPOSITORY,
     )
 
     assert outcome.refusal is refusals.RefusalReason.STAGE_FAILED
@@ -175,7 +193,8 @@ def test_the_recovery_disk_is_built_from_image_a_with_the_agent_standing_it_in(
     located = exported_fixture(ports, files, root)
     guest = DeliveringGuest(files, {"build.tag-payload": {"tag": "x"}}, {"disk.qcow2": b"disk"})
     monkeypatch.setattr(
-        accessgrant, "grant",
+        accessgrant,
+        "grant",
         lambda _ports, *, root, run: accessgrant.Granted(
             directory=root.child(f"exports/{run}/test-access"),
             credentials=root.child(f"exports/{run}/test-access/credentials.json"),
@@ -185,8 +204,12 @@ def test_the_recovery_disk_is_built_from_image_a_with_the_agent_standing_it_in(
     )
 
     outcome = recovery_disk_recipe.build(
-        held(ports, files, guest), repository=REPOSITORY, runtime_root=root,
-        builder=builder(root), wheel=wheel(root), fixture=located,
+        held(ports, files, guest),
+        repository=REPOSITORY,
+        runtime_root=root,
+        builder=builder(root),
+        wheel=wheel(root),
+        fixture=located,
     )
 
     assert outcome.succeeded, outcome.detail
@@ -194,13 +217,15 @@ def test_the_recovery_disk_is_built_from_image_a_with_the_agent_standing_it_in(
     remote = f"/var/tmp/apex-{run}"
     assert guest.asked == ["build.tag-payload"]
     assert guest.requests[0]["arguments"] == {
-        "work": remote, "source": f"localhost/apex-recovery-{FIXTURE}:a",
+        "work": remote,
+        "source": f"localhost/apex-recovery-{FIXTURE}:a",
         "digest": fixture_report()["images"]["a"]["digest"],
     }
     scripts = [item.script.rendered() for item in guest.runs]
     assert any(
         script == f"cd {remote} && tar -xf source.tar && sudo flock -n /run/apex-build.lock "
-        "bash -c 'bash guest/disk-artifact.sh qcow2 sha256:" + "1" * 64
+        "bash -c 'bash guest/disk-artifact.sh qcow2 sha256:"
+        + "1" * 64
         + " && python3 guest/sign-artifacts.py output target-image.json'"
         for script in scripts
     )
@@ -224,8 +249,12 @@ def test_a_fixture_whose_manifest_changed_is_refused_before_the_builder_is_touch
     guest = DeliveringGuest(files, {}, {})
 
     outcome = recovery_disk_recipe.build(
-        held(ports, files, guest), repository=REPOSITORY, runtime_root=root,
-        builder=builder(root), wheel=wheel(root), fixture=located,
+        held(ports, files, guest),
+        repository=REPOSITORY,
+        runtime_root=root,
+        builder=builder(root),
+        wheel=wheel(root),
+        fixture=located,
     )
 
     assert outcome.refusal is refusals.RefusalReason.FIXTURE_REPORT_MALFORMED

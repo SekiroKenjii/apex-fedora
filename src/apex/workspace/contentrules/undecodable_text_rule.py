@@ -30,7 +30,6 @@ def inspect(subject: rulespecs.ContentSubject) -> Sequence[rulespecs.Finding]:
     return ()
 
 
-
 contentrules.declare(
     rulespecs.ContentRule(
         id=RULE,

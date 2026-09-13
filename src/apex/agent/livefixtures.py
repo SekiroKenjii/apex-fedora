@@ -89,9 +89,7 @@ class Inventory:
         )
 
 
-def _require_protected(
-    inventory: Inventory, name: re.Pattern[str], bus: re.Pattern[str]
-) -> None:
+def _require_protected(inventory: Inventory, name: re.Pattern[str], bus: re.Pattern[str]) -> None:
     for device in inventory.devices:
         if (
             not name.fullmatch(device.name)
@@ -107,9 +105,11 @@ def require_live_fixture(inventory: Inventory) -> None:
     """The blank 48 GiB target and the partitioned 4 GiB sentinel, and nothing else."""
     whole = [item for item in inventory.devices if item.partition is None]
     parts = [item for item in inventory.devices if item.partition is not None]
-    if len(whole) != 2 or len(parts) != 3 or sorted(item.sectors for item in whole) != [
-        OTHER_SECTORS, TARGET_SECTORS,
-    ]:
+    if (
+        len(whole) != 2
+        or len(parts) != 3
+        or sorted(item.sectors for item in whole) != [OTHER_SECTORS, TARGET_SECTORS]
+    ):
         raise refuse("expected only the blank 48 GiB and partitioned 4 GiB fixtures")
     other = next(item for item in whole if item.sectors == OTHER_SECTORS)
     if (
@@ -158,10 +158,7 @@ def require_usb_fixture(ports: agentports.AgentPorts, inventory: Inventory) -> N
 def attempt(ports: agentports.AgentPorts, device: blockdevices.BlockDevice) -> encoding.Document:
     """Write the first sector back to itself and say what the kernel did."""
     outcome = ports.blocks.rewrite(
-        safepaths.SafePath(DEVICES / device.name),
-        expected=device.number,
-        offset=0,
-        length=SECTOR,
+        safepaths.SafePath(DEVICES / device.name), expected=device.number, offset=0, length=SECTOR
     )
     result: dict[str, encoding.JsonValue] = {
         "device": device.name,
@@ -181,10 +178,7 @@ def attempt(ports: agentports.AgentPorts, device: blockdevices.BlockDevice) -> e
 
 
 def exercise(
-    ports: agentports.AgentPorts,
-    inventory: Inventory,
-    *,
-    retake: Callable[[], Inventory],
+    ports: agentports.AgentPorts, inventory: Inventory, *, retake: Callable[[], Inventory]
 ) -> list[encoding.JsonValue]:
     """Every device in turn, stopping at the first that is not denied.
 

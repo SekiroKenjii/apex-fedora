@@ -23,17 +23,17 @@ STAGES = (
     identify_run_stage.STAGE,
     deliver_agent_stage.STAGE,
     *(fault_stage.for_case(case) for case in CASES),
-    mint_stage.for_check(
-        CHECK, reports=[verifykeys.fault_report(case) for case in CASES]
-    ),
+    mint_stage.for_check(CHECK, reports=[verifykeys.fault_report(case) for case in CASES]),
 )
-SEEDS = frozenset({
-    verifykeys.GUEST,
-    verifykeys.WHEEL,
-    verifykeys.CANDIDATE,
-    verifykeys.WITNESS,
-    verifykeys.RECORDER,
-})
+SEEDS = frozenset(
+    {
+        verifykeys.GUEST,
+        verifykeys.WHEEL,
+        verifykeys.CANDIDATE,
+        verifykeys.WITNESS,
+        verifykeys.RECORDER,
+    }
+)
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 
@@ -57,4 +57,3 @@ def verify(
             verifykeys.RECORDER: recorder,
         },
     )
-

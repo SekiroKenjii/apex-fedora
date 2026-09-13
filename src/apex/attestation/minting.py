@@ -48,9 +48,7 @@ def _specification(check: identifiers.CheckId) -> descriptors.CheckSpec:
     return catalogue.specification(check)
 
 
-def _require_environment(
-    spec: descriptors.CheckSpec, witnessed: claims.EnvironmentKind
-) -> None:
+def _require_environment(spec: descriptors.CheckSpec, witnessed: claims.EnvironmentKind) -> None:
     physical = claims.EnvironmentKind.PHYSICAL
     if spec.group == descriptors.HARDWARE_GROUP and witnessed is not physical:
         raise _refuse(
@@ -61,9 +59,7 @@ def _require_environment(
     claims.require_attestable(witnessed, expected=spec.environment)
 
 
-def _intended(
-    spec: descriptors.CheckSpec, offered: Sequence[Offered]
-) -> tuple[proofs.Proof, ...]:
+def _intended(spec: descriptors.CheckSpec, offered: Sequence[Offered]) -> tuple[proofs.Proof, ...]:
     """Every citation, judged before any byte is filed; `Proof` refuses an empty one."""
     accepted = set(spec.accepted_proof_kinds)
     for item in offered:

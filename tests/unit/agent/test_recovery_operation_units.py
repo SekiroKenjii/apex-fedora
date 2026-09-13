@@ -107,8 +107,7 @@ def test_the_grub_repair_applies_the_exact_newline_fix_and_keeps_the_preimage() 
 
 
 @pytest.mark.parametrize(
-    "change",
-    [{"preimage": "f" * 64}, {"expected_digest": IMAGE_B}, {"run_id": "short"}],
+    "change", [{"preimage": "f" * 64}, {"expected_digest": IMAGE_B}, {"run_id": "short"}]
 )
 def test_a_repair_over_another_preimage_deployment_or_run_is_refused(
     change: dict[str, str],
@@ -157,12 +156,7 @@ def test_the_retry_variant_replaces_the_two_retry_line_and_keeps_the_original() 
     _, files, ports = guest(tree(), outputs())
 
     found = recovery_fixture_unit.run(
-        ports,
-        arguments={
-            "action": "retry-config",
-            "expected_digest": IMAGE_A,
-            "run_id": RUN,
-        },
+        ports, arguments={"action": "retry-config", "expected_digest": IMAGE_A, "run_id": RUN}
     )
 
     assert found["status"] == "PASS"
@@ -172,12 +166,7 @@ def test_the_retry_variant_replaces_the_two_retry_line_and_keeps_the_original() 
     )
     with pytest.raises(errors.Refusal) as again:
         recovery_fixture_unit.run(
-            ports,
-            arguments={
-                "action": "retry-config",
-                "expected_digest": IMAGE_A,
-                "run_id": RUN,
-            },
+            ports, arguments={"action": "retry-config", "expected_digest": IMAGE_A, "run_id": RUN}
         )
     assert "already exists" in again.value.subject
 
@@ -189,7 +178,7 @@ def test_a_staged_update_or_other_components_refuse_every_change() -> None:
             **{
                 "bootc status --format json": bootc_status(
                     IMAGE_A, rollback=IMAGE_B, staged=IMAGE_B
-                ),
+                )
             }
         ),
     )
@@ -199,11 +188,7 @@ def test_a_staged_update_or_other_components_refuse_every_change() -> None:
         with pytest.raises(errors.Refusal) as raised:
             recovery_fixture_unit.run(
                 ports,
-                arguments={
-                    "action": "retry-config",
-                    "expected_digest": IMAGE_A,
-                    "run_id": RUN,
-                },
+                arguments={"action": "retry-config", "expected_digest": IMAGE_A, "run_id": RUN},
             )
         assert raised.value.reason is refusals.RefusalReason.FIXTURE_STATE_UNEXPECTED
 

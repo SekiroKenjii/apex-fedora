@@ -27,11 +27,7 @@ def _mismatch(detail: str) -> errors.Refusal:
 
 
 def require_inspection(
-    inspection: encoding.Document,
-    *,
-    fixture: str,
-    images: encoding.Document,
-    process: int,
+    inspection: encoding.Document, *, fixture: str, images: encoding.Document, process: int
 ) -> str:
     """The reviewed plan's digest, from an inspection of this fixture on this machine."""
     if inspection.get("status") != PASS or inspection.get("action") != INSPECT:

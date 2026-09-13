@@ -54,6 +54,4 @@ def transcribed[RuleT: rulespecs.EntryRule | rulespecs.ContentRule | rulespecs.M
     which is a stronger claim than the full set can make and the one that says the transcription
     was faithful.
     """
-    return tuple(
-        rule for rule in rules if isinstance(rule.origin, ruleorigins.Decomposed)
-    )
+    return tuple(rule for rule in rules if isinstance(rule.origin, ruleorigins.Decomposed))

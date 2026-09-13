@@ -21,6 +21,7 @@ from apex.model import machines
 from apex.pipeline import runner
 from apex.verification import (
     initramfsops,
+    operationplans,
     recoveryops,
     testaccess,
     updatefixtures,
@@ -40,7 +41,9 @@ UPDATE = updateops.NAME
 RECOVERY = recoveryops.NAME
 INITRAMFS = initramfsops.NAME
 FAMILIES: dict[str, tuple[str, ...]] = {
-    UPDATE: updateops.ACTIONS, RECOVERY: recoveryops.ACTIONS, INITRAMFS: initramfsops.ACTIONS,
+    UPDATE: updateops.ACTIONS,
+    RECOVERY: recoveryops.ACTIONS,
+    INITRAMFS: initramfsops.ACTIONS,
 }
 ACTION = "action"
 FIXTURE = "fixture"
@@ -53,15 +56,19 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("family", choices=tuple(FAMILIES))
     parser.add_argument(f"--{ACTION}", required=True, help="the older tool's action name")
     parser.add_argument(
-        f"--{FIXTURE}", required=True,
+        f"--{FIXTURE}",
+        required=True,
         help="the completed update fixture, by run identifier or export directory",
     )
     parser.add_argument(
-        f"--{ACCESS}", type=Path, required=True,
+        f"--{ACCESS}",
+        type=Path,
+        required=True,
         help="the disposable account's access directory, inside the runtime root",
     )
     parser.add_argument(
-        f"--{INSPECTION}", type=Path,
+        f"--{INSPECTION}",
+        type=Path,
         help="the reviewed inspection report an initramfs injection is bound to",
     )
     return parser
@@ -92,8 +99,11 @@ class Request:
                 remedy="name the reviewed inspection there and nowhere else",
             )
         return cls(
-            family=family, action=action, fixture=str(arguments.fixture),
-            access=arguments.access, inspection=arguments.inspection,
+            family=family,
+            action=action,
+            fixture=str(arguments.fixture),
+            access=arguments.access,
+            inspection=arguments.inspection,
         )
 
 
@@ -123,43 +133,39 @@ class Gathered:
             ) from malformed
 
 
-def _update(gathered: Gathered) -> runner.Outcome:
+def _inputs(gathered: Gathered) -> operationplans.Inputs:
     inputs = gathered.inputs
-    if gathered.request.action in updateops.CHECKS:
-        return update_check_recipe.verify(
-            inputs.ports, guest=inputs.guest, wheel=inputs.wheel, fixture=gathered.located,
-            action=gathered.request.action, credentials=gathered.credentials(),
-            process=inputs.lease.identity.process, monitor=inputs.lease.intent.monitor,
-            root=inputs.root,
-        )
-    return update_operation_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, fixture=gathered.located,
-        action=gathered.request.action, credentials=gathered.credentials(),
-        process=inputs.lease.identity.process, root=inputs.root,
+    return operationplans.Inputs(
+        guest=inputs.guest,
+        wheel=inputs.wheel,
+        fixture=gathered.located,
+        action=gathered.request.action,
+        credentials=gathered.credentials(),
+        process=inputs.lease.identity.process,
+        root=inputs.root,
+        monitor=inputs.lease.intent.monitor,
+        inspection=gathered.inspection(),
     )
+
+
+def _update(gathered: Gathered) -> runner.Outcome:
+    if gathered.request.action in updateops.CHECKS:
+        return update_check_recipe.verify(gathered.inputs.ports, _inputs(gathered))
+    return update_operation_recipe.verify(gathered.inputs.ports, _inputs(gathered))
 
 
 def _recovery(gathered: Gathered) -> runner.Outcome:
-    inputs = gathered.inputs
-    return recovery_operation_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, fixture=gathered.located,
-        action=gathered.request.action, credentials=gathered.credentials(),
-        process=inputs.lease.identity.process, root=inputs.root,
-    )
+    return recovery_operation_recipe.verify(gathered.inputs.ports, _inputs(gathered))
 
 
 def _initramfs(gathered: Gathered) -> runner.Outcome:
-    inputs = gathered.inputs
-    return initramfs_operation_recipe.verify(
-        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, fixture=gathered.located,
-        action=gathered.request.action, credentials=gathered.credentials(),
-        process=inputs.lease.identity.process, inspection=gathered.inspection(),
-        root=inputs.root,
-    )
+    return initramfs_operation_recipe.verify(gathered.inputs.ports, _inputs(gathered))
 
 
 RUNNERS: dict[str, Callable[[Gathered], runner.Outcome]] = {
-    UPDATE: _update, RECOVERY: _recovery, INITRAMFS: _initramfs,
+    UPDATE: _update,
+    RECOVERY: _recovery,
+    INITRAMFS: _initramfs,
 }
 
 
@@ -198,10 +204,18 @@ def _recipe(name: str, family: str, action: str | None, *extra: str) -> commands
     if action is None:
         operands = ("action", *operands)
     return commandspecs.Recipe(
-        name, operands,
+        name,
+        operands,
         (
-            NAME, family, f"--{ACTION}", "{{action}}" if action is None else action,
-            f"--{FIXTURE}", "{{fixture}}", f"--{ACCESS}", "{{access}}", *extra,
+            NAME,
+            family,
+            f"--{ACTION}",
+            "{{action}}" if action is None else action,
+            f"--{FIXTURE}",
+            "{{fixture}}",
+            f"--{ACCESS}",
+            "{{access}}",
+            *extra,
         ),
     )
 
@@ -211,12 +225,9 @@ JUST_RECIPES = (
     _recipe("test-recovery", RECOVERY, None),
     _recipe("test-initramfs-inspect", INITRAMFS, initramfsops.INSPECT),
     _recipe(
-        "test-initramfs-inject", INITRAMFS, initramfsops.INJECT,
-        f"--{INSPECTION}", "{{inspection}}",
+        "test-initramfs-inject", INITRAMFS, initramfsops.INJECT, f"--{INSPECTION}", "{{inspection}}"
     ),
     _recipe("test-initramfs-rescue", INITRAMFS, initramfsops.RESCUE),
 )
 
-commands.declare(
-    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=JUST_RECIPES)
-)
+commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=JUST_RECIPES))

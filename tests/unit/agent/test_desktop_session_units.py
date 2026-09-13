@@ -39,11 +39,19 @@ def test_the_greeter_is_reported_once_it_appears_on_the_seat() -> None:
 
     assert report["found"] is True
     assert report["session"] == {
-        "id": GREETER_ID, "user": "gdm", "seat": "seat0", "class": "greeter", "type": "wayland",
+        "id": GREETER_ID,
+        "user": "gdm",
+        "seat": "seat0",
+        "class": "greeter",
+        "type": "wayland",
     }
     assert report["sessions"] == [report["session"]]
     assert [tuple(call) for call in process.calls] == [
-        VIRTUAL, LIST_SESSIONS, LIST_SESSIONS, LIST_SESSIONS, SHOW_GREETER,
+        VIRTUAL,
+        LIST_SESSIONS,
+        LIST_SESSIONS,
+        LIST_SESSIONS,
+        SHOW_GREETER,
     ]
     assert sum(span.seconds for span in clock.slept) == 2
 
@@ -87,7 +95,11 @@ def test_the_accounts_wayland_session_is_waited_for() -> None:
 
     assert report["found"] is True and report["wayland"] is True and report["waited"] is True
     assert report["session"] == {
-        "id": SESSION_ID, "user": "apex-test", "seat": "seat0", "class": "user", "type": "wayland",
+        "id": SESSION_ID,
+        "user": "apex-test",
+        "seat": "seat0",
+        "class": "user",
+        "type": "wayland",
     }
     assert sum(span.seconds for span in clock.slept) == 1
 
@@ -102,12 +114,8 @@ def test_a_session_that_is_not_wayland_is_not_the_one_waited_for() -> None:
     assert sum(span.seconds for span in clock.slept) >= 90
 
 
-@pytest.mark.parametrize(
-    "arguments", [{}, {"user": "Root!"}, {"user": "apex-test", "wait": "yes"}]
-)
-def test_a_session_request_without_a_plain_account_is_refused(
-    arguments: dict[str, object],
-) -> None:
+@pytest.mark.parametrize("arguments", [{}, {"user": "Root!"}, {"user": "apex-test", "wait": "yes"}])
+def test_a_session_request_without_a_plain_account_is_refused(arguments: dict[str, object]) -> None:
     process, _, _, ports = session(SessionSpec())
 
     with pytest.raises(errors.Refusal) as caught:
@@ -126,7 +134,11 @@ def test_the_shell_startup_event_is_reported_as_the_journal_wrote_it() -> None:
     assert report["event"] == STARTED_EVENT
     journal = desktop_shell_startup_unit.journal_query(1687)
     assert [tuple(call) for call in process.calls] == [
-        VIRTUAL, SHELL_OWNER, tuple(journal), SHELL_OWNER, tuple(journal),
+        VIRTUAL,
+        SHELL_OWNER,
+        tuple(journal),
+        SHELL_OWNER,
+        tuple(journal),
     ]
     assert sum(span.seconds for span in clock.slept) == 1
 

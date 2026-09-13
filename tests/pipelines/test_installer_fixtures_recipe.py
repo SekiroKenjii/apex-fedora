@@ -64,7 +64,8 @@ def build(ports: portset.HostPorts, root: safepaths.RuntimeRoot, guest: Answerin
     return installer_fixtures_recipe.build(
         held,
         builder=guestshell.GuestTarget(
-            user=defaults.BUILDER_USER, port=defaults.BUILDER_SSH_PORT,
+            user=defaults.BUILDER_USER,
+            port=defaults.BUILDER_SSH_PORT,
             key=safepaths.SafePath.regular_file(root.path / "builder_ed25519", within=root),
             known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
         ),

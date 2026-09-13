@@ -18,8 +18,12 @@ GUARD_RULES = "00-apex-live-disk-guard.rules"
 ASSEMBLER_PROGRAMS = ("python3", "mksquashfs", "unsquashfs")
 SQUASHFS_OPTIONS = "-noappend -mem 1G -processors 4"
 LABEL_CHECK_PATHS = (
-    "etc/shadow", "usr/bin/bash", "usr/bin/passwd",
-    "usr/lib/systemd/systemd", "usr/libexec/flatpak-system-helper", "var/roothome",
+    "etc/shadow",
+    "usr/bin/bash",
+    "usr/bin/passwd",
+    "usr/lib/systemd/systemd",
+    "usr/libexec/flatpak-system-helper",
+    "var/roothome",
 )
 
 

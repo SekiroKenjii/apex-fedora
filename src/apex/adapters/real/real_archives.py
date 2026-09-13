@@ -11,7 +11,7 @@ import io
 import tarfile
 
 from apex.adapters import sourcewalk
-from apex.kernel import claims, errors, hashing, quantities, refusals, safepaths
+from apex.kernel import claims, errors, hashing, quantities, safepaths
 from apex.ports import archives
 
 PRIVATE_DIRECTORY = 0o700
@@ -70,28 +70,12 @@ class TarArchives(archives.ArchivePort):
         reads = 0
         into.path.parent.mkdir(parents=True, exist_ok=True, mode=PRIVATE_DIRECTORY)
         with tarfile.open(into.path, "w") as archive:
-            for candidate in sourcewalk.candidates(sources):
-                relative = str(candidate.relative_to(sources.root.path))
-                if candidate.is_symlink():
-                    raise errors.Refusal(
-                        refusals.RefusalReason.PATH_IS_A_SYMLINK, subject=relative
-                    )
-                if not candidate.is_file():
-                    raise errors.Refusal(
-                        refusals.RefusalReason.ARCHIVE_ENTRY_NOT_REGULAR, subject=relative
-                    )
-                payload = candidate.read_bytes()
+            for admitted in sourcewalk.admitted(sources, screen):
                 reads += 1
-                mode = sourcewalk.mode_for(candidate)
-                screen(archives.BundleCandidate(path=relative, mode=mode, payload=payload))
-                info = tarfile.TarInfo(relative)
-                info.size = len(payload)
-                info.mode = mode.value
+                info = tarfile.TarInfo(admitted.relative)
+                info.size = len(admitted.payload)
+                info.mode = admitted.mode.value
                 info.mtime = 0
-                archive.addfile(info, io.BytesIO(payload))
-                entries.append(
-                    archives.BundledFile(
-                        path=relative, mode=mode, digest=hashing.digest_bytes(payload)
-                    )
-                )
+                archive.addfile(info, io.BytesIO(admitted.payload))
+                entries.append(admitted.entry())
         return tuple(sorted(entries, key=lambda entry: entry.path)), reads

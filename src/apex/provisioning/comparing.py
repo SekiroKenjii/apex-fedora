@@ -88,8 +88,14 @@ def compare(
 def _compare_one(ports: portset.HostPorts, item: Layered) -> DiskObservation:
     completed = ports.processes.run(
         commands.Argv.of(
-            backingchain.QEMU_IMG, "compare", "-f", backingchain.QCOW2, "-F",
-            backingchain.QCOW2, item.source.disk, item.overlay.disk,
+            backingchain.QEMU_IMG,
+            "compare",
+            "-f",
+            backingchain.QCOW2,
+            "-F",
+            backingchain.QCOW2,
+            item.source.disk,
+            item.overlay.disk,
         ),
         deadline=defaults.IMAGE_TOOL_DEADLINE,
         limit=commands.OutputLimit.default(),

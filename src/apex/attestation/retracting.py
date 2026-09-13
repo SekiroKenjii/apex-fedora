@@ -31,9 +31,7 @@ class Withheld:
 def retract(
     outcome: readiness.Outcome, *, attestations: Sequence[attesting.Attestation]
 ) -> tuple[readiness.Outcome, tuple[Withheld, ...]]:
-    imported = {
-        item.check for item in attestations if item.kind is ledger.EntryKind.IMPORTED
-    }
+    imported = {item.check for item in attestations if item.kind is ledger.EntryKind.IMPORTED}
     stated: dict[str, verdicts.Verdict] = {}
     withheld: list[Withheld] = []
     for name, verdict in outcome.verdicts.items():

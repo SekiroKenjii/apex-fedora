@@ -90,9 +90,7 @@ def test_a_check_outside_the_catalogue_is_refused(
 def test_hardware_evidence_from_a_virtual_machine_is_refused_at_write(
     store: proofs.ProofStore, chain: ledger.Ledger
 ) -> None:
-    reason = refused(
-        store, chain, check=HARDWARE_CHECK, witnessed=claims.EnvironmentKind.VM
-    )
+    reason = refused(store, chain, check=HARDWARE_CHECK, witnessed=claims.EnvironmentKind.VM)
 
     assert reason is refusals.RefusalReason.HARDWARE_REQUIRES_PHYSICAL
 
@@ -120,7 +118,10 @@ def test_a_proof_kind_the_check_does_not_accept_is_refused(
     screenshot = minting.Offered(payload=b"P6 1 1 255\n\0\0\0", kind=".ppm")
 
     reason = refused(
-        store, chain, check=VM_CHECK, offered=(JSON, screenshot),
+        store,
+        chain,
+        check=VM_CHECK,
+        offered=(JSON, screenshot),
         witnessed=claims.EnvironmentKind.VM,
     )
 
@@ -137,9 +138,7 @@ def test_a_biometric_template_is_never_a_permitted_kind(
     assert reason is refusals.RefusalReason.PROOF_KIND_NOT_ACCEPTED
 
 
-def test_a_pass_without_proof_is_refused(
-    store: proofs.ProofStore, chain: ledger.Ledger
-) -> None:
+def test_a_pass_without_proof_is_refused(store: proofs.ProofStore, chain: ledger.Ledger) -> None:
     reason = refused(store, chain, offered=())
 
     assert reason is refusals.RefusalReason.PASS_REQUIRES_PROOF

@@ -101,9 +101,7 @@ def test_a_source_already_present_with_its_digest_is_not_fetched_again(
     assert all(not item.fetched for item in result.sources)
 
 
-def test_a_cached_source_whose_bytes_changed_is_fetched_again(
-    root: safepaths.RuntimeRoot,
-) -> None:
+def test_a_cached_source_whose_bytes_changed_is_fetched_again(root: safepaths.RuntimeRoot) -> None:
     first = fake_downloading.OfflineFetcher(served())
     acquiring.acquire(bundle(first), reviewed=reviewed(), root=root)
     (root.path / defaults.SOURCES_DIRECTORY / "alpha.tar.gz").write_bytes(b"corrupted")

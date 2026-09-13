@@ -72,11 +72,13 @@ def select(
     parsed = identifiers.BuildId.parse(build)
     _completed_image(ports, root, parsed)
     verified = verifying.verify_bundle(
-        ports, location=trust_command.location(root, build),
-        anchor=anchors.operator_supplied(key),
+        ports, location=trust_command.location(root, build), anchor=anchors.operator_supplied(key)
     )
     selected = selecting.select(
-        ports, root=root, digest=verified.digest, build=parsed,
+        ports,
+        root=root,
+        digest=verified.digest,
+        build=parsed,
         verification=trust_command.verified_document(ports, verified),
         run=ports.identities.run_id(),
     )
@@ -92,7 +94,8 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
 
 RECIPES = (
     commandspecs.Recipe(
-        "select-candidate", ("build_id", "key"),
+        "select-candidate",
+        ("build_id", "key"),
         (NAME, SELECT, "--build", "{{build_id}}", "--key", "{{key}}"),
     ),
 )

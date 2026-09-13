@@ -52,8 +52,11 @@ class Observation:
             raise Incomplete("observer and journal boot identities differ")
         grubenv = str(data["grubenv"]["stdout"])
         return cls(
-            boot=boot, phase=str(data["phase"]), digest=str(data["digest"]),
-            injected=data.get("injected") is True, gdm_stdout=str(data["gdm"]["stdout"]),
+            boot=boot,
+            phase=str(data["phase"]),
+            digest=str(data["digest"]),
+            injected=data.get("injected") is True,
+            gdm_stdout=str(data["gdm"]["stdout"]),
             grubenv=dict(line.split("=", 1) for line in grubenv.splitlines() if "=" in line),
         )
 
@@ -84,8 +87,11 @@ class Journal:
 
     def injections(self, boot: str, bad: str) -> list[Observation]:
         return [
-            item for item in self.observations
-            if item.boot == boot and item.phase == GDM_START and item.injected
+            item
+            for item in self.observations
+            if item.boot == boot
+            and item.phase == GDM_START
+            and item.injected
             and item.digest == bad
         ]
 
@@ -99,9 +105,10 @@ def _failed_boot(journal: Journal, found: Observation, bad: str) -> str | None:
         raise Incomplete("GDM did not fail with the injected exit status")
     if not any(HEALTH_REJECTED in line for line in lines):
         raise Incomplete("the production Apex health check did not reject the boot")
-    if found.grubenv.get("boot_success") != "0" or found.grubenv.get(
-        "greenboot_next_deployment_id"
-    ) != bad:
+    if (
+        found.grubenv.get("boot_success") != "0"
+        or found.grubenv.get("greenboot_next_deployment_id") != bad
+    ):
         raise Incomplete("missing GRUB failure status or expected rollback identity")
     return found.grubenv.get("boot_counter")
 
@@ -143,8 +150,11 @@ def _judge(journal: Journal, good: str, bad: str) -> encoding.Document:
     return {
         "automatic_gdm_fallback": PASS,
         "two_failure_limit": PASS if len(failed) == TWO_FAILURES else FAIL,
-        "failed_boot_ids": list(failed), "fallback_boot_id": recovery,
-        "counter_before_health": list(counters), "good_digest": good, "bad_digest": bad,
+        "failed_boot_ids": list(failed),
+        "fallback_boot_id": recovery,
+        "counter_before_health": list(counters),
+        "good_digest": good,
+        "bad_digest": bad,
         "scope": SCOPE,
     }
 

@@ -21,6 +21,12 @@ def build(
     profile: builds.Profile,
 ) -> runner.Outcome:
     return buildplan.run(
-        PLAN, ports, repository=repository, runtime_root=runtime_root, builder=builder,
-        profile=profile, kind=builds.ArtifactKind.IMAGE, parent=None,
+        PLAN,
+        ports,
+        repository=repository,
+        runtime_root=runtime_root,
+        builder=builder,
+        profile=profile,
+        kind=builds.ArtifactKind.IMAGE,
+        parent=None,
     )

@@ -9,12 +9,11 @@ carries the first failure and the guest is not asked to do what it cannot.
 
 from __future__ import annotations
 
-from apex.composition import keys as composition_keys
 from apex.composition.stages import identify_run_stage
-from apex.kernel import claims, identifiers, safepaths
+from apex.kernel import identifiers
 from apex.pipeline import plans, runner
-from apex.ports import guestshell, portset
-from apex.verification import probes, recording, testaccess, verifykeys
+from apex.ports import portset
+from apex.verification import desktopplans, probes, verifykeys
 from apex.verification.stages import (
     deliver_agent_stage,
     login_stage,
@@ -48,42 +47,9 @@ STAGES = (
         CHECK, reports=[login_stage.KEY, shell_startup_stage.KEY, render_bars_stage.KEY]
     ),
 )
-SEEDS = frozenset({
-    verifykeys.GUEST,
-    verifykeys.WHEEL,
-    verifykeys.CANDIDATE,
-    verifykeys.WITNESS,
-    verifykeys.RECORDER,
-    verifykeys.MONITOR,
-    verifykeys.CREDENTIALS,
-    composition_keys.RUNTIME_ROOT,
-})
+SEEDS = desktopplans.SEEDS | {verifykeys.CREDENTIALS}
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 
-def verify(
-    ports: portset.HostPorts,
-    *,
-    guest: guestshell.GuestTarget,
-    wheel: safepaths.SafePath,
-    candidate: identifiers.Digest,
-    witness: claims.EnvironmentKind,
-    recorder: recording.Recorder,
-    monitor: safepaths.SafePath,
-    credentials: testaccess.Credentials,
-    root: safepaths.RuntimeRoot,
-) -> runner.Outcome:
-    return runner.run(
-        PLAN,
-        ports=ports,
-        seeds={
-            verifykeys.GUEST: guest,
-            verifykeys.WHEEL: wheel,
-            verifykeys.CANDIDATE: candidate,
-            verifykeys.WITNESS: witness,
-            verifykeys.RECORDER: recorder,
-            verifykeys.MONITOR: monitor,
-            verifykeys.CREDENTIALS: credentials,
-            composition_keys.RUNTIME_ROOT: root,
-        },
-    )
+def verify(ports: portset.HostPorts, inputs: desktopplans.Inputs) -> runner.Outcome:
+    return desktopplans.run(PLAN, ports, inputs)

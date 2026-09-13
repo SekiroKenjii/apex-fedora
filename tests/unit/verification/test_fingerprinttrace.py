@@ -25,32 +25,49 @@ def call(
     method: str = "Claim", client: str = ":1.2", serial: int = 2, destination: str = SERVICE
 ) -> dict[str, object]:
     return {
-        "type": "method_call", "cookie": serial, "timestamp-realtime": 100, "sender": client,
-        "destination": destination, "path": DEVICE, "interface": INTERFACE, "member": method,
+        "type": "method_call",
+        "cookie": serial,
+        "timestamp-realtime": 100,
+        "sender": client,
+        "destination": destination,
+        "path": DEVICE,
+        "interface": INTERFACE,
+        "member": method,
         "payload": {"type": "s", "data": ["PRIVATE USERNAME"]},
     }
 
 
 def reply(client: str = ":1.2", serial: int = 2, error: str | None = None) -> dict[str, object]:
     return {
-        "type": "error" if error else "method_return", "reply_cookie": serial,
-        "timestamp-realtime": 101, "sender": ":1.10", "destination": client,
-        "error_name": error, "payload": {"type": "s", "data": ["PRIVATE ERROR BODY"]},
+        "type": "error" if error else "method_return",
+        "reply_cookie": serial,
+        "timestamp-realtime": 101,
+        "sender": ":1.10",
+        "destination": client,
+        "error_name": error,
+        "payload": {"type": "s", "data": ["PRIVATE ERROR BODY"]},
     }
 
 
 def disconnect(client: str = ":1.2") -> dict[str, object]:
     return {
-        "type": "signal", "timestamp-realtime": 102, "sender": "org.freedesktop.DBus",
-        "interface": "org.freedesktop.DBus", "member": "NameOwnerChanged",
+        "type": "signal",
+        "timestamp-realtime": 102,
+        "sender": "org.freedesktop.DBus",
+        "interface": "org.freedesktop.DBus",
+        "member": "NameOwnerChanged",
         "payload": {"type": "sss", "data": [client, client, ""]},
     }
 
 
 def status() -> dict[str, object]:
     return {
-        "type": "signal", "timestamp-realtime": 103, "sender": ":1.10", "path": DEVICE,
-        "interface": INTERFACE, "member": "EnrollStatus",
+        "type": "signal",
+        "timestamp-realtime": 103,
+        "sender": ":1.10",
+        "path": DEVICE,
+        "interface": INTERFACE,
+        "member": "EnrollStatus",
         "payload": {"type": "sb", "data": ["enroll-disconnected", True]},
     }
 
@@ -76,8 +93,13 @@ def test_an_error_status_does_not_release_the_claim() -> None:
 
 def test_a_second_client_is_denied_until_a_release_is_observed() -> None:
     held = fed(
-        call(), reply(), call(client=":1.3"), reply(client=":1.3", error=IN_USE),
-        call("Release", serial=3), reply(serial=3), call(client=":1.3", serial=4),
+        call(),
+        reply(),
+        call(client=":1.3"),
+        reply(client=":1.3", error=IN_USE),
+        call("Release", serial=3),
+        reply(serial=3),
+        call(client=":1.3", serial=4),
         reply(client=":1.3", serial=4),
     )
 
@@ -121,9 +143,7 @@ def test_an_unknown_initial_owner_and_an_incomplete_trace_are_explicit() -> None
 
 
 def test_usernames_error_bodies_and_unrelated_messages_are_dropped() -> None:
-    held = fed(
-        call(), reply(error=IN_USE), call("DeleteEnrolledFingers"), disconnect(":1.99")
-    )
+    held = fed(call(), reply(error=IN_USE), call("DeleteEnrolledFingers"), disconnect(":1.99"))
 
     combined = json.dumps([held.events, held.summary()])
     assert "PRIVATE" not in combined and "DeleteEnrolledFingers" not in combined
@@ -178,9 +198,7 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 
 def host(ports: portset.HostPorts) -> portset.HostPorts:
     filesystem = fake_files.MemoryFiles()
-    for name, data in (
-        (defaults.KERNEL_RELEASE, b"7.1.13-200\n"), (defaults.BOOT_ID, b"boot-1\n"),
-    ):
+    for name, data in ((defaults.KERNEL_RELEASE, b"7.1.13-200\n"), (defaults.BOOT_ID, b"boot-1\n")):
         filesystem.write_atomic(safepaths.SafePath(Path(name)), data, mode=defaults.RECORD_MODE)
     return dataclasses.replace(ports, files=filesystem)
 
@@ -237,10 +255,12 @@ def test_a_transcript_cut_mid_event_is_incomplete(
 def test_a_client_s_process_is_named_by_its_program_and_never_its_arguments(
     ports: portset.HostPorts,
 ) -> None:
-    processes = fake_process.ScriptedProcess({
-        (*fingerprinttrace.PROCESS_QUERY, ":1.2"): fake_process.Reply(stdout=b"u 4242\n"),
-        (*fingerprinttrace.PROCESS_QUERY, ":1.3"): fake_process.Reply(exit_code=1),
-    })
+    processes = fake_process.ScriptedProcess(
+        {
+            (*fingerprinttrace.PROCESS_QUERY, ":1.2"): fake_process.Reply(stdout=b"u 4242\n"),
+            (*fingerprinttrace.PROCESS_QUERY, ":1.3"): fake_process.Reply(exit_code=1),
+        }
+    )
     filesystem = fake_files.MemoryFiles()
     filesystem.write_atomic(
         safepaths.SafePath(Path("/usr/bin/gnome-control-center")), b"", mode=defaults.RECORD_MODE
@@ -252,7 +272,9 @@ def test_a_client_s_process_is_named_by_its_program_and_never_its_arguments(
     held = dataclasses.replace(ports, processes=processes, files=filesystem)
 
     assert fingerprinttrace.client_process(held, ":1.2") == {
-        "status": "OBSERVED", "pid": 4242, "executable": "gnome-control-center",
+        "status": "OBSERVED",
+        "pid": 4242,
+        "executable": "gnome-control-center",
     }
     assert fingerprinttrace.client_process(held, ":1.3") == {"status": "UNKNOWN"}
     assert fingerprinttrace.client_process(held, "org.gnome.Shell") == {"status": "UNKNOWN"}

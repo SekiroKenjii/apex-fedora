@@ -12,9 +12,7 @@ GOVERNED = ("REPOSITORY_", "COMMIT_", "HOOK_")
 
 def test_every_repository_and_commit_reason_has_a_producer() -> None:
     body = "\n".join(
-        path.read_text()
-        for path in sorted(SOURCE.rglob("*.py"))
-        if path.name != "refusals.py"
+        path.read_text() for path in sorted(SOURCE.rglob("*.py")) if path.name != "refusals.py"
     )
     orphans = [
         member.name

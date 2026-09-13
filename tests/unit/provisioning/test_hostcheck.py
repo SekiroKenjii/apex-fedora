@@ -64,9 +64,10 @@ def test_a_ready_host_reports_everything_it_has_and_no_problem(
     assert document["tools"] == {name: f"/usr/bin/{name}" for name in defaults.HOST_TOOLS}
     assert document["kvm"] is True and document["firmware"] is True
     assert document["available_memory_mib"] == 16384
-    assert document["required_memory_mib"] == (
-        defaults.BUILDER.memory + defaults.BUILDER.reserve
-    ).value
+    assert (
+        document["required_memory_mib"]
+        == (defaults.BUILDER.memory + defaults.BUILDER.reserve).value
+    )
     assert document["free_gib"] == 500
     assert document["required_free_gib"] == defaults.BUILDER.minimum_free.value
     assert document["state"] == str(root.path) and document["vm"] is None
@@ -80,9 +81,7 @@ def test_every_shortfall_is_named_in_the_order_the_older_tool_checked(
         free_space=quantities.Gib(2).as_bytes(),
         kvm_accessible=False,
     )
-    held = bundle(
-        ports, tools=("python3", "uv"), firmware=False, capacity=short, tmp_path=tmp_path
-    )
+    held = bundle(ports, tools=("python3", "uv"), firmware=False, capacity=short, tmp_path=tmp_path)
 
     problems = hostcheck.examine(held, settings(tmp_path), root).problems()
 

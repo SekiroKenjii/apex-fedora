@@ -42,8 +42,15 @@ def bundle() -> agentports.AgentPorts:
     for argv in (
         ("bootc", "status", "--format", "json"),
         ("systemctl", "is-active", "gdm"),
-        ("busctl", "--system", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-         "org.freedesktop.DBus", "GetId"),
+        (
+            "busctl",
+            "--system",
+            "call",
+            "org.freedesktop.DBus",
+            "/org/freedesktop/DBus",
+            "org.freedesktop.DBus",
+            "GetId",
+        ),
         ("findmnt", "--noheadings", "--output", "TARGET,SOURCE,FSTYPE,OPTIONS", "/"),
         ("systemctl", "--failed", "--no-legend"),
         ("loginctl", "list-sessions", "--no-legend"),
@@ -52,12 +59,15 @@ def bundle() -> agentports.AgentPorts:
     ):
         process.expect(argv, fake_process.Reply(stdout=b"ok\n"))
     return agentports.AgentPorts(
-        processes=process, files=fake_files.MemoryFiles(), clock=fake_clock.ManualClock(),
+        processes=process,
+        files=fake_files.MemoryFiles(),
+        clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 

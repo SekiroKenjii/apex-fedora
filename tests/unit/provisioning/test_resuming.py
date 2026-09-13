@@ -39,13 +39,15 @@ def started(host: Host, tmp_path: Path, **changes: object) -> testspec.Prepared:
     for name in ("target.qcow2", "other.qcow2", "apex.iso", "ventoy.qcow2"):
         (host.root.path / name).write_bytes(b"")
     request = testspec.TestRequest(
-        disk=host.root.path / "target.qcow2", **changes,  # type: ignore[arg-type]
+        disk=host.root.path / "target.qcow2",
+        **changes,  # type: ignore[arg-type]
     )
     ports = dataclasses.replace(host.ports, processes=Storage())
     prepared = testspec.prepare(ports, held, host.root, request, run=RUN)
     host.files.write_atomic(
         safepaths.SafePath(prepared.run_directory.path / defaults.TEST_SERIAL_LOG_NAME),
-        b"first boot", mode=PRIVATE,
+        b"first boot",
+        mode=PRIVATE,
     )
     return prepared
 
@@ -54,8 +56,12 @@ def test_the_run_is_rebuilt_over_its_overlays_without_remaking_them(
     host: Host, tmp_path: Path
 ) -> None:
     first = started(
-        host, tmp_path, iso=host.root.path / "apex.iso", medium=machines.Medium.INSTALLER,
-        extra_disks=(host.root.path / "other.qcow2",), guest_ssh=True,
+        host,
+        tmp_path,
+        iso=host.root.path / "apex.iso",
+        medium=machines.Medium.INSTALLER,
+        extra_disks=(host.root.path / "other.qcow2",),
+        guest_ssh=True,
     )
     tools = Storage()
     ports = dataclasses.replace(host.ports, processes=tools)
@@ -71,9 +77,12 @@ def test_the_run_is_rebuilt_over_its_overlays_without_remaking_them(
     run_directory = host.run_directory.path
     for suffix in ("-vars.fd", "-serial.log", ".json"):
         assert str(run_directory / f"before-resume-{STAMP}{suffix}") in host.files.writes
-    assert host.files.read_bytes(
-        safepaths.SafePath(run_directory / f"before-resume-{STAMP}-serial.log"), limit=1 << 20
-    ) == b"first boot"
+    assert (
+        host.files.read_bytes(
+            safepaths.SafePath(run_directory / f"before-resume-{STAMP}-serial.log"), limit=1 << 20
+        )
+        == b"first boot"
+    )
 
 
 def test_without_the_iso_the_installed_disk_boots_on_its_own(host: Host, tmp_path: Path) -> None:
@@ -104,7 +113,10 @@ def test_a_run_with_the_usb_bus_is_not_resumed(host: Host, tmp_path: Path) -> No
 def test_a_running_machine_blocks_the_resumption(host: Host, tmp_path: Path) -> None:
     prepared = started(host, tmp_path)
     launching.launch(
-        host.ports, root=host.root, spec=prepared.spec, run=RUN,
+        host.ports,
+        root=host.root,
+        spec=prepared.spec,
+        run=RUN,
         run_directory=prepared.run_directory,
     )
 
@@ -130,9 +142,12 @@ def test_a_run_this_tree_did_not_start_is_refused(host: Host, tmp_path: Path) ->
 def test_prepare_leaves_the_record_the_resumption_reads(host: Host, tmp_path: Path) -> None:
     prepared = started(host, tmp_path, extra_disks=(host.root.path / "other.qcow2",))
 
-    record = json.loads(host.files.read_bytes(
-        safepaths.SafePath(prepared.run_directory.path / defaults.RUN_RECORD_NAME), limit=1 << 20
-    ))
+    record = json.loads(
+        host.files.read_bytes(
+            safepaths.SafePath(prepared.run_directory.path / defaults.RUN_RECORD_NAME),
+            limit=1 << 20,
+        )
+    )
 
     assert record["disk"] == {
         "source": str(host.root.path / "target.qcow2"),

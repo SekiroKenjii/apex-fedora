@@ -8,38 +8,30 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from apex.kernel import errors, identifiers, refusals
-from apex.registry import decorators, discovery, registry
+from apex.kernel import identifiers
+from apex.registry import casebook, registry
 from apex.verification import probing
 
 DIRECTORY = Path(__file__).resolve().parent
-
-_collector: registry.Registry[str, probing.ProbeCase] = registry.Registry("probe")
-_sealed: registry.SealedRegistry[str, probing.ProbeCase] | None = None
+BOOK: casebook.Casebook[probing.ProbeCase] = casebook.Casebook(
+    kind="probe",
+    namespace=__name__,
+    key=lambda case: str(case.unit),
+    known="the host knows these probes",
+)
 
 
 def declare(case: probing.ProbeCase) -> probing.ProbeCase:
-    _collector.add(str(case.unit), case, at=decorators.caller(2))
-    return case
+    return BOOK.declare(case)
 
 
 def sealed() -> registry.SealedRegistry[str, probing.ProbeCase]:
-    global _sealed
-    if _sealed is None:
-        discovery.discover([__name__])
-        _sealed = _collector.seal()
-    return _sealed
+    return BOOK.sealed()
 
 
 def registered() -> tuple[probing.ProbeCase, ...]:
-    return tuple(case for _, case in sorted(sealed().items(), key=lambda item: item[0]))
+    return BOOK.registered()
 
 
 def lookup(name: identifiers.ProbeId) -> probing.ProbeCase:
-    if str(name) not in sealed():
-        raise errors.Refusal(
-            refusals.RefusalReason.UNIT_UNKNOWN,
-            subject=str(name),
-            remedy=f"the host knows these probes: {', '.join(sorted(sealed()))}",
-        )
-    return sealed().lookup(str(name))
+    return BOOK.lookup(name)

@@ -87,8 +87,7 @@ def _proof_reference(entry: object, path: Path, index: int) -> ProofReference:
             subject=f"{path.name}: proof entry {index}",
         )
     return ProofReference(
-        relative_path=str(entry["path"]),
-        digest=identifiers.Digest.parse(str(entry["sha256"])),
+        relative_path=str(entry["path"]), digest=identifiers.Digest.parse(str(entry["sha256"]))
     )
 
 

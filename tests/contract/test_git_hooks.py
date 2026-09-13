@@ -21,9 +21,18 @@ NONE = "0" * 40
 
 def git(repository: Path, *arguments: str) -> str:
     return subprocess.run(
-        ["git", "-C", str(repository), *arguments], capture_output=True, text=True, check=True,
-        env={"PATH": "/usr/bin:/bin", "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@x",
-             "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@x", "HOME": str(repository)},
+        ["git", "-C", str(repository), *arguments],
+        capture_output=True,
+        text=True,
+        check=True,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "GIT_AUTHOR_NAME": "t",
+            "GIT_AUTHOR_EMAIL": "t@x",
+            "GIT_COMMITTER_NAME": "t",
+            "GIT_COMMITTER_EMAIL": "t@x",
+            "HOME": str(repository),
+        },
     ).stdout
 
 

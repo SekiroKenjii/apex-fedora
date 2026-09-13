@@ -69,9 +69,7 @@ def parse_report(document: Mapping[str, object]) -> VentoyReport:
         image = identifiers.Digest(str(document.get("image_sha256", "")))
     except errors.Refusal as error:
         raise _report(f"image digest: {error.subject}") from error
-    return VentoyReport(
-        request=parse_request(request), image=image, physical_media_accessed=False
-    )
+    return VentoyReport(request=parse_request(request), image=image, physical_media_accessed=False)
 
 
 def _malformed(detail: str) -> errors.Refusal:

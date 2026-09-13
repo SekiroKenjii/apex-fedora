@@ -23,13 +23,13 @@ def records(directory: bytes) -> list[tuple[bytes, int, int, int]]:
         size = struct.unpack_from("<I", directory, offset + 10)[0]
         flags = directory[offset + 25]
         width = directory[offset + 32]
-        found.append((directory[offset + 33:offset + 33 + width], extent, size, flags))
+        found.append((directory[offset + 33 : offset + 33 + width], extent, size, flags))
         offset += length
     return found
 
 
 def sector(image: bytes, index: int) -> bytes:
-    return image[index * SECTOR:(index + 1) * SECTOR]
+    return image[index * SECTOR : (index + 1) * SECTOR]
 
 
 def test_the_descriptor_names_the_volume_the_tables_and_the_root_directory() -> None:

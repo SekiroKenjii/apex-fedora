@@ -20,9 +20,7 @@ def test_every_member_of_the_host_bundle_is_a_real_adapter(tmp_path: Path) -> No
         assert type(member).__module__.startswith("apex.adapters.real."), field.name
 
 
-def test_an_overridden_runtime_root_is_resolved_where_the_operator_pointed(
-    tmp_path: Path,
-) -> None:
+def test_an_overridden_runtime_root_is_resolved_where_the_operator_pointed(tmp_path: Path) -> None:
     runtime = tmp_path / "runtime"
     runtime.mkdir(mode=0o700)
 

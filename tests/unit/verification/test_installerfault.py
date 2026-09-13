@@ -32,8 +32,10 @@ def held(ports: portset.HostPorts) -> portset.HostPorts:
 
 def observation(source: str, overlay: str, *, unchanged: bool = True) -> comparing.DiskObservation:
     return comparing.DiskObservation(
-        source=safepaths.SafePath(Path(source)), overlay=safepaths.SafePath(Path(overlay)),
-        unchanged=unchanged, output="",
+        source=safepaths.SafePath(Path(source)),
+        overlay=safepaths.SafePath(Path(overlay)),
+        unchanged=unchanged,
+        output="",
     )
 
 
@@ -55,7 +57,11 @@ def test_the_request_names_the_case_the_image_and_the_machine_and_reads_back_the
     document = request.document()
 
     assert document == {
-        "schema": 1, "case": "wrong-key", "iso_sha256": "a" * 64, "vm_pid": 4242, "run": str(RUN),
+        "schema": 1,
+        "case": "wrong-key",
+        "iso_sha256": "a" * 64,
+        "vm_pid": 4242,
+        "run": str(RUN),
     }
     assert installerfault.Request.parse(json.loads(json.dumps(document))) == request
     with pytest.raises(errors.Refusal) as malformed:
@@ -68,7 +74,8 @@ def test_the_request_names_the_case_the_image_and_the_machine_and_reads_back_the
     [
         ("wrong-key", None, refusals.RefusalReason.REQUEST_MALFORMED),
         (
-            "corrupt-blob", "-----BEGIN PUBLIC KEY-----\nx\n",
+            "corrupt-blob",
+            "-----BEGIN PUBLIC KEY-----\nx\n",
             refusals.RefusalReason.REQUEST_MALFORMED,
         ),
         ("no-such-case", None, refusals.RefusalReason.UNIT_UNKNOWN),
@@ -92,19 +99,22 @@ def test_a_key_is_read_from_inside_the_root_and_must_be_a_small_public_key_block
     public = root.path / "wrong.pub"
     public.write_bytes(b"")
     bundle.files.write_atomic(
-        safepaths.SafePath(public), b"-----BEGIN PUBLIC KEY-----\nfixture\n",
+        safepaths.SafePath(public),
+        b"-----BEGIN PUBLIC KEY-----\nfixture\n",
         mode=defaults.RECORD_MODE,
     )
     certificate = root.path / "wrong.crt"
     certificate.write_bytes(b"")
     bundle.files.write_atomic(
-        safepaths.SafePath(certificate), b"-----BEGIN CERTIFICATE-----\nnot a key\n",
+        safepaths.SafePath(certificate),
+        b"-----BEGIN CERTIFICATE-----\nnot a key\n",
         mode=defaults.RECORD_MODE,
     )
     large = root.path / "large.pub"
     large.write_bytes(b"")
     bundle.files.write_atomic(
-        safepaths.SafePath(large), b"-----BEGIN PUBLIC KEY-----\n" + b"x" * 4096,
+        safepaths.SafePath(large),
+        b"-----BEGIN PUBLIC KEY-----\n" + b"x" * 4096,
         mode=defaults.RECORD_MODE,
     )
 
@@ -152,7 +162,9 @@ def prepared(
     )
     installerfault.write_request(bundle, run_directory, request)
     installerfault.write_kept(
-        bundle, run_directory, request=request,
+        bundle,
+        run_directory,
+        request=request,
         observations=installerruns.confirming() if guest is None else guest,  # type: ignore[arg-type]
     )
     return bundle, run_directory, request
@@ -244,7 +256,9 @@ def test_a_run_without_a_request_is_refused_by_the_missing_record(
 
     with pytest.raises(errors.Refusal) as refused:
         installerfault.collect(
-            bundle, root=root, run_directory=root.child(f"vm-runs/{RUN}"),
+            bundle,
+            root=root,
+            run_directory=root.child(f"vm-runs/{RUN}"),
             comparison=comparison(True, True),
         )
 

@@ -14,7 +14,7 @@ import re
 from collections.abc import Mapping
 from pathlib import PurePosixPath
 
-from apex.composition import exports
+from apex.composition import artifactchecks, exports
 from apex.config import defaults
 from apex.kernel import encoding, errors, identifiers, refusals, safepaths
 from apex.model import builds, oci
@@ -92,8 +92,11 @@ def _package(item: object) -> LockedPackage:
     if not isinstance(item, Mapping):
         raise TypeError("package")
     return LockedPackage(
-        name=str(item["name"]), version=str(item["version"]), release=str(item["release"]),
-        arch=str(item["arch"]), sha256=str(item["sha256"]),
+        name=str(item["name"]),
+        version=str(item["version"]),
+        release=str(item["release"]),
+        arch=str(item["arch"]),
+        sha256=str(item["sha256"]),
     )
 
 
@@ -152,29 +155,6 @@ def _artifacts(report: Mapping[str, object]) -> dict[str, str]:
     return {str(name): str(value) for name, value in artifacts.items()}
 
 
-def _require_digests(
-    ports: portset.HostPorts,
-    root: safepaths.RuntimeRoot,
-    home: safepaths.SafePath,
-    artifacts: Mapping[str, str],
-) -> None:
-    for relative, expected in artifacts.items():
-        try:
-            found = ports.digests.file(
-                safepaths.SafePath.regular_file(home.path / relative, within=root)
-            )
-        except (errors.Refusal, errors.PortFailure) as problem:
-            raise errors.Refusal(
-                refusals.RefusalReason.ARTIFACT_CHECKSUM_MISMATCH,
-                subject=f"{relative}: {problem}",
-            ) from problem
-        if found.hex != expected:
-            raise errors.Refusal(
-                refusals.RefusalReason.ARTIFACT_CHECKSUM_MISMATCH,
-                subject=f"{relative}: differs from the transferred report",
-            )
-
-
 def _require_packages(artifacts: Mapping[str, str], lock: NvidiaLock) -> None:
     if artifacts[defaults.NVIDIA_LOCK_COPY] != lock.digest.hex:
         raise _unbound("the transferred lock differs from the build input")
@@ -212,6 +192,6 @@ def verify_report(
         raise _unbound(f"{defaults.NVIDIA_REPORT_NAME}: {problem}") from problem
     _bound(report, frozen, lock)
     artifacts = _artifacts(report)
-    _require_digests(ports, root, home, artifacts)
+    artifactchecks.require_artifacts(ports, root, home, artifacts)
     _require_packages(artifacts, lock)
     return report

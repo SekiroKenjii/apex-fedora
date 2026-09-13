@@ -51,8 +51,13 @@ def for_mode(
                 image = console.capture(ports, monitor, into=into)
                 extras.append(judging.capture(image, name=name))
                 agentrun.run_unit(
-                    ports, guest, install, unit=case.unit, arguments=DISMISS,
-                    token=ports.identities.token(), privileged=case.privileged,
+                    ports,
+                    guest,
+                    install,
+                    unit=case.unit,
+                    arguments=DISMISS,
+                    token=ports.identities.token(),
+                    privileged=case.privileged,
                 )
         except errors.Refusal as refusal:
             return stages.Refuse(reason=refusal.reason, detail=refusal.subject)
@@ -70,15 +75,22 @@ def for_mode(
     return stages.SimpleStage(
         id=identifiers.StageId(f"desktop.window-{mode}"),
         reads=(
-            verifykeys.GUEST, verifykeys.AGENT, verifykeys.MONITOR,
-            composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID, *after,
+            verifykeys.GUEST,
+            verifykeys.AGENT,
+            verifykeys.MONITOR,
+            composition_keys.RUNTIME_ROOT,
+            composition_keys.RUN_ID,
+            *after,
         ),
         writes=(key,),
         attests=frozenset(),
-        effects=frozenset({
-            effects.Effect.REMOTE_EXEC, effects.Effect.MUTATES_GUEST,
-            effects.Effect.WRITES_RUNTIME,
-        }),
+        effects=frozenset(
+            {
+                effects.Effect.REMOTE_EXEC,
+                effects.Effect.MUTATES_GUEST,
+                effects.Effect.WRITES_RUNTIME,
+            }
+        ),
         preflight=stages.always_ready,
         apply=apply,
     )

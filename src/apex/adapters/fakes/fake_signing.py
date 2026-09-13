@@ -64,7 +64,7 @@ def _secret(key: safepaths.RegularFile, prefix: str) -> str:
     text = key.path.read_text()
     if not text.startswith(prefix):
         raise errors.PortFailure(port="signing", cause=f"{key}: not a {prefix[:-1]} key")
-    return text[len(prefix):]
+    return text[len(prefix) :]
 
 
 def _tag(secret: str, payload: bytes) -> bytes:

@@ -63,9 +63,7 @@ def witnessed_through(bundle: EnvironmentKind, guest: EnvironmentKind) -> Enviro
     return guest
 
 
-ATTESTABLE = frozenset(
-    kind for kind in EnvironmentKind if kind is not EnvironmentKind.SIMULATED
-)
+ATTESTABLE = frozenset(kind for kind in EnvironmentKind if kind is not EnvironmentKind.SIMULATED)
 
 
 def require_attestable(

@@ -96,10 +96,12 @@ def test_the_whole_verification_runs_over_a_payload_directory(
     layer = b"synthetic compressed layer bytes"
     config_digest = "sha256:" + hashlib.sha256(config).hexdigest()
     layer_digest = "sha256:" + hashlib.sha256(layer).hexdigest()
-    raw = json.dumps({
-        "config": {"digest": config_digest, "size": len(config)},
-        "layers": [{"digest": layer_digest, "size": len(layer)}],
-    }).encode()
+    raw = json.dumps(
+        {
+            "config": {"digest": config_digest, "size": len(config)},
+            "layers": [{"digest": layer_digest, "size": len(layer)}],
+        }
+    ).encode()
     (tmp_path / config_digest[7:]).write_bytes(config)
     (tmp_path / layer_digest[7:]).write_bytes(layer)
     (tmp_path / "manifest.json").write_bytes(raw)

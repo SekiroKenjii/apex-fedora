@@ -49,8 +49,7 @@ def inspect(
         link = safepaths.SafePath.regular_file(current, within=root)
         if link in links:
             raise errors.Refusal(
-                refusals.RefusalReason.DISK_CHAIN_CYCLE,
-                subject=f"{link} is its own ancestor",
+                refusals.RefusalReason.DISK_CHAIN_CYCLE, subject=f"{link} is its own ancestor"
             )
         links.append(link)
         description = _describe(ports, link)

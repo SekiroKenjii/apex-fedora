@@ -24,9 +24,9 @@ from apex.wiring import contexts
 
 NAME = "record"
 SUMMARY = "record one result for a check with the operator's proofs and note"
-STATUSES = tuple(sorted({
-    verdicts.Passed.stored_name, verdicts.Failed.stored_name, verdicts.Blocked.stored_name,
-}))
+STATUSES = tuple(
+    sorted({verdicts.Passed.stored_name, verdicts.Failed.stored_name, verdicts.Blocked.stored_name})
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -34,8 +34,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("check")
     parser.add_argument("status", choices=STATUSES)
     parser.add_argument(
-        "--environment", required=True,
-        choices=[str(kind) for kind in claims.ATTESTABLE],
+        "--environment", required=True, choices=[str(kind) for kind in claims.ATTESTABLE]
     )
     parser.add_argument("--description", required=True)
     parser.add_argument("--proof", type=Path, action="append", default=[])
@@ -64,7 +63,9 @@ def _candidate(root: safepaths.RuntimeRoot) -> identifiers.Digest:
 
 def note(description: str, reason: str, environment: claims.EnvironmentKind) -> minting.Offered:
     document: encoding.Document = {
-        "description": description, "reason": reason, "environment": str(environment),
+        "description": description,
+        "reason": reason,
+        "environment": str(environment),
     }
     return minting.Offered(payload=encoding.canonical(document), kind=defaults.OPERATOR_NOTE_KIND)
 
@@ -106,14 +107,16 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
         candidate=_candidate(root),
         witnessed=claims.witnessed_through(ports.environment, environment),
     )
-    return commandspecs.Reply(document={
-        "recorded": {
-            "check": str(recorded.check),
-            "verdict": recorded.verdict.stored_name,
-            "sequence": recorded.sequence,
-            "proofs": [digest.hex for digest in recorded.proofs],
+    return commandspecs.Reply(
+        document={
+            "recorded": {
+                "check": str(recorded.check),
+                "verdict": recorded.verdict.stored_name,
+                "sequence": recorded.sequence,
+                "proofs": [digest.hex for digest in recorded.proofs],
+            }
         }
-    })
+    )
 
 
 commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run))

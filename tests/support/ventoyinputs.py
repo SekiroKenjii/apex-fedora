@@ -23,7 +23,9 @@ from apex.provisioning.fixtures import ventoy_fixture
 VERSION = "1.1.17"
 COMMIT = "7cbdc5cf69935bcf1f085ae67f40e70ea7e74bae"
 SIGNER = "843938DF228D22F7B3742BC0D94AA3F0EFE21092"
-ARCHIVE_URL = f"https://github.com/ventoy/Ventoy/releases/download/v{VERSION}/ventoy-{VERSION}-linux.tar.gz"
+ARCHIVE_URL = (
+    f"https://github.com/ventoy/Ventoy/releases/download/v{VERSION}/ventoy-{VERSION}-linux.tar.gz"
+)
 SUMS_URL = f"https://github.com/ventoy/Ventoy/releases/download/v{VERSION}/sha256.txt"
 UBUNTU_NAME = "ubuntu-26.04-desktop-amd64.iso"
 ARCHIVE = b"the ventoy release archive"
@@ -45,12 +47,19 @@ def lock_document() -> dict[str, Any]:
     return {
         "schema": 1,
         "ventoy": {
-            "version": VERSION, "commit": COMMIT, "url": ARCHIVE_URL, "sha256": digest(ARCHIVE),
-            "checksum_url": SUMS_URL, "checksum_sha256": digest(sums_text()),
+            "version": VERSION,
+            "commit": COMMIT,
+            "url": ARCHIVE_URL,
+            "sha256": digest(ARCHIVE),
+            "checksum_url": SUMS_URL,
+            "checksum_sha256": digest(sums_text()),
         },
         "ubuntu": {
-            "filename": UBUNTU_NAME, "url": f"https://releases.ubuntu.com/26.04/{UBUNTU_NAME}",
-            "sha256": digest(UBUNTU_ISO), "bytes": len(UBUNTU_ISO), "signer": SIGNER,
+            "filename": UBUNTU_NAME,
+            "url": f"https://releases.ubuntu.com/26.04/{UBUNTU_NAME}",
+            "sha256": digest(UBUNTU_ISO),
+            "bytes": len(UBUNTU_ISO),
+            "signer": SIGNER,
         },
     }
 
@@ -80,7 +89,8 @@ def lay_out(
     (output / "live" / "Apex-Live.iso").write_bytes(LIVE_ISO)
     files = {
         str(path.relative_to(output)): hashing.digest_bytes(path.read_bytes()).hex
-        for path in sorted(output.rglob("*")) if path.is_file()
+        for path in sorted(output.rglob("*"))
+        if path.is_file()
     }
     inventory = json.dumps({"schema": 1, "digest": SIGNED_DIGEST, "files": files}).encode()
     (output / bundles.MANIFEST_NAME).write_bytes(inventory)
@@ -96,8 +106,11 @@ def lay_out(
     (beside / "SHA256SUMS.gpg").write_bytes(b"a detached signature")
     (beside / "keyring.gpg").write_bytes(b"a keyring")
     return Laid(
-        live_output=output, ubuntu=ubuntu, trusted_key=public,
-        checksums=beside / "SHA256SUMS", signature=beside / "SHA256SUMS.gpg",
+        live_output=output,
+        ubuntu=ubuntu,
+        trusted_key=public,
+        checksums=beside / "SHA256SUMS",
+        signature=beside / "SHA256SUMS.gpg",
         keyring=beside / "keyring.gpg",
     )
 

@@ -49,7 +49,9 @@ class Console:
                 wire = connection.fileno()
                 shell = subprocess.Popen(
                     ["bash", "--norc", "--noprofile", "-s"],
-                    stdin=wire, stdout=wire, stderr=wire,
+                    stdin=wire,
+                    stdout=wire,
+                    stderr=wire,
                     env={"PATH": os.environ["PATH"], "HOME": os.environ.get("HOME", "/")},
                 )
                 shell.wait()
@@ -77,7 +79,8 @@ def shell(console: Console, *, process: int | None = None) -> real_serialshell.S
 
 def target(tmp_path: Path) -> guestshell.GuestTarget:
     return guestshell.GuestTarget(
-        user="root", port=quantities.TcpPort(22245),
+        user="root",
+        port=quantities.TcpPort(22245),
         key=safepaths.SafePath(tmp_path / "unused"),
         known_hosts=safepaths.SafePath(tmp_path / "kh"),
     )
@@ -115,7 +118,9 @@ def test_a_script_that_succeeds_reports_zero_and_a_transcript_takes_the_output(
         target(tmp_path),
         guestshell.GuestRun(
             script=guestshell.RemoteScript.of(guestshell.Step.of("echo", "hello")),
-            deadline=DEADLINE, limit=commands.OutputLimit.default(), transcript=transcript,
+            deadline=DEADLINE,
+            limit=commands.OutputLimit.default(),
+            transcript=transcript,
         ),
     )
 
@@ -143,7 +148,8 @@ def test_a_send_to_a_place_the_guest_cannot_write_fails(console: Console, tmp_pa
 
     with pytest.raises(errors.PortFailure):
         shell(console).send(
-            target(tmp_path), local=safepaths.SafePath(local),
+            target(tmp_path),
+            local=safepaths.SafePath(local),
             remote=safepaths.RemotePath(str(tmp_path / "missing" / "dir" / "file")),
             deadline=DEADLINE,
         )
@@ -159,12 +165,18 @@ def test_a_file_and_a_directory_are_received_back(console: Console, tmp_path: Pa
     tree.path.mkdir()
 
     shell(console).receive(
-        target(tmp_path), remote=safepaths.RemotePath(str(remote_dir / "result.json")),
-        into=single, recursive=False, deadline=DEADLINE,
+        target(tmp_path),
+        remote=safepaths.RemotePath(str(remote_dir / "result.json")),
+        into=single,
+        recursive=False,
+        deadline=DEADLINE,
     )
     shell(console).receive(
-        target(tmp_path), remote=safepaths.RemotePath(str(remote_dir)),
-        into=tree, recursive=True, deadline=DEADLINE,
+        target(tmp_path),
+        remote=safepaths.RemotePath(str(remote_dir)),
+        into=tree,
+        recursive=True,
+        deadline=DEADLINE,
     )
 
     assert single.path.read_bytes() == b'{"status": "PASS"}'
@@ -204,7 +216,8 @@ def test_a_script_that_outlives_the_deadline_is_a_port_failure(
             target(tmp_path),
             guestshell.GuestRun(
                 script=guestshell.RemoteScript.of(guestshell.Step.of("sleep", "5")),
-                deadline=timing.Deadline(timing.Elapsed(1)), limit=commands.OutputLimit.default(),
+                deadline=timing.Deadline(timing.Elapsed(1)),
+                limit=commands.OutputLimit.default(),
             ),
         )
 

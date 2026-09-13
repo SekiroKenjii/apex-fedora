@@ -41,18 +41,20 @@ class Granted:
 
 def blueprint(*, hashed: str, public_key: str) -> bytes:
     """The image builder's blueprint for the account, as the older tool wrote it."""
-    return "\n".join((
-        "[[customizations.user]]",
-        f'name = "{defaults.TEST_ACCOUNT}"',
-        f'description = "{defaults.TEST_ACCOUNT_DESCRIPTION}"',
-        f"password = {json.dumps(hashed)}",
-        f"key = {json.dumps(public_key)}",
-        f'groups = ["{WHEEL}"]',
-        "",
-        "[customizations.kernel]",
-        f'append = "{defaults.TEST_KERNEL_APPEND}"',
-        "",
-    )).encode()
+    return "\n".join(
+        (
+            "[[customizations.user]]",
+            f'name = "{defaults.TEST_ACCOUNT}"',
+            f'description = "{defaults.TEST_ACCOUNT_DESCRIPTION}"',
+            f"password = {json.dumps(hashed)}",
+            f"key = {json.dumps(public_key)}",
+            f'groups = ["{WHEEL}"]',
+            "",
+            "[customizations.kernel]",
+            f'append = "{defaults.TEST_KERNEL_APPEND}"',
+            "",
+        )
+    ).encode()
 
 
 def grant(
@@ -66,9 +68,8 @@ def grant(
     credentials = directory / defaults.CREDENTIALS_NAME
     ports.files.write_atomic(
         credentials,
-        encoding.canonical({
-            "user": defaults.TEST_ACCOUNT, "password": password, "key": str(key),
-        }) + b"\n",
+        encoding.canonical({"user": defaults.TEST_ACCOUNT, "password": password, "key": str(key)})
+        + b"\n",
         mode=defaults.RECORD_MODE,
     )
     written = directory / defaults.TEST_BLUEPRINT_NAME

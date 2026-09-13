@@ -40,10 +40,17 @@ STAGES = (
     retrieve_output_stage.STAGE,
     record_result_stage.STAGE,
 )
-SEEDS = frozenset({
-    keys.REPOSITORY, keys.RUNTIME_ROOT, keys.BUILDER, keys.REQUESTED_PROFILE, keys.KIND,
-    keys.PARENT, keys.TEST_ACCESS,
-})
+SEEDS = frozenset(
+    {
+        keys.REPOSITORY,
+        keys.RUNTIME_ROOT,
+        keys.BUILDER,
+        keys.REQUESTED_PROFILE,
+        keys.KIND,
+        keys.PARENT,
+        keys.TEST_ACCESS,
+    }
+)
 
 
 def plan(name: str) -> plans.Plan[portset.HostPorts]:

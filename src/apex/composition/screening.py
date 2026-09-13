@@ -23,9 +23,7 @@ def screen(candidate: archives.BundleCandidate) -> None:
     path = treerows.RepoPath(candidate.path)
     findings = gitguarding.judge_entry(
         rulespecs.EntrySubject(
-            path=path,
-            mode=_mode_of(candidate),
-            size=quantities.ByteCount(len(candidate.payload)),
+            path=path, mode=_mode_of(candidate), size=quantities.ByteCount(len(candidate.payload))
         ),
         rules=gitguarding.registered_entry_rules(),
     ) + gitguarding.judge_content(

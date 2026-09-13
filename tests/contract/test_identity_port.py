@@ -20,9 +20,7 @@ def test_successive_identifiers_differ(identities: ids_port.IdentityPort) -> Non
     assert len(issued) == 20
 
 
-def test_run_identifiers_and_tokens_share_one_sequence(
-    identities: ids_port.IdentityPort,
-) -> None:
+def test_run_identifiers_and_tokens_share_one_sequence(identities: ids_port.IdentityPort) -> None:
     issued = {str(identities.run_id()), str(identities.token())}
 
     assert len(issued) == 2

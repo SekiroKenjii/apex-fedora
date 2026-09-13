@@ -123,11 +123,13 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
 
 RECIPES = (
     commandspecs.Recipe(
-        "trust-verify", ("build_id", "key"),
+        "trust-verify",
+        ("build_id", "key"),
         (NAME, VERIFY, "--build", "{{build_id}}", "--key", "{{key}}"),
     ),
     commandspecs.Recipe(
-        "trust-exercise", ("build_id", "key"),
+        "trust-exercise",
+        ("build_id", "key"),
         (NAME, EXERCISE, "--build", "{{build_id}}", "--key", "{{key}}"),
     ),
     commandspecs.Recipe("trust-development-key", (), (NAME, DEVELOPMENT_KEY)),

@@ -27,12 +27,24 @@ class CurlDownloads(downloading.DownloadPort):
         into.path.parent.mkdir(parents=True, exist_ok=True, mode=parts.PRIVATE_DIRECTORY)
         part = parts.part_of(into.path)
         arguments = [
-            PROGRAM, "--fail", "--silent", "--show-error", "--location",
-            "--proto", "=https", "--proto-redir", "=https",
-            "--retry", str(defaults.DOWNLOAD_RETRIES),
-            "--connect-timeout", str(defaults.DOWNLOAD_CONNECT_TIMEOUT.seconds),
-            "--max-time", str(int(deadline.budget.seconds)),
-            "--output", str(part), str(url),
+            PROGRAM,
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--location",
+            "--proto",
+            "=https",
+            "--proto-redir",
+            "=https",
+            "--retry",
+            str(defaults.DOWNLOAD_RETRIES),
+            "--connect-timeout",
+            str(defaults.DOWNLOAD_CONNECT_TIMEOUT.seconds),
+            "--max-time",
+            str(int(deadline.budget.seconds)),
+            "--output",
+            str(part),
+            str(url),
         ]
         try:
             completed = subprocess.run(  # noqa: S603

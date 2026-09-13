@@ -15,9 +15,7 @@ ASSETS = REPOSITORY / "src" / "apex" / "assets" / "verbatim"
 
 
 @pytest.mark.parametrize("program", [desktopprograms.RENDER, desktopprograms.THEME])
-def test_each_program_is_its_verbatim_asset_byte_for_byte(
-    program: desktopprograms.Program,
-) -> None:
+def test_each_program_is_its_verbatim_asset_byte_for_byte(program: desktopprograms.Program) -> None:
     asset = (ASSETS / f"{program.asset}.verbatim").read_bytes()
 
     assert program.source() == asset
@@ -40,12 +38,25 @@ def test_the_program_starts_as_a_transient_user_unit_under_wayland() -> None:
     argv = desktopprograms.launch(desktopprograms.THEME, "apex-theme-gtk3", "gtk3")
 
     assert list(argv) == [
-        "systemd-run", "--user", "--unit=apex-theme-gtk3", "--collect",
-        "--setenv=GDK_BACKEND=wayland", "python3", "/var/tmp/apex-theme-probe.py", "gtk3",
+        "systemd-run",
+        "--user",
+        "--unit=apex-theme-gtk3",
+        "--collect",
+        "--setenv=GDK_BACKEND=wayland",
+        "python3",
+        "/var/tmp/apex-theme-probe.py",
+        "gtk3",
     ]
     assert list(desktopprograms.journal("apex-theme-gtk3")) == [
-        "journalctl", "--user", "-u", "apex-theme-gtk3", "--no-pager"
+        "journalctl",
+        "--user",
+        "-u",
+        "apex-theme-gtk3",
+        "--no-pager",
     ]
     assert list(desktopprograms.stop("apex-theme-gtk3")) == [
-        "systemctl", "--user", "stop", "apex-theme-gtk3"
+        "systemctl",
+        "--user",
+        "stop",
+        "apex-theme-gtk3",
     ]

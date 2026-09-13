@@ -78,8 +78,11 @@ class FileIdentity:
 
     def document(self) -> dict[str, int]:
         return {
-            "device": self.device, "inode": self.inode, "size": self.size,
-            "modified_ns": self.modified_nanoseconds, "links": self.links,
+            "device": self.device,
+            "inode": self.inode,
+            "size": self.size,
+            "modified_ns": self.modified_nanoseconds,
+            "links": self.links,
             "allocated": self.allocated,
         }
 

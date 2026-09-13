@@ -34,16 +34,20 @@ class AccountTools(fake_process.ScriptedProcess):
             mode = safepaths.PRIVATE_DIRECTORY_MODE
             self.files.write_atomic(safepaths.SafePath(key), b"private", mode=mode)
             self.files.write_atomic(
-                safepaths.SafePath(key.with_name(key.name + ".pub")), f"{PUBLIC}\n".encode(),
+                safepaths.SafePath(key.with_name(key.name + ".pub")),
+                f"{PUBLIC}\n".encode(),
                 mode=mode,
             )
             self.expect(vector, fake_process.Reply())
         elif vector[:2] == ("openssl", "passwd"):
             self.fed.append(keywords.get("stdin"))
             fed = keywords.get("stdin") or b""
-            self.expect(vector, fake_process.Reply(
-                exit_code=self.hashing_exit, stdout=b"$6$salt$" + fed.strip() + b"\n"
-            ))
+            self.expect(
+                vector,
+                fake_process.Reply(
+                    exit_code=self.hashing_exit, stdout=b"$6$salt$" + fed.strip() + b"\n"
+                ),
+            )
         return super().run(argv, **keywords)
 
 

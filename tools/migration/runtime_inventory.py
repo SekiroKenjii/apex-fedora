@@ -107,7 +107,10 @@ def collect(root: Path, *, deep: bool) -> list[Entry]:
         if stat.S_ISLNK(info.st_mode):
             entries.append(
                 Entry(
-                    str(relative), Tier.SYMLINK, mode, info.st_size,
+                    str(relative),
+                    Tier.SYMLINK,
+                    mode,
+                    info.st_size,
                     # Path.readlink normalises a trailing slash away; the manifest must
                     # record the target exactly as stored.
                     target=os.readlink(absolute),  # noqa: PTH115

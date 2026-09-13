@@ -194,9 +194,7 @@ def test_a_judged_observation_records_with_its_captures_beside_the_report(
         extras=[judging.capture(b"png bytes", name="gtk3.png")],
     )
     key = verifykeys.judged("window.gtk3")
-    run = stages.RunContext(
-        facts=run.facts.with_fact(key, judged, produced_by=SEED), ports=ports
-    )
+    run = stages.RunContext(facts=run.facts.with_fact(key, judged, produced_by=SEED), ports=ports)
     stage = mint_stage.for_check(identifiers.CheckId("desktop.theme-surfaces"), reports=[key])
 
     result = stage.apply(run)

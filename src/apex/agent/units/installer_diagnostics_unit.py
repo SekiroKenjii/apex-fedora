@@ -25,8 +25,16 @@ LOG_DIRECTORY = "/tmp"  # noqa: S108
 COMMANDS: Mapping[str, commands.Argv] = {
     "selinux": commands.Argv.of("getenforce"),
     "units": commands.Argv.of(
-        "systemctl", "show", "anaconda.service", "anaconda-pre.service",
-        "-p", "ActiveState", "-p", "Result", "-p", "ExecMainStatus",
+        "systemctl",
+        "show",
+        "anaconda.service",
+        "anaconda-pre.service",
+        "-p",
+        "ActiveState",
+        "-p",
+        "Result",
+        "-p",
+        "ExecMainStatus",
     ),
     "journal": commands.Argv.of(
         "journalctl", "-b", "-n", "1000", "--no-pager", "-o", "short-monotonic"

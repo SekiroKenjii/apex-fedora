@@ -42,8 +42,16 @@ def argv(
     harness: safepaths.SafePath, sources: safepaths.SafePath, output: safepaths.SafePath
 ) -> commands.Argv:
     return commands.Argv.of(
-        "runuser", "-u", defaults.BUILDER_USER, "--",
-        "env", "PYTHONDONTWRITEBYTECODE=1", "python3", harness, sources, output,
+        "runuser",
+        "-u",
+        defaults.BUILDER_USER,
+        "--",
+        "env",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "python3",
+        harness,
+        sources,
+        output,
     )
 
 

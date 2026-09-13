@@ -36,16 +36,22 @@ def bundle(*, raw: bytes = RAW) -> agentports.AgentPorts:
     files = fake_files.MemoryFiles()
     files.write_atomic(
         safepaths.SafePath(Path(defaults.BUILDER_MARKER)),
-        f"{defaults.BUILDER_MARKER_TEXT}\n".encode(), mode=PRIVATE,
+        f"{defaults.BUILDER_MARKER_TEXT}\n".encode(),
+        mode=PRIVATE,
     )
     registry = fake_containers.FakeRegistry()
     registry.manifest_of(containers.ImageReference.stored(SOURCE), raw)
     tag = f"{defaults.PAYLOAD_TAG_PREFIX}{hashing.digest_bytes(RAW).hex}"
     registry.hold(tag, identifiers.ImageId("c" * 64), b"{}")
     return agentports.AgentPorts(
-        processes=process, files=files, clock=fake_clock.ManualClock(), containers=registry,
-        digests=fake_digesting.CountingDigests(), archives=fake_archives.MemoryArchives(),
-        identities=fake_ids.SequenceIdentities(), extents=fake_extents.FakeExtents(),
+        processes=process,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=registry,
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
         blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
@@ -86,8 +92,7 @@ def test_a_source_whose_manifest_is_not_the_fixture_s_is_refused() -> None:
 
 
 @pytest.mark.parametrize(
-    "change",
-    [{"work": "/elsewhere"}, {"source": "docker.io/x:a"}, {"digest": "short"}],
+    "change", [{"work": "/elsewhere"}, {"source": "docker.io/x:a"}, {"digest": "short"}]
 )
 def test_malformed_arguments_are_refused_before_the_engine_is_asked(change: dict[str, str]) -> None:
     ports = bundle()

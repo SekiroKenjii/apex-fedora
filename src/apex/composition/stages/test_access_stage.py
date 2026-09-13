@@ -31,9 +31,7 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         return stages.Advance(facts={keys.ACCESS: None})
     try:
         granted = accessgrant.grant(
-            context.ports,
-            root=context.facts[keys.RUNTIME_ROOT],
-            run=context.facts[keys.RUN_ID],
+            context.ports, root=context.facts[keys.RUNTIME_ROOT], run=context.facts[keys.RUN_ID]
         )
         context.ports.guest.send(
             context.facts[keys.BUILDER_VERIFIED],
@@ -49,8 +47,13 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("access.grant"),
     reads=(
-        keys.TEST_ACCESS, keys.KIND, keys.RUNTIME_ROOT, keys.RUN_ID, keys.BUILDER_VERIFIED,
-        keys.REMOTE, keys.TRANSFERRED,
+        keys.TEST_ACCESS,
+        keys.KIND,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
+        keys.BUILDER_VERIFIED,
+        keys.REMOTE,
+        keys.TRANSFERRED,
     ),
     writes=(keys.ACCESS,),
     attests=frozenset(),

@@ -85,9 +85,7 @@ def _refuse_unsigned_content(
             )
 
 
-def _digest_of(
-    ports: portset.HostPorts, location: BundleLocation, name: str
-) -> identifiers.Digest:
+def _digest_of(ports: portset.HostPorts, location: BundleLocation, name: str) -> identifiers.Digest:
     return ports.digests.file(location.regular_entry(name))
 
 

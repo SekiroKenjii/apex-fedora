@@ -128,9 +128,7 @@ def test_a_character_the_layout_cannot_type_is_refused_without_naming_it(text: s
     assert text[-1] not in str(caught.value)
 
 
-def test_a_secret_is_typed_chord_by_chord_with_the_older_pause(
-    root: safepaths.RuntimeRoot,
-) -> None:
+def test_a_secret_is_typed_chord_by_chord_with_the_older_pause(root: safepaths.RuntimeRoot) -> None:
     monitor = fake_qmp.ScriptedQmp({"send-key": {}})
     ports = bundle(monitor)
 

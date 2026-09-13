@@ -54,18 +54,29 @@ def context(
     assert isinstance(ports.files, fake_files.MemoryFiles)
     monitor = DrawingMonitor(ports.files)
     bundle = portset.HostPorts(
-        processes=ports.processes, files=ports.files, clock=ports.clock,
-        identities=ports.identities, locks=ports.locks, digests=ports.digests,
-        archives=ports.archives, signing=ports.signing, downloads=ports.downloads,
-        hypervisor=ports.hypervisor, monitor=monitor, guest=guest,
+        processes=ports.processes,
+        files=ports.files,
+        clock=ports.clock,
+        identities=ports.identities,
+        locks=ports.locks,
+        digests=ports.digests,
+        archives=ports.archives,
+        signing=ports.signing,
+        downloads=ports.downloads,
+        hypervisor=ports.hypervisor,
+        monitor=monitor,
+        guest=guest,
     )
     held = facts.FactMap()
     seeded: list[tuple[facts.FactKey[Any], object]] = [
         (verifykeys.GUEST, None),
-        (verifykeys.AGENT, agentrun.AgentInstall(
-            directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
-            digest=identifiers.Digest("a" * 64),
-        )),
+        (
+            verifykeys.AGENT,
+            agentrun.AgentInstall(
+                directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
+                digest=identifiers.Digest("a" * 64),
+            ),
+        ),
         (verifykeys.MONITOR, root.child("qmp.sock")),
         (verifykeys.CREDENTIALS, credentials),
         (composition_keys.RUNTIME_ROOT, root),
@@ -112,10 +123,18 @@ def test_the_password_is_typed_as_chords_at_the_greeter_and_never_filed(
     assert judged.verdict is verdicts.PASSED
     assert monitor.captured() == ["greeter.png"]
     assert monitor.pressed() == [
-        ["ret"], ["shift", "a"], ["b"], ["minus"], ["1"], ["shift", "minus"], ["ret"],
+        ["ret"],
+        ["shift", "a"],
+        ["b"],
+        ["minus"],
+        ["1"],
+        ["shift", "minus"],
+        ["ret"],
     ]
     assert [request["arguments"] for request in guest.requests] == [
-        {"user": "apex-test", "wait": False}, {}, {"user": "apex-test", "wait": True},
+        {"user": "apex-test", "wait": False},
+        {},
+        {"user": "apex-test", "wait": True},
     ]
     assert judged.observations["capture"] == "greeter.png"
     assert judged.observations["session"] == ON_SEAT
@@ -143,9 +162,9 @@ def test_an_account_already_on_the_seat_refuses_the_run_before_any_key(
 def test_a_greeter_that_never_comes_fails_the_login_without_typing(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.session": OFF_SEAT, "desktop.greeter": {"found": False, "sessions": []},
-    })
+    guest = AnsweringGuest(
+        {"desktop.session": OFF_SEAT, "desktop.greeter": {"found": False, "sessions": []}}
+    )
     run, monitor = context(ports, root, guest)
 
     result = login().apply(run)
@@ -190,9 +209,9 @@ def test_a_password_the_layout_cannot_type_refuses_before_the_guest_is_asked(
 def test_the_shell_is_settled_welcome_dismissed_and_the_overview_round_tripped(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.shell-startup": STARTED, "desktop.overview": [FOLLOWED, FOLLOWED, FOLLOWED],
-    })
+    guest = AnsweringGuest(
+        {"desktop.shell-startup": STARTED, "desktop.overview": [FOLLOWED, FOLLOWED, FOLLOWED]}
+    )
     run, monitor = context(ports, root, guest, judged={"login": verdicts.PASSED})
 
     result = shell().apply(run)
@@ -201,18 +220,31 @@ def test_the_shell_is_settled_welcome_dismissed_and_the_overview_round_tripped(
     judged = result.facts[shell_startup_stage.KEY]
     assert judged.verdict is verdicts.PASSED
     assert [command.name for command in monitor.executed] == [
-        "screendump", "send-key", "send-key", "send-key", "screendump", "send-key",
+        "screendump",
+        "send-key",
+        "send-key",
+        "send-key",
+        "screendump",
+        "send-key",
     ]
     assert monitor.captured() == ["shell-startup.png", "overview.png"]
     assert monitor.pressed() == [["esc"], ["esc"], ["meta_l"], ["esc"]]
     assert [request["arguments"] for request in guest.requests] == [
-        {}, {"expected": False}, {"expected": True}, {"expected": False},
+        {},
+        {"expected": False},
+        {"expected": True},
+        {"expected": False},
     ]
     assert judged.observations["overview_keyboard_roundtrip"] == [True, True, True]
     assert judged.observations["captures"] == ["shell-startup.png", "overview.png"]
     assert judged.observations["startup"] == STARTED
     assert [extra.kind for extra in judged.extras] == [
-        ".json", ".png", ".json", ".json", ".png", ".json",
+        ".json",
+        ".png",
+        ".json",
+        ".json",
+        ".png",
+        ".json",
     ]
     assert slept(ports) == 2
 
@@ -235,9 +267,9 @@ def test_a_shell_that_never_reports_startup_fails_without_a_key(
 def test_an_overview_that_ignores_the_super_key_fails_and_stops_the_round_trip(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.shell-startup": STARTED, "desktop.overview": [FOLLOWED, IGNORED],
-    })
+    guest = AnsweringGuest(
+        {"desktop.shell-startup": STARTED, "desktop.overview": [FOLLOWED, IGNORED]}
+    )
     run, monitor = context(ports, root, guest, judged={"login": verdicts.PASSED})
 
     result = shell().apply(run)
@@ -255,12 +287,10 @@ def test_an_overview_that_ignores_the_super_key_fails_and_stops_the_round_trip(
 def test_a_login_that_did_not_pass_blocks_the_shell_and_render_stages_untouched(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot, earlier: verdicts.Verdict
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.shell-startup": STARTED, "desktop.render": {"presented": True},
-    })
-    run, monitor = context(
-        ports, root, guest, judged={"login": earlier, "shell.startup": earlier}
+    guest = AnsweringGuest(
+        {"desktop.shell-startup": STARTED, "desktop.render": {"presented": True}}
     )
+    run, monitor = context(ports, root, guest, judged={"login": earlier, "shell.startup": earlier})
     render = render_bars_stage.for_case(
         probes.lookup(identifiers.ProbeId("desktop.render")),
         gates=(login_stage.KEY, shell_startup_stage.KEY),

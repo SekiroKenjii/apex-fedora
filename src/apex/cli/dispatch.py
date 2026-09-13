@@ -46,15 +46,18 @@ def run(
         refusal = _refused(argv)
         rendering.emit(
             commandspecs.Reply(narrative=f"{refusal}\n", exit_code=refusal.exit_code),
-            stdout=stdout, stderr=stderr,
+            stdout=stdout,
+            stderr=stderr,
         )
         return refusal.exit_code
     try:
-        reply = command.run(commandspecs.Request(
-            arguments=tuple(argv[1:]),
-            context=context_of(),
-            read_input=commandspecs.no_input if stdin is None else stdin.read,
-        ))
+        reply = command.run(
+            commandspecs.Request(
+                arguments=tuple(argv[1:]),
+                context=context_of(),
+                read_input=commandspecs.no_input if stdin is None else stdin.read,
+            )
+        )
     except errors.ApexError as failure:
         reply = commandspecs.Reply(narrative=f"{failure}\n", exit_code=failure.exit_code)
     except SystemExit as stop:

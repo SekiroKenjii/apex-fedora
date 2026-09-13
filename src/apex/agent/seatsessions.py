@@ -93,9 +93,7 @@ def wait_for(
 
     def present() -> bool:
         seen.append(on_seat(ports))
-        found = find(
-            seen[-1], user=user, session_class=session_class, session_type=session_type
-        )
+        found = find(seen[-1], user=user, session_class=session_class, session_type=session_type)
         return found is not None
 
     observing.settle(ports, present, policy)

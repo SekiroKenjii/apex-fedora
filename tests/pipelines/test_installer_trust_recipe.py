@@ -62,9 +62,9 @@ def test_the_plan_guards_delivers_makes_the_work_faults_and_keeps_the_report() -
 def test_the_fault_runs_over_its_work_and_the_report_is_kept_with_the_run(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "fault.installer-trust": {"status": "PASS", "cases": {"unsigned": "PASS"}},
-    })
+    guest = AnsweringGuest(
+        {"fault.installer-trust": {"status": "PASS", "cases": {"unsigned": "PASS"}}}
+    )
 
     outcome = verify(ports, root, guest)
 

@@ -143,8 +143,7 @@ def test_with_a_installed_the_policy_in_force_must_be_the_fixture_s_and_stays() 
 
 
 @pytest.mark.parametrize(
-    "fault",
-    ["archive-digest", "member-outside", "listed-digest", "policy-not-reject", "other-id"],
+    "fault", ["archive-digest", "member-outside", "listed-digest", "policy-not-reject", "other-id"]
 )
 def test_a_fixture_that_is_not_the_one_named_is_refused_before_the_policy_moves(fault: str) -> None:
     given = arguments()

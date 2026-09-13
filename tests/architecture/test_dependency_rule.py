@@ -37,9 +37,9 @@ LAYERS = {
     "agent": 10,
 }
 
-EFFECT_MODULES = frozenset({
-    "subprocess", "socket", "fcntl", "shutil", "tempfile", "time", "uuid", "secrets",
-})
+EFFECT_MODULES = frozenset(
+    {"subprocess", "socket", "fcntl", "shutil", "tempfile", "time", "uuid", "secrets"}
+)
 EFFECT_FREE_LAYERS = frozenset({"kernel", "model", "ports", "registry", "pipeline"})
 
 

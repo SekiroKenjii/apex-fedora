@@ -61,8 +61,15 @@ def test_each_case_is_refused_by_the_entry_point_and_passes(case: str) -> None:
         ("systemd-detect-virt", "--vm"),
         ("getenforce",),
         ("lsblk", "-bJ", "-o", "NAME,SIZE,TYPE,SERIAL,MOUNTPOINTS"),
-        ("systemctl", "show", "anaconda.service", "-p", "ActiveState",
-         "-p", "ExecMainStartTimestampMonotonic"),
+        (
+            "systemctl",
+            "show",
+            "anaconda.service",
+            "-p",
+            "ActiveState",
+            "-p",
+            "ExecMainStartTimestampMonotonic",
+        ),
         ("/usr/bin/anaconda", "--text"),
         ("getenforce",),
     ]
@@ -164,8 +171,17 @@ def test_a_guest_that_is_not_the_offline_diagnostic_installer_is_refused(
         InstallerSpec(anaconda_state="ActiveState=active\nExecMainStartTimestampMonotonic=99"),
         dataclasses.replace(
             InstallerSpec(),
-            disks={"blockdevices": [{"name": "vda", "size": 48 * 1024**3, "type": "disk",
-                                     "serial": "x", "mountpoints": [None]}]},
+            disks={
+                "blockdevices": [
+                    {
+                        "name": "vda",
+                        "size": 48 * 1024**3,
+                        "type": "disk",
+                        "serial": "x",
+                        "mountpoints": [None],
+                    }
+                ]
+            },
         ),
     ],
 )

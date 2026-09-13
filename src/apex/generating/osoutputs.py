@@ -27,9 +27,7 @@ class Output:
 OUTPUTS = (
     Output("Containerfile", "Containerfile", lambda _: imageinputs.containerfile()),
     Output("image-configure.sh", "guest/image-configure.sh", imageinputs.configure),
-    Output(
-        "installer-configure.sh", "guest/installer-configure.sh", installerinputs.configure
-    ),
+    Output("installer-configure.sh", "guest/installer-configure.sh", installerinputs.configure),
     Output(
         "assemble-live-squashfs.sh",
         "guest/assemble-live-squashfs.sh",

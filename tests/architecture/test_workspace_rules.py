@@ -60,8 +60,11 @@ def test_the_registry_holds_one_rule_for_every_module(package: str) -> None:
 def test_every_added_rule_states_why_it_refuses_more() -> None:
     added = [
         rule
-        for rule in (*entryrules.registered(), *contentrules.registered(),
-                     *messagerules.registered())
+        for rule in (
+            *entryrules.registered(),
+            *contentrules.registered(),
+            *messagerules.registered(),
+        )
         if isinstance(rule.origin, ruleorigins.Introduced)
     ]
 
@@ -74,8 +77,11 @@ def test_every_added_rule_states_why_it_refuses_more() -> None:
 def test_no_rule_identifier_is_claimed_twice() -> None:
     identifiers = [
         str(rule.id)
-        for rule in (*entryrules.registered(), *contentrules.registered(),
-                     *messagerules.registered())
+        for rule in (
+            *entryrules.registered(),
+            *contentrules.registered(),
+            *messagerules.registered(),
+        )
     ]
 
     assert sorted(identifiers) == sorted(set(identifiers))

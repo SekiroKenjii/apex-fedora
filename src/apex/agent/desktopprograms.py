@@ -50,8 +50,14 @@ THEME = Program(
 def launch(program: Program, unit: str, *arguments: str) -> commands.Argv:
     """Start the program as a transient unit of the user's manager, collected when it ends."""
     return commands.Argv.of(
-        "systemd-run", "--user", f"--unit={unit}", "--collect", f"--setenv={BACKEND}",
-        "python3", program.installed, *arguments,
+        "systemd-run",
+        "--user",
+        f"--unit={unit}",
+        "--collect",
+        f"--setenv={BACKEND}",
+        "python3",
+        program.installed,
+        *arguments,
     )
 
 

@@ -19,8 +19,15 @@ from apex.ports import files
 ROOT_USER = 0
 CMDLINE = safepaths.SafePath(Path("/proc/cmdline"))
 SHELL_OWNER = commands.Argv.of(
-    "busctl", "--user", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-    "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", "org.gnome.Shell",
+    "busctl",
+    "--user",
+    "call",
+    "org.freedesktop.DBus",
+    "/org/freedesktop/DBus",
+    "org.freedesktop.DBus",
+    "GetConnectionUnixProcessID",
+    "s",
+    "org.gnome.Shell",
 )
 SHELL_PID = re.compile(r"u [1-9][0-9]*")
 

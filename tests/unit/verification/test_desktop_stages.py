@@ -34,7 +34,8 @@ class FramesInOrder(fake_qmp.ScriptedQmp):
     def _draw(self, files: fake_files.MemoryFiles, command: qmp.QmpCommand) -> None:
         payload = self.frames.pop(0) if len(self.frames) > 1 else self.frames[0]
         files.write_atomic(
-            safepaths.SafePath(Path(str(command.arguments["filename"]))), payload,
+            safepaths.SafePath(Path(str(command.arguments["filename"]))),
+            payload,
             mode=defaults.RECORD_MODE,
         )
 
@@ -56,18 +57,29 @@ def context(
     assert isinstance(ports.files, fake_files.MemoryFiles)
     monitor = FramesInOrder(ports.files, frames)
     bundle = portset.HostPorts(
-        processes=ports.processes, files=ports.files, clock=ports.clock,
-        identities=ports.identities, locks=ports.locks, digests=ports.digests,
-        archives=ports.archives, signing=ports.signing, downloads=ports.downloads,
-        hypervisor=ports.hypervisor, monitor=monitor, guest=guest,
+        processes=ports.processes,
+        files=ports.files,
+        clock=ports.clock,
+        identities=ports.identities,
+        locks=ports.locks,
+        digests=ports.digests,
+        archives=ports.archives,
+        signing=ports.signing,
+        downloads=ports.downloads,
+        hypervisor=ports.hypervisor,
+        monitor=monitor,
+        guest=guest,
     )
     held = facts.FactMap()
     for key, value in (
         (verifykeys.GUEST, None),
-        (verifykeys.AGENT, agentrun.AgentInstall(
-            directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
-            digest=identifiers.Digest("a" * 64),
-        )),
+        (
+            verifykeys.AGENT,
+            agentrun.AgentInstall(
+                directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
+                digest=identifiers.Digest("a" * 64),
+            ),
+        ),
         (verifykeys.MONITOR, root.child("qmp.sock")),
         (composition_keys.RUNTIME_ROOT, root),
         (composition_keys.RUN_ID, identifiers.RunId("b" * 32)),
@@ -83,9 +95,9 @@ def render_case() -> object:
 def test_bars_that_appear_on_the_third_frame_pass_after_three_tries(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"}
-    })
+    guest = AnsweringGuest(
+        {"desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"}}
+    )
     run, monitor = context(ports, root, guest, [BLANK, BLANK, BARS])
     stage = render_bars_stage.for_case(render_case())  # type: ignore[arg-type]
 
@@ -96,7 +108,13 @@ def test_bars_that_appear_on_the_third_frame_pass_after_three_tries(
     assert judged.verdict is verdicts.PASSED
     assert judged.observations["bars"]["visible"] is True  # type: ignore[index]
     assert [command.name for command in monitor.executed] == [
-        "send-key", "screendump", "send-key", "screendump", "send-key", "screendump", "screendump",
+        "send-key",
+        "screendump",
+        "send-key",
+        "screendump",
+        "send-key",
+        "screendump",
+        "screendump",
     ]
     assert [extra.kind for extra in judged.extras] == [".json", ".png"]
     clock = ports.clock
@@ -107,9 +125,9 @@ def test_bars_that_appear_on_the_third_frame_pass_after_three_tries(
 def test_bars_that_never_appear_fail_after_the_older_deadline(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"}
-    })
+    guest = AnsweringGuest(
+        {"desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"}}
+    )
     run, monitor = context(ports, root, guest, [BLANK])
     stage = render_bars_stage.for_case(render_case())  # type: ignore[arg-type]
 
@@ -169,17 +187,21 @@ def test_a_guest_that_refuses_the_probe_refuses_the_stage(
         ({}, verdicts.BLOCKED),
         ({"settings": {"gtk_theme": {"returncode": 1, "stdout": ""}}}, verdicts.BLOCKED),
         (
-            {"settings": {
-                "gtk_theme": {"returncode": 0, "stdout": "'Adwaita-dark'\n"},
-                "shell_theme": {"returncode": 0, "stdout": "'Other'\n"},
-            }},
+            {
+                "settings": {
+                    "gtk_theme": {"returncode": 0, "stdout": "'Adwaita-dark'\n"},
+                    "shell_theme": {"returncode": 0, "stdout": "'Other'\n"},
+                }
+            },
             verdicts.FAILED,
         ),
         (
-            {"settings": {
-                "gtk_theme": {"returncode": 0, "stdout": "'Adwaita-dark'\n"},
-                "shell_theme": {"returncode": 0, "stdout": "'Shadcn-Graphite'\n"},
-            }},
+            {
+                "settings": {
+                    "gtk_theme": {"returncode": 0, "stdout": "'Adwaita-dark'\n"},
+                    "shell_theme": {"returncode": 0, "stdout": "'Shadcn-Graphite'\n"},
+                }
+            },
             verdicts.PASSED,
         ),
     ],

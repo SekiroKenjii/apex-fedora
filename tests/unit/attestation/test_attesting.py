@@ -43,10 +43,7 @@ def test_an_imported_attestation_carries_both_permanent_limits() -> None:
 
 @pytest.mark.parametrize(
     "dropped",
-    [
-        claims.ScopeLimit.LEGACY_NO_PORT_PROOF,
-        claims.ScopeLimit.LEGACY_NO_CANDIDATE_READBACK,
-    ],
+    [claims.ScopeLimit.LEGACY_NO_PORT_PROOF, claims.ScopeLimit.LEGACY_NO_CANDIDATE_READBACK],
 )
 def test_an_imported_attestation_missing_either_permanent_limit_is_a_defect(
     dropped: claims.ScopeLimit,
