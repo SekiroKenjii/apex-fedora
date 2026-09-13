@@ -3815,6 +3815,73 @@ signer wrote a public key into a directory nobody had made; the plan's default o
 put the login before the booted-digest check of `check-a`, kept and written down. `golden_change`:
 eleven new plans, none changed. `supersedes`: none.
 
+## P22. Every gate blocks, and `apex check` is the gate
+
+Goal: section F's first phase, G9. Every rule `docs/STYLE.md` states is held by a check that
+fails the command, and the checks the specification names that had never run, the formatter
+in check mode, pylint's duplicate rule and the import linter, run and block; nothing is in a
+warning mode. On `work/phase-22-checks`, the whole gate green at the head.
+
+### The command
+
+`apex check` runs the checks declared under `workspace/checks/`, one module each, in their
+declared order: `format`, `lint`, `types`, `pyright`, `deadcode`, `duplicates`, `imports`,
+`architecture`, `tree` and `sizes`. Seven run a pinned tool through uv with the pins in
+`config/toolchain.py`, which the justfile renders from the same table; `architecture` runs
+every test under `tests/architecture/`; `tree` judges every tracked file by the repository's
+entry and content rules, the hooks' own, so the organisation-name rule holds over the whole
+index and not only what a commit changes; `sizes` prints the line table against
+`config/budgets.py`, which the size tests read too. The reply names each verdict and the tail
+of a failing tool's words, and the exit code is non-zero when any check failed. `just check`
+runs it; `just lint`, `just types`, `just pyright` and `just deadcode` run one check each
+under their old names, and `just format`, `just duplicates` and `just imports` are new; `just
+gate` runs `just check` first.
+
+### What the new checks found
+
+The formatter had never run over the tree: 403 files changed under it, with
+`skip-magic-trailing-comma` set so a construct that fits on one line stays on one. Pylint's
+duplicate rule found twelve blocks of ten lines or more shared by two modules, each now one
+module used by both: `verification/operationplans.py` (the four guest operation plans and
+their inputs), `verification/desktopplans.py` and `desktopstages.py` (the desktop recipes'
+seeds and the desktop stages' declaration), `verification/buildertests.py` (the two
+fingerprint tests in the builder), `verification/workdirs.py` (a work directory made and
+filled), `composition/artifactchecks.py` (a report's artifacts verified by digest),
+`registry/casebook.py` (the four functions every case registry had: the units, the probes,
+the faults and now the checks), `agent/worksites.py` (a unit's work directory named for the
+run), `ports/clock.wait` (the polling loop both clocks ran), `sourcewalk.admitted` (the
+screened walk both archive adapters made), and `kernel/encoding.readable` (the one place a
+document is rendered for a person). The import linter's layer contract mirrors the two
+dependency tests and holds.
+
+### What went
+
+`provisioning/compactledger.py` holds the compaction's ledger, which the formatter had put
+past 400 lines with its module; the size budgets moved into `config/budgets.py` with the
+raises the formatting cost (`model` 1 900, `provisioning` 2 500, `cli` 3 700, `config` 900).
+The ratchet's baseline is refrozen under the changed configuration.
+
+### What this slice did not do
+
+Run `apex check` on the operator's machines beyond this checkout; the CI runs it. The
+acceptance's counts hold as tests: `print` outside the renderer is zero and pretty JSON is
+rendered in one place; `hashlib` is still called in twelve modules outside the kernel, each
+over bytes it holds, and is not narrowed here.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Checks | ten, every one blocking; G9 held |
+| Formatter | 403 files reformatted, none by hand |
+| Duplicates | twelve blocks found, none left at ten lines |
+| Import contract | one layers contract, kept |
+
+`migration_red`: the formatter pushed two modules and four packages over their budgets; the
+fake archive port had to learn to hold members for the shared walk; the pyright recipe of
+the gate types the tests and found `JsonValue` indexed without a cast in the new tests.
+`golden_change`: none; the plans' digests are unchanged by formatting. `supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -3824,9 +3891,14 @@ just surface-freeze <dir>   # freeze the operator command surface, once
 just surface                # check the live justfile still covers it
 just ratchet-freeze         # record the per-file lint baseline, once
 just ratchet                # check no file regressed
-just lint                   # style rules over the restructured code
+just check                  # every check the architecture is held by, blocking
+just format                 # one of them alone: the formatter in check mode
+just lint                   # ruff over the restructured code
 just types                  # strict type check over the package
+just pyright                # pyright over the package and the typed tests
 just deadcode               # unused code at vulture confidence 80
+just duplicates             # pylint's duplicate-code rule over the package
+just imports                # the import linter's layer contract
 just plans-freeze           # record every recipe's derived plan, once per change
 just plans                  # check the frozen plans still match the derived ones
 just agent-wheel <dir>      # build the agent as a wheel and print its digest
