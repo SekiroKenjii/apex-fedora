@@ -29,7 +29,7 @@ shutdown. Do not write GRUB counters or replace the finalization commands.
 
 ```sh
 just test-initramfs-inspect "$fixture" "$access"
-# Read the resulting result.json before supplying its absolute path here.
+# Read the run's initramfs.json before supplying its absolute path here.
 just test-initramfs-inject "$fixture" "$access" "$inspection"
 ```
 
@@ -43,7 +43,9 @@ The helper creates a separate 4 KiB truncated initramfs copy with an invalid hea
 Only B's `initrd` field points to that copy. The original initramfs, kernel,
 A entry, EFI files and grubenv must remain unchanged. Writes use a private guest
 mount namespace; the BLS replacement is atomic and preserves its SELinux label.
-The host runner retains the exact executed sources and before/after evidence.
+Each run keeps its report as `initramfs.json` under its export directory: the request,
+the plan or the injection result as the guest gave it, and the fixture and machine it
+was bound to; an injection refuses an inspection of another fixture or machine.
 
 ## Observe and rescue
 

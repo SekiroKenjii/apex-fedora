@@ -1,0 +1,277 @@
+{
+ "digest": "adb0837ba12036087445008bf5e57a99bf00d4221d53565857161fd7ce3cce9d",
+ "name": "build-recovery-disk",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.guard",
+   "reads": [
+    "verification.builder"
+   ],
+   "writes": [
+    "verification.guest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "source.locate",
+   "reads": [
+    "repository"
+   ],
+   "writes": [
+    "source.set"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "reads-host"
+   ],
+   "id": "sources.review",
+   "reads": [
+    "repository"
+   ],
+   "writes": [
+    "sources.reviewed"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "reads-host",
+    "writes-runtime"
+   ],
+   "id": "fixture.source",
+   "reads": [
+    "fixture.located",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.frozen",
+    "build.profile"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "reads-host",
+    "writes-runtime"
+   ],
+   "id": "source.bundle",
+   "reads": [
+    "run.id",
+    "runtime.root",
+    "source.set"
+   ],
+   "writes": [
+    "source.bundle"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "builder.check",
+   "reads": [
+    "build.frozen",
+    "builder"
+   ],
+   "writes": [
+    "builder.verified"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "source.manifest",
+   "reads": [
+    "run.id",
+    "runtime.root",
+    "source.bundle"
+   ],
+   "writes": [
+    "source.manifest"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "network-fetch",
+    "writes-runtime"
+   ],
+   "id": "sources.acquire",
+   "reads": [
+    "builder.verified",
+    "runtime.root",
+    "sources.reviewed"
+   ],
+   "writes": [
+    "sources.acquired"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "guest.prepare",
+   "reads": [
+    "builder.verified",
+    "run.id",
+    "sources.acquired"
+   ],
+   "writes": [
+    "guest.remote"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "guest.transfer",
+   "reads": [
+    "build.frozen",
+    "builder.verified",
+    "guest.remote",
+    "run.id",
+    "runtime.root",
+    "source.bundle",
+    "source.manifest"
+   ],
+   "writes": [
+    "guest.transferred"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "access.grant",
+   "reads": [
+    "build.kind",
+    "build.test-access",
+    "builder.verified",
+    "guest.remote",
+    "guest.transferred",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.access"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec"
+   ],
+   "id": "payload.tag",
+   "reads": [
+    "agent.install",
+    "fixture.located",
+    "guest.remote",
+    "guest.transferred",
+    "verification.guest"
+   ],
+   "writes": [
+    "payload.tagged"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "fixture.disk",
+   "reads": [
+    "build.access",
+    "build.frozen",
+    "builder.verified",
+    "guest.remote",
+    "payload.tagged",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.run"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "build.retrieve",
+   "reads": [
+    "build.run",
+    "builder.verified",
+    "guest.remote",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "build.retrieved"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "build.record",
+   "reads": [
+    "build.access",
+    "build.kind",
+    "build.parent",
+    "build.profile",
+    "build.retrieved",
+    "build.run",
+    "guest.remote",
+    "run.id",
+    "runtime.root",
+    "source.bundle"
+   ],
+   "writes": [
+    "build.record"
+   ]
+  }
+ ]
+}

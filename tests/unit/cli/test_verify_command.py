@@ -606,3 +606,45 @@ def test_the_diagnostics_come_home_in_one_step_and_an_incomplete_log_is_the_run_
         "installer-diagnostics: installer.logs: anaconda.log truncated"
     )
     assert consoles.guest.asked == ["installer.diagnostics", "installer.diagnostics"]
+
+
+@pytest.mark.parametrize("recipe", ["fingerprint-rpms", "fingerprint-gtk"])
+def test_the_fingerprint_package_tests_need_the_package_build_and_run_in_the_builder(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, recipe: str
+) -> None:
+    guest = AnsweringGuest({})
+    held = bundle(ports, guest)
+    running(held, root, machines.VmRole.BUILDER)
+    (root.path / defaults.BUILDER_KEY_NAME).write_bytes(b"key")
+
+    with pytest.raises(errors.Refusal) as unnamed:
+        verify_command.run(request(held, root, recipe))
+    reply = verify_command.run(request(held, root, recipe, "--build", "1" * 32))
+
+    assert unnamed.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert isinstance(reply.document, dict) and reply.document["succeeded"] is False
+    assert reply.document["refusal"] in {
+        str(refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE),
+        str(refusals.RefusalReason.STAGE_FAILED),
+    }
+    assert "1" * 32 in reply.narrative and guest.asked == []
+
+
+def test_the_blob_sharing_runs_in_the_builder_for_the_fixture_named(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = AnsweringGuest({"fixture.dedupe": {"status": "PASS", "files_removed": 0}})
+    held = bundle(ports, guest)
+    running(held, root, machines.VmRole.BUILDER)
+    (root.path / defaults.BUILDER_KEY_NAME).write_bytes(b"key")
+
+    reply = verify_command.run(request(held, root, "dedupe", "--build", "c" * 32))
+    with pytest.raises(errors.Refusal) as unnamed:
+        verify_command.run(request(held, root, "dedupe"))
+
+    assert reply.exit_code == 0, reply.narrative
+    assert guest.asked == ["fixture.dedupe"]
+    asked = guest.requests[0]["arguments"]
+    assert isinstance(asked, dict) and asked["fixture"] == "c" * 32
+    assert unnamed.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert [r.name for r in verify_command.JUST_RECIPES][-1] == "dedupe"

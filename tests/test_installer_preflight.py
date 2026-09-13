@@ -5,7 +5,9 @@ import subprocess
 import sys
 
 import pytest
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def load(name):

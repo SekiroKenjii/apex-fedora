@@ -35,6 +35,13 @@ class TarArchives(archives.ArchivePort):
         except (OSError, tarfile.TarError) as error:
             raise errors.PortFailure(port="archives", cause=str(error)) from error
 
+    def members(self, archive: safepaths.SafePath) -> tuple[str, ...]:
+        try:
+            with tarfile.open(archive.path) as opened:
+                return tuple(opened.getnames())
+        except (OSError, tarfile.TarError) as error:
+            raise errors.PortFailure(port="archives", cause=str(error)) from error
+
     def bundle(
         self, sources: archives.SourceSet, *, into: safepaths.SafePath, screen: archives.Screen
     ) -> archives.SourceBundle:

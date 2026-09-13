@@ -31,6 +31,14 @@ class MemoryFiles(files.FileSystemPort):
         self.links: dict[str, str] = {}
         self.labels: dict[str, str] = {}
         self.devices: dict[str, files.DeviceNumber] = {}
+        self._inodes: dict[str, int] = {}
+        self._versions: dict[str, int] = {}
+        self._issued = 0
+
+    def _fresh_inode(self, name: str) -> None:
+        self._issued += 1
+        self._inodes[name] = self._issued
+        self._versions[name] = self._issued
 
     def _canonical(self, name: str) -> str:
         """Follow a link anywhere on the path, as the kernel would for a read."""
@@ -53,6 +61,7 @@ class MemoryFiles(files.FileSystemPort):
         self, path: safepaths.SafePath, payload: bytes, *, mode: quantities.FileMode
     ) -> identifiers.Digest:
         self._files[str(path)] = StoredFile(payload, mode)
+        self._fresh_inode(str(path))
         self.writes.append(str(path))
         return hashing.digest_bytes(payload)
 
@@ -80,12 +89,15 @@ class MemoryFiles(files.FileSystemPort):
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{source}: no such file")
         self._files[str(destination)] = StoredFile(bytes(stored.payload), stored.mode)
+        self._fresh_inode(str(destination))
         self.writes.append(str(destination))
 
     def link(self, existing: safepaths.SafePath, new: safepaths.SafePath) -> None:
         if str(new) in self._files:
             raise errors.PortFailure(port="files", cause=f"{new}: File exists")
         self.copy(existing, new)
+        self._inodes[str(new)] = self._inodes[str(existing)]
+        self._versions[str(new)] = self._versions[str(existing)]
 
     def reserve(
         self, path: safepaths.SafePath, *, size: quantities.ByteCount, mode: quantities.FileMode
@@ -108,6 +120,31 @@ class MemoryFiles(files.FileSystemPort):
         if str(path) not in self._files:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         del self._files[str(path)]
+        self._inodes.pop(str(path), None)
+
+    def identity(self, path: safepaths.SafePath) -> files.FileIdentity:
+        name = self._canonical(str(path))
+        stored = self._files.get(name)
+        if stored is None:
+            raise errors.PortFailure(port="files", cause=f"{path}: no such file")
+        inode = self._inodes[name]
+        return files.FileIdentity(
+            device=1, inode=inode, size=len(stored.payload),
+            modified_nanoseconds=self._versions[name],
+            links=sum(1 for held in self._inodes.values() if held == inode),
+            allocated=len(stored.payload),
+        )
+
+    def replace(self, source: safepaths.SafePath, destination: safepaths.SafePath) -> None:
+        stored = self._files.get(str(source))
+        if stored is None:
+            raise errors.PortFailure(port="files", cause=f"{source}: no such file")
+        self._files[str(destination)] = stored
+        self._inodes[str(destination)] = self._inodes[str(source)]
+        self._versions[str(destination)] = self._versions[str(source)]
+        del self._files[str(source)]
+        del self._inodes[str(source)]
+        self.writes.append(str(destination))
 
     def free_space(self, path: safepaths.SafePath) -> quantities.ByteCount:  # noqa: ARG002
         return self.free
@@ -161,7 +198,7 @@ class MemoryFiles(files.FileSystemPort):
             target = self.links.get(current)
             if target is None:
                 if self.exists(safepaths.SafePath(Path(current))):
-                    return safepaths.SafePath(Path(current))
+                    return safepaths.SafePath(Path(self._canonical(current)))
                 raise errors.PortFailure(port="files", cause=f"{path}: no such file")
             current = target
         raise errors.PortFailure(port="files", cause=f"{path}: too many levels of links")
@@ -184,7 +221,7 @@ class MemoryFiles(files.FileSystemPort):
                 kind=files.EntryKind.DIRECTORY, owner=0, group=0,
                 mode=quantities.FileMode(0o700), label=self.labels.get(name), device=None,
             )
-        stored = self._files.get(name)
+        stored = self._files.get(self._canonical(name))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         return files.Inspection(

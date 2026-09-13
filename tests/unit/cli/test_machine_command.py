@@ -547,3 +547,40 @@ def test_a_report_that_does_not_confirm_the_rejection_is_not_collected(
 
     assert refused.value.reason is refusals.RefusalReason.FAULT_NOT_CONFIRMED
     assert not held.files.exists(safepaths.SafePath(run_directory / "fault-result.json"))
+
+
+def test_compact_runs_the_compaction_and_a_resume_finalises_a_kept_copy(
+    ports: portset.HostPorts, prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from apex.provisioning import compacting  # noqa: PLC0415
+
+    settings, root = prepared
+    seen: list[str | None] = []
+
+    def compacted(name: str | None) -> Any:
+        seen.append(name)
+        return compacting.Compacted(
+            report=root.child("compactions/x/result.json"), status="PASS",
+            replacement="COMPLETE", projected_free=7,
+        )
+
+    monkeypatch.setattr(
+        compacting, "compact", lambda _held, _settings, _root: compacted(None)
+    )
+    monkeypatch.setattr(
+        compacting, "finalise",
+        lambda _held, _settings, _root, run: compacted(str(run)),
+    )
+
+    first = machine_command.run(request(bundle(ports), settings, root, "compact"))
+    second = machine_command.run(
+        request(bundle(ports), settings, root, "compact", "--resume", "c" * 32)
+    )
+
+    assert isinstance(first.document, dict) and isinstance(second.document, dict)
+    assert first.document["compacted"]["status"] == "PASS"  # type: ignore[index]
+    assert second.document["compacted"]["projected_free"] == 7  # type: ignore[index]
+    assert seen == [None, "c" * 32]
+    names = {item.name: item.parameters for item in machine_command.RECIPES}
+    assert names["builder-compact"] == () and names["builder-finalize"] == ("compaction_id",)

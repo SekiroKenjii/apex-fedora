@@ -4,9 +4,9 @@ These are the rules the code under `src/` is written to. Each rule names how it 
 by a tool in `just gate`, by a test under `tests/architecture/`, or by review. A rule with no
 check is a preference, and preferences are not listed here.
 
-The rules apply to `src/` in full and to `tests/` where stated. The tree under `tools/` and
-`guest/` is being replaced and is held only by the lint ratchet, which lets a file improve and
-never regress.
+The rules apply to `src/` in full, to `tools/migration/` and to `tests/` where stated. The
+tree under `guest/` is being replaced and is held only by the lint ratchet, which lets a
+file improve and never regress.
 
 ## Layout of a file
 

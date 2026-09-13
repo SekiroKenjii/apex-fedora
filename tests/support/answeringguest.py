@@ -21,7 +21,8 @@ class AnsweringGuest(fake_guestshell.ScriptedGuest):
     """Answers a unit request with the observations declared for that unit, framed.
 
     An answer is a document, or a list of documents given out in order for a unit that is
-    asked more than once in a run.
+    asked more than once in a run. A request sent through sudo with a password on the first
+    line has that line taken off and kept, so a test can see it was given and never shown.
     """
 
     def __init__(self, answers: dict[str, Answer | list[Answer]]) -> None:
@@ -29,6 +30,7 @@ class AnsweringGuest(fake_guestshell.ScriptedGuest):
         self.answers = answers
         self.asked: list[str] = []
         self.requests: list[dict[str, object]] = []
+        self.passwords: list[str] = []
 
     def run(
         self, target: guestshell.GuestTarget, run: guestshell.GuestRun
@@ -38,7 +40,11 @@ class AnsweringGuest(fake_guestshell.ScriptedGuest):
             return super().run(target, run)
         self.runs.append(run)
         token = identifiers.Token(text.split("--framed ", 1)[1].split("'", 1)[0])
-        request = json.loads(run.stdin)
+        payload = run.stdin
+        if "sudo -k -S" in text:
+            password, _, payload = payload.partition(b"\n")
+            self.passwords.append(password.decode())
+        request = json.loads(payload)
         unit = str(request["unit"])
         self.asked.append(unit)
         self.requests.append(request)

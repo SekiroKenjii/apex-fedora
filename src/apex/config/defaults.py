@@ -323,3 +323,70 @@ UBUNTU_VERIFICATION_NAME = "ubuntu-verification.json"
 LIVE_VERIFICATION_NAME = "live-verification.json"
 INPUTS_LOCK_NAME = "inputs.lock.json"
 MEDIA_EXECUTION_NAME = "execution.json"
+FINGERPRINT_OBSERVATIONS_DIRECTORY = "fingerprint-observations"
+TRACE_EVENTS_NAME = "events.jsonl"
+TRACE_SUMMARY_NAME = "summary.json"
+TRACE_EVENT_LIMIT = 2000
+TRACE_ERROR_LIMIT = 20
+TRACE_LINE_LIMIT = bounded.Limit(256 * 1024)
+TRACE_RAW_LIMIT = bounded.Limit(256 * 1024)
+BUS_QUERY_DEADLINE = timing.Deadline(timing.Elapsed(2))
+KERNEL_RELEASE = "/proc/sys/kernel/osrelease"
+DIALOG_TESTS_DIRECTORY = "fingerprint-dialog-tests"
+ELAN_TESTS_DIRECTORY = "elan-diagnostics-tests"
+DIALOG_LOCK_PATH = "config/gnome-fingerprint.lock.json"
+ELAN_LOCK_PATH = "config/elan-diagnostics.lock.json"
+DIALOG_HARNESS_PATH = "tests/fixtures/fingerprint-dialog-harness.c"
+ELAN_HARNESS_PATH = "tests/fixtures/elan-diagnostics-harness.c"
+PATCH_WORK_DIRECTORY = "work"
+COMPILE_DEADLINE = timing.Deadline(timing.Elapsed(300))
+HARNESS_CASE_DEADLINE = timing.Deadline(timing.Elapsed(5))
+COMPACTIONS_DIRECTORY = "compactions"
+COMPRESSED_DISK_NAME = "builder-compressed.qcow2"
+CONVERT_LOG_NAME = "convert.log"
+FINALISE_PREFIX = "finalize-"
+COMPACTION_RESERVE = quantities.Gib(4)
+COMPACTION_DEADLINE = timing.Deadline(timing.Elapsed(4 * 3600))
+COMPRESSION_TYPE = "zstd"
+CONVERT_THREADS = "2"
+FINGERPRINT_RPMS_LOCK_PATH = "config/fingerprint-rpms.lock.json"
+FINGERPRINT_REQUEST_NAME = "fingerprint-request.json"
+FINGERPRINT_INPUTS_DIRECTORY = "inputs"
+FINGERPRINT_PACKAGES_DIRECTORY = "packages"
+FINGERPRINT_MOCK_DIRECTORY = "mock"
+FINGERPRINT_REPODATA_PREFIX = "packages/repodata/"
+FINGERPRINT_VENDOR_SUFFIX = "apex1"
+FINGERPRINT_VERIFICATION_NAME = "verified.json"
+UPDATE_WORK_PREFIX = "/var/tmp/apex-update-"
+GRUB_REPAIR_PATH = "guest/fix-grub-fragment.py"
+RETRY_PRESET_PATH = "system_files/usr/share/apex/greenboot.conf"
+FIXTURE_DISK_NAME = "fixture-disk.json"
+FIXTURE_DISK_SCOPE = "Fresh installed recovery fixture; boot is NOT TESTED"
+FINGERPRINT_TEST_LOCK = safepaths.RemotePath("/run/apex-fingerprint-test.lock")
+SMOKE_SCRIPT_NAME = "test.py"
+SMOKE_INPUTS_NAME = "inputs.json"
+SMOKE_LOG_NAME = "test.log"
+GTK_REQUEST_NAME = "request.json"
+GTK_LOG_NAME = "execution.log"
+GTK_LOCK_NAME = "test.lock"
+GTK_INPUT_FILES = (
+    "guest/fingerprint-gtk.py", "guest/fingerprint-gtk.c", "guest/fingerprint-gtk-service.py",
+    "config/fingerprint-rpms.lock.json", "rpms/patches/gnome-fingerprint-retain-claim.patch",
+)
+SMOKE_SCRIPT_PATH = "guest/fingerprint-rpm-smoke.py"
+
+GUEST_READY = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(240)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(2), ceiling=timing.Elapsed(2), factor=1
+    ),
+    description="the guest answers over ssh and systemd reports the system running",
+)
+SYSTEM_STATES = frozenset({"running", "degraded"})
+REBOOT_EXITS = frozenset({0, 255})
+UPDATE_OPERATION_DEADLINE = timing.Deadline(timing.Elapsed(900))
+UPDATE_UPLOAD_PREFIX = "/var/tmp/apex-update-"
+UPDATE_SENTINEL_NAME = "apex-update-sentinel.txt"
+UPDATE_REPORT_NAME = "update.json"
+RECOVERY_REPORT_NAME = "recovery.json"
+INITRAMFS_REPORT_NAME = "initramfs.json"

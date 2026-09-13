@@ -2,7 +2,9 @@ import hashlib
 import importlib.util
 
 import pytest
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('live_builder', ROOT / 'guest/prepare-live-builder.py')
 builder = importlib.util.module_from_spec(spec)

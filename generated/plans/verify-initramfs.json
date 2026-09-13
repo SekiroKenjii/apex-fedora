@@ -1,0 +1,68 @@
+{
+ "digest": "b709ef57545ebbfc4a87f31f1d37985971d6d89dea70b2f323847ee05ef3c1ef",
+ "name": "verify-initramfs",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "guest.ready",
+   "reads": [
+    "verification.guest"
+   ],
+   "writes": [
+    "guest.ready"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "guest.ready",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "initramfs.operate",
+   "reads": [
+    "agent.install",
+    "fixture.located",
+    "initramfs.inspection",
+    "machine.process",
+    "operation.action",
+    "run.id",
+    "runtime.root",
+    "verification.credentials",
+    "verification.guest"
+   ],
+   "writes": [
+    "report.initramfs",
+    "retained.initramfs"
+   ]
+  }
+ ]
+}

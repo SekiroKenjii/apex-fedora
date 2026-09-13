@@ -69,6 +69,11 @@ class ArchivePort(Protocol):
         ...
 
     @abstractmethod
+    def members(self, archive: safepaths.SafePath) -> tuple[str, ...]:
+        """Every member's name as the archive carries it, in the archive's order."""
+        ...
+
+    @abstractmethod
     def bundle(
         self, sources: SourceSet, *, into: safepaths.SafePath, screen: Screen
     ) -> SourceBundle: ...

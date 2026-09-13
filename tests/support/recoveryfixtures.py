@@ -1,8 +1,7 @@
 """An installed test guest as the recovery probes expect it, built from one spec.
 
 The spec names the deployment digests, the GRUB fragments and the retry configuration; the
-fake tree and the fake programs are derived from it, and the older script's tree on disk
-can be derived from the same spec, so a mutation reaches both sides of a parity.
+fake tree and the fake programs are both derived from it.
 """
 
 from __future__ import annotations
@@ -121,12 +120,3 @@ def installed_guest(spec: InstalledSpec) -> tuple[Answering, agentports.AgentPor
         extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return process, ports
-
-
-def older_tree(spec: InstalledSpec, base: Path) -> Path:
-    """The same guest on disk, rooted under `base`, for the older script's `Path`."""
-    for name, content in spec.files.items():
-        target = base / name.lstrip("/")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(content)
-    return base

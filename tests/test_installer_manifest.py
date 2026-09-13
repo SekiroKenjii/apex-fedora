@@ -1,6 +1,8 @@
 import importlib.util
 import pytest
-from apexlib.common import ROOT
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('installer_manifest', ROOT / 'guest/label-installer-manifest.py')
 module = importlib.util.module_from_spec(spec)

@@ -333,3 +333,77 @@ def test_the_nvidia_packages_are_built_for_a_frozen_parent_and_bound_to_it(
     assert isinstance(verification, dict) and verification["stage"] == "rpm-build"
     assert any("guest/nvidia-build.py" in run.script.rendered() for run in guest.runs)
     assert orphan.value.reason is refusals.RefusalReason.BUILD_PARENT_REQUIRED
+
+
+@pytest.mark.parametrize(
+    "arguments,reason",
+    [
+        (("fingerprint-rpms", "--parent", "d" * 32), refusals.RefusalReason.REQUEST_MALFORMED),
+        (("fingerprint-image",), refusals.RefusalReason.BUILD_PARENT_REQUIRED),
+        (
+            ("fingerprint-image", "--parent", "d" * 32, "--rpm-build", "1" * 32),
+            refusals.RefusalReason.REQUEST_MALFORMED,
+        ),
+        (("update-fixtures",), refusals.RefusalReason.BUILD_PARENT_REQUIRED),
+        (
+            ("update-fixtures", "--parent", "d" * 32, "--test-access"),
+            refusals.RefusalReason.REQUEST_MALFORMED,
+        ),
+        (("recovery-disk",), refusals.RefusalReason.REQUEST_MALFORMED),
+        (
+            ("recovery-disk", "--fixture", "c" * 32, "--parent", "d" * 32),
+            refusals.RefusalReason.REQUEST_MALFORMED,
+        ),
+    ],
+)
+def test_each_kind_takes_exactly_the_operands_its_recipe_seeds_from(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot,
+    arguments: tuple[str, ...], reason: refusals.RefusalReason,
+) -> None:
+    with pytest.raises(errors.Refusal) as raised:
+        build_command.run(request(bundle(ports, AnsweringGuest({})), root, repository, *arguments))
+
+    assert raised.value.reason is reason
+
+
+def test_the_fingerprint_packages_are_built_in_the_leased_builder_from_the_checkout(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    import fingerprintbuilds
+    from mirroredfiles import MirroredFiles
+
+    filesystem = MirroredFiles()
+    scratch = MirroredFiles()
+    fingerprintbuilds.rpm_build(scratch, root)
+    home = root.path / "exports" / str(fingerprintbuilds.RPM_BUILD) / "output"
+    outputs = {
+        str(p.relative_to(home)): p.read_bytes() for p in home.rglob("*") if p.is_file()
+    }
+    shutil.rmtree(home.parent)
+
+    class Guest(AnsweringGuest):
+        def receive(
+            self, target: Any, *, remote: Any, into: Any, recursive: bool, deadline: Any
+        ) -> None:
+            super().receive(
+                target, remote=remote, into=into, recursive=recursive, deadline=deadline
+            )
+            base = into.path / posixpath.basename(str(remote))
+            for name, data in outputs.items():
+                filesystem.write_atomic(safepaths.SafePath(base / name), data, mode=nvidia.PRIVATE)
+
+    guest = Guest({})
+    held = dataclasses.replace(bundle(ports, guest), files=filesystem)
+    running(held, root, machines.VmRole.BUILDER)
+
+    reply = build_command.run(
+        request(held, root, safepaths.SourceRoot.adopt(REPOSITORY), "fingerprint-rpms")
+    )
+
+    assert reply.exit_code == 0, reply.narrative
+    assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
+    record = reply.document["record"]
+    assert isinstance(record, dict) and record["kind"] == "fingerprint-rpms"
+    verification = reply.document["fingerprint"]
+    assert isinstance(verification, dict) and verification["status"] == "PASS"
+    assert any("guest/fingerprint-rpms.py" in run.script.rendered() for run in guest.runs)

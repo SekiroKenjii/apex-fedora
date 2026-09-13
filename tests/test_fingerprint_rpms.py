@@ -6,14 +6,13 @@ import sys
 import tarfile
 
 import pytest
-from apexlib.common import ROOT, Blocked, sha256
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 spec = importlib.util.spec_from_file_location('fingerprint_rpms', ROOT / 'guest/fingerprint-rpms.py')
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
-runner_spec = importlib.util.spec_from_file_location('fingerprint_rpm_runner', ROOT / 'tools/build-fingerprint-rpms.py')
-runner = importlib.util.module_from_spec(runner_spec)
-runner_spec.loader.exec_module(runner)
 smoke_spec = importlib.util.spec_from_file_location('fingerprint_rpm_smoke', ROOT / 'guest/fingerprint-rpm-smoke.py')
 smoke = importlib.util.module_from_spec(smoke_spec)
 smoke_spec.loader.exec_module(smoke)
@@ -113,54 +112,3 @@ def test_archive_patch_preflight_catches_application_failure(tmp_path, valid):
     else:
         with pytest.raises(subprocess.CalledProcessError):
             build.validate_patch_archive(archive, patch)
-
-
-@pytest.fixture
-def report_fixture(tmp_path):
-    manifest = {'files': {'config/fingerprint-rpms.lock.json': 'a' * 64,
-                         'rpms/patches/libfprint-elan-status-diagnostics.patch': 'b' * 64,
-                         'rpms/patches/gnome-fingerprint-retain-claim.patch': 'c' * 64}}
-    report = {'status': 'PASS', 'stage': 'rpm-build', 'source_lock_sha256': 'a' * 64,
-              'ready_to_install': False, 'hardware': 'NOT TESTED', 'image_integration': 'NOT TESTED',
-              'full_gtk_dbus_integration': 'NOT TESTED', 'packages': {}, 'artifacts': {}}
-    for name, checksum in [('libfprint', 'b' * 64), ('gnome-control-center', 'c' * 64)]:
-        report['packages'][name] = {'status': 'PASS', 'patch_sha256': checksum, 'rpms': {'test.rpm': 'fixture'}}
-        path = tmp_path / name / 'mock/test.rpm'
-        path.parent.mkdir(parents=True)
-        path.write_bytes(b'test artifact')
-        report['artifacts'][str(path.relative_to(tmp_path))] = sha256(path)
-    repo = tmp_path / 'packages/repodata/repomd.xml'
-    repo.parent.mkdir(parents=True)
-    repo.write_text('test repository')
-    report['artifacts'][str(repo.relative_to(tmp_path))] = sha256(repo)
-    return tmp_path, report, manifest
-
-
-def test_transferred_report_and_artifacts_verified(report_fixture):
-    out, report, manifest = report_fixture
-    (out / 'results.json').write_text(json.dumps(report))
-    assert runner.verify_report(out, manifest)['status'] == 'PASS'
-
-
-@pytest.mark.parametrize('fault', ['hardware-pass', 'missing-package', 'patch', 'missing-rpm', 'tamper', 'escape', 'symlink'])
-def test_incomplete_or_tampered_transfer_rejected(report_fixture, fault):
-    out, report, manifest = report_fixture
-    if fault == 'hardware-pass':
-        report['hardware'] = 'PASS'
-    elif fault == 'missing-package':
-        del report['packages']['libfprint']
-    elif fault == 'patch':
-        report['packages']['libfprint']['patch_sha256'] = 'd' * 64
-    elif fault == 'missing-rpm':
-        del report['artifacts']['libfprint/mock/test.rpm']
-    elif fault == 'tamper':
-        (out / 'libfprint/mock/test.rpm').write_bytes(b'changed')
-    elif fault == 'escape':
-        report['artifacts']['../outside'] = 'e' * 64
-    elif fault == 'symlink':
-        path = out / 'libfprint/mock/test.rpm'
-        path.unlink()
-        path.symlink_to(out / 'gnome-control-center/mock/test.rpm')
-    (out / 'results.json').write_text(json.dumps(report))
-    with pytest.raises(Blocked):
-        runner.verify_report(out, manifest)

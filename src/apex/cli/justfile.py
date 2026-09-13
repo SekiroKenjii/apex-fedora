@@ -1,11 +1,11 @@
 """The justfile rendered from the registry, so a recipe can never name a command that is gone.
 
 Three kinds of recipe: the ones the commands declare, rendered as the package's entry point
-with each parameter quoted; the gate and its tools, the same on every machine; and the
-recipes of the older host tools whose flows have not moved yet, kept word for word. The
-operator's surface may grow and never shift, which the surface contract holds against the
-frozen baseline; a recipe whose work folded into another keeps its operands and runs the
-retired name, so the dispatcher's refusal names the replacement at the prompt.
+with each parameter quoted; the one host pipeline, a privileged bus monitor piped into the
+collector, which no command can spell alone; and the gate and its tools, the same on every
+machine. The operator's surface may grow and never shift, which the surface contract holds
+against the frozen baseline; a recipe whose work folded into another keeps its operands and
+runs the retired name, so the dispatcher's refusal names the replacement at the prompt.
 """
 
 from __future__ import annotations
@@ -34,35 +34,20 @@ HEADER = (
 Lines = tuple[str, ...]
 Plain = tuple[str, str, Lines]
 
-OLDER_TOOLS: tuple[Plain, ...] = (
-    ("observe-fingerprint", "", ("bash tools/observe-fingerprint.sh",)),
-    ("test-fingerprint-dialog", "source",
-     ('python3 tools/test-fingerprint-dialog.py "{{source}}"',)),
-    ("builder-compact", "", ("python3 tools/compact-builder.py --replace-verified",)),
-    ("builder-finalize", "compaction_id",
-     ('python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"',)),
-    ("build-fingerprint-rpms", "", ("python3 tools/build-fingerprint-rpms.py",)),
-    ("test-fingerprint-rpms", "build_id",
-     ('python3 tools/test-fingerprint-rpms.py "{{build_id}}"',)),
-    ("test-fingerprint-gtk", "build_id", ('python3 tools/test-fingerprint-gtk.py "{{build_id}}"',)),
-    ("build-fingerprint-image", "parent_build rpm_build gtk_test",
-     ('python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" '
-      '"{{gtk_test}}"',)),
-    ("test-elan-diagnostics", "source", ('python3 tools/test-elan-diagnostics.py "{{source}}"',)),
-    ("update-fixtures", "build_id", ('python3 tools/prepare-update-fixture.py "{{build_id}}"',)),
-    ("recovery-disk", "fixture", ('python3 tools/build-recovery-disk.py "{{fixture}}"',)),
-    ("test-update", "action fixture access",
-     ('python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"',)),
-    ("test-recovery", "action fixture access",
-     ('python3 tools/recovery-vm.py "{{action}}" "{{fixture}}" "{{access}}"',)),
-    ("test-initramfs-inspect", "fixture access",
-     ('python3 tools/initramfs-vm.py inspect "{{fixture}}" "{{access}}"',)),
-    ("test-initramfs-inject", "fixture access inspection",
-     ('python3 tools/initramfs-vm.py inject "{{fixture}}" "{{access}}" '
-      '--inspection "{{inspection}}"',)),
-    ("test-initramfs-rescue", "fixture access",
-     ('python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"',)),
+BUS_MONITOR = (
+    "sudo -- /usr/bin/timeout --signal=INT 90s /usr/bin/busctl --system --json=short "
+    "--match=\"path_namespace='/net/reactivated/Fprint'\" "
+    "--match=\"sender='net.reactivated.Fprint'\" "
+    "--match=\"type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'\" "
+    "monitor"
 )
+HOST_PIPELINES: tuple[Plain, ...] = (
+    ("observe-fingerprint", "", (
+        "{ " + BUS_MONITOR + "; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } "
+        "| {{apex}} hardware observe-fingerprint --lookup-system-clients",
+    )),
+)
+
 
 FOLDED: tuple[Plain, ...] = (
     ("installer-logs-collect", "run_directory token",
@@ -70,7 +55,7 @@ FOLDED: tuple[Plain, ...] = (
 )
 
 TOOLING: tuple[Plain, ...] = (
-    ("test", "", (f"{UV} python tools/check_static.py", PYTEST)),
+    ("test", "", (f"{UV} python tools/migration/check_static.py", PYTEST)),
     ("test-integration", "", (f"{PYTEST} -m integration",)),
     ("runtime-freeze", "", (f"{MIGRATION}/runtime_inventory.py record",)),
     ("runtime-verify", "", (f"{MIGRATION}/runtime_inventory.py verify",)),
@@ -116,7 +101,7 @@ def render() -> str:
         HEADER,
         *(_command_recipe(recipe) for command in _commands() for recipe in command.recipes),
         *(_plain(name, parameters, lines) for name, parameters, lines in FOLDED),
-        *(_plain(name, parameters, lines) for name, parameters, lines in OLDER_TOOLS),
+        *(_plain(name, parameters, lines) for name, parameters, lines in HOST_PIPELINES),
         *(_plain(name, parameters, lines) for name, parameters, lines in TOOLING),
         _plain("gate", "", GATE),
     ]

@@ -22,6 +22,18 @@ installer-fixtures:
 build-nvidia build_id:
     {{apex}} build nvidia --parent "{{build_id}}"
 
+build-fingerprint-rpms:
+    {{apex}} build fingerprint-rpms
+
+build-fingerprint-image parent_build rpm_build gtk_test:
+    {{apex}} build fingerprint-image --parent "{{parent_build}}" --rpm-build "{{rpm_build}}" --gtk-test "{{gtk_test}}"
+
+update-fixtures build_id:
+    {{apex}} build update-fixtures --parent "{{build_id}}"
+
+recovery-disk fixture:
+    {{apex}} build recovery-disk --fixture "{{fixture}}"
+
 select-candidate build_id key:
     {{apex}} candidate select --build "{{build_id}}" --key "{{key}}"
 
@@ -48,6 +60,12 @@ builder-stop:
 
 builder-status:
     {{apex}} machine status
+
+builder-compact:
+    {{apex}} machine compact
+
+builder-finalize compaction_id:
+    {{apex}} machine compact --resume "{{compaction_id}}"
 
 test-vm disk:
     {{apex}} machine start --role test --disk "{{disk}}"
@@ -78,6 +96,27 @@ test-resume-installed run_directory:
 
 test-installer-fault-collect run_directory:
     {{apex}} machine collect --run "{{run_directory}}"
+
+test-update action fixture access:
+    {{apex}} operate update --action "{{action}}" --fixture "{{fixture}}" --access "{{access}}"
+
+test-recovery action fixture access:
+    {{apex}} operate recovery --action "{{action}}" --fixture "{{fixture}}" --access "{{access}}"
+
+test-initramfs-inspect fixture access:
+    {{apex}} operate initramfs --action inspect --fixture "{{fixture}}" --access "{{access}}"
+
+test-initramfs-inject fixture access inspection:
+    {{apex}} operate initramfs --action inject --fixture "{{fixture}}" --access "{{access}}" --inspection "{{inspection}}"
+
+test-initramfs-rescue fixture access:
+    {{apex}} operate initramfs --action verify-rescue --fixture "{{fixture}}" --access "{{access}}"
+
+test-fingerprint-dialog source:
+    {{apex}} patch fingerprint-dialog --source "{{source}}"
+
+test-elan-diagnostics source:
+    {{apex}} patch elan-diagnostics --source "{{source}}"
 
 plan-artifact kind:
     {{apex}} plan artifact "{{kind}}"
@@ -142,59 +181,23 @@ test-installer-wrong-key public_key:
 installer-logs-prepare:
     {{apex}} verify installer-diagnostics --serial
 
+test-fingerprint-rpms build_id:
+    {{apex}} verify fingerprint-rpms --build "{{build_id}}"
+
+test-fingerprint-gtk build_id:
+    {{apex}} verify fingerprint-gtk --build "{{build_id}}"
+
+dedupe fixture_id:
+    {{apex}} verify dedupe --build "{{fixture_id}}"
+
 installer-logs-collect run_directory token:
     {{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"
 
 observe-fingerprint:
-    bash tools/observe-fingerprint.sh
-
-test-fingerprint-dialog source:
-    python3 tools/test-fingerprint-dialog.py "{{source}}"
-
-builder-compact:
-    python3 tools/compact-builder.py --replace-verified
-
-builder-finalize compaction_id:
-    python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"
-
-build-fingerprint-rpms:
-    python3 tools/build-fingerprint-rpms.py
-
-test-fingerprint-rpms build_id:
-    python3 tools/test-fingerprint-rpms.py "{{build_id}}"
-
-test-fingerprint-gtk build_id:
-    python3 tools/test-fingerprint-gtk.py "{{build_id}}"
-
-build-fingerprint-image parent_build rpm_build gtk_test:
-    python3 tools/build-fingerprint-image.py "{{parent_build}}" "{{rpm_build}}" "{{gtk_test}}"
-
-test-elan-diagnostics source:
-    python3 tools/test-elan-diagnostics.py "{{source}}"
-
-update-fixtures build_id:
-    python3 tools/prepare-update-fixture.py "{{build_id}}"
-
-recovery-disk fixture:
-    python3 tools/build-recovery-disk.py "{{fixture}}"
-
-test-update action fixture access:
-    python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"
-
-test-recovery action fixture access:
-    python3 tools/recovery-vm.py "{{action}}" "{{fixture}}" "{{access}}"
-
-test-initramfs-inspect fixture access:
-    python3 tools/initramfs-vm.py inspect "{{fixture}}" "{{access}}"
-
-test-initramfs-inject fixture access inspection:
-    python3 tools/initramfs-vm.py inject "{{fixture}}" "{{access}}" --inspection "{{inspection}}"
-
-test-initramfs-rescue fixture access:
-    python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"
+    { sudo -- /usr/bin/timeout --signal=INT 90s /usr/bin/busctl --system --json=short --match="path_namespace='/net/reactivated/Fprint'" --match="sender='net.reactivated.Fprint'" --match="type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'" monitor; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } | {{apex}} hardware observe-fingerprint --lookup-system-clients
 
 test:
-    uv run --no-project --python {{python}} python tools/check_static.py
+    uv run --no-project --python {{python}} python tools/migration/check_static.py
     uv run --no-project --python {{python}} --with pytest==9.1.1 pytest
 
 test-integration:

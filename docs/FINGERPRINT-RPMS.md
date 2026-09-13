@@ -12,8 +12,9 @@ It does not install packages on Ubuntu, change a frozen image or select a candid
 
 To test the rebuilt library, use `just test-fingerprint-rpms BUILD_ID`. This installs
 only libfprint and its test package inside the builder VM, with external repositories
-disabled. It runs the packaged C tests as the unprivileged builder user. Inputs,
-checksums, installation output and TAP logs stay in `runtime/fingerprint-rpm-tests`.
+disabled. It runs the packaged C tests as the unprivileged builder user. The inputs
+sent, the guest's report and the verdict stay in the run's export directory as
+`fingerprint.rpm-smoke.json`.
 Any missing case, skip, TODO or failing process prevents a pass. It does not start a
 physical enrollment or exercise the GNOME dialog.
 
@@ -28,9 +29,10 @@ metadata logging remains disabled unless explicitly enabled; this is a diagnosti
 patch, not a fix for the physical protocol error.
 
 Every run saves its source export, original and modified specs, SRPMs, binary RPMs,
-Mock logs and a local RPM repository under `runtime/fingerprint-rpm-builds`. The
-host verifies transferred file hashes and the patch/source identities. Retain the
-Mock package list: build dependencies still come from rolling Fedora repositories.
+Mock logs and a local RPM repository under `exports/RUN/output` in the runtime root.
+The host verifies transferred file hashes and the patch/source identities and writes
+`verified.json` beside the record. Retain the Mock package list: build
+dependencies still come from rolling Fedora repositories.
 
 Source trust is official HTTPS plus pinned checksums, not independently verified
 source signatures. The resulting RPMs are unsigned development artifacts. They

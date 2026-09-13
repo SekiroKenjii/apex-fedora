@@ -14,10 +14,11 @@ def baseline() -> dict[str, int]:
     return json.loads(lint_ratchet.BASELINE.read_text())["files"]
 
 
-def test_the_baseline_is_committed_and_describes_the_old_tree() -> None:
+def test_the_baseline_is_committed_and_describes_what_remains_of_the_old_tree() -> None:
     files = baseline()
 
-    assert len(files) >= 100
+    older = ("guest/", "system_files/", "tests/")
+    assert files and all(path.startswith(older) for path in files)
     assert sum(files.values()) > 0
 
 

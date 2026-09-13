@@ -11,11 +11,59 @@ import dataclasses
 from collections.abc import Mapping
 
 from apex.config import defaults
-from apex.kernel import commands, distribution, encoding, errors, identifiers, refusals, safepaths
+from apex.kernel import (
+    commands,
+    distribution,
+    encoding,
+    errors,
+    identifiers,
+    refusals,
+    safepaths,
+    secrets,
+    timing,
+)
 from apex.model import agentwire, serialframe
 from apex.ports import guestshell, portset
 
 MODULE = "apex.agent.main"
+
+
+class _FirstLine:
+    """The sink a password reaches: the first line of the guest's standard input."""
+
+    def __init__(self, payload: bytes) -> None:
+        self.stdin = payload
+
+    def accept(self, material: str) -> None:
+        self.stdin = material.encode() + b"\n" + self.stdin
+
+
+def standard_input(payload: bytes, password: secrets.Secret[str] | None) -> bytes:
+    """The payload, behind the password's line when sudo is to read one."""
+    sink = _FirstLine(payload)
+    if password is not None:
+        password.reveal_into(sink)
+    return sink.stdin
+
+
+def as_root(
+    ports: portset.HostPorts,
+    target: guestshell.GuestTarget,
+    *arguments: str,
+    password: secrets.Secret[str],
+    deadline: timing.Deadline,
+) -> commands.CompletedRun:
+    """One program as root with the password on standard input; the run comes back as is."""
+    step = guestshell.Step.of(*guestshell.SUDO_ASKING, *arguments)
+    return ports.guest.run(
+        target,
+        guestshell.GuestRun(
+            script=guestshell.RemoteScript.of(step),
+            deadline=deadline,
+            limit=commands.OutputLimit.default(),
+            stdin=standard_input(b"", password),
+        ),
+    )
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -71,11 +119,15 @@ def run_unit(
     arguments: Mapping[str, encoding.JsonValue],
     token: identifiers.Token,
     privileged: bool = True,
+    password: secrets.Secret[str] | None = None,
+    private_mounts: bool = False,
 ) -> agentwire.AgentReply:
     """One request in, one framed reply out.
 
-    A privileged request runs as root under the guest's build lock. A session request runs
-    as the shell's own user with no lock, which is how a unit reaches that user's desktop.
+    A privileged request runs as root under the guest's build lock, sudo reading the
+    password from the line before the request when the account has one to give. A session
+    request runs as the shell's own user with no lock, which is how a unit reaches that
+    user's desktop. Private mounts confine a fixture's remount to its own namespace.
     """
     request = agentwire.AgentRequest(
         host_version=distribution.installed_version(),
@@ -89,7 +141,11 @@ def run_unit(
             "run", "--framed", str(token),
         )
     )
-    asked = invocation.under_lock(defaults.BUILD_LOCK) if privileged else invocation.steps[0]
+    asked = invocation.steps[0]
+    if privileged:
+        asked = invocation.under_lock(
+            defaults.BUILD_LOCK, asking=password is not None, private_mounts=private_mounts
+        )
     completed = ports.guest.run(
         target,
         guestshell.GuestRun(
@@ -98,7 +154,7 @@ def run_unit(
             ),
             deadline=defaults.BUILD_DEADLINE,
             limit=commands.OutputLimit(defaults.AGENT_REPLY_LIMIT.value),
-            stdin=encoding.canonical(request.document()),
+            stdin=standard_input(encoding.canonical(request.document()), password),
         ),
     )
     if completed.exit_code == errors.Refusal.exit_code:

@@ -20,6 +20,9 @@ EXPECTED_COMPONENTS: Mapping[str, str] = {"bootupd": "0.2.35", "greenboot": "0.1
 OBSERVED_EXIT = 42
 DROP_IN = "90-apex-recovery-test.conf"
 INTERPRETER = "/usr/bin/python3"
+GREENBOOT_CONFIG = "/etc/greenboot/greenboot.conf"
+SYSTEMD_UNITS = "/etc/systemd/system"
+TEST_DIRECTORY = "/var/lib/apex-recovery-test"
 
 
 def repaired_config(current: bytes, fragment: bytes) -> bytes:

@@ -35,6 +35,13 @@ class Asked:
     serial: bool = False
     case: str | None = None
     wrong_key: Path | None = None
+    access: Path | None = None
+
+    def credentials_file(self) -> Path | None:
+        """The credentials named outright, or the ones the access directory holds."""
+        if self.access is None:
+            return self.credentials
+        return self.access / defaults.CREDENTIALS_NAME
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -121,11 +128,16 @@ def required_candidate(inputs: Inputs) -> identifiers.Digest:
 
 
 def _credentials(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, path: Path | None
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, asked: Asked
 ) -> testaccess.Credentials | None:
+    """The credentials the request names; an access directory supplies the key it holds."""
+    path = asked.credentials_file()
     if path is None:
         return None
-    return testaccess.read(ports.files, safepaths.SafePath.regular_file(path, within=root))
+    read = testaccess.read(ports.files, safepaths.SafePath.regular_file(path, within=root))
+    if asked.access is not None and read.key is None:
+        return dataclasses.replace(read, key=asked.access / defaults.TEST_KEY_NAME)
+    return read
 
 
 def _serial_ports(
@@ -166,7 +178,7 @@ def _serial_guest(
 def _builder_guest(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot, asked: Asked
 ) -> guestshell.GuestTarget:
-    if asked.user is not None or asked.credentials is not None or asked.serial:
+    if asked.user is not None or asked.credentials_file() is not None or asked.serial:
         raise errors.Refusal(
             refusals.RefusalReason.REQUEST_MALFORMED,
             subject="a builder recipe takes neither --user, --credentials nor --serial",
@@ -200,7 +212,7 @@ def _guest(
     if role is machines.VmRole.BUILDER:
         return _builder_guest(ports, root, asked)
     if asked.serial:
-        return _serial_guest(root, asked.user, asked.credentials)
+        return _serial_guest(root, asked.user, asked.credentials_file())
     return _test_guest(root, asked, credentials)
 
 
@@ -230,7 +242,7 @@ def gather(context: contexts.Context, *, role: machines.VmRole, asked: Asked) ->
     root = _root(context)
     ports = context.bundle(root)
     lease = _running_machine(ports, root, role)
-    read = None if asked.serial else _credentials(ports, root, asked.credentials)
+    read = None if asked.serial else _credentials(ports, root, asked)
     guest = _guest(ports, root, role, asked, read)
     if asked.serial:
         ports = _serial_ports(context, ports, root, lease)
