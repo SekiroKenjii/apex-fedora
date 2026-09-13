@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from installedguest import bootc_status, guest
@@ -50,7 +51,7 @@ def test_the_state_names_the_boot_the_kernels_the_status_the_policy_and_the_mark
         },
     )
 
-    found = update_state_unit.run(ports, arguments={})
+    found = cast("dict[str, Any]", update_state_unit.run(ports, arguments={}))
 
     assert found["boot_id"] == "boot-1"
     assert found["versions"]["stdout"] == "bootc-1\n"
@@ -91,7 +92,7 @@ def provisioning(*, members: dict[str, bytes] | None = None, current: bytes = PO
     return process, files, ports
 
 
-def arguments(**changes: object) -> dict[str, object]:
+def arguments(**changes: Any) -> dict[str, Any]:
     return {
         "fixture": FIXTURE,
         "archive": ARCHIVE,
@@ -177,7 +178,10 @@ def test_bootc_is_asked_to_switch_only_to_a_fixture_directory_and_its_words_come
         ("bootc", "switch", "--enforce-container-sigpolicy", "--transport", "dir", source)
     )
 
-    found = update_operate_unit.run(ports, arguments={"operation": "switch", "source": source})
+    found = cast(
+        "dict[str, Any]",
+        update_operate_unit.run(ports, arguments={"operation": "switch", "source": source}),
+    )
     rolled = update_operate_unit.run(ports, arguments={"operation": "rollback"})
 
     assert found["returncode"] == 1 and found["stderr"] == "failed\n"

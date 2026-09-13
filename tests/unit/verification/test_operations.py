@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from typing import Any
 
 import guestoperations as ops
 import pytest
@@ -107,7 +108,7 @@ def test_the_recovery_preimage_is_the_digest_of_the_configuration_as_read() -> N
     assert raised.value.reason is refusals.RefusalReason.FIXTURE_REPORT_MALFORMED
 
 
-def inspection_document(**changes: object) -> dict[str, object]:
+def inspection_document(**changes: Any) -> dict[str, Any]:
     return {
         "status": "PASS",
         "action": "inspect",

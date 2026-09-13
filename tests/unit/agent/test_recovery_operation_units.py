@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from installedguest import COMPONENTS, bootc_status, guest
@@ -63,8 +64,12 @@ def test_the_migration_and_the_collection_are_one_program_each_plus_the_records(
         {f"{recovery_fixture.TEST_DIRECTORY}/{RUN}/x-gdm-start.json": b"{}"}, {}
     )
 
-    migrated = recovery_operate_unit.run(ports, arguments={"operation": "migrate"})
-    collected = recovery_operate_unit.run(ports, arguments={"operation": "collect"})
+    migrated = cast(
+        "dict[str, Any]", recovery_operate_unit.run(ports, arguments={"operation": "migrate"})
+    )
+    collected = cast(
+        "dict[str, Any]", recovery_operate_unit.run(ports, arguments={"operation": "collect"})
+    )
 
     assert migrated["program"]["argv"] == ["bootupctl", "migrate-static-grub-config"]
     assert set(collected["programs"]) == {"boots", "journal"}

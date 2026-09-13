@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from installedguest import COMPONENTS, bootc_status, guest
@@ -92,8 +93,8 @@ def as_root(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(deployments, "require_private_mounts", lambda: None)
 
 
-def armed(**changes: object) -> tuple:
-    return guest(tree(), outputs(**changes), links=LINKS)
+def armed(*, status: bytes | None = None, environment: bytes | None = None) -> tuple:
+    return guest(tree(), outputs(status=status, environment=environment), links=LINKS)
 
 
 def test_the_inspection_binds_both_entries_and_fingerprints_every_protected_input() -> None:
@@ -103,7 +104,7 @@ def test_the_inspection_binds_both_entries_and_fingerprints_every_protected_inpu
         ports, arguments={"action": "inspect", "good": GOOD, "bad": BAD}
     )
 
-    plan = found["plan"]
+    plan = cast("dict[str, Any]", found["plan"])
     assert found["sha256"] == initramfs_fixture.plan_digest(plan).hex
     assert plan["entries"]["a"]["fields"]["version"] == "1"
     assert plan["entries"]["b"]["deployment"] == f"{DEPLOY}/{CHECKSUM_B}.0"
@@ -141,8 +142,8 @@ def test_the_inspection_binds_both_entries_and_fingerprints_every_protected_inpu
         {"environment": b"fallback=1\nboot_counter=2\n"},
     ],
 )
-def test_a_guest_not_naturally_armed_is_refused(change: dict) -> None:
-    _, _, ports = armed(**change)
+def test_a_guest_not_naturally_armed_is_refused(change: dict[str, bytes]) -> None:
+    _, _, ports = armed(status=change.get("status"), environment=change.get("environment"))
 
     with pytest.raises(errors.Refusal) as raised:
         initramfs_fixture_unit.run(ports, arguments={"action": "inspect", "good": GOOD, "bad": BAD})
@@ -272,7 +273,7 @@ def test_the_rescue_check_says_whether_a_boots_its_own_initramfs() -> None:
     blocked = initramfs_fixture_unit.run(
         ports, arguments={"action": "verify-rescue", "good": GOOD, "bad": BAD}
     )
-    assert blocked["status"] == "BLOCKED" and "do not reboot" in blocked["reason"]
+    assert blocked["status"] == "BLOCKED" and "do not reboot" in str(blocked["reason"])
 
 
 def test_an_unknown_action_or_a_missing_digest_is_refused_before_the_guard() -> None:
