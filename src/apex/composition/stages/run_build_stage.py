@@ -2,8 +2,9 @@
 
 The script is the one the older tree composed by hand, now assembled step by step: unpack the
 bundle, then under the guest's build lock, bootstrap and either build the image or import the
-frozen payload and derive the artifact from it. A non-zero exit is recorded, not raised, so
-the output the guest did produce is still retrieved.
+frozen payload and derive the artifact from it; the NVIDIA packages are built over the
+imported payload by the guest's own script and signed by nobody, as before. A non-zero exit
+is recorded, not raised, so the output the guest did produce is still retrieved.
 """
 
 from __future__ import annotations
@@ -46,14 +47,18 @@ def _build_steps(
     if frozen is None or parent is None:
         return (guestshell.Step.of("bash", f"guest/{kind.guest_script}", str(profile), str(kind)),)
     payload = str(exports.payload(parent, profile))
+    imported = guestshell.Step.of(
+        "bash", "guest/import-payload.sh", payload, builds.TARGET_DOCUMENT
+    )
+    if kind is builds.ArtifactKind.NVIDIA:
+        packaged = guestshell.Step.of(
+            "python3", f"guest/{kind.guest_script}", str(frozen.image_id)
+        )
+        return (imported, packaged)
     derive = ["bash", f"guest/{kind.guest_script}", str(kind), str(frozen.image_id)]
     if kind is builds.ArtifactKind.INSTALLER:
         derive.append(payload)
-    return (
-        guestshell.Step.of("bash", "guest/import-payload.sh", payload, builds.TARGET_DOCUMENT),
-        guestshell.Step.of(*derive),
-        SIGN,
-    )
+    return (imported, guestshell.Step.of(*derive), SIGN)
 
 
 def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:

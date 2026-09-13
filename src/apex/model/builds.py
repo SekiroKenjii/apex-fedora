@@ -38,6 +38,7 @@ class ArtifactKind(enum.StrEnum):
     QCOW2 = "qcow2"
     INSTALLER = "installer"
     LIVE = "live"
+    NVIDIA = "nvidia"
 
     @property
     def derived(self) -> bool:
@@ -49,6 +50,8 @@ class ArtifactKind(enum.StrEnum):
             return "build.sh"
         if self is ArtifactKind.LIVE:
             return "live-artifact.sh"
+        if self is ArtifactKind.NVIDIA:
+            return "nvidia-build.py"
         return "disk-artifact.sh"
 
 
