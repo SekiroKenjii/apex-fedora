@@ -16,6 +16,7 @@ from apex.model import pins, release
 FEDORA_44 = release.ReleaseProfile(
     id=identifiers.ProfileId("fedora-44"),
     major=44,
+    os_id="fedora",
     os_release_version_id="44",
     dist_tag=release.DistTag("fc44"),
     mock_root="fedora-44-x86_64",

@@ -30,6 +30,7 @@ PACKAGE_LINE_BUDGETS = {
     "attestation": 3600,
     "composition": 1200,
     "verification": 1600,
+    "generating": 800,
     "provisioning": 1600,
     "trust": 1200,
     "agent": 4400,

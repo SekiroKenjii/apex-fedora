@@ -74,6 +74,7 @@ class UpstreamSignal:
 class ReleaseProfile:
     id: identifiers.ProfileId
     major: int
+    os_id: str
     os_release_version_id: str
     dist_tag: DistTag
     mock_root: str
