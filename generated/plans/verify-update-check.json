@@ -1,0 +1,131 @@
+{
+ "digest": "228051de8f282ff887b545b6ac451ba354857e8773a4375bbd7e31335e174ea8",
+ "name": "verify-update-check",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "guest.ready",
+   "reads": [
+    "verification.guest"
+   ],
+   "writes": [
+    "guest.ready"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "guest.ready",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.login",
+   "reads": [
+    "agent.install",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.credentials",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.login"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.shell-startup",
+   "reads": [
+    "agent.install",
+    "judged.login",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.shell.startup"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "desktop.render-bars",
+   "reads": [
+    "agent.install",
+    "judged.login",
+    "judged.shell.startup",
+    "machine.monitor",
+    "run.id",
+    "runtime.root",
+    "verification.guest"
+   ],
+   "writes": [
+    "judged.render.bars"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "update.operate",
+   "reads": [
+    "agent.install",
+    "fixture.located",
+    "judged.login",
+    "judged.render.bars",
+    "judged.shell.startup",
+    "machine.process",
+    "operation.action",
+    "run.id",
+    "runtime.root",
+    "verification.credentials",
+    "verification.guest"
+   ],
+   "writes": [
+    "report.update",
+    "retained.update"
+   ]
+  }
+ ]
+}

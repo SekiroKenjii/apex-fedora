@@ -374,3 +374,19 @@ GTK_INPUT_FILES = (
     "config/fingerprint-rpms.lock.json", "rpms/patches/gnome-fingerprint-retain-claim.patch",
 )
 SMOKE_SCRIPT_PATH = "guest/fingerprint-rpm-smoke.py"
+
+GUEST_READY = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(240)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(2), ceiling=timing.Elapsed(2), factor=1
+    ),
+    description="the guest answers over ssh and systemd reports the system running",
+)
+SYSTEM_STATES = frozenset({"running", "degraded"})
+REBOOT_EXITS = frozenset({0, 255})
+UPDATE_OPERATION_DEADLINE = timing.Deadline(timing.Elapsed(900))
+UPDATE_UPLOAD_PREFIX = "/var/tmp/apex-update-"
+UPDATE_SENTINEL_NAME = "apex-update-sentinel.txt"
+UPDATE_REPORT_NAME = "update.json"
+RECOVERY_REPORT_NAME = "recovery.json"
+INITRAMFS_REPORT_NAME = "initramfs.json"

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from apex.composition import agentrun, exports
 from apex.composition import keys as composition_keys
 from apex.kernel import errors, identifiers
-from apex.pipeline import effects, stages
+from apex.pipeline import effects, facts, stages
 from apex.ports import portset
 from apex.verification import verifykeys
 
@@ -22,6 +24,19 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
     except errors.PortFailure as failure:
         return stages.Fail(cause=failure.cause)
     return stages.Advance(facts={verifykeys.AGENT: install})
+
+
+def waiting(ready: facts.FactKey[Any]) -> stages.SimpleStage[portset.HostPorts]:
+    """The same delivery, after the fact that says the guest is there to receive it."""
+    return stages.SimpleStage(
+        id=identifiers.StageId("agent.deliver"),
+        reads=(composition_keys.RUN_ID, verifykeys.GUEST, verifykeys.WHEEL, ready),
+        writes=(verifykeys.AGENT,),
+        attests=frozenset(),
+        effects=frozenset({effects.Effect.REMOTE_EXEC}),
+        preflight=stages.always_ready,
+        apply=apply,
+    )
 
 
 STAGE = stages.SimpleStage(

@@ -17,6 +17,9 @@ from apex.kernel import claims, commands, errors, quantities, refusals, safepath
 from apex.model import machines
 
 USER_NAME = re.compile(r"[a-z_][a-z0-9_-]*")
+SUDO = ("sudo",)
+SUDO_ASKING = ("sudo", "-k", "-S", "-p", "")
+UNSHARE_MOUNTS = ("unshare", "--mount", "--propagation", "slave")
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -75,9 +78,20 @@ class RemoteScript:
     def rendered(self) -> str:
         return " && ".join(step.rendered() for step in self.steps)
 
-    def under_lock(self, lock: safepaths.RemotePath) -> Step:
-        """The whole script as one step that holds the guest's build lock while it runs."""
-        return Step.of("sudo", "flock", "-n", str(lock), "bash", "-c", self.rendered())
+    def under_lock(
+        self, lock: safepaths.RemotePath, *, asking: bool = False, private_mounts: bool = False
+    ) -> Step:
+        """The whole script as one step that holds the guest's build lock while it runs.
+
+        Asking has sudo read the password from the first line of its standard input, its
+        cached credentials dropped first so that line is always consumed; private mounts
+        give the script a mount namespace of its own, so a remount it makes ends with it.
+        """
+        privilege = SUDO_ASKING if asking else SUDO
+        namespace = UNSHARE_MOUNTS if private_mounts else ()
+        return Step.of(
+            *privilege, "flock", "-n", str(lock), *namespace, "bash", "-c", self.rendered()
+        )
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

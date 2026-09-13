@@ -50,6 +50,9 @@ VENTOY_PREPARED = facts.FactKey[ventoymedia.Prepared]("ventoy.prepared")
 MEDIA = facts.FactKey[safepaths.SafePath]("ventoy.medium")
 FIXTURE = facts.FactKey[updatefixtures.Located]("fixture.located")
 TAGGED = facts.FactKey[encoding.Document]("payload.tagged")
+ACTION = facts.FactKey[str]("operation.action")
+READY = facts.FactKey[encoding.Document]("guest.ready")
+INSPECTION = facts.FactKey[encoding.Document | None]("initramfs.inspection")
 
 
 def fault_report(case: faulting.FaultCase) -> facts.FactKey[faulting.FaultReport]:

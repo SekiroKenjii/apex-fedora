@@ -32,6 +32,7 @@ from apex.verification.recipes import (  # noqa: E402
     fingerprint_cleanup_recipe,
     fingerprint_gtk_recipe,
     fingerprint_rpms_test_recipe,
+    initramfs_operation_recipe,
     installer_diagnostics_recipe,
     installer_fixtures_recipe,
     installer_payload_recipe,
@@ -40,7 +41,10 @@ from apex.verification.recipes import (  # noqa: E402
     live_observe_recipe,
     live_protection_recipe,
     recovery_disk_recipe,
+    recovery_operation_recipe,
+    update_check_recipe,
     update_fixtures_recipe,
+    update_operation_recipe,
     ventoy_media_recipe,
     ventoy_observe_recipe,
 )
@@ -70,6 +74,10 @@ RECIPES = {
     recovery_disk_recipe.NAME: recovery_disk_recipe.PLAN,
     fingerprint_rpms_test_recipe.NAME: fingerprint_rpms_test_recipe.PLAN,
     fingerprint_gtk_recipe.NAME: fingerprint_gtk_recipe.PLAN,
+    update_operation_recipe.NAME: update_operation_recipe.PLAN,
+    update_check_recipe.NAME: update_check_recipe.PLAN,
+    recovery_operation_recipe.NAME: recovery_operation_recipe.PLAN,
+    initramfs_operation_recipe.NAME: initramfs_operation_recipe.PLAN,
 }
 
 

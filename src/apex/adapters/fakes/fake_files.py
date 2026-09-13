@@ -123,7 +123,7 @@ class MemoryFiles(files.FileSystemPort):
         self._inodes.pop(str(path), None)
 
     def identity(self, path: safepaths.SafePath) -> files.FileIdentity:
-        name = str(path)
+        name = self._canonical(str(path))
         stored = self._files.get(name)
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
@@ -198,7 +198,7 @@ class MemoryFiles(files.FileSystemPort):
             target = self.links.get(current)
             if target is None:
                 if self.exists(safepaths.SafePath(Path(current))):
-                    return safepaths.SafePath(Path(current))
+                    return safepaths.SafePath(Path(self._canonical(current)))
                 raise errors.PortFailure(port="files", cause=f"{path}: no such file")
             current = target
         raise errors.PortFailure(port="files", cause=f"{path}: too many levels of links")
@@ -221,7 +221,7 @@ class MemoryFiles(files.FileSystemPort):
                 kind=files.EntryKind.DIRECTORY, owner=0, group=0,
                 mode=quantities.FileMode(0o700), label=self.labels.get(name), device=None,
             )
-        stored = self._files.get(name)
+        stored = self._files.get(self._canonical(name))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         return files.Inspection(

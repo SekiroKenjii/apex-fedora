@@ -15,14 +15,16 @@ SOURCE = Path(__file__).resolve().parents[2] / "src" / "apex"
 MODULE_LINE_LIMIT = 400
 FAN_IN_LIMIT = 40
 # The kernel is the shared vocabulary, `config.defaults` is the one place a number lives,
-# `ports.portset` is the bundle every host stage names in its signature, `pipeline.stages` and
+# `ports.portset` is the bundle every host stage names in its signature and `agent.agentports`
+# the guest's own, `pipeline.stages` and
 # `pipeline.effects` are the stage vocabulary every stage is made of and answers with,
 # `composition.keys` is the fact vocabulary the build stages pass to one another,
 # `verification.verifykeys` the same for the verification stages, and `ports.guestshell` is
-# the port every stage that asks a guest names; the specification makes all eight central on
+# the port every stage that asks a guest names; the specification makes all nine central on
 # purpose, so none is a hidden hub.
 FAN_IN_EXEMPT = (
-    "apex.kernel", "apex.config.defaults", "apex.ports.portset", "apex.pipeline.stages",
+    "apex.kernel", "apex.config.defaults", "apex.ports.portset", "apex.agent.agentports",
+    "apex.pipeline.stages",
     "apex.pipeline.effects", "apex.composition.keys", "apex.verification.verifykeys",
     "apex.ports.guestshell",
 )
@@ -36,15 +38,15 @@ PACKAGE_LINE_BUDGETS = {
     "config": 800,
     "targeting": 600,
     "attestation": 3600,
-    "composition": 2400,
-    "verification": 6400,
+    "composition": 2600,
+    "verification": 8000,
     "generating": 800,
     "provisioning": 2400,
     "trust": 1200,
-    "agent": 5600,
+    "agent": 6400,
     "workspace": 2000,
     "adapters": 3100,
-    "cli": 3300,
+    "cli": 3600,
     "wiring": 300,
 }
 

@@ -6,24 +6,51 @@ and changes when any of them does, without a tar ever being written.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from apex.adapters import sourcewalk
-from apex.kernel import claims, encoding, errors, hashing, refusals, safepaths
-from apex.ports import archives
+from apex.kernel import claims, encoding, errors, hashing, quantities, refusals, safepaths
+from apex.ports import archives, files
+
+EXTRACTED_MODE = quantities.FileMode(0o600)
 
 
 class MemoryArchives(archives.ArchivePort):
     environment = claims.EnvironmentKind.SIMULATED
 
-    def __init__(self) -> None:
+    def __init__(self, filesystem: files.FileSystemPort | None = None) -> None:
         self.written: dict[str, tuple[str, ...]] = {}
         self.extracted: list[tuple[safepaths.SafePath, safepaths.SafePath]] = []
         self.packed: list[tuple[safepaths.SafePath, safepaths.SafePath, str]] = []
+        self.held: dict[str, dict[str, bytes]] = {}
+        self.filesystem = filesystem
+
+    def hold(self, archive: safepaths.SafePath, members: Mapping[str, bytes]) -> None:
+        """Declare what an archive contains, for members and for an extraction to lay down."""
+        self.held[str(archive)] = dict(members)
 
     def pack(self, directory: safepaths.SafePath, *, into: safepaths.SafePath, name: str) -> None:
         self.packed.append((directory, into, name))
+        self.held[str(into)] = {
+            f"{name}/{path.relative_to(directory.path)}": path.read_bytes()
+            for path in sorted(directory.path.rglob("*"))
+            if path.is_file()
+        }
 
     def extract(self, archive: safepaths.SafePath, *, into: safepaths.SafePath) -> None:
         self.extracted.append((archive, into))
+        for name, payload in self.held.get(str(archive), {}).items():
+            target = safepaths.SafePath(into.path / name)
+            if self.filesystem is not None:
+                self.filesystem.write_atomic(target, payload, mode=EXTRACTED_MODE)
+            else:
+                target.path.parent.mkdir(parents=True, exist_ok=True)
+                target.path.write_bytes(payload)
+
+    def members(self, archive: safepaths.SafePath) -> tuple[str, ...]:
+        if str(archive) not in self.held:
+            raise errors.PortFailure(port="archives", cause=f"{archive}: no such archive")
+        return tuple(self.held[str(archive)])
 
     def bundle(
         self, sources: archives.SourceSet, *, into: safepaths.SafePath, screen: archives.Screen

@@ -245,3 +245,21 @@ def test_the_screen_sees_every_candidate_with_its_bytes(
         ("tools/helper.py", 0o644, b"value = 1\n"),
         ("tools/run.sh", 0o755, b"#!/bin/sh\necho hi\n"),
     ]
+
+
+def test_an_archive_names_its_members_as_it_carries_them(
+    archives: archive_port.ArchivePort, root: safepaths.RuntimeRoot
+) -> None:
+    source = root.path / "fixture"
+    (source / "a").mkdir(parents=True)
+    (source / "a" / "manifest.json").write_bytes(b"{}")
+    (source / "policy.json").write_bytes(b"{}")
+    packed = root.child("fixture.tar")
+
+    archives.pack(safepaths.SafePath(source), into=packed, name="f" * 32)
+
+    members = archives.members(packed)
+    assert set(members) >= {"f" * 32 + "/a/manifest.json", "f" * 32 + "/policy.json"}
+    assert all(name.split("/")[0] == "f" * 32 for name in members)
+    with pytest.raises(errors.PortFailure):
+        archives.members(root.child("absent.tar"))

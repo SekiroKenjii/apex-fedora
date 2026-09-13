@@ -42,7 +42,7 @@ def test_recipe_names_are_unique_across_commands_tools_and_the_older_tree() -> N
     ]
     plain = [
         name for name, _, _ in (
-            *justfile.FOLDED, *justfile.HOST_PIPELINES, *justfile.OLDER_TOOLS, *justfile.TOOLING,
+            *justfile.FOLDED, *justfile.HOST_PIPELINES, *justfile.TOOLING,
         )
     ]
     names = [*declared, *plain, "gate", "default"]

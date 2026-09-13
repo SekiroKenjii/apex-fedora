@@ -1,0 +1,67 @@
+{
+ "digest": "28c00aff9c9d0f515d1ccbcfc7ec71267f4d5167824b36529f96bb6fb858c20e",
+ "name": "verify-update",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "guest.ready",
+   "reads": [
+    "verification.guest"
+   ],
+   "writes": [
+    "guest.ready"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "guest.ready",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "mutates-guest",
+    "remote-exec",
+    "writes-runtime"
+   ],
+   "id": "update.operate",
+   "reads": [
+    "agent.install",
+    "fixture.located",
+    "machine.process",
+    "operation.action",
+    "run.id",
+    "runtime.root",
+    "verification.credentials",
+    "verification.guest"
+   ],
+   "writes": [
+    "report.update",
+    "retained.update"
+   ]
+  }
+ ]
+}

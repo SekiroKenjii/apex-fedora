@@ -124,6 +124,10 @@ class RefusalReason(enum.StrEnum):
     FIXTURE_REQUEST_MALFORMED = "fixture.request-malformed"
     FIXTURE_REPORT_MALFORMED = "fixture.report-malformed"
     FIXTURE_STATE_UNEXPECTED = "fixture.state-unexpected"
+    UPDATE_STATE_UNEXPECTED = "update.state-unexpected"
+    UPDATE_REJECTION_NOT_OBSERVED = "update.rejection-not-observed"
+    GUEST_NOT_READY = "guest.not-ready"
+    INSPECTION_MISMATCH = "initramfs.inspection-mismatch"
 
     LOCK_HELD = "lock.held"
     ARCHIVE_ENTRY_NOT_REGULAR = "archive.entry-not-regular"

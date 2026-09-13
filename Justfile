@@ -97,6 +97,21 @@ test-resume-installed run_directory:
 test-installer-fault-collect run_directory:
     {{apex}} machine collect --run "{{run_directory}}"
 
+test-update action fixture access:
+    {{apex}} operate update --action "{{action}}" --fixture "{{fixture}}" --access "{{access}}"
+
+test-recovery action fixture access:
+    {{apex}} operate recovery --action "{{action}}" --fixture "{{fixture}}" --access "{{access}}"
+
+test-initramfs-inspect fixture access:
+    {{apex}} operate initramfs --action inspect --fixture "{{fixture}}" --access "{{access}}"
+
+test-initramfs-inject fixture access inspection:
+    {{apex}} operate initramfs --action inject --fixture "{{fixture}}" --access "{{access}}" --inspection "{{inspection}}"
+
+test-initramfs-rescue fixture access:
+    {{apex}} operate initramfs --action verify-rescue --fixture "{{fixture}}" --access "{{access}}"
+
 test-fingerprint-dialog source:
     {{apex}} patch fingerprint-dialog --source "{{source}}"
 
@@ -177,21 +192,6 @@ installer-logs-collect run_directory token:
 
 observe-fingerprint:
     { sudo -- /usr/bin/timeout --signal=INT 90s /usr/bin/busctl --system --json=short --match="path_namespace='/net/reactivated/Fprint'" --match="sender='net.reactivated.Fprint'" --match="type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'" monitor; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } | {{apex}} hardware observe-fingerprint --lookup-system-clients
-
-test-update action fixture access:
-    python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"
-
-test-recovery action fixture access:
-    python3 tools/recovery-vm.py "{{action}}" "{{fixture}}" "{{access}}"
-
-test-initramfs-inspect fixture access:
-    python3 tools/initramfs-vm.py inspect "{{fixture}}" "{{access}}"
-
-test-initramfs-inject fixture access inspection:
-    python3 tools/initramfs-vm.py inject "{{fixture}}" "{{access}}" --inspection "{{inspection}}"
-
-test-initramfs-rescue fixture access:
-    python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"
 
 test:
     uv run --no-project --python {{python}} python tools/check_static.py

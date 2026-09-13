@@ -188,3 +188,52 @@ def test_a_session_unit_is_asked_as_the_user_without_the_lock(
 
     assert reply.observations == {"x": 2}
     assert guest_of(ports).runs[-1].script.rendered() == script
+
+
+def test_a_privileged_unit_with_a_password_has_sudo_read_it_from_the_first_line(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    from apex.kernel import secrets  # noqa: PLC0415
+
+    guest = guest_of(ports)
+    install = agentrun.AgentInstall(
+        directory=safepaths.RemotePath("/var/tmp/apex-run/agent"),
+        digest=identifiers.Digest("a" * 64),
+    )
+    guest.expect(
+        "cd /var/tmp/apex-run/agent && sudo -k -S -p '' flock -n /run/apex-build.lock unshare "
+        "--mount --propagation slave bash -c 'env PYTHONPATH=/var/tmp/apex-run/agent/lib python3 "
+        f"-m apex.agent.main run --framed {TOKEN}'",
+        fake_guestshell.GuestReply(
+            stdout=framed({"protocol": 1, "unit": str(UNIT), "observations": {"ok": True}})
+        ),
+    )
+
+    reply = agentrun.run_unit(
+        ports, target(root), install, unit=UNIT, arguments={}, token=TOKEN,
+        password=secrets.Secret("Ab-1_"), private_mounts=True,
+    )
+
+    assert reply.observations == {"ok": True}
+    stdin = guest.runs[-1].stdin
+    assert stdin is not None and stdin.startswith(b"Ab-1_\n{")
+    assert json.loads(stdin.split(b"\n", 1)[1])["unit"] == str(UNIT)
+
+
+def test_one_program_as_root_carries_the_password_and_nothing_else_on_stdin(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    from apex.kernel import secrets, timing  # noqa: PLC0415
+
+    guest = guest_of(ports)
+    guest.expect(
+        "sudo -k -S -p '' systemctl reboot", fake_guestshell.GuestReply(exit_code=255)
+    )
+
+    completed = agentrun.as_root(
+        ports, target(root), "systemctl", "reboot",
+        password=secrets.Secret("Ab-1_"), deadline=timing.Deadline(timing.Elapsed(5)),
+    )
+
+    assert completed.exit_code == 255
+    assert guest.runs[-1].stdin == b"Ab-1_\n"

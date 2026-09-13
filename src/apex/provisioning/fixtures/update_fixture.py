@@ -36,6 +36,9 @@ BUILDER_POLICY = "/etc/containers/policy.json"
 STORAGE_SCOPE = "[overlay@/var/lib/containers/storage]"
 CASES_FROM_B = ("unsigned", "untrusted")
 BLOB_NAME = re.compile(r"[a-f0-9]{64}")
+SENTINEL_TEXT = b"Apex A/B user data must survive update and rollback.\n"
+MODULES_DIRECTORY = "/usr/lib/modules"
+RECOVERY_MARKER = "/usr/share/apex/recovery-fixture.json"
 SIGNATURE_PREFIX = "signature-"
 
 

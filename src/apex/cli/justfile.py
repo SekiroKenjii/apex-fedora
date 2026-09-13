@@ -1,13 +1,11 @@
 """The justfile rendered from the registry, so a recipe can never name a command that is gone.
 
-Four kinds of recipe: the ones the commands declare, rendered as the package's entry point
+Three kinds of recipe: the ones the commands declare, rendered as the package's entry point
 with each parameter quoted; the one host pipeline, a privileged bus monitor piped into the
-collector, which no command can spell alone; the gate and its tools, the same on every
-machine; and the recipes of the older host tools whose flows have not moved yet, kept word
-for word. The operator's surface may grow and never shift, which the surface contract
-holds against the frozen baseline; a recipe whose work folded into another keeps its
-operands and runs the retired name, so the dispatcher's refusal names the replacement at
-the prompt.
+collector, which no command can spell alone; and the gate and its tools, the same on every
+machine. The operator's surface may grow and never shift, which the surface contract holds
+against the frozen baseline; a recipe whose work folded into another keeps its operands and
+runs the retired name, so the dispatcher's refusal names the replacement at the prompt.
 """
 
 from __future__ import annotations
@@ -50,19 +48,6 @@ HOST_PIPELINES: tuple[Plain, ...] = (
     )),
 )
 
-OLDER_TOOLS: tuple[Plain, ...] = (
-    ("test-update", "action fixture access",
-     ('python3 tools/update-vm.py "{{action}}" "{{fixture}}" "{{access}}"',)),
-    ("test-recovery", "action fixture access",
-     ('python3 tools/recovery-vm.py "{{action}}" "{{fixture}}" "{{access}}"',)),
-    ("test-initramfs-inspect", "fixture access",
-     ('python3 tools/initramfs-vm.py inspect "{{fixture}}" "{{access}}"',)),
-    ("test-initramfs-inject", "fixture access inspection",
-     ('python3 tools/initramfs-vm.py inject "{{fixture}}" "{{access}}" '
-      '--inspection "{{inspection}}"',)),
-    ("test-initramfs-rescue", "fixture access",
-     ('python3 tools/initramfs-vm.py verify-rescue "{{fixture}}" "{{access}}"',)),
-)
 
 FOLDED: tuple[Plain, ...] = (
     ("installer-logs-collect", "run_directory token",
@@ -117,7 +102,6 @@ def render() -> str:
         *(_command_recipe(recipe) for command in _commands() for recipe in command.recipes),
         *(_plain(name, parameters, lines) for name, parameters, lines in FOLDED),
         *(_plain(name, parameters, lines) for name, parameters, lines in HOST_PIPELINES),
-        *(_plain(name, parameters, lines) for name, parameters, lines in OLDER_TOOLS),
         *(_plain(name, parameters, lines) for name, parameters, lines in TOOLING),
         _plain("gate", "", GATE),
     ]

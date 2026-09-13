@@ -22,6 +22,13 @@ OSTREE_OPTION = "ostree="
 MARKER = b"APEX_BAD_INITRD\n"
 MINIMUM_INITRAMFS_BYTES = 4096
 SCOPE = "bootlink binding only, not recovery or boot acceptance"
+BOOT_DIRECTORY = "/boot"
+GRUB_CONFIG = "/boot/grub2/grub.cfg"
+GRUB_ENVIRONMENT = "/boot/grub2/grubenv"
+EFI_DIRECTORY = "/boot/efi/EFI"
+BOOT_ENTRIES = "/boot/loader/entries"
+FAULT_DIRECTORY = "/boot/apex-initramfs-fault"
+TEST_DIRECTORY = "/var/lib/apex-initramfs-test"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
