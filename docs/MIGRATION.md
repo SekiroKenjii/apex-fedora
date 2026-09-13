@@ -3142,6 +3142,73 @@ stopped before a fact was written; a failed guest build reaches the reply as the
 `stage.failed` refusal, which is the exit the older tool gave. `golden_change`: three build
 plans, one stage added. `supersedes`: none yet.
 
+## P20i. The trust commands, the candidate selected, results recorded by hand
+
+Goal: the last of the operator's daily commands that still ran in the older tree, the ones
+that judge a bundle, keep the builder's key, choose the candidate and record a result by
+hand, on the trust and attestation packages the restructure already built. Four commits on
+`work/phase-20i-trust-commands`, the whole gate green at the head.
+
+### The bundle judged, the verifier exercised, the key kept
+
+`apex trust verify --build <id> --key <public key>` verifies the output a build left under
+the runtime root's exports against a key the operator supplies from outside it, and
+answers as the older `verify-artifact` did, field for field. `apex trust exercise` runs
+every registered negative over a scratch copy under `signature-tests/<run>` and files
+its results beside them, so a passing verification is worth citing. `apex trust
+development-key` fetches the builder's development public key over the builder's own
+channel, checks that the bytes parse as a public key, keeps them under `trust/` with a
+record of where they came from, and refuses a key that differs from the one kept, because
+rotation is reviewed and never silent. The three builder commands share one reading of
+the lease (`cli/builderaccess.py`).
+
+### The candidate selected, a result recorded
+
+`apex candidate select --build <id> --key <public key>` takes a completed image build,
+verifies its output, and writes its digest as the candidate under test with the
+verification beside it; the previous candidate's document is archived under its own run
+and the store is not touched, because every record names the digest it was made for. The
+older tool moved the evidence directory into the archive; the chain has no such directory
+to move. Selection is for testing; the readiness fold decides installation.
+
+`apex record <check> <status> --environment <kind> --description <text> [--proof <file>]
+[--reason <text>]` is the older `record` through the minting rules: an unknown check, a
+hardware result from a machine, a kind the check does not accept and a pass without a
+proof file are refused before any byte lands. The description and the reason are filed
+as the record's first proof, a small document, because the chain's entry has no field
+for prose and the words are evidence of what was done; a pass still needs a proof file
+beyond that note.
+
+### The names
+
+`record` is owned under its own name; `report` is retired to `apex readiness`, which was
+its reading without the file it wrote on the way; `select-candidate`, `verify-artifact`,
+`test-artifact` and `trust-development-key` are retired to the commands above. The
+bridge holds fourteen names, and the parity check covers exactly the twenty eight corpus
+invocations they still answer.
+
+### What this slice did not do
+
+`test-live-check` with its five cases, `test-compare-disks` and `test-resume`, the
+installer fault and log commands, `installer-fixtures`, `ventoy-media`, `build-nvidia`,
+`doctor`, `hooks`, `git-hook`, `hardware-snapshot`, `decode-coefficient`; a real first
+boot of a builder from the generated seed; the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 354 files, 25106 lines |
+| Commands owned | ten: `build`, `candidate`, `evidence`, `machine`, `plan`, `readiness`, `record`, `sources`, `trust`, `verify` |
+| Fast suite | 2 479 passed, 8 skipped |
+
+`migration_red`: a second candidate made from the same manifest was the same digest and
+archived nothing, so the fixture learned to vary the image; the store reader elects its
+version by the mark on disk, which a test writing through the fake files had to place
+itself; the note filed as a proof satisfied the pass rule on its own, so the command
+requires a proof file beyond it; the cli and kernel packages passed their budgets, raised
+to 2200 and 1500. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
