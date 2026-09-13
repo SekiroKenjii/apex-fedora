@@ -3336,6 +3336,84 @@ command passed 400 lines and its input gathering moved to `cli/verifyinputs.py`;
 passed 2200 (2247) and was raised to 2400, adapters passed 2600 (2899) and was raised to
 3000. `golden_change`: none. `supersedes`: none yet.
 
+## P20l. The installer fault, its logs and its fixture disks, from the CLI
+
+Goal: the four names the older tree still answered for the installer, `test-installer-fault`,
+`test-installer-fault-collect`, `installer-logs` and `installer-fixtures`, as commands on the
+new tree over the guest units P19e already moved. Four commits on
+`work/phase-20l-installer`, the whole gate green at the head.
+
+### The payload fault, in two steps as before
+
+`apex verify installer-payload --case <case> [--wrong-key <public key>] --serial` runs
+`fault.installer-payload` in the installer guest over the serial rescue shell. Before the
+guest is touched, `installer.request` writes `fault-request.json` beside the machine's run
+(the case, the boot image's digest, the machine's process, the run), refuses a machine
+that already carries one so every attempt starts from a fresh boot, and refuses a machine
+that is not the one the fault was designed for: an offline installer boot with a serial
+console and exactly one extra disk (`verification/stages/installer_request_stage.py`). The
+guest's report is kept beside the run as `fault-guest.json` with the verdict the host drew,
+and retained under the verification run's exports. Only the wrong-key case takes a key,
+which is read from inside the runtime root and must be a small public one
+(`verification/installerfault.py`).
+
+`apex machine collect --run <id or run directory>` is the second step, once the machine
+is off: the disks are compared as `machine compare` compares them, the host confirms the
+kept report itself (the named case, exit code one, the preflight failed, no upstream log,
+enforcement kept) rather than trusting a status string, the boot image is digested again
+against the request, and `fault-result.json` is written with the verdict: a pass when both
+disks proved unchanged, and a refusal naming the result file otherwise. Nothing is minted;
+`installer.payload-rejection` is recorded by hand from six such results, as it was.
+
+### The logs, in one step
+
+`apex verify installer-diagnostics --serial` delivers the agent over the serial console,
+asks `installer.diagnostics`, keeps the bundle as the guest gave it under the run's
+exports, and then fails the run naming the first of the three installer logs that did not
+come whole (`stages/installer_logs_stage.py`), which is what the older collection's
+non-zero exit told the operator: do not cancel the installer yet. The older two steps
+existed because the host could not run anything in the guest; with the serial shell it
+can, so `installer-logs prepare` and `collect` fold into one. The justfile's
+`installer-logs-prepare` runs the one step; `installer-logs-collect run_directory token`
+keeps its operands, as the surface contract requires, and runs the retired name, so the
+dispatcher's refusal names the replacement.
+
+### The fixture disks
+
+`apex build fixtures` runs `fixture.installer-disks` in the isolated builder under the
+run's directory, receives its output home, digests each disk against the builder's report
+and refuses one that differs (`stages/fixture_retrieve_stage.py`), and retains the report
+beside them; the reply names where the disks landed
+(`verification/recipes/installer_fixtures_recipe.py`). The probe stage takes its
+arguments from the run now, as the fault stage does.
+
+Four names retired; the bridge holds seven: `build-nvidia`, `decode-coefficient`,
+`doctor`, `git-hook`, `hardware-snapshot`, `hooks`, `ventoy-media`.
+
+### What this slice did not do
+
+A real payload fault, log capture or fixture build through a booted machine, which only
+the operator can run (each is proven on fakes; NOT TESTED against a booted installer or the
+real builder); `ventoy-media`, `build-nvidia`, `doctor`, `hooks`, `git-hook`,
+`hardware-snapshot`, `decode-coefficient`; the older tree's deletion.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 373 files, 26943 lines |
+| Bridge | seven names |
+| Fast suite | 2 572 passed, 8 skipped |
+
+`migration_red`: the request stage checked for an earlier attempt in preflight, where the
+runner permits no port call, so the check moved into apply and the stage is ordered first
+because it reads nothing the run produces; a stage's failure is the outcome's
+`stage.failed` refusal, which the recipe tests now assert; `pipeline.stages` passed the
+fan-in limit (41) and is exempt as the vocabulary every stage is made of; verification
+passed 2800 (3455) and was raised to 3600, cli passed 2400 (2406) and was raised to 2600;
+the parity floor fell from twenty invocations to twelve with seven names bridged.
+`golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
