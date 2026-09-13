@@ -45,14 +45,14 @@ context that drives them.
 | `guest/fetch-sources.py` | 16 | build step | retired; `trust/acquiring.py` on the host | P18 |
 | `guest/sign-artifacts.py` | 35 | build step, signing | `build.sign-artifacts` unit on `SigningPort` | P18 |
 | `guest/sign-installer-payload.py` | 77 | build step, signing | `build.sign-installer` unit on `SigningPort` | P18 |
-| `guest/clean-image.py` | 34 | image step | `generated/os/` build step | P19 |
-| `guest/compose-shell-theme.py` | 63 | image step | `generated/os/` build step | P19 |
-| `guest/fix-grub-fragment.py` | 24 | image step | `generated/os/` build step | P19 |
-| `guest/fix-schema-overrides.py` | 31 | image step | `generated/os/` build step | P19 |
-| `guest/label-installer-manifest.py` | 66 | image step | `generated/os/` build step | P19 |
-| `guest/guard-installer-entrypoint.py` | 37 | image step | `generated/os/` build step | P19 |
-| `guest/prepare-live-builder.py` | 42 | image step | `generated/os/` build step | P19 |
-| `guest/prepare-live-rootfs.py` | 132 | image step | `generated/os/` build step | P19 |
+| `guest/clean-image.py` | 34 | image step | called as shipped by `generated/os/image-configure.sh`; its own move follows the generated tree taking over the build | P19i, called |
+| `guest/compose-shell-theme.py` | 63 | image step | called as shipped by `generated/os/image-configure.sh` | P19i, called |
+| `guest/fix-grub-fragment.py` | 24 | image step | called as shipped by `generated/os/image-configure.sh` | P19i, called |
+| `guest/fix-schema-overrides.py` | 31 | image step | called as shipped by `generated/os/image-configure.sh` | P19i, called |
+| `guest/label-installer-manifest.py` | 66 | image step | installer build step, unchanged until the generated tree takes over the build | P19i, later |
+| `guest/guard-installer-entrypoint.py` | 37 | image step | called as shipped by `generated/os/installer-configure.sh` | P19i, called |
+| `guest/prepare-live-builder.py` | 42 | image step | live build step, unchanged until the generated tree takes over the build | P19i, later |
+| `guest/prepare-live-rootfs.py` | 132 | image step | called as shipped by `generated/os/assemble-live-squashfs.sh` | P19i, called |
 | `guest/installer-preflight.py` | 185 | safety artifact | `assets/verbatim/installer-preflight.py.verbatim`, byte for byte, held equal by a test; typed wrapper `trust/preflight.py` | verbatim, P19e, done |
 | `guest/bootstrap.sh` | 13 | build shell | runs as shipped, first step under the guest lock in `composition/stages/run_build_stage.py` | P18 host side done |
 | `guest/build.sh` | 35 | build shell | runs as shipped from `composition/recipes/image_recipe.py`; its steps become units when the builder carries the agent | P18 host side done |
@@ -60,9 +60,9 @@ context that drives them.
 | `guest/disk-artifact.sh` | 84 | build shell | runs as shipped from `composition/recipes/disk_artifact_recipe.py` | P18 host side done |
 | `guest/live-artifact.sh` | 35 | build shell | runs as shipped from `composition/recipes/live_artifact_recipe.py` | P18 host side done |
 | `guest/import-payload.sh` | 20 | build shell | runs as shipped, first derived step in `run_build_stage.py` | P18 host side done |
-| `guest/image-configure.sh` | 52 | image shell | `generated/os/` build step | P19 |
-| `guest/installer-configure.sh` | 72 | image shell | `generated/os/` build step | P19 |
-| `guest/assemble-live-squashfs.sh` | 22 | image shell | `generated/os/` build step | P19 |
+| `guest/image-configure.sh` | 52 | image shell | rendered by `generating/imageinputs.py` from the release profile into `generated/os/image-configure.sh`, held byte-equal (G8) while this file ships | P19i, generated |
+| `guest/installer-configure.sh` | 72 | image shell | rendered by `generating/installerinputs.py` into `generated/os/installer-configure.sh`, held byte-equal (G8) | P19i, generated |
+| `guest/assemble-live-squashfs.sh` | 22 | image shell | rendered by `generating/liveinputs.py` into `generated/os/assemble-live-squashfs.sh`, held byte-equal (G8) | P19i, generated |
 | `guest/run-installer-osbuild.sh` | 18 | build shell | `composition` stage | P18 |
 | `guest/fingerprint-tests.sh` | 25 | build shell | `fault.fingerprint-cleanup` unit step for step, host case in `verification/faults/fingerprint_cleanup_fault.py`; its downloads moved to the host, `trust/testsources.py` against `config/fingerprint-tests.lock.json`; the older script stays until `just test-fingerprint` is repointed | P19f, done |
 | `live/rootfs/usr/libexec/apex/live-disk-guard.sh` | 40 | safety artifact | stays in the live root; tested unmodified | verbatim, done |

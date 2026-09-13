@@ -2589,6 +2589,64 @@ recording's proofs are addresses, not the offered kinds, which a test had assume
 verification package passed its budget and the host bundle passed the fan-in limit, both
 raised with a reason. `golden_change`: one plan added, none changed. `supersedes`: none yet.
 
+## P19i. The generated build inputs, and the two benchmarks the table still owed
+
+Goal: gate G8, the generator that reproduces what ships, and the two rows of the
+performance table that had no benchmark. Three commits on `work/phase-19i-generated-os`, the
+whole gate green at the head.
+
+### The build inputs render from the release
+
+The Containerfile, the script that configures the image inside it, the installer's
+configure script, the live medium's Containerfile and configure script, and the squashfs
+step carried the release by hand: the version the base must report, the dist tag of the
+pinned greenboot, the vendor directory under the EFI partition, the profiles the build
+accepts. `generating/` renders all six from `ReleaseProfile`, which gained the one field
+the scripts needed that it lacked, the operating system id. What is not a decision of the
+release is a constant of the generator, named for what it is: the package set, the units
+masked and enabled, the dracut modules, the tools the installer must find. The renderings
+are frozen under `generated/os/`, and `just os` holds two equalities on every gate run: the
+frozen tree equals a fresh rendering, and each rendering equals the handwritten file it
+replaces for as long as that file ships. The build still reads the handwritten files; the
+generated tree takes over when the builder carries the agent, and G8 is what makes that
+switch safe. A test moves the release to a later one and shows every place the files
+carried it moving with it, and nowhere else.
+
+The Python steps the scripts call, such as `compose-shell-theme.py`, are not generated;
+they are called as shipped, and the agent map says so for each.
+
+### The two benchmarks
+
+`tests/property/test_readiness_benchmark.py` records ten thousand entries over five hundred
+proofs through the same recorder every run uses, into the in-memory file port, then times
+the read through the versioned reader and the fold: under two seconds and under one
+hundred mebibytes at peak, as the table requires. Building the store exposed a quadratic
+append in the fake file port, which now keeps a growing buffer for an appended file, so
+appending stays linear as it is on disk. `tests/property/test_guard_benchmark.py` parses two
+thousand index rows and runs every registered entry and content rule over each, under three
+seconds. Both carry the `benchmark` marker, are deselected from the fast suite, and run in
+the gate as `just benchmarks`.
+
+### What this slice did not do
+
+The build does not yet read from `generated/os/`; the Containerfile and the scripts under
+`guest/` and `live/` remain the inputs until the cutover, and the generator is proven on
+them meanwhile. The Python image steps and the two builder-side scripts that prepare the
+live and installer trees move when the builder carries the agent.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 299 files, 20136 lines |
+| Generated build inputs | six, all byte-equal to what ships |
+| Fast suite | 2 236 passed, 9 skipped; benchmarks 3 passed |
+
+`migration_red`: the installer rendering first split the masked units four and two where
+the file splits them three and three; the readiness benchmark first read an empty store
+because the reader elects by the mark on disk while the store was in memory; and the fake
+file port appended in quadratic time. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
