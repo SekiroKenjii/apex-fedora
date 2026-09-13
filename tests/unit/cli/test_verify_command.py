@@ -184,8 +184,10 @@ def credentials(
     """The fixture's credentials, on disk for the path check and in the fake files for reading."""
     directory = root.path / defaults.TEST_ACCESS_DIRECTORY
     directory.mkdir(mode=0o700, exist_ok=True)
+    key = directory / defaults.TEST_KEY_NAME
+    key.write_bytes(b"test key")
     path = directory / defaults.CREDENTIALS_NAME
-    payload = json.dumps({"user": user, "password": "Ab-1_", "key": "k"}).encode()
+    payload = json.dumps({"user": user, "password": "Ab-1_", "key": str(key)}).encode()
     path.write_bytes(payload)
     held.files.write_atomic(safepaths.SafePath(path), payload, mode=defaults.RECORD_MODE)
     return path
@@ -214,6 +216,7 @@ def test_the_render_recipe_logs_in_with_the_credentials_and_the_fake_bundle_is_r
     assert reply.document["not_tested"] == ["desktop.password-wayland"]
     assert guest.asked[:3] == ["desktop.session", "desktop.greeter", "desktop.session"]
     assert guest.targets[-1].user == "apex-test"
+    assert guest.targets[-1].key.path == path.with_name(defaults.TEST_KEY_NAME)
     assert "Ab-1_" not in json.dumps(reply.document)
 
 

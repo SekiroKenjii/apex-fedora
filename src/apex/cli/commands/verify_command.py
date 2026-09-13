@@ -225,10 +225,13 @@ def _guest(
             key=_present(root, defaults.BUILDER_KEY_NAME, remedy="prepare the builder first"),
             known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
         )
+    key = _present(root, defaults.GUEST_KEY_NAME, remedy="place the guest key beside the store")
+    if credentials is not None and credentials.key is not None:
+        key = safepaths.SafePath.regular_file(credentials.key, within=root)
     return guestshell.GuestTarget(
         user=_account(arguments.user, credentials),
         port=defaults.GUEST_SSH_PORT,
-        key=_present(root, defaults.GUEST_KEY_NAME, remedy="place the guest key beside the store"),
+        key=key,
         known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
     )
 
