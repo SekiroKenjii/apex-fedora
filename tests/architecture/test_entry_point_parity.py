@@ -21,7 +21,7 @@ def test_the_parity_check_covers_every_invocation_the_bridge_still_answers() -> 
         and (not invocation.arguments or legacy_bridge.handles(invocation.arguments[0]))
     ]
 
-    assert len(covered) == len(bridged) >= 40
+    assert len(covered) == len(bridged) >= 20
 
 
 @pytest.mark.golden

@@ -16,6 +16,9 @@ artifact kind build_id:
 test-disk build_id:
     {{apex}} build qcow2 --parent "{{build_id}}" --test-access
 
+select-candidate build_id key:
+    {{apex}} candidate select --build "{{build_id}}" --key "{{key}}"
+
 verify-chain:
     {{apex}} evidence verify-chain
 
@@ -64,6 +67,9 @@ plan-upgrade release:
 readiness:
     {{apex}} readiness
 
+report:
+    {{apex}} readiness
+
 readiness-table:
     {{apex}} readiness --table
 
@@ -72,6 +78,15 @@ readiness-table-strict:
 
 sources:
     {{apex}} sources
+
+trust-verify build_id key:
+    {{apex}} trust verify --build "{{build_id}}" --key "{{key}}"
+
+trust-exercise build_id key:
+    {{apex}} trust exercise --build "{{build_id}}" --key "{{key}}"
+
+trust-development-key:
+    {{apex}} trust development-key
 
 verify-live-protection user:
     {{apex}} verify live-protection --user "{{user}}"
@@ -177,9 +192,6 @@ test-resume-installed run_directory:
 
 test-compare-disks run_directory:
     python3 tools/apex.py test-compare-disks "{{run_directory}}"
-
-report:
-    python3 tools/apex.py report
 
 test:
     uv run --no-project --python {{python}} python tools/check_static.py
