@@ -70,6 +70,23 @@ def test_a_name_the_registry_does_not_hold_goes_to_the_bridge(
     assert dispatch.run([], context_of=lambda: context(ports), stdout=out, stderr=err) == 7
 
 
+def test_a_retired_name_is_refused_with_its_replacement_and_never_reaches_the_bridge(
+    ports: portset.HostPorts, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[list[str]] = []
+    monkeypatch.setattr(legacy_bridge, "dispatch", lambda arguments: asked.append(arguments) or 7)
+    out, err = streams()
+
+    code = dispatch.run(
+        ["test-vm", "disk.qcow2"], context_of=lambda: context(ports), stdout=out, stderr=err
+    )
+
+    assert code == errors.Refusal.exit_code and asked == []
+    assert "command.retired" in err.getvalue()
+    assert "apex machine start --role test" in err.getvalue()
+    assert out.getvalue() == ""
+
+
 def test_a_refusal_raised_by_a_command_keeps_its_exit_code_and_is_narrated(
     ports: portset.HostPorts, monkeypatch: pytest.MonkeyPatch
 ) -> None:

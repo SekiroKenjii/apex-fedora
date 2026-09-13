@@ -9,8 +9,19 @@ import pytest
 from migration import entry_point_parity
 
 
-def test_the_parity_check_covers_most_of_the_corpus() -> None:
-    assert len(entry_point_parity.invocation_arguments()) >= 60
+def test_the_parity_check_covers_every_invocation_the_bridge_still_answers() -> None:
+    from apex.cli import legacy_bridge
+    from migration import golden_corpus
+
+    covered = entry_point_parity.invocation_arguments()
+    bridged = [
+        invocation
+        for invocation in golden_corpus.invocations()
+        if "<subject>" not in invocation.arguments
+        and (not invocation.arguments or legacy_bridge.handles(invocation.arguments[0]))
+    ]
+
+    assert len(covered) == len(bridged) >= 40
 
 
 @pytest.mark.golden
