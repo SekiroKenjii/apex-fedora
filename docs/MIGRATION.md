@@ -2781,6 +2781,65 @@ rule refuses; an unmet precondition carries no remedy and the machine command ha
 one; the settings loader passed the complexity limit and the path picker moved out of it.
 `golden_change`: none. `supersedes`: none yet.
 
+## P20c. The test machine started, and a recipe run from the lease
+
+Goal: the disposable machine every verification needs, started from the CLI over fresh
+overlays, and the two recipes the tree already has run against it with everything taken
+from the runtime root. Three commits on `work/phase-20c-test-machine`, the whole gate
+green at the head.
+
+### A test machine over overlays
+
+`apex machine start --role test --disk <qcow2> [--iso <image> --medium live|installer]
+[--extra-disk ...] [--guest-ssh] [--serial-console]` lays a run out under `vm-runs/<run>`:
+every disk the machine touches is a fresh overlay over a source inside the runtime root, so
+a run never writes to what it was given; the firmware variables are copied twice, the copy
+the machine writes and the one the comparison reads back against; the image it boots from
+is attached as a cdrom and booted first. `provisioning/testspec.py` is that reading of a
+request, and it refuses a request that contradicts itself, an image without a medium or a
+medium without an image, before anything is written.
+
+The witness on the lease now follows the medium: under a real hypervisor a test machine
+booted from the live image is witnessed as `live-vm`, from the installer image as
+`installer-vm`, and from its disk as `vm`; under a simulated one as a simulation. The
+kernel's rule for meeting a requirement grew one clause with a test: a machine booted from
+either medium is still a virtual machine and meets a requirement for one, and the reverse
+never holds, because the catalogue asks for `vm` where the older records were made, and a
+machine booted from the live image is not less than that.
+
+### A recipe run from the lease
+
+`apex verify live-protection | desktop-theme --user <account>` takes everything from the
+runtime root: the lease says which machine runs, where its monitor is and what witness its
+launcher vouched for; the guest key and the agent wheel are the files beside the store; the
+candidate is the frozen one; the recorder opens the store for this run. A builder is
+refused, since a recipe mutates its guest; no machine, no wheel and no candidate are each
+named. The reply is the run's outcome: what was attested, what stayed not tested, and the
+refusal when there was one, with the exit code of a refusal or a failure. A machine that a
+simulated hypervisor launched is refused at the minting stage's preflight before the guest
+is touched, which is the witness doing its work.
+
+### What this slice did not do
+
+The keyboard login through the monitor and the record for `desktop.password-wayland`; the
+builder's storage prepared from the CLI; the fingerprint and builder fault recipes with the
+builder's work directory; the emulated USB devices of the older test machine.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Package | 314 files, 21390 lines |
+| Commands owned | five: `evidence`, `machine`, `plan`, `readiness`, `verify` |
+| Fast suite | 2 306 passed, 8 skipped |
+
+`migration_red`: the fake file port had never seen the firmware variables a test machine
+copies, and the stub that answers `qemu-img create` had to make the run directory it
+writes into, which the real file port does on its own; the first verify test expected the
+chain to refuse a simulated bundle where the minting stage's preflight had already refused
+a simulated witness; the CLI package passed its budget, raised to 1400 with the five
+commands in view. `golden_change`: none. `supersedes`: none yet.
+
 ## Commands
 
 ```sh
