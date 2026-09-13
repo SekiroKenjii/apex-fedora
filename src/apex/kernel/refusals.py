@@ -91,6 +91,8 @@ class RefusalReason(enum.StrEnum):
     MACHINE_ROLE_MISMATCH = "machine.role-mismatch"
     COMMAND_RETIRED = "command.retired"
     TEST_ACCESS_NOT_QCOW2 = "build.test-access-not-qcow2"
+    DEVELOPMENT_KEY_CHANGED = "trust.development-key-changed"
+    PUBLIC_KEY_MALFORMED = "trust.public-key-malformed"
     MACHINE_IDENTITY_CHANGED = "machine.identity-changed"
     MACHINE_IDENTITY_UNCHECKABLE = "machine.identity-uncheckable"
     MACHINE_RUNNING = "machine.running"
