@@ -56,19 +56,32 @@ def bundle(ports: portset.HostPorts, guest: AnsweringGuest) -> portset.HostPorts
     )
 
 
-def spec(root: safepaths.RuntimeRoot, role: machines.VmRole) -> machines.VmSpec:
+def spec(
+    root: safepaths.RuntimeRoot, role: machines.VmRole, *, serial_console: bool = False
+) -> machines.VmSpec:
     present = lambda name: safepaths.SafePath.regular_file(root.path / name, within=root)  # noqa: E731
+    serial: machines.Serial = machines.SerialFile(root.child("serial.log"))
+    if serial_console:
+        serial = machines.SerialSocket(
+            root.child(defaults.SERIAL_SOCKET_NAME), log=root.child("serial.log")
+        )
     return machines.VmSpec.build(
         role=role,
         resources=machines.VmResources(memory=defaults.TEST_MACHINE.memory, processors=2),
         root_disk=present("disk.qcow2"),
         firmware=machines.Firmware(code=present("code.fd"), variables=present("vars.fd")),
         monitor=machines.MonitorSocket(root.child("qmp.sock")),
-        serial=machines.SerialFile(root.child("serial.log")),
+        serial=serial,
     )
 
 
-def running(ports: portset.HostPorts, root: safepaths.RuntimeRoot, role: machines.VmRole) -> None:
+def running(
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    role: machines.VmRole,
+    *,
+    serial_console: bool = False,
+) -> None:
     """Launch under a hypervisor that declares itself real, so the lease carries a witness."""
     declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
         "environment": claims.EnvironmentKind.BUILD
@@ -76,7 +89,7 @@ def running(ports: portset.HostPorts, root: safepaths.RuntimeRoot, role: machine
     launcher = dataclasses.replace(ports, hypervisor=declared_real())
     run = launcher.identities.run_id()
     launching.launch(
-        launcher, root=root, spec=spec(root, role), run=run,
+        launcher, root=root, spec=spec(root, role, serial_console=serial_console), run=run,
         run_directory=root.child(f"vm-runs/{run}"), medium=machines.Medium.LIVE,
     )
     hypervisor = ports.hypervisor
@@ -87,7 +100,10 @@ def running(ports: portset.HostPorts, root: safepaths.RuntimeRoot, role: machine
 
 
 def request(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, *arguments: str
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    *arguments: str,
+    serial: contexts.SerialShell = contexts.unwired_serial,
 ) -> commandspecs.Request:
     return commandspecs.Request(
         arguments=arguments,
@@ -97,6 +113,7 @@ def request(
             root=root,
             environment={},
             bundle=lambda _root: ports,
+            serial=serial,
         ),
     )
 
@@ -338,3 +355,122 @@ def test_the_installer_trust_recipe_keeps_its_report_and_mints_nothing(
     assert reply.document["attested"] == [] and reply.document["not_tested"] == []
     assert "retained.fault.installer-trust" in reply.document["facts"]  # type: ignore[operator]
     assert guest.asked == ["fault.installer-trust"]
+
+
+class Consoles:
+    """A serial factory that hands out one answering guest and remembers what it was asked."""
+
+    def __init__(self, guest: AnsweringGuest) -> None:
+        self.guest = guest
+        self.opened: list[tuple[safepaths.SafePath, int]] = []
+
+    def __call__(self, socket_path: safepaths.SafePath, process: int) -> AnsweringGuest:
+        self.opened.append((socket_path, process))
+        return self.guest
+
+
+def test_a_live_check_over_serial_reaches_the_rescue_shell_as_root_and_keeps_the_answer(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    over_ssh = AnsweringGuest({})
+    held = bundle(ports, over_ssh)
+    running(held, root, machines.VmRole.TEST, serial_console=True)
+    consoles = Consoles(AnsweringGuest({"live.observe": {"cmdline": "rd.live.image"}}))
+
+    reply = verify_command.run(request(held, root, "observe", "--serial", serial=consoles))
+
+    assert isinstance(reply.document, dict)
+    assert reply.document["succeeded"] is True and reply.exit_code == 0
+    assert "retained.live.observe" in reply.document["facts"]  # type: ignore[operator]
+    lease = launching.current(held, root=root)
+    assert lease is not None
+    assert consoles.opened == [(root.child(defaults.SERIAL_SOCKET_NAME), lease.identity.process)]
+    assert consoles.guest.asked == ["live.observe"]
+    assert consoles.guest.targets[-1].user == "root"
+    assert over_ssh.asked == [] and over_ssh.runs == []
+
+
+def test_the_older_case_names_spell_the_recipes_that_took_them_over(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST, serial_console=True)
+    consoles = Consoles(AnsweringGuest({
+        "fault.live-lock": {"status": "PASS"},
+        "fault.live-write-denial": {"status": "PASS"},
+        "fault.usb-write-denial": {"status": "PASS"},
+    }))
+
+    lock = verify_command.run(request(held, root, "lock-fault", "--serial", serial=consoles))
+    denial = verify_command.run(
+        request(held, root, "write-denial", "--serial", "--user", "liveuser", serial=consoles)
+    )
+
+    assert isinstance(lock.document, dict) and lock.document["succeeded"] is True
+    assert isinstance(denial.document, dict)
+    assert denial.narrative.startswith("live-protection:")
+    assert denial.document["not_tested"] == ["live.disk-protection"]
+    assert consoles.guest.asked == [
+        "fault.live-lock", "fault.live-write-denial", "fault.usb-write-denial"
+    ]
+    assert [target.user for target in consoles.guest.targets][-1] == "liveuser"
+
+
+def test_serial_needs_a_machine_started_with_its_console(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST)
+    consoles = Consoles(AnsweringGuest({"live.observe": {}}))
+
+    with pytest.raises(errors.Refusal) as caught:
+        verify_command.run(request(held, root, "live-observe", "--serial", serial=consoles))
+
+    assert caught.value.reason is refusals.RefusalReason.SERIAL_CONSOLE_ABSENT
+    assert consoles.opened == []
+
+
+def test_a_context_without_a_serial_shell_wired_cannot_verify_over_serial(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST, serial_console=True)
+
+    with pytest.raises(errors.PreconditionUnmet) as caught:
+        verify_command.run(request(held, root, "live-observe", "--serial"))
+
+    assert caught.value.reason is refusals.RefusalReason.TOPOLOGY_INCONSISTENT
+
+
+def test_serial_takes_no_credentials_and_no_builder_recipe(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    held = bundle(ports, AnsweringGuest({}))
+    running(held, root, machines.VmRole.TEST, serial_console=True)
+    consoles = Consoles(AnsweringGuest({}))
+
+    with pytest.raises(errors.Refusal) as with_credentials:
+        verify_command.run(request(
+            held, root, "live-observe", "--serial", "--credentials", "creds.json",
+            serial=consoles,
+        ))
+    with pytest.raises(errors.Refusal) as builder:
+        verify_command.run(request(held, root, "installer-trust", "--serial", serial=consoles))
+
+    assert with_credentials.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
+    assert "--credentials" in str(with_credentials.value)
+    assert builder.value.reason is refusals.RefusalReason.MACHINE_ROLE_MISMATCH
+    assert consoles.opened == []
+
+
+def test_the_live_observe_recipe_goes_over_ssh_without_serial(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
+) -> None:
+    guest = AnsweringGuest({"ventoy.observe": {"ventoy": True}})
+    held = bundle(ports, guest)
+    running(held, root, machines.VmRole.TEST)
+
+    reply = verify_command.run(request(held, root, "ventoy-observe", "--user", "liveuser"))
+
+    assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
+    assert guest.asked == ["ventoy.observe"] and guest.targets[-1].user == "liveuser"

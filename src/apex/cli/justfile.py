@@ -56,7 +56,6 @@ OLDER_TOOLS: tuple[Plain, ...] = (
      (f'{LEGACY} ventoy-media --live-output "{{{{live_output}}}}" --ubuntu "{{{{ubuntu}}}}" '
       '--trusted-key "{{trusted_key}}" --checksums "{{checksums}}" '
       '--signature "{{signature}}" --keyring "{{keyring}}"',)),
-    ("test-live-check", "case", (f'{LEGACY} test-live-check "{{{{case}}}}"',)),
     ("test-installer-fault", "case", (f'{LEGACY} test-installer-fault "{{{{case}}}}"',)),
     ("test-installer-wrong-key", "public_key",
      (f'{LEGACY} test-installer-fault wrong-key --wrong-key "{{{{public_key}}}}"',)),

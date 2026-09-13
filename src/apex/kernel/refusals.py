@@ -88,6 +88,7 @@ class RefusalReason(enum.StrEnum):
     TOPOLOGY_INCONSISTENT = "machine.topology-inconsistent"
     SOCKET_PATH_TOO_LONG = "machine.socket-path-too-long"
     MACHINE_NOT_RUNNING = "machine.not-running"
+    SERIAL_CONSOLE_ABSENT = "machine.serial-console-absent"
     MACHINE_ROLE_MISMATCH = "machine.role-mismatch"
     COMMAND_RETIRED = "command.retired"
     TEST_ACCESS_NOT_QCOW2 = "build.test-access-not-qcow2"

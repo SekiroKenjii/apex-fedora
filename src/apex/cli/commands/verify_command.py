@@ -7,6 +7,9 @@ opens the store for this run. Each recipe names the role it runs against: a disp
 test machine for the desktop and live recipes, whose guest account comes from `--user` or
 from the credentials file a keyboard login needs; the isolated builder for the fingerprint
 recipe, whose account is the builder's own and whose target is the build named by `--build`.
+A live medium has no ssh, so `--serial` reaches its rescue shell over the serial socket the
+machine was started with, as root unless `--user` says otherwise; the older live check's
+case names are accepted as spellings of the recipes that took them over.
 """
 
 from __future__ import annotations
@@ -16,22 +19,20 @@ import dataclasses
 from collections.abc import Callable
 from pathlib import Path
 
-from apex.cli import builderaccess, commands, commandspecs
-from apex.config import defaults
-from apex.kernel import encoding, errors, identifiers, refusals, safepaths
-from apex.model import machines, runtimestate
+from apex.cli import commands, commandspecs, verifyinputs
+from apex.kernel import encoding, errors, refusals
+from apex.model import machines
 from apex.pipeline import runner
-from apex.ports import guestshell, portset
-from apex.provisioning import launching, leases
-from apex.verification import recording, testaccess
 from apex.verification.recipes import (
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
     installer_trust_recipe,
+    live_lock_recipe,
+    live_observe_recipe,
     live_protection_recipe,
+    ventoy_observe_recipe,
 )
-from apex.wiring import contexts
 
 NAME = "verify"
 SUMMARY = "run a verification recipe against the running machine and record its result"
@@ -40,13 +41,27 @@ DESKTOP_THEME = "desktop-theme"
 DESKTOP_RENDER = "desktop-render"
 FINGERPRINT_CLEANUP = "fingerprint-cleanup"
 INSTALLER_TRUST = "installer-trust"
-RECIPES = (LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST)
-
-
+LIVE_OBSERVE = "live-observe"
+VENTOY_OBSERVE = "ventoy-observe"
+LIVE_LOCK = "live-lock"
+RECIPES = (
+    LIVE_PROTECTION, DESKTOP_THEME, DESKTOP_RENDER, FINGERPRINT_CLEANUP, INSTALLER_TRUST,
+    LIVE_OBSERVE, VENTOY_OBSERVE, LIVE_LOCK,
+)
+CASES: dict[str, str] = {
+    "observe": LIVE_OBSERVE,
+    "write-denial": LIVE_PROTECTION,
+    "usb-write-denial": LIVE_PROTECTION,
+    "lock-fault": LIVE_LOCK,
+}
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog=f"apex {NAME}", description=SUMMARY)
-    parser.add_argument("recipe", choices=RECIPES)
+    parser.add_argument("recipe", choices=(*RECIPES, *CASES))
     parser.add_argument("--user", help="the guest account the shell opens as")
+    parser.add_argument(
+        "--serial", action="store_true",
+        help="reach the guest's rescue shell over the machine's serial socket, not ssh",
+    )
     parser.add_argument(
         "--credentials", type=Path,
         help="the disposable account's credentials file, inside the runtime root",
@@ -56,104 +71,28 @@ def _parser() -> argparse.ArgumentParser:
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class Inputs:
-    ports: portset.HostPorts
-    guest: guestshell.GuestTarget
-    wheel: safepaths.SafePath
-    candidate: identifiers.Digest | None
-    lease: leases.MachineLease
-    recorder: recording.Recorder
-    root: safepaths.RuntimeRoot
-    repository: safepaths.SourceRoot
-    credentials: testaccess.Credentials | None
-    parent: identifiers.BuildId | None
-
-
-@dataclasses.dataclass(frozen=True, slots=True)
 class Recipe:
     role: machines.VmRole
-    run: Callable[[Inputs], runner.Outcome]
+    run: Callable[[verifyinputs.Inputs], runner.Outcome]
 
 
-def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
-    if context.root is None:
-        raise errors.PreconditionUnmet(
-            refusals.RefusalReason.PATH_NOT_A_DIRECTORY,
-            subject=f"{context.settings.runtime_root}: no runtime root to verify from",
-        )
-    return context.root
-
-
-def _running_machine(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, role: machines.VmRole
-) -> leases.MachineLease:
-    lease = launching.current(ports, root=root)
-    if lease is None:
-        raise errors.Refusal(
-            refusals.RefusalReason.MACHINE_NOT_RUNNING,
-            subject="no machine is running",
-            remedy=f"start the {role} machine first",
-        )
-    if lease.intent.role is role:
-        return lease
-    if role is machines.VmRole.TEST:
-        raise errors.Refusal(
-            refusals.RefusalReason.NOT_A_DISPOSABLE_MACHINE,
-            subject=f"a {lease.intent.role} machine is running",
-            remedy="this recipe mutates its guest and runs only against a test machine",
-        )
-    raise errors.Refusal(
-        refusals.RefusalReason.MACHINE_ROLE_MISMATCH,
-        subject=f"a {lease.intent.role} machine is running",
-        remedy=f"this recipe runs in the isolated {role}",
-    )
-
-
-def _present(root: safepaths.RuntimeRoot, name: str, *, remedy: str) -> safepaths.SafePath:
-    candidate = root.child(name)
-    if not candidate.path.is_file():
-        raise errors.PreconditionUnmet(
-            refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=f"{candidate}: {remedy}"
-        )
-    return safepaths.SafePath.regular_file(candidate.path, within=root)
-
-
-def _candidate(root: safepaths.RuntimeRoot) -> identifiers.Digest:
-    document = root.child(runtimestate.CANDIDATE_NAME)
-    if not document.path.is_file():
-        raise errors.PreconditionUnmet(
-            refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE,
-            subject=f"{document}: select a candidate before verifying",
-        )
-    return runtimestate.read_candidate(document.path).digest
-
-
-def _required_candidate(inputs: Inputs) -> identifiers.Digest:
-    if inputs.candidate is None:
-        raise errors.PreconditionUnmet(
-            refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE,
-            subject="no candidate was selected for a test machine recipe",
-        )
-    return inputs.candidate
-
-
-def _live_protection(inputs: Inputs) -> runner.Outcome:
+def _live_protection(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return live_protection_recipe.verify(
         inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
-        candidate=_required_candidate(inputs), witness=inputs.lease.intent.witness,
+        candidate=verifyinputs.required_candidate(inputs), witness=inputs.lease.intent.witness,
         recorder=inputs.recorder,
     )
 
 
-def _desktop_theme(inputs: Inputs) -> runner.Outcome:
+def _desktop_theme(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return desktop_theme_recipe.verify(
         inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
-        candidate=_required_candidate(inputs), witness=inputs.lease.intent.witness,
+        candidate=verifyinputs.required_candidate(inputs), witness=inputs.lease.intent.witness,
         recorder=inputs.recorder, monitor=inputs.lease.intent.monitor, root=inputs.root,
     )
 
 
-def _desktop_render(inputs: Inputs) -> runner.Outcome:
+def _desktop_render(inputs: verifyinputs.Inputs) -> runner.Outcome:
     if inputs.credentials is None:
         raise errors.Refusal(
             refusals.RefusalReason.REQUEST_MALFORMED,
@@ -162,13 +101,13 @@ def _desktop_render(inputs: Inputs) -> runner.Outcome:
         )
     return desktop_render_recipe.verify(
         inputs.ports, guest=inputs.guest, wheel=inputs.wheel,
-        candidate=_required_candidate(inputs), witness=inputs.lease.intent.witness,
+        candidate=verifyinputs.required_candidate(inputs), witness=inputs.lease.intent.witness,
         recorder=inputs.recorder, monitor=inputs.lease.intent.monitor,
         credentials=inputs.credentials, root=inputs.root,
     )
 
 
-def _fingerprint_cleanup(inputs: Inputs) -> runner.Outcome:
+def _fingerprint_cleanup(inputs: verifyinputs.Inputs) -> runner.Outcome:
     if inputs.parent is None:
         raise errors.Refusal(
             refusals.RefusalReason.REQUEST_MALFORMED,
@@ -182,9 +121,27 @@ def _fingerprint_cleanup(inputs: Inputs) -> runner.Outcome:
     )
 
 
-def _installer_trust(inputs: Inputs) -> runner.Outcome:
+def _installer_trust(inputs: verifyinputs.Inputs) -> runner.Outcome:
     return installer_trust_recipe.verify(
         inputs.ports, builder=inputs.guest, wheel=inputs.wheel, root=inputs.root
+    )
+
+
+def _live_observe(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return live_observe_recipe.verify(
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, root=inputs.root
+    )
+
+
+def _ventoy_observe(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return ventoy_observe_recipe.verify(
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, root=inputs.root
+    )
+
+
+def _live_lock(inputs: verifyinputs.Inputs) -> runner.Outcome:
+    return live_lock_recipe.verify(
+        inputs.ports, guest=inputs.guest, wheel=inputs.wheel, root=inputs.root
     )
 
 
@@ -194,64 +151,10 @@ RUNNERS: dict[str, Recipe] = {
     DESKTOP_RENDER: Recipe(machines.VmRole.TEST, _desktop_render),
     FINGERPRINT_CLEANUP: Recipe(machines.VmRole.BUILDER, _fingerprint_cleanup),
     INSTALLER_TRUST: Recipe(machines.VmRole.BUILDER, _installer_trust),
+    LIVE_OBSERVE: Recipe(machines.VmRole.TEST, _live_observe),
+    VENTOY_OBSERVE: Recipe(machines.VmRole.TEST, _ventoy_observe),
+    LIVE_LOCK: Recipe(machines.VmRole.TEST, _live_lock),
 }
-
-
-def _credentials(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, path: Path | None
-) -> testaccess.Credentials | None:
-    if path is None:
-        return None
-    return testaccess.read(ports.files, safepaths.SafePath.regular_file(path, within=root))
-
-
-def _guest(
-    ports: portset.HostPorts,
-    root: safepaths.RuntimeRoot,
-    role: machines.VmRole,
-    arguments: argparse.Namespace,
-    credentials: testaccess.Credentials | None,
-) -> guestshell.GuestTarget:
-    """The account and key a recipe reaches its guest with, fixed for the builder."""
-    if role is machines.VmRole.BUILDER:
-        if arguments.user is not None or credentials is not None:
-            raise errors.Refusal(
-                refusals.RefusalReason.REQUEST_MALFORMED,
-                subject="a builder recipe takes neither --user nor --credentials",
-                remedy="the builder's account and key are the runtime root's own",
-            )
-        return builderaccess.leased_builder(ports, root)
-    key = _present(root, defaults.GUEST_KEY_NAME, remedy="place the guest key beside the store")
-    if credentials is not None and credentials.key is not None:
-        key = safepaths.SafePath.regular_file(credentials.key, within=root)
-    return guestshell.GuestTarget(
-        user=_account(arguments.user, credentials),
-        port=defaults.GUEST_SSH_PORT,
-        key=key,
-        known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
-    )
-
-
-def _parent(value: str | None) -> identifiers.BuildId | None:
-    return None if value is None else identifiers.BuildId.parse(value)
-
-
-def _account(user: str | None, credentials: testaccess.Credentials | None) -> str:
-    """The guest account: the one named, the one the credentials name, and never two."""
-    if credentials is not None and user not in (None, credentials.user):
-        raise errors.Refusal(
-            refusals.RefusalReason.REQUEST_MALFORMED,
-            subject=f"--user {user} but the credentials name {credentials.user}",
-            remedy="name one account",
-        )
-    named = user if credentials is None else credentials.user
-    if named is None:
-        raise errors.Refusal(
-            refusals.RefusalReason.REQUEST_MALFORMED,
-            subject="no guest account",
-            remedy="name it with --user or --credentials",
-        )
-    return named
 
 
 def _document(outcome: runner.Outcome) -> encoding.Document:
@@ -267,35 +170,19 @@ def _document(outcome: runner.Outcome) -> encoding.Document:
 
 def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
-    root = _root(request.context)
-    ports = request.context.bundle(root)
-    recipe = RUNNERS[arguments.recipe]
-    lease = _running_machine(ports, root, recipe.role)
-    credentials = _credentials(ports, root, arguments.credentials)
-    inputs = Inputs(
-        ports=ports,
-        guest=_guest(ports, root, recipe.role, arguments, credentials),
-        wheel=_present(
-            root, defaults.AGENT_WHEEL_NAME, remedy="build the agent wheel into the root"
-        ),
-        candidate=_candidate(root) if recipe.role is machines.VmRole.TEST else None,
-        lease=lease,
-        recorder=recording.Recorder.open(
-            root, filesystem=ports.files, identities=ports.identities, clock=ports.clock
-        ),
-        root=root,
-        repository=request.context.repository,
-        credentials=credentials,
-        parent=_parent(arguments.build),
+    name = str(CASES.get(arguments.recipe, arguments.recipe))
+    recipe = RUNNERS[name]
+    asked = verifyinputs.Asked(
+        user=arguments.user, credentials=arguments.credentials, build=arguments.build,
+        serial=arguments.serial,
     )
+    inputs = verifyinputs.gather(request.context, role=recipe.role, asked=asked)
     outcome = recipe.run(inputs)
     if outcome.succeeded:
         return commandspecs.Reply(document=_document(outcome))
     exit_code = errors.Refusal.exit_code if outcome.refusal is not None else 1
     return commandspecs.Reply(
-        document=_document(outcome),
-        narrative=f"{arguments.recipe}: {outcome.detail}\n",
-        exit_code=exit_code,
+        document=_document(outcome), narrative=f"{name}: {outcome.detail}\n", exit_code=exit_code
     )
 
 
@@ -314,6 +201,7 @@ JUST_RECIPES = (
         "test-fingerprint", ("build_id",), (NAME, FINGERPRINT_CLEANUP, "--build", "{{build_id}}")
     ),
     commandspecs.Recipe("test-installer-trust", (), (NAME, INSTALLER_TRUST)),
+    commandspecs.Recipe("test-live-check", ("case",), (NAME, "{{case}}", "--serial")),
 )
 
 commands.declare(
