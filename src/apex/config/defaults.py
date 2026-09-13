@@ -103,6 +103,46 @@ BARS_APPEAR = timing.WaitPolicy(
     description="the render probe's bars are visible",
 )
 ESCAPE_KEY = "esc"
+RETURN_KEY = "ret"
+OVERVIEW_KEY = "meta_l"
+KEY_INTERVAL = timing.Elapsed(0.1)
+GREETER_SETTLE = timing.Elapsed(3)
+PROMPT_SETTLE = timing.Elapsed(1)
+WELCOME_SETTLE = timing.Elapsed(1)
+SEAT = "seat0"
+GREETER_CLASS = "greeter"
+WAYLAND_SESSION = "wayland"
+SHELL_STARTED_MESSAGE = "f3ea493c22934e26811cd62abe8e203a"
+TEST_ACCESS_DIRECTORY = "test-access"
+CREDENTIALS_NAME = "credentials.json"
+GREETER_APPEARS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(60)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(1), ceiling=timing.Elapsed(1), factor=1
+    ),
+    description="GDM presents a greeter session on the seat",
+)
+SESSION_APPEARS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(90)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(1), ceiling=timing.Elapsed(1), factor=1
+    ),
+    description="the account's Wayland session appears on the seat",
+)
+SHELL_STARTS = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(90)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(1), ceiling=timing.Elapsed(1), factor=1
+    ),
+    description="GNOME Shell reports its startup complete",
+)
+OVERVIEW_SETTLES = timing.WaitPolicy(
+    deadline=timing.Deadline(timing.Elapsed(15)),
+    backoff=timing.Backoff.exponential(
+        first=timing.Elapsed(0.5), ceiling=timing.Elapsed(0.5), factor=1
+    ),
+    description="the Shell's Overview reaches the expected state",
+)
 SHELL_SHORTCUT = ("meta_l", "s")
 SCREENS_DIRECTORY = "screens"
 GTK_THEME_NAME = "Adwaita-dark"

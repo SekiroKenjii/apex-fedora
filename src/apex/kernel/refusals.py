@@ -96,6 +96,9 @@ class RefusalReason(enum.StrEnum):
     LEASE_MISMATCH = "machine.lease-mismatch"
 
     SCREEN_SIZE_CHANGED = "screen.size-changed"
+    CONSOLE_TEXT_UNSUPPORTED = "console.text-unsupported"
+    SESSION_ALREADY_OPEN = "desktop.session-already-open"
+    CREDENTIALS_MALFORMED = "access.credentials-malformed"
 
     DISK_NOT_QCOW2 = "disk.not-qcow2"
     DISK_CHAIN_CYCLE = "disk.chain-cycle"
