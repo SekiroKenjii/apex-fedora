@@ -15,7 +15,12 @@ import dataclasses
 
 from apex.cli import builderaccess, commands, commandspecs, verifyinputs
 from apex.composition import exports, keys
-from apex.composition.recipes import disk_artifact_recipe, image_recipe, live_artifact_recipe
+from apex.composition.recipes import (
+    disk_artifact_recipe,
+    image_recipe,
+    live_artifact_recipe,
+    nvidia_recipe,
+)
 from apex.kernel import encoding, errors, identifiers, refusals, safepaths
 from apex.model import builds
 from apex.pipeline import runner
@@ -121,6 +126,10 @@ def _run(
         return live_artifact_recipe.derive(
             ports, repository=repository, runtime_root=root, builder=builder, parent=parent
         )
+    if request.kind is builds.ArtifactKind.NVIDIA:
+        return nvidia_recipe.build(
+            ports, repository=repository, runtime_root=root, builder=builder, parent=parent
+        )
     return disk_artifact_recipe.derive(
         ports, repository=repository, runtime_root=root, builder=builder,
         kind=request.kind, parent=parent, test_access=request.test_access,
@@ -132,6 +141,7 @@ def _document(outcome: runner.Outcome, root: safepaths.RuntimeRoot) -> encoding.
     record = outcome.facts.get(keys.BUILD_RECORD)
     access = outcome.facts.get(keys.ACCESS)
     fixtures = outcome.facts.get(verifykeys.FIXTURES)
+    verification = outcome.facts.get(keys.NVIDIA_REPORT)
     return {
         "succeeded": outcome.succeeded,
         "run": None if run is None else str(run),
@@ -139,6 +149,7 @@ def _document(outcome: runner.Outcome, root: safepaths.RuntimeRoot) -> encoding.
         "record": None if record is None else record.document(),
         "access": None if access is None else access.document(),
         "fixtures": None if fixtures is None else str(fixtures),
+        "nvidia": verification,
         "refusal": None if outcome.refusal is None else str(outcome.refusal),
         "detail": outcome.detail,
     }
@@ -172,6 +183,10 @@ RECIPES = (
         (NAME, str(builds.ArtifactKind.QCOW2), "--parent", "{{build_id}}", f"--{TEST_ACCESS}"),
     ),
     commandspecs.Recipe("installer-fixtures", (), (NAME, FIXTURES)),
+    commandspecs.Recipe(
+        "build-nvidia", ("build_id",),
+        (NAME, str(builds.ArtifactKind.NVIDIA), "--parent", "{{build_id}}"),
+    ),
 )
 
 commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES))

@@ -72,7 +72,7 @@ def test_the_bridge_never_grows() -> None:
 
 
 def test_the_bridge_answers_only_for_names_it_holds() -> None:
-    assert legacy_bridge.handles("build-nvidia")
+    assert legacy_bridge.handles("ventoy-media")
     assert not legacy_bridge.handles("no-such-command")
 
 

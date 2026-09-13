@@ -19,6 +19,9 @@ test-disk build_id:
 installer-fixtures:
     {{apex}} build fixtures
 
+build-nvidia build_id:
+    {{apex}} build nvidia --parent "{{build_id}}"
+
 select-candidate build_id key:
     {{apex}} candidate select --build "{{build_id}}" --key "{{key}}"
 
@@ -150,9 +153,6 @@ builder-compact:
 
 builder-finalize compaction_id:
     python3 tools/compact-builder.py --replace-verified --resume "{{compaction_id}}"
-
-build-nvidia build_id:
-    python3 tools/apex.py build-nvidia --build "{{build_id}}"
 
 build-fingerprint-rpms:
     python3 tools/build-fingerprint-rpms.py
