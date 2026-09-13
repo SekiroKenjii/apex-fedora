@@ -33,6 +33,7 @@ def test_every_probe_module_declares_one_case_and_the_registry_holds_them_all() 
         "desktop.theme-adwaita",
         "desktop.theme-gtk3",
         "desktop.theme-settings",
+        "fixture.installer-disks",
         "guest.diagnostics",
         "installer.diagnostics",
         "live.observe",

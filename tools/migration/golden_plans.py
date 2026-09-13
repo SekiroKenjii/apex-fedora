@@ -27,6 +27,9 @@ from apex.verification.recipes import (  # noqa: E402
     desktop_render_recipe,
     desktop_theme_recipe,
     fingerprint_cleanup_recipe,
+    installer_diagnostics_recipe,
+    installer_fixtures_recipe,
+    installer_payload_recipe,
     installer_trust_recipe,
     live_lock_recipe,
     live_observe_recipe,
@@ -48,6 +51,9 @@ RECIPES = {
     live_observe_recipe.NAME: live_observe_recipe.PLAN,
     ventoy_observe_recipe.NAME: ventoy_observe_recipe.PLAN,
     live_lock_recipe.NAME: live_lock_recipe.PLAN,
+    installer_payload_recipe.NAME: installer_payload_recipe.PLAN,
+    installer_diagnostics_recipe.NAME: installer_diagnostics_recipe.PLAN,
+    installer_fixtures_recipe.NAME: installer_fixtures_recipe.PLAN,
 }
 
 

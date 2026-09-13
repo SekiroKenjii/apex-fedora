@@ -12,7 +12,7 @@ from apex.model import oci
 from apex.pipeline import facts
 from apex.ports import guestshell
 from apex.trust import testsources
-from apex.verification import faulting, judging, probing, recording, testaccess
+from apex.verification import faulting, installerfault, judging, probing, recording, testaccess
 
 GUEST = facts.FactKey[guestshell.GuestTarget]("verification.guest")
 WHEEL = facts.FactKey[safepaths.SafePath]("agent.wheel")
@@ -28,6 +28,14 @@ TARGET = facts.FactKey[oci.FrozenImage]("verification.target")
 TEST_SOURCES = facts.FactKey[testsources.Acquired]("fingerprint.sources")
 WORK = facts.FactKey[safepaths.RemotePath]("guest.work")
 IMPORTED = facts.FactKey[encoding.Document]("payload.imported")
+MACHINE_RUN = facts.FactKey[safepaths.SafePath]("machine.run-directory")
+MACHINE_PROCESS = facts.FactKey[int]("machine.process")
+FAULT_CASE = facts.FactKey[str]("installer.case")
+WRONG_KEY = facts.FactKey[str]("installer.wrong-key")
+INSTALLER_REQUEST = facts.FactKey[installerfault.Request]("installer.request")
+KEPT = facts.FactKey[safepaths.SafePath]("installer.kept")
+LOGS_COMPLETE = facts.FactKey[bool]("installer.logs-complete")
+FIXTURES = facts.FactKey[safepaths.SafePath]("fixture.output")
 
 
 def fault_report(case: faulting.FaultCase) -> facts.FactKey[faulting.FaultReport]:

@@ -1,0 +1,71 @@
+{
+ "digest": "b9733a07d1713b704d21de301c039823d8c52758fb2363a7af4bde21b6670c15",
+ "name": "verify-installer-diagnostics",
+ "stages": [
+  {
+   "attests": [],
+   "effects": [],
+   "id": "run.identify",
+   "reads": [],
+   "writes": [
+    "run.id"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "agent.deliver",
+   "reads": [
+    "agent.wheel",
+    "run.id",
+    "verification.guest"
+   ],
+   "writes": [
+    "agent.install"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "remote-exec"
+   ],
+   "id": "installer.diagnostics",
+   "reads": [
+    "agent.install",
+    "verification.guest"
+   ],
+   "writes": [
+    "observed.installer.diagnostics"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [
+    "writes-runtime"
+   ],
+   "id": "retain.installer.diagnostics",
+   "reads": [
+    "observed.installer.diagnostics",
+    "run.id",
+    "runtime.root"
+   ],
+   "writes": [
+    "retained.installer.diagnostics"
+   ]
+  },
+  {
+   "attests": [],
+   "effects": [],
+   "id": "installer.logs",
+   "reads": [
+    "observed.installer.diagnostics",
+    "retained.installer.diagnostics"
+   ],
+   "writes": [
+    "installer.logs-complete"
+   ]
+  }
+ ]
+}
