@@ -112,6 +112,9 @@ trust-exercise build_id key:
 trust-development-key:
     {{apex}} trust development-key
 
+ventoy-media live_output ubuntu trusted_key checksums signature keyring:
+    {{apex}} ventoy-media --live-output "{{live_output}}" --ubuntu "{{ubuntu}}" --trusted-key "{{trusted_key}}" --checksums "{{checksums}}" --signature "{{signature}}" --keyring "{{keyring}}"
+
 verify-live-protection user:
     {{apex}} verify live-protection --user "{{user}}"
 
@@ -168,9 +171,6 @@ build-fingerprint-image parent_build rpm_build gtk_test:
 
 test-elan-diagnostics source:
     python3 tools/test-elan-diagnostics.py "{{source}}"
-
-ventoy-media live_output ubuntu trusted_key checksums signature keyring:
-    python3 tools/apex.py ventoy-media --live-output "{{live_output}}" --ubuntu "{{ubuntu}}" --trusted-key "{{trusted_key}}" --checksums "{{checksums}}" --signature "{{signature}}" --keyring "{{keyring}}"
 
 update-fixtures build_id:
     python3 tools/prepare-update-fixture.py "{{build_id}}"
