@@ -166,6 +166,11 @@ BUILDER_DISK_NAME = "builder.qcow2"
 BUILDER_SEED_NAME = "seed.iso"
 BUILDER_VARIABLES_NAME = "builder-vars.fd"
 BUILDER_SERIAL_LOG_NAME = "builder-serial.log"
+TEST_DISK_NAME = "disk.qcow2"
+TEST_EXTRA_DISK_PREFIX = "other-"
+TEST_SERIAL_LOG_NAME = "test-serial.log"
+GUEST_KEY_NAME = "guest_ed25519"
+MAXIMUM_TEST_EXTRA_DISKS = 2
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

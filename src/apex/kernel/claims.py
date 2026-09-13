@@ -24,9 +24,20 @@ class EnvironmentKind(enum.StrEnum):
     SIMULATED = "simulated"
 
     def satisfies(self, required: EnvironmentKind) -> bool:
+        """Whether a witness of this kind meets a requirement for that one.
+
+        A simulation meets nothing. A machine booted from the live or the installer medium
+        is still a virtual machine, so it meets a requirement for one; the reverse never
+        holds, since a plain virtual machine says nothing about what it booted from.
+        """
         if self is EnvironmentKind.SIMULATED:
             return False
-        return self is required
+        if self is required:
+            return True
+        return required is EnvironmentKind.VM and self in _VIRTUAL_MACHINES
+
+
+_VIRTUAL_MACHINES = frozenset({EnvironmentKind.LIVE_VM, EnvironmentKind.INSTALLER_VM})
 
 
 def meet(kinds: Iterable[EnvironmentKind]) -> EnvironmentKind:
