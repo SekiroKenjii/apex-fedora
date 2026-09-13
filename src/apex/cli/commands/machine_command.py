@@ -31,6 +31,7 @@ from apex.provisioning import (
     runrecord,
     testspec,
 )
+from apex.verification import installerfault
 from apex.wiring import contexts
 
 NAME = "machine"
@@ -39,6 +40,7 @@ PREPARE, START, STOP, STATUS, RECLAIM = "prepare", "start", "stop", "status", "r
 HOTPLUG = "hotplug-usb"
 POWER_LOSS = "power-loss"
 COMPARE = "compare"
+COLLECT = "collect"
 RESUME = "resume"
 TEST = "test"
 
@@ -66,6 +68,10 @@ def _parser() -> argparse.ArgumentParser:
         COMPARE, help="compare a stopped run's overlays with their sources"
     )
     compare.add_argument("--run", required=True, help="the run, by id or by its run directory")
+    collect = actions.add_parser(
+        COLLECT, help="judge a stopped installer fault run from its request, report and disks"
+    )
+    collect.add_argument("--run", required=True, help="the run, by id or by its run directory")
     resume = actions.add_parser(RESUME, help="boot a stopped run again over its own overlays")
     resume.add_argument("--run", required=True, help="the run, by id or by its run directory")
     resume.add_argument("--without-iso", action="store_true", help="leave the boot image out")
@@ -177,7 +183,9 @@ def _run_id(value: str) -> identifiers.RunId:
     return identifiers.RunId.parse(Path(value).name)
 
 
-def compare(ports: portset.HostPorts, root: safepaths.RuntimeRoot, run: str) -> encoding.Document:
+def _comparison(
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, run: str
+) -> tuple[safepaths.SafePath, comparing.RunComparison]:
     run_directory = root.child(f"{defaults.RUNS_DIRECTORY}/{_run_id(run)}")
     record = runrecord.read(ports, run_directory)
     layers = record.layers(hotplugging.attached(ports, run_directory))
@@ -188,7 +196,21 @@ def compare(ports: portset.HostPorts, root: safepaths.RuntimeRoot, run: str) -> 
         )
         for layer in layers
     )
-    return comparing.compare(ports, root=root, run_directory=run_directory, disks=disks).document()
+    return run_directory, comparing.compare(
+        ports, root=root, run_directory=run_directory, disks=disks
+    )
+
+
+def compare(ports: portset.HostPorts, root: safepaths.RuntimeRoot, run: str) -> encoding.Document:
+    return _comparison(ports, root, run)[1].document()
+
+
+def collect(ports: portset.HostPorts, root: safepaths.RuntimeRoot, run: str) -> encoding.Document:
+    """The comparison first, since it refuses a running machine, then the fault's result."""
+    run_directory, comparison = _comparison(ports, root, run)
+    return installerfault.collect(
+        ports, root=root, run_directory=run_directory, comparison=comparison
+    ).document()
 
 
 def resume(
@@ -248,6 +270,7 @@ ACTIONS: dict[str, Action] = {
     HOTPLUG: lambda _, ports, root, arguments: hotplug(ports, root, arguments.source),
     POWER_LOSS: lambda _, ports, root, __: power_loss(ports, root),
     COMPARE: lambda _, ports, root, arguments: compare(ports, root, arguments.run),
+    COLLECT: lambda _, ports, root, arguments: collect(ports, root, arguments.run),
     RESUME: resume,
     STOP: lambda _, ports, root, __: stop(ports, root),
     RECLAIM: lambda _, ports, root, __: reclaim(ports, root),
@@ -306,6 +329,10 @@ RECIPES = (
     commandspecs.Recipe(
         "test-resume-installed", ("run_directory",),
         (NAME, RESUME, "--run", "{{run_directory}}", "--without-iso"),
+    ),
+    commandspecs.Recipe(
+        "test-installer-fault-collect", ("run_directory",),
+        (NAME, COLLECT, "--run", "{{run_directory}}"),
     ),
 )
 

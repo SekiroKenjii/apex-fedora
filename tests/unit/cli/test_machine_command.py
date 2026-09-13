@@ -6,6 +6,7 @@ import dataclasses
 from pathlib import Path
 from typing import Any
 
+import installerruns
 import pytest
 from storagefixtures import Storage
 
@@ -21,8 +22,9 @@ from apex.adapters.real import real_files
 from apex.cli import commandspecs
 from apex.cli.commands import machine_command
 from apex.config import loader
-from apex.kernel import errors, quantities, refusals, safepaths
+from apex.kernel import errors, identifiers, quantities, refusals, safepaths
 from apex.ports import portset
+from apex.verification import installerfault
 from apex.wiring import contexts
 
 REPOSITORY = Path(__file__).resolve().parents[3]
@@ -435,3 +437,113 @@ def test_a_stopped_run_is_resumed_by_its_id_over_the_same_overlays(
     assert isinstance(hypervisor, fake_hypervisor.FakeQemu)
     assert len(hypervisor.spawned) == 2
     assert list(hypervisor.spawned[1].spec.render()) == list(hypervisor.spawned[0].spec.render())
+
+
+def finished_fault_run(
+    ports: portset.HostPorts,
+    tmp_path: Path,
+    root: safepaths.RuntimeRoot,
+    *,
+    guest: dict[str, object] | None = None,
+) -> tuple[portset.HostPorts, loader.Settings, Path]:
+    """An installer machine started, faulted and powered off, its records beside the run."""
+    settings = variables_settings(tmp_path)
+    for name in ("target.qcow2", "other.qcow2"):
+        (root.path / name).write_bytes(b"")
+    iso = root.path / installerruns.ISO_NAME
+    iso.write_bytes(installerruns.ISO_BYTES)
+    held = dataclasses.replace(bundle(ports), processes=Storage())
+    held.files.write_atomic(
+        safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
+    )
+    machine_command.run(request(
+        held, settings, root, "start", "--role", "test",
+        "--disk", str(root.path / "target.qcow2"), "--extra-disk", str(root.path / "other.qcow2"),
+        "--iso", str(iso), "--medium", "installer", "--serial-console",
+    ))
+    run_directory = next((root.path / "vm-runs").iterdir())
+    held_run = safepaths.SafePath(run_directory)
+    asked = installerfault.Request(
+        case=installerruns.CASE,
+        image=held.digests.file(safepaths.SafePath.regular_file(iso, within=root)),
+        process=4242,
+        run=identifiers.RunId.parse(run_directory.name),
+    )
+    installerfault.write_request(held, held_run, asked)
+    installerfault.write_kept(
+        held, held_run, request=asked,
+        observations=installerruns.confirming() if guest is None else guest,  # type: ignore[arg-type]
+    )
+    machine_command.run(request(held, settings, root, "power-loss"))
+    return held, settings, run_directory
+
+
+def expect_comparisons(
+    held: portset.HostPorts, root: safepaths.RuntimeRoot, run_directory: Path, *exits: int
+) -> None:
+    tools = held.processes
+    assert isinstance(tools, Storage)
+    for overlay, exit_code in zip(("disk.qcow2", "other-1.qcow2"), exits, strict=True):
+        source = "target.qcow2" if overlay == "disk.qcow2" else "other.qcow2"
+        tools.expect(
+            ("qemu-img", "compare", "-f", "qcow2", "-F", "qcow2",
+             str(root.path / source), str(run_directory / overlay)),
+            fake_process.Reply(
+                exit_code=exit_code,
+                stdout=b"Images are identical." if exit_code == 0 else b"Content mismatch",
+            ),
+        )
+
+
+def test_a_finished_fault_run_is_collected_into_its_result_once_both_disks_prove_unchanged(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    held, settings, run_directory = finished_fault_run(ports, tmp_path, root)
+    expect_comparisons(held, root, run_directory, 0, 0)
+
+    reply = machine_command.run(
+        request(held, settings, root, "collect", "--run", str(run_directory))
+    )
+
+    assert isinstance(reply.document, dict) and reply.exit_code == 0
+    assert reply.document["status"] == "PASS" and reply.document["case"] == installerruns.CASE
+    proof = str(reply.document["proof"])
+    assert proof == str(run_directory / "fault-result.json")
+    assert held.files.exists(safepaths.SafePath(Path(proof)))
+
+
+def test_a_disk_that_changed_leaves_a_failed_result_and_is_refused(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    held, settings, run_directory = finished_fault_run(ports, tmp_path, root)
+    expect_comparisons(held, root, run_directory, 0, 1)
+
+    with pytest.raises(errors.Refusal) as refused:
+        machine_command.run(request(held, settings, root, "collect", "--run", str(run_directory)))
+
+    assert refused.value.reason is refusals.RefusalReason.FAULT_DISK_CHANGED
+    assert held.files.exists(safepaths.SafePath(run_directory / "fault-result.json"))
+
+
+def test_a_report_that_does_not_confirm_the_rejection_is_not_collected(
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    tmp_path: Path,
+) -> None:
+    _, root = prepared
+    held, settings, run_directory = finished_fault_run(
+        ports, tmp_path, root, guest={**installerruns.confirming(), "selinux_after": "Permissive"}
+    )
+    expect_comparisons(held, root, run_directory, 0, 0)
+
+    with pytest.raises(errors.Refusal) as refused:
+        machine_command.run(request(held, settings, root, "collect", "--run", str(run_directory)))
+
+    assert refused.value.reason is refusals.RefusalReason.FAULT_NOT_CONFIRMED
+    assert not held.files.exists(safepaths.SafePath(run_directory / "fault-result.json"))

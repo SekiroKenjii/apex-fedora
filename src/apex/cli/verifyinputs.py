@@ -19,7 +19,7 @@ from apex.kernel import errors, identifiers, refusals, safepaths
 from apex.model import machines, runtimestate
 from apex.ports import guestshell, portset
 from apex.provisioning import launching, leases
-from apex.verification import recording, testaccess
+from apex.verification import installerfault, recording, testaccess
 from apex.wiring import contexts
 
 SERIAL_USER = "root"
@@ -33,6 +33,8 @@ class Asked:
     credentials: Path | None = None
     build: str | None = None
     serial: bool = False
+    case: str | None = None
+    wrong_key: Path | None = None
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -47,6 +49,8 @@ class Inputs:
     repository: safepaths.SourceRoot
     credentials: testaccess.Credentials | None
     parent: identifiers.BuildId | None
+    case: str | None = None
+    wrong_key: str | None = None
 
 
 def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
@@ -81,6 +85,11 @@ def _running_machine(
         subject=f"a {lease.intent.role} machine is running",
         remedy=f"this recipe runs in the isolated {role}",
     )
+
+
+def wheel(root: safepaths.RuntimeRoot) -> safepaths.SafePath:
+    """The agent wheel placed beside the store, which every guest recipe delivers."""
+    return _present(root, defaults.AGENT_WHEEL_NAME, remedy="build the agent wheel into the root")
 
 
 def _present(root: safepaths.RuntimeRoot, name: str, *, remedy: str) -> safepaths.SafePath:
@@ -228,9 +237,7 @@ def gather(context: contexts.Context, *, role: machines.VmRole, asked: Asked) ->
     return Inputs(
         ports=ports,
         guest=guest,
-        wheel=_present(
-            root, defaults.AGENT_WHEEL_NAME, remedy="build the agent wheel into the root"
-        ),
+        wheel=wheel(root),
         candidate=_candidate(root) if role is machines.VmRole.TEST else None,
         lease=lease,
         recorder=recording.Recorder.open(
@@ -240,4 +247,9 @@ def gather(context: contexts.Context, *, role: machines.VmRole, asked: Asked) ->
         repository=context.repository,
         credentials=read,
         parent=_parent(asked.build),
+        case=asked.case,
+        wrong_key=(
+            None if asked.wrong_key is None
+            else installerfault.read_key(ports, root, asked.wrong_key)
+        ),
     )
