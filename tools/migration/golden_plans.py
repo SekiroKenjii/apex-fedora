@@ -35,6 +35,7 @@ from apex.verification.recipes import (  # noqa: E402
     live_lock_recipe,
     live_observe_recipe,
     live_protection_recipe,
+    ventoy_media_recipe,
     ventoy_observe_recipe,
 )
 
@@ -56,6 +57,7 @@ RECIPES = {
     installer_payload_recipe.NAME: installer_payload_recipe.PLAN,
     installer_diagnostics_recipe.NAME: installer_diagnostics_recipe.PLAN,
     installer_fixtures_recipe.NAME: installer_fixtures_recipe.PLAN,
+    ventoy_media_recipe.NAME: ventoy_media_recipe.PLAN,
 }
 
 
