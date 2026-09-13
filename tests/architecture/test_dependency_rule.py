@@ -30,6 +30,7 @@ LAYERS = {
     "provisioning": 6,
     "composition": 6,
     "verification": 6,
+    "generating": 6,
     "adapters": 7,
     "wiring": 8,
     "cli": 9,

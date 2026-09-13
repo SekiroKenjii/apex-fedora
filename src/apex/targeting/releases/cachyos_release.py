@@ -12,6 +12,7 @@ from apex.model import release
 PROFILE = release.ReleaseProfile(
     id=identifiers.ProfileId("cachyos"),
     major=44,
+    os_id="fedora",
     os_release_version_id="44",
     dist_tag=release.DistTag("fc44"),
     mock_root="fedora-44-x86_64",
