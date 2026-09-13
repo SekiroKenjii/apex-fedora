@@ -1,9 +1,9 @@
 """Write the three-line hooks that hand every decision to the rules.
 
 Each hook is a shell line that executes the package's entry point for its own kind, so the
-hook itself decides nothing and the operator can read all of it. A hook already present
-that is not one of these is left alone and named, and a checkout that sends its hooks
-elsewhere is refused rather than written under.
+hook itself decides nothing and the operator can read all of it. The hooks land where Git
+says this checkout's hooks live, which honours `core.hooksPath`; a hook already present
+that is not one of these is left alone and named before anything is written.
 """
 
 from __future__ import annotations
@@ -27,12 +27,6 @@ def body(kind: str) -> str:
 def install(
     processes: process.ProcessPort, filesystem: files.FileSystemPort, repository: Path
 ) -> tuple[safepaths.SafePath, ...]:
-    if gitreading.hooks_path_configured(processes, repository):
-        raise errors.Refusal(
-            refusals.RefusalReason.HOOK_PATH_CONFIGURED,
-            subject="core.hooksPath sends this checkout's hooks elsewhere",
-            remedy="integrate the three hooks there by hand",
-        )
     directory = gitreading.hooks_directory(processes, repository)
     if not filesystem.exists(directory):
         raise errors.Refusal(

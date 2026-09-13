@@ -1,8 +1,9 @@
-"""A verbatim asset is the older tree's file, byte for byte, for as long as that tree exists.
+"""A verbatim asset is the older tree's file, byte for byte, for as long as that file exists.
 
 The point of carrying a safety artifact unrewritten is lost the moment the two copies drift.
-This holds every asset equal to the file it names under `guest/`, and holds the typed
-wrapper's digest to the same bytes, so an edit to either side fails here first.
+This holds every asset equal to the file it names under `guest/` while that file is still
+shipped, and holds each typed wrapper's digest to the asset's bytes, so an edit to either
+side fails here first.
 """
 
 from __future__ import annotations
@@ -36,28 +37,26 @@ def test_every_verbatim_asset_equals_the_older_tree_s_file_of_the_same_name() ->
     differing = [
         asset.name
         for asset in assets()
-        if asset.read_bytes() != older_copy(asset).read_bytes()
+        if older_copy(asset).is_file() and asset.read_bytes() != older_copy(asset).read_bytes()
     ]
 
     assert differing == []
 
 
-def test_the_preflight_wrapper_carries_the_older_file_s_digest() -> None:
-    expected = hashlib.sha256((REPOSITORY / "guest" / preflight.ASSET).read_bytes()).hexdigest()
-
-    assert preflight.digest().hex == expected
+def asset_digest(name: str) -> str:
+    return hashlib.sha256((ASSETS / f"{name}{SUFFIX}").read_bytes()).hexdigest()
 
 
-def test_the_fingerprint_harness_wrapper_carries_the_older_file_s_digest() -> None:
-    older = REPOSITORY / "guest" / fingerprintharness.ASSET
+def test_the_preflight_wrapper_carries_the_asset_s_digest() -> None:
+    assert preflight.digest().hex == asset_digest(preflight.ASSET)
 
-    assert fingerprintharness.digest().hex == hashlib.sha256(older.read_bytes()).hexdigest()
+
+def test_the_fingerprint_harness_wrapper_carries_the_asset_s_digest() -> None:
+    assert fingerprintharness.digest().hex == asset_digest(fingerprintharness.ASSET)
 
 
 @pytest.mark.parametrize("program", [desktopprograms.RENDER, desktopprograms.THEME])
-def test_each_desktop_program_wrapper_carries_the_older_file_s_digest(
+def test_each_desktop_program_wrapper_carries_the_asset_s_digest(
     program: desktopprograms.Program,
 ) -> None:
-    older = REPOSITORY / "guest" / program.asset
-
-    assert program.digest().hex == hashlib.sha256(older.read_bytes()).hexdigest()
+    assert program.digest().hex == asset_digest(program.asset)

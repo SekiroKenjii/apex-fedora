@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from apex.cli import commands, commandspecs, dispatch, legacy_bridge
+from apex.cli import commands, commandspecs, dispatch
 from apex.config import loader
 from apex.kernel import errors, refusals, safepaths
 from apex.ports import portset
@@ -58,38 +58,6 @@ def test_a_registered_name_runs_as_a_command_and_the_document_goes_to_standard_o
     assert err.getvalue() == ""
 
 
-def test_a_name_the_registry_does_not_hold_goes_to_the_bridge(
-    ports: portset.HostPorts, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    asked: list[list[str]] = []
-    monkeypatch.setattr(legacy_bridge, "dispatch", lambda arguments: asked.append(arguments) or 7)
-    out, err = streams()
-
-    code = dispatch.run(
-        ["older-tool", "--json"], context_of=lambda: context(ports), stdout=out, stderr=err
-    )
-
-    assert code == 7 and asked == [["older-tool", "--json"]]
-    assert dispatch.run([], context_of=lambda: context(ports), stdout=out, stderr=err) == 7
-
-
-def test_a_retired_name_is_refused_with_its_replacement_and_never_reaches_the_bridge(
-    ports: portset.HostPorts, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    asked: list[list[str]] = []
-    monkeypatch.setattr(legacy_bridge, "dispatch", lambda arguments: asked.append(arguments) or 7)
-    out, err = streams()
-
-    code = dispatch.run(
-        ["test-vm", "disk.qcow2"], context_of=lambda: context(ports), stdout=out, stderr=err
-    )
-
-    assert code == errors.Refusal.exit_code and asked == []
-    assert "command.retired" in err.getvalue()
-    assert "apex machine start --role test" in err.getvalue()
-    assert out.getvalue() == ""
-
-
 def test_a_refusal_raised_by_a_command_keeps_its_exit_code_and_is_narrated(
     ports: portset.HostPorts, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -122,3 +90,32 @@ def test_a_parser_that_stops_the_run_keeps_the_code_it_chose(
     assert helped == 0 and wrong == 2
     captured = capsys.readouterr()
     assert "usage: apex plan" in captured.out and "invalid choice" in captured.err
+
+
+def test_a_name_nobody_owns_is_refused_with_the_names_that_exist(
+    ports: portset.HostPorts,
+) -> None:
+    out, err = streams()
+
+    code = dispatch.run(
+        ["older-tool", "--json"], context_of=lambda: context(ports), stdout=out, stderr=err
+    )
+    empty = dispatch.run([], context_of=lambda: context(ports), stdout=out, stderr=err)
+
+    assert code == errors.Refusal.exit_code and empty == errors.Refusal.exit_code
+    assert "command.unknown: older-tool" in err.getvalue()
+    assert "the commands are build, candidate" in err.getvalue()
+    assert out.getvalue() == ""
+
+
+def test_a_retired_name_is_refused_with_its_replacement(ports: portset.HostPorts) -> None:
+    out, err = streams()
+
+    code = dispatch.run(
+        ["test-vm", "disk.qcow2"], context_of=lambda: context(ports), stdout=out, stderr=err
+    )
+
+    assert code == errors.Refusal.exit_code
+    assert "command.retired" in err.getvalue()
+    assert "apex machine start --role test" in err.getvalue()
+    assert out.getvalue() == ""

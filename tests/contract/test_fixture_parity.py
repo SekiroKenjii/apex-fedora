@@ -14,14 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from apex.kernel import errors, hashing, identifiers, safepaths
+from apex.kernel import errors, identifiers, safepaths
 from apex.model import extents
-from apex.provisioning.fixtures import (
-    initramfs_fixture,
-    recovery_fixture,
-    update_fixture,
-    ventoy_fixture,
-)
+from apex.provisioning.fixtures import initramfs_fixture, recovery_fixture, update_fixture
 
 GUEST = Path(__file__).resolve().parents[2] / "guest"
 RUN = identifiers.RunId("b" * 32)
@@ -183,30 +178,6 @@ def test_the_container_recipes_match_the_older_assembly() -> None:
     assert update_fixture.containerfile("b", parent=parent, first=first) == (
         f"FROM {first}\nCOPY marker.json /usr/share/apex/recovery-fixture.json\n"
     )
-
-
-def test_the_ventoy_request_is_accepted_and_refused_alike(tmp_path: Path) -> None:
-    legacy = older("ventoy-fixture")
-    files = {}
-    for name in ("ventoy.tar.gz", "Apex-Live.iso", "Ubuntu.iso"):
-        (tmp_path / name).write_bytes(name.encode())
-        files[name] = hashing.digest_bytes(name.encode()).hex
-    request = {"files": files, "ventoy_version": "1.0.99"}
-
-    legacy.verify_inputs(tmp_path, request)
-    parsed = ventoy_fixture.parse_request(request)
-
-    assert parsed.version == "1.0.99"
-    assert {name: digest.hex for name, digest in parsed.files.items()} == files
-    for damaged in (
-        {"files": {**files, "Extra.iso": files["Ubuntu.iso"]}, "ventoy_version": "1.0.99"},
-        {"files": {**files, "Ubuntu.iso": "nothex"}, "ventoy_version": "1.0.99"},
-        {"files": files, "ventoy_version": "1.0"},
-    ):
-        with pytest.raises(RuntimeError):
-            legacy.verify_inputs(tmp_path, damaged)
-        with pytest.raises(errors.Refusal):
-            ventoy_fixture.parse_request(damaged)
 
 
 def test_the_dedupe_ioctl_layout_is_unchanged() -> None:

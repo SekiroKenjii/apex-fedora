@@ -45,7 +45,7 @@ and the [hwdep packing definition](https://github.com/torvalds/linux/blob/v6.18/
 The decoder and tests implement this arithmetic without opening a device:
 
 ```sh
-python3 tools/apex.py decode-coefficient 0x20 0x477 0x4a4b
+apex hardware decode-coefficient 0x20 0x477 0x4a4b
 ```
 
 ## ASUS fixups and this board

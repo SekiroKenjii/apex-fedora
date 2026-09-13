@@ -140,19 +140,13 @@ def test_a_failed_or_absent_git_is_a_refusal_carrying_its_words() -> None:
     assert "not found" in str(absent.value)
 
 
-def test_the_hooks_directory_and_a_configured_hooks_path_are_read_from_git(
-    tmp_path: Path,
-) -> None:
+def test_the_hooks_directory_is_where_git_says_it_is(tmp_path: Path) -> None:
     processes = fake_process.ScriptedProcess({
         ("git", "-C", str(tmp_path), "rev-parse", "--git-path", "hooks"): (
             fake_process.Reply(stdout=b".git/hooks\n")
         ),
-        ("git", "-C", str(tmp_path), "config", "--get", "core.hooksPath"): (
-            fake_process.Reply(exit_code=1)
-        ),
-        git("config", "--get", "core.hooksPath"): fake_process.Reply(stdout=b"/elsewhere\n"),
+        git("rev-parse", "--git-path", "hooks"): fake_process.Reply(stdout=b"/elsewhere/hooks\n"),
     })
 
     assert gitreading.hooks_directory(processes, tmp_path).path == tmp_path / ".git" / "hooks"
-    assert gitreading.hooks_path_configured(processes, tmp_path) is False
-    assert gitreading.hooks_path_configured(processes, REPO) is True
+    assert gitreading.hooks_directory(processes, REPO).path == Path("/elsewhere/hooks")

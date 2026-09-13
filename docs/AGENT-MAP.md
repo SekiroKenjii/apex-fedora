@@ -13,28 +13,28 @@ context that drives them.
 | File | Lines | Role | Destination | Phase |
 |---|---|---|---|---|
 | `guest/probe.py` | 22 | probe | `guest.state` unit | P16, done |
-| `guest/live-probe.py` | 97 | probe | `live.observe` unit over one sysfs snapshot; the older script stays until `just live-check` is repointed | P19a, done |
-| `guest/live-usb-probe.py` | 75 | probe | `fault.usb-write-denial` unit over the sysfs snapshot and the block device port; the older script stays until `just test-live-check` is repointed | P19b, done |
-| `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit over the same snapshot; the older script stays until `just live-check` is repointed | P19a, done |
+| `guest/live-probe.py` | 97 | probe | `live.observe` unit over one sysfs snapshot; the older script was deleted in P21 | P19a, done |
+| `guest/live-usb-probe.py` | 75 | probe | `fault.usb-write-denial` unit over the sysfs snapshot and the block device port; the older script was deleted in P21 | P19b, done |
+| `guest/ventoy-probe.py` | 49 | probe | `ventoy.observe` unit over the same snapshot; the older script was deleted in P21 | P19a, done |
 | `guest/recovery-probe.py` | 68 | probe | `recovery.prerequisites` unit; the older script stays until `just recovery-probe` is repointed | P19d, done |
 | `guest/installed-recovery-probe.py` | 58 | probe | `recovery.installed` unit with `agent/grubstatic.py`; the older script stays until its caller is repointed | P19d, done |
-| `guest/render-probe.py` | 37 | probe, GTK | `assets/verbatim/render-probe.py.verbatim`, byte for byte, held equal by a test; placed and started by the `desktop.render` unit as the session's user, host case in `verification/probes/desktop_render_probe.py`; the older program stays until `tools/apexlib/guesttest.py` is repointed | verbatim, P19g, done |
-| `guest/theme-probe.py` | 54 | probe, GTK | `assets/verbatim/theme-probe.py.verbatim`, byte for byte, held equal by a test; shown and stopped by the `desktop.theme-gtk3` and `desktop.theme-adwaita` units, the session's settings read by `desktop.theme-settings`; host cases under `verification/probes/`; the older program stays until `tools/apexlib/guesttest.py` is repointed | verbatim, P19g, done |
+| `guest/render-probe.py` | 37 | probe, GTK | `assets/verbatim/render-probe.py.verbatim`, byte for byte, held equal by a test; placed and started by the `desktop.render` unit as the session's user, host case in `verification/probes/desktop_render_probe.py`; the older program stays while `tools/apexlib/guesttest.py` still starts it | verbatim, P19g, done |
+| `guest/theme-probe.py` | 54 | probe, GTK | `assets/verbatim/theme-probe.py.verbatim`, byte for byte, held equal by a test; shown and stopped by the `desktop.theme-gtk3` and `desktop.theme-adwaita` units, the session's settings read by `desktop.theme-settings`; host cases under `verification/probes/`; the older program stays while `tools/apexlib/guesttest.py` still starts it | verbatim, P19g, done |
 | `guest/diagnostics.py` | 40 | diagnostics | `guest.diagnostics` unit, the destination created exclusively through the file port; the older script stays for the operator's USB until the agent reaches the laptop | P19d, done |
 | `guest/installer-diagnostics.py` | 89 | diagnostics, framed serial | `installer.diagnostics` unit; the framing is the agent's, under the host's token; the older script stays until `just installer-logs` is repointed | P19d, done |
 | `guest/nvidia-check.py` | 56 | build check | `build.nvidia-check` unit | P18 |
 | `guest/verify-image.py` | 57 | build check | `build.verify-image` unit | P18 |
 | `guest/live-parity.py` | 19 | build check | `build.live-parity` unit | P18 |
-| `guest/live-write-denial.py` | 124 | fault | `fault.live-write-denial` unit, host case in `verification/faults/live_write_denial_fault.py`; the older script stays until `just test-live-check` is repointed | P19b, done |
-| `guest/live-lock-fault.py` | 103 | fault | `fault.live-lock` unit, its child run through the process port with `CAP_SYS_ADMIN` dropped; host case in `verification/faults/live_lock_fault.py`; the older script stays until `just test-live-check` is repointed | P19c, done |
-| `guest/test-installer-fault.py` | 155 | fault | `fault.installer-payload` unit, host case in `verification/faults/installer_payload_fault.py`; the older script stays until `just test-installer-fault` is repointed | P19e, done |
-| `guest/test-installer-trust.py` | 164 | fault, signatures | `fault.installer-trust` unit through the engine port, host case in `verification/faults/installer_trust_fault.py`; the older script stays until `just installer-trust` is repointed | P19e, done |
-| `guest/test-fingerprint.py` | 108 | fixture test, harness | `assets/verbatim/test-fingerprint.py.verbatim`, byte for byte, held equal by a test; typed wrapper `agent/fingerprintharness.py`; run as the builder user by the `fault.fingerprint-cleanup` unit; the older script stays until `just test-fingerprint` is repointed | verbatim, P19f, done |
+| `guest/live-write-denial.py` | 124 | fault | `fault.live-write-denial` unit, host case in `verification/faults/live_write_denial_fault.py`; the older script was deleted in P21 | P19b, done |
+| `guest/live-lock-fault.py` | 103 | fault | `fault.live-lock` unit, its child run through the process port with `CAP_SYS_ADMIN` dropped; host case in `verification/faults/live_lock_fault.py`; the older script was deleted in P21 | P19c, done |
+| `guest/test-installer-fault.py` | 155 | fault | `fault.installer-payload` unit, host case in `verification/faults/installer_payload_fault.py`; the older script was deleted in P21 | P19e, done |
+| `guest/test-installer-trust.py` | 164 | fault, signatures | `fault.installer-trust` unit through the engine port, host case in `verification/faults/installer_trust_fault.py`; the older script was deleted in P21 | P19e, done |
+| `guest/test-fingerprint.py` | 108 | fixture test, harness | `assets/verbatim/test-fingerprint.py.verbatim`, byte for byte, held equal by a test; typed wrapper `agent/fingerprintharness.py`; run as the builder user by the `fault.fingerprint-cleanup` unit; the older script was deleted in P21 | verbatim, P19f, done |
 | `guest/initramfs-fixture.py` | 260 | fixture | host side in `provisioning/fixtures/initramfs_fixture.py`; guest steps become the `fixture.initramfs` unit | P17 host side done, P18c unit |
 | `guest/recovery-fixture.py` | 182 | fixture | host side in `provisioning/fixtures/recovery_fixture.py`; guest steps become the `fixture.recovery` unit | P17 host side done, P18c unit |
 | `guest/update-fixture.py` | 188 | fixture, signing | `fixture.update` unit on the container engine, host side in `provisioning/fixtures/update_fixture.py`; the older script stays until `just update-fixture` is repointed | P18c, done |
-| `guest/installer-fixtures.py` | 88 | fixture | `fixture.installer-disks` unit, host side in `provisioning/fixtures/installer_fixture.py`; the older script stays until `just installer-fixtures` is repointed | P18b, done |
-| `guest/ventoy-fixture.py` | 114 | fixture | `fixture.ventoy` unit, host side in `provisioning/fixtures/ventoy_fixture.py`; the older script stays until `just ventoy-fixture` is repointed | P18c, done |
+| `guest/installer-fixtures.py` | 88 | fixture | `fixture.installer-disks` unit, host side in `provisioning/fixtures/installer_fixture.py`; the older script was deleted in P21 | P18b, done |
+| `guest/ventoy-fixture.py` | 114 | fixture | `fixture.ventoy` unit, host side in `provisioning/fixtures/ventoy_fixture.py`; the older script was deleted in P21 | P18c, done |
 | `guest/dedupe-update-blobs.py` | 153 | fixture, storage | `fixture.dedupe` unit over the extent port, layout in `model/extents.py`; the older script stays until `just dedupe` is repointed | P18c, done |
 | `guest/nvidia-build.py` | 190 | build step | `composition/recipes/nvidia_recipe.py` guest side | P18 |
 | `guest/fingerprint-rpms.py` | 137 | build step | `composition/recipes/fingerprint_rpms_recipe.py` guest side | P18 |
@@ -64,7 +64,7 @@ context that drives them.
 | `guest/installer-configure.sh` | 72 | image shell | rendered by `generating/installerinputs.py` into `generated/os/installer-configure.sh`, held byte-equal (G8) | P19i, generated |
 | `guest/assemble-live-squashfs.sh` | 22 | image shell | rendered by `generating/liveinputs.py` into `generated/os/assemble-live-squashfs.sh`, held byte-equal (G8) | P19i, generated |
 | `guest/run-installer-osbuild.sh` | 18 | build shell | `composition` stage | P18 |
-| `guest/fingerprint-tests.sh` | 25 | build shell | `fault.fingerprint-cleanup` unit step for step, host case in `verification/faults/fingerprint_cleanup_fault.py`; its downloads moved to the host, `trust/testsources.py` against `config/fingerprint-tests.lock.json`; the older script stays until `just test-fingerprint` is repointed | P19f, done |
+| `guest/fingerprint-tests.sh` | 25 | build shell | `fault.fingerprint-cleanup` unit step for step, host case in `verification/faults/fingerprint_cleanup_fault.py`; its downloads moved to the host, `trust/testsources.py` against `config/fingerprint-tests.lock.json`; the older script was deleted in P21 | P19f, done |
 | `live/rootfs/usr/libexec/apex/live-disk-guard.sh` | 40 | safety artifact | stays in the live root; tested unmodified | verbatim, done |
 | `live/rootfs/usr/libexec/apex/live-protection-check.sh` | 7 | safety artifact | stays in the live root | verbatim |
 | `live/rootfs/usr/lib/dracut/modules.d/01apexprotect/` | 13 | safety artifact | stays in the live root | verbatim |

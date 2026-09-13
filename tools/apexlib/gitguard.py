@@ -101,19 +101,3 @@ def inspect_outgoing(repo: Path, updates: str):
             raw = run(["git", "-C", repo, "cat-file", "commit", commit], capture_output=True).stdout
             validate_subject(raw.split(b"\n\n", 1)[1].decode())
             inspect_tree(repo, commit)
-
-
-def install(repo: Path = ROOT):
-    existing = subprocess.run(["git", "-C", str(repo), "config", "--get", "core.hooksPath"], capture_output=True, text=True)
-    if existing.returncode == 0:
-        raise Blocked("An existing core.hooksPath must be integrated manually")
-    hooks = repo / ".git/hooks"
-    if not hooks.is_dir():
-        raise Blocked("Initialize a local Git repository first")
-    for name in ("pre-commit", "commit-msg", "pre-push"):
-        path = hooks / name
-        body = '#!/bin/sh\n# apex-local-hook\nexec python3 tools/apex.py git-hook ' + name + ' "$@"\n'
-        if path.exists() and "# apex-local-hook" not in path.read_text():
-            raise Blocked(f"Preserving existing hook: {path}")
-        path.write_text(body)
-        path.chmod(0o755)

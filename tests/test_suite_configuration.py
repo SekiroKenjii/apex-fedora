@@ -14,7 +14,6 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 # 8 inherited guest cases, 6 added in P4 that read the real evidence store, and 4 added in
 # P11 that read it again through the versioned reader.
 EXPECTED_INTEGRATION_CASES = 18
-EXPECTED_GOLDEN_CASES = 1
 
 
 def options() -> dict[str, object]:
@@ -26,7 +25,7 @@ def test_opt_in_markers_are_deselected_by_default() -> None:
     addopts = str(options()["addopts"])
 
     assert "not integration" in addopts
-    assert "not golden" in addopts
+    assert "not benchmark" in addopts
 
 
 def test_every_marker_used_in_the_suite_is_declared() -> None:
@@ -47,11 +46,5 @@ def test_the_number_of_opt_in_cases_is_fixed() -> None:
         for path in (REPOSITORY / "tests" / "integration").glob("test_*.py")
         for line in path.read_text().splitlines()
     )
-    golden = sum(
-        line.startswith("@pytest.mark.golden")
-        for path in (REPOSITORY / "tests").glob("test_*.py")
-        for line in path.read_text().splitlines()
-    )
 
     assert integration == EXPECTED_INTEGRATION_CASES
-    assert golden == EXPECTED_GOLDEN_CASES

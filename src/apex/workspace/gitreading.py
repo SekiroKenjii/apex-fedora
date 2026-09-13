@@ -158,16 +158,7 @@ def outgoing_commits(
 
 
 def hooks_directory(processes: process.ProcessPort, repository: Path) -> safepaths.SafePath:
-    """Where this checkout's hooks live, which for a worktree is the common directory's."""
+    """Where this checkout's hooks live: the common directory's for a worktree, and
+    `core.hooksPath` when the operator set one, since Git resolves both."""
     answer = _git(processes, repository, "rev-parse", "--git-path", "hooks")
     return safepaths.SafePath((repository / answer.decode(errors="replace").strip()).resolve())
-
-
-def hooks_path_configured(processes: process.ProcessPort, repository: Path) -> bool:
-    try:
-        _git(processes, repository, "config", "--get", "core.hooksPath")
-    except errors.Refusal as refusal:
-        if refusal.reason is refusals.RefusalReason.HOOK_GIT_FAILED:
-            return False
-        raise
-    return True
