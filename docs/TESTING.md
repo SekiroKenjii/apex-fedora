@@ -221,7 +221,10 @@ Use `apex record CHECK STATUS --environment KIND --description DESCRIPTION --pro
 to capture evidence. This copies proof files into private runtime
 storage, adds a timestamp and archives any previous record for that check. It does not
 decide whether a human observation was correct. Hardware records require `physical` as
-their environment; a VM cannot attest them.
+their environment; a VM cannot attest them. Records written by the older tree are read as
+imported and carry permanent limits; [Reproving](REPROVING.md) names the command that
+records each of them again through the real ports, `just prove-git` and
+`just prove-signature` among them.
 
 ```json
 {

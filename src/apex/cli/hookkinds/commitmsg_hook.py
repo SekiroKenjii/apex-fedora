@@ -1,7 +1,9 @@
 """The commit message hook.
 
 It reads a file and runs five pure rules. Nothing here executes a program or needs a repository,
-which is exactly why this is the hook the rules take over first.
+which is exactly why this is the hook the rules take over first. The file is read as bytes,
+because a text read folds a carriage return into a newline before the rule that refuses it
+could see it.
 """
 
 from __future__ import annotations
@@ -25,7 +27,7 @@ def inspect(request: hookspecs.HookRequest) -> Sequence[rulespecs.Finding]:
             subject=NAME,
             remedy="Git passes the message file; this hook was called without it",
         )
-    raw = Path(request.arguments[0]).read_text(encoding=ENCODING)
+    raw = Path(request.arguments[0]).read_bytes().decode(ENCODING)
     subject = rulespecs.MessageSubject(raw=raw)
     return gitguarding.judge_message(subject, rules=gitguarding.registered_message_rules())
 

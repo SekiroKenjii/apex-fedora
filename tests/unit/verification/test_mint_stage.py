@@ -11,21 +11,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pretendingreal import pretending_real
 
-from apex.adapters.fakes import (
-    fake_archives,
-    fake_clock,
-    fake_digesting,
-    fake_downloading,
-    fake_files,
-    fake_guestshell,
-    fake_hypervisor,
-    fake_ids,
-    fake_locking,
-    fake_process,
-    fake_qmp,
-    fake_signing,
-)
+from apex.adapters.fakes import fake_clock, fake_files
 from apex.attestation import ledger, minting, proofs
 from apex.kernel import claims, identifiers, refusals, safepaths, secrets, verdicts
 from apex.pipeline import facts, stages
@@ -36,27 +24,6 @@ from apex.verification.stages import mint_stage
 CHECK = identifiers.CheckId("live.disk-protection")
 CANDIDATE = identifiers.Digest("c" * 64)
 SEED = identifiers.StageId("seed")
-
-
-def declared_real(cls: Any) -> Any:
-    return type(f"Real{cls.__name__}", (cls,), {"environment": claims.EnvironmentKind.BUILD})
-
-
-def pretending_real() -> portset.HostPorts:
-    return portset.HostPorts(
-        processes=declared_real(fake_process.ScriptedProcess)(),
-        files=declared_real(fake_files.MemoryFiles)(),
-        clock=declared_real(fake_clock.ManualClock)(),
-        identities=declared_real(fake_ids.SequenceIdentities)(),
-        locks=declared_real(fake_locking.MemoryLocks)(),
-        digests=declared_real(fake_digesting.CountingDigests)(),
-        archives=declared_real(fake_archives.MemoryArchives)(),
-        signing=declared_real(fake_signing.FakeSigner)(),
-        downloads=declared_real(fake_downloading.PinningFetcher)(),
-        hypervisor=declared_real(fake_hypervisor.FakeQemu)(),
-        monitor=declared_real(fake_qmp.ScriptedQmp)(),
-        guest=declared_real(fake_guestshell.ScriptedGuest)(),
-    )
 
 
 @pytest.fixture

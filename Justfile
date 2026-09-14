@@ -130,6 +130,12 @@ plan-verify recipe:
 plan-upgrade release:
     {{apex}} plan upgrade --release "{{release}}"
 
+prove-git:
+    {{apex}} prove git
+
+prove-signature build_id key:
+    {{apex}} prove signature --build "{{build_id}}" --key "{{key}}"
+
 readiness:
     {{apex}} readiness
 

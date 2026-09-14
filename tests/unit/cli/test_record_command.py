@@ -4,57 +4,21 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
+from pretendingreal import pretending_real
 
-from apex.adapters.fakes import (
-    fake_archives,
-    fake_clock,
-    fake_digesting,
-    fake_downloading,
-    fake_files,
-    fake_guestshell,
-    fake_hypervisor,
-    fake_ids,
-    fake_locking,
-    fake_process,
-    fake_qmp,
-    fake_signing,
-)
 from apex.attestation import reading
 from apex.cli import commandspecs
 from apex.cli.commands import record_command
 from apex.config import loader
-from apex.kernel import claims, errors, quantities, refusals, safepaths
+from apex.kernel import errors, quantities, refusals, safepaths
 from apex.model import storemark
 from apex.ports import portset
 from apex.wiring import contexts
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 CANDIDATE = "sha256:" + "c" * 64
-
-
-def declared_real(cls: Any) -> Any:
-    return type(f"Real{cls.__name__}", (cls,), {"environment": claims.EnvironmentKind.BUILD})
-
-
-def pretending_real() -> portset.HostPorts:
-    """Every fake declared real, so the minting rules can be reached; the lie is on purpose."""
-    return portset.HostPorts(
-        processes=declared_real(fake_process.ScriptedProcess)(),
-        files=declared_real(fake_files.MemoryFiles)(),
-        clock=declared_real(fake_clock.ManualClock)(),
-        identities=declared_real(fake_ids.SequenceIdentities)(),
-        locks=declared_real(fake_locking.MemoryLocks)(),
-        digests=declared_real(fake_digesting.CountingDigests)(),
-        archives=declared_real(fake_archives.MemoryArchives)(),
-        signing=declared_real(fake_signing.FakeSigner)(),
-        downloads=declared_real(fake_downloading.PinningFetcher)(),
-        hypervisor=declared_real(fake_hypervisor.FakeQemu)(),
-        monitor=declared_real(fake_qmp.ScriptedQmp)(),
-        guest=declared_real(fake_guestshell.ScriptedGuest)(),
-    )
 
 
 @pytest.fixture
