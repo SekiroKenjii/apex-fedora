@@ -114,9 +114,14 @@ def installed_guest(spec: InstalledSpec) -> tuple[Answering, agentports.AgentPor
         files.write_atomic(safepaths.SafePath(Path(name)), content, mode=PUBLIC)
     process = Answering(spec)
     ports = agentports.AgentPorts(
-        processes=process, files=files, clock=fake_clock.ManualClock(),
-        containers=fake_containers.FakeRegistry(), digests=fake_digesting.CountingDigests(),
-        archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        processes=process,
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return process, ports

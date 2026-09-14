@@ -22,9 +22,9 @@ def git(*arguments: str) -> tuple[str, ...]:
 
 
 def scripted() -> fake_process.ScriptedProcess:
-    return fake_process.ScriptedProcess({
-        git("rev-parse", "--git-path", "hooks"): fake_process.Reply(stdout=b".git/hooks\n"),
-    })
+    return fake_process.ScriptedProcess(
+        {git("rev-parse", "--git-path", "hooks"): fake_process.Reply(stdout=b".git/hooks\n")}
+    )
 
 
 def context(
@@ -45,9 +45,9 @@ def test_three_hooks_are_written_executable_each_naming_its_own_kind() -> None:
     filesystem = fake_files.MemoryFiles()
     filesystem.make_directory(safepaths.SafePath(HOOKS), mode=quantities.FileMode(0o755))
 
-    reply = hooks_command.run(commandspecs.Request(
-        arguments=(), context=context(scripted(), filesystem)
-    ))
+    reply = hooks_command.run(
+        commandspecs.Request(arguments=(), context=context(scripted(), filesystem))
+    )
 
     assert reply.exit_code == 0 and reply.narrative == "Local Git hooks installed\n"
     assert isinstance(reply.document, dict)
@@ -59,7 +59,9 @@ def test_three_hooks_are_written_executable_each_naming_its_own_kind() -> None:
         body = filesystem.read_bytes(target, limit=1 << 16).decode()
         assert body == hookinstall.body(name)
         assert body.splitlines() == [
-            "#!/bin/sh", defaults.HOOK_MARKER, f'exec {hookinstall.ENTRY} git-hook {name} "$@"',
+            "#!/bin/sh",
+            defaults.HOOK_MARKER,
+            f'exec {hookinstall.ENTRY} git-hook {name} "$@"',
         ]
         assert filesystem.mode_of(target) == defaults.HOOK_MODE
     assert "uv run --no-project --python" in hookinstall.ENTRY
@@ -73,13 +75,15 @@ def test_a_hook_that_is_not_ours_and_no_repository_are_refused() -> None:
     )
 
     with pytest.raises(errors.Refusal) as foreign:
-        hooks_command.run(commandspecs.Request(
-            arguments=(), context=context(scripted(), filesystem)
-        ))
+        hooks_command.run(
+            commandspecs.Request(arguments=(), context=context(scripted(), filesystem))
+        )
     with pytest.raises(errors.Refusal) as absent:
-        hooks_command.run(commandspecs.Request(
-            arguments=(), context=context(scripted(), fake_files.MemoryFiles())
-        ))
+        hooks_command.run(
+            commandspecs.Request(
+                arguments=(), context=context(scripted(), fake_files.MemoryFiles())
+            )
+        )
 
     assert foreign.value.reason is refusals.RefusalReason.HOOK_FOREIGN
     assert absent.value.reason is refusals.RefusalReason.HOOK_NO_REPOSITORY

@@ -16,7 +16,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 from typing import Protocol
 
-from apex.kernel import claims, timing
+from apex.kernel import claims, errors, timing
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -40,3 +40,25 @@ class ClockPort(Protocol):
     def wait_until(
         self, condition: Callable[[], bool], policy: timing.WaitPolicy
     ) -> timing.Elapsed: ...
+
+
+def wait(
+    now: Callable[[], timing.Instant],
+    sleep: Callable[[timing.Elapsed], None],
+    condition: Callable[[], bool],
+    policy: timing.WaitPolicy,
+) -> timing.Elapsed:
+    """Poll under the policy's backoff until the condition holds or its deadline passes."""
+    started = now()
+    attempt = 0
+    while True:
+        if condition():
+            return timing.Elapsed(now().seconds - started.seconds)
+        deadline = timing.Deadline(policy.deadline.budget, started=started)
+        if deadline.expired_at(now()):
+            raise errors.PortFailure(
+                port="clock",
+                cause=f"waited {policy.deadline.budget.seconds}s for {policy.description}",
+            )
+        sleep(policy.backoff.delay(attempt))
+        attempt += 1

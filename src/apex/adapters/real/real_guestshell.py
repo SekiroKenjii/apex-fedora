@@ -21,8 +21,10 @@ class OpensshGuestShell(guestshell.GuestShellPort):
     ) -> commands.CompletedRun:
         argv = commands.Argv.of(
             SSH,
-            "-i", target.key,
-            "-p", str(target.port),
+            "-i",
+            target.key,
+            "-p",
+            str(target.port),
             *_options(
                 "IdentitiesOnly=yes",
                 "BatchMode=yes",
@@ -34,11 +36,7 @@ class OpensshGuestShell(guestshell.GuestShellPort):
             run.script.rendered(),
         )
         return self._processes.run(
-            argv,
-            deadline=run.deadline,
-            limit=run.limit,
-            stdin=run.stdin,
-            transcript=run.transcript,
+            argv, deadline=run.deadline, limit=run.limit, stdin=run.stdin, transcript=run.transcript
         )
 
     def send(
@@ -77,8 +75,10 @@ class OpensshGuestShell(guestshell.GuestShellPort):
     ) -> None:
         argv = commands.Argv.of(
             SCP,
-            "-i", target.key,
-            "-P", str(target.port),
+            "-i",
+            target.key,
+            "-P",
+            str(target.port),
             *_options(
                 "IdentitiesOnly=yes",
                 "BatchMode=yes",

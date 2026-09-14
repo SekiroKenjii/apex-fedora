@@ -71,9 +71,7 @@ def test_every_record_from_a_v1_store_is_imported_and_carries_both_permanent_lim
         assert entry.limits >= attesting.LEGACY_LIMITS
 
 
-def test_one_unreadable_record_becomes_a_fault_and_the_others_still_resolve(
-    tmp_path: Path,
-) -> None:
+def test_one_unreadable_record_becomes_a_fault_and_the_others_still_resolve(tmp_path: Path) -> None:
     root = store(tmp_path)
     put(root, "one", record("build.one"))
     put(root, "damaged", "{ not json")
@@ -85,9 +83,7 @@ def test_one_unreadable_record_becomes_a_fault_and_the_others_still_resolve(
     assert any("damaged.json" in fault for fault in found.faults)
 
 
-def test_a_symlinked_record_becomes_a_fault_rather_than_a_silent_absence(
-    tmp_path: Path,
-) -> None:
+def test_a_symlinked_record_becomes_a_fault_rather_than_a_silent_absence(tmp_path: Path) -> None:
     root = store(tmp_path)
     real = put(root, "one", record("build.one"))
     (root / "evidence" / "linked.json").symlink_to(real)
@@ -96,8 +92,7 @@ def test_a_symlinked_record_becomes_a_fault_rather_than_a_silent_absence(
 
     assert len(found.attestations) == 1
     assert any(
-        fault.startswith(refusals.RefusalReason.PATH_IS_A_SYMLINK.value)
-        for fault in found.faults
+        fault.startswith(refusals.RefusalReason.PATH_IS_A_SYMLINK.value) for fault in found.faults
     )
 
 
@@ -144,9 +139,7 @@ def test_the_reading_never_opens_history_or_candidate_history(tmp_path: Path) ->
     assert {entry.check for entry in found.attestations} == {"build.one"}
 
 
-def test_reading_a_store_writes_nothing_and_creates_nothing_under_its_root(
-    tmp_path: Path,
-) -> None:
+def test_reading_a_store_writes_nothing_and_creates_nothing_under_its_root(tmp_path: Path) -> None:
     root = store(tmp_path)
     put(root, "one", record("build.one"))
     before = inventory(root)

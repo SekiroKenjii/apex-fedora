@@ -9,8 +9,11 @@ from apex.kernel import errors, refusals
 
 def test_every_project_error_descends_from_one_root() -> None:
     for kind in (
-        errors.Refusal, errors.PreconditionUnmet, errors.VerificationFailed,
-        errors.PortFailure, errors.RegistrationError,
+        errors.Refusal,
+        errors.PreconditionUnmet,
+        errors.VerificationFailed,
+        errors.PortFailure,
+        errors.RegistrationError,
     ):
         assert issubclass(kind, errors.ApexError)
 
@@ -28,8 +31,10 @@ def test_each_error_carries_its_own_exit_code() -> None:
 
 def test_the_exit_codes_are_distinct() -> None:
     codes = [
-        errors.Refusal.exit_code, errors.PreconditionUnmet.exit_code,
-        errors.VerificationFailed.exit_code, errors.PortFailure.exit_code,
+        errors.Refusal.exit_code,
+        errors.PreconditionUnmet.exit_code,
+        errors.VerificationFailed.exit_code,
+        errors.PortFailure.exit_code,
         errors.INTERNAL_DEFECT_EXIT_CODE,
     ]
 

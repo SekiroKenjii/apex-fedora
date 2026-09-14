@@ -44,8 +44,12 @@ class Partition:
 PARTITIONS = (
     Partition(1, quantities.Mib(512), "U", "vfat", "APEX_EFI", "EFI/BOOT/apex-sentinel.txt"),
     Partition(
-        2, quantities.Mib(1024), "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7", "ntfs-3g",
-        "APEX_WINDOWS", "apex-sentinel.txt",
+        2,
+        quantities.Mib(1024),
+        "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7",
+        "ntfs-3g",
+        "APEX_WINDOWS",
+        "apex-sentinel.txt",
     ),
     Partition(3, quantities.Mib(2048), "L", "ext4", "APEX_LINUX", "apex-sentinel.txt"),
 )

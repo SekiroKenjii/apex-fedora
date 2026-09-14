@@ -38,9 +38,7 @@ def test_a_node_with_another_number_is_refused_before_any_read(
     assert caught.value.reason is refusals.RefusalReason.DEVICE_IDENTITY_MISMATCH
 
 
-def test_a_character_device_is_not_a_block_device(
-    blocks: blockdevices.BlockDevicePort,
-) -> None:
+def test_a_character_device_is_not_a_block_device(blocks: blockdevices.BlockDevicePort) -> None:
     """The null device carries the number it is asked for, and is still refused."""
     if isinstance(blocks, fake_blockdevices.FakeBlockDevices):
         pytest.skip("NOT TESTED: the fake holds only block devices")
@@ -71,9 +69,7 @@ def test_an_absent_node_is_a_port_failure_on_the_real_adapter(
         blocks.rewrite(root.child("absent"), expected=NULL_NUMBER, offset=0, length=512)
 
 
-def test_a_denied_write_leaves_the_bytes_unchanged(
-    blocks: blockdevices.BlockDevicePort,
-) -> None:
+def test_a_denied_write_leaves_the_bytes_unchanged(blocks: blockdevices.BlockDevicePort) -> None:
     if not isinstance(blocks, fake_blockdevices.FakeBlockDevices):
         pytest.skip("NOT TESTED: no disposable block device on this host")
     node = safepaths.SafePath(Path("/dev/vdb"))
@@ -85,9 +81,7 @@ def test_a_denied_write_leaves_the_bytes_unchanged(
     assert outcome.written is None and outcome.error_number == errno.EROFS
 
 
-def test_an_accepted_write_reports_the_bytes_written(
-    blocks: blockdevices.BlockDevicePort,
-) -> None:
+def test_an_accepted_write_reports_the_bytes_written(blocks: blockdevices.BlockDevicePort) -> None:
     if not isinstance(blocks, fake_blockdevices.FakeBlockDevices):
         pytest.skip("NOT TESTED: no disposable block device on this host")
     node = safepaths.SafePath(Path("/dev/vdb"))

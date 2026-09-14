@@ -14,12 +14,12 @@ from apex.kernel import commands, encoding, identifiers
 SCOPE = "Read-only virtual Ventoy observations; no automatic acceptance"
 COMMANDS: Mapping[str, commands.Argv] = {
     "disks": commands.Argv.of(
-        "lsblk", "--json", "-o",
+        "lsblk",
+        "--json",
+        "-o",
         "NAME,TYPE,MAJ:MIN,SIZE,FSTYPE,LABEL,RO,MOUNTPOINTS,TRAN,SERIAL,PKNAME",
     ),
-    "mounts": commands.Argv.of(
-        "findmnt", "--json", "-o", "TARGET,SOURCE,FSTYPE,OPTIONS,MAJ:MIN"
-    ),
+    "mounts": commands.Argv.of("findmnt", "--json", "-o", "TARGET,SOURCE,FSTYPE,OPTIONS,MAJ:MIN"),
     "dm-table": commands.Argv.of("dmsetup", "table"),
     "dm-info": commands.Argv.of("dmsetup", "info", "-c"),
     "sessions": commands.Argv.of("loginctl", "list-sessions", "--no-legend"),

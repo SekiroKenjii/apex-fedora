@@ -55,15 +55,20 @@ def test_a_context_wired_with_the_scripted_serial_shell_answers_scripts_and_reme
     script = guestshell.RemoteScript.of(guestshell.Step.of("cat", "/proc/cmdline"))
     console.expect(script.rendered(), fake_guestshell.GuestReply(stdout=b"rd.live.image\n"))
     target = guestshell.GuestTarget(
-        user="root", port=defaults.GUEST_SSH_PORT,
+        user="root",
+        port=defaults.GUEST_SSH_PORT,
         key=safepaths.SafePath(tmp_path / "unused"),
         known_hosts=safepaths.SafePath(tmp_path / "kh"),
     )
 
-    completed = console.run(target, guestshell.GuestRun(
-        script=script, deadline=defaults.GUEST_COMMAND_DEADLINE,
-        limit=kernel_commands.OutputLimit.default(),
-    ))
+    completed = console.run(
+        target,
+        guestshell.GuestRun(
+            script=script,
+            deadline=defaults.GUEST_COMMAND_DEADLINE,
+            limit=kernel_commands.OutputLimit.default(),
+        ),
+    )
 
     assert completed.stdout == b"rd.live.image\n" and completed.exit_code == 0
     assert opened == [console]

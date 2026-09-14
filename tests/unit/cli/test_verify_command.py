@@ -12,13 +12,7 @@ import pytest
 from answeringguest import AnsweringGuest
 from monitorfixtures import DrawingMonitor
 
-from apex.adapters.fakes import (
-    fake_clock,
-    fake_downloading,
-    fake_files,
-    fake_hypervisor,
-    fake_qmp,
-)
+from apex.adapters.fakes import fake_clock, fake_downloading, fake_files, fake_hypervisor, fake_qmp
 from apex.cli import commandspecs
 from apex.cli.commands import verify_command
 from apex.config import defaults, loader
@@ -85,14 +79,18 @@ def running(
     serial_console: bool = False,
 ) -> None:
     """Launch under a hypervisor that declares itself real, so the lease carries a witness."""
-    declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
-        "environment": claims.EnvironmentKind.BUILD
-    })
+    declared_real = type(
+        "RealQemu", (fake_hypervisor.FakeQemu,), {"environment": claims.EnvironmentKind.BUILD}
+    )
     launcher = dataclasses.replace(ports, hypervisor=declared_real())
     run = launcher.identities.run_id()
     launching.launch(
-        launcher, root=root, spec=spec(root, role, serial_console=serial_console), run=run,
-        run_directory=root.child(f"vm-runs/{run}"), medium=machines.Medium.LIVE,
+        launcher,
+        root=root,
+        spec=spec(root, role, serial_console=serial_console),
+        run=run,
+        run_directory=root.child(f"vm-runs/{run}"),
+        medium=machines.Medium.LIVE,
     )
     hypervisor = ports.hypervisor
     assert isinstance(hypervisor, fake_hypervisor.FakeQemu)
@@ -123,10 +121,12 @@ def request(
 def test_the_live_recipe_runs_against_the_leased_guest_and_the_fake_bundle_is_refused(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "fault.live-write-denial": {"status": "PASS"},
-        "fault.usb-write-denial": {"status": "PASS"},
-    })
+    guest = AnsweringGuest(
+        {
+            "fault.live-write-denial": {"status": "PASS"},
+            "fault.usb-write-denial": {"status": "PASS"},
+        }
+    )
     held = bundle(ports, guest)
     running(held, root, machines.VmRole.TEST)
 
@@ -186,8 +186,12 @@ def test_a_machine_launched_by_a_fake_is_refused_before_the_guest_is_touched(
     held = bundle(ports, guest)
     run = held.identities.run_id()
     launching.launch(
-        held, root=root, spec=spec(root, machines.VmRole.TEST), run=run,
-        run_directory=root.child(f"vm-runs/{run}"), medium=machines.Medium.LIVE,
+        held,
+        root=root,
+        spec=spec(root, machines.VmRole.TEST),
+        run=run,
+        run_directory=root.child(f"vm-runs/{run}"),
+        medium=machines.Medium.LIVE,
     )
 
     reply = verify_command.run(request(held, root, "live-protection", "--user", "tester"))
@@ -215,13 +219,15 @@ def credentials(
 def test_the_render_recipe_logs_in_with_the_credentials_and_the_fake_bundle_is_refused(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "desktop.session": [{"found": False}, {"found": True, "wayland": True}],
-        "desktop.greeter": {"found": True},
-        "desktop.shell-startup": {"found": True, "pid": 1, "event": {}},
-        "desktop.overview": [{"reached": True}, {"reached": True}, {"reached": True}],
-        "desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"},
-    })
+    guest = AnsweringGuest(
+        {
+            "desktop.session": [{"found": False}, {"found": True, "wayland": True}],
+            "desktop.greeter": {"found": True},
+            "desktop.shell-startup": {"found": True, "pid": 1, "event": {}},
+            "desktop.overview": [{"reached": True}, {"reached": True}, {"reached": True}],
+            "desktop.render": {"presented": True, "display_type": "GdkWaylandDisplay"},
+        }
+    )
     held = bundle(ports, guest)
     assert isinstance(held.files, fake_files.MemoryFiles)
     held = dataclasses.replace(held, monitor=DrawingMonitor(held.files, {"application.ppm": BARS}))
@@ -282,10 +288,12 @@ def test_without_an_account_from_either_source_the_recipe_is_refused(
 def test_the_fingerprint_recipe_runs_in_the_builder_and_the_fake_bundle_is_refused(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "build.import-payload": {"tag": "localhost/apex-payload:x"},
-        "fault.fingerprint-cleanup": {"status": "PASS"},
-    })
+    guest = AnsweringGuest(
+        {
+            "build.import-payload": {"tag": "localhost/apex-payload:x"},
+            "fault.fingerprint-cleanup": {"status": "PASS"},
+        }
+    )
     held = dataclasses.replace(bundle(ports, guest), downloads=fake_downloading.PinningFetcher())
     running(held, root, machines.VmRole.BUILDER)
     (root.path / defaults.BUILDER_KEY_NAME).write_bytes(b"key")
@@ -397,11 +405,15 @@ def test_the_older_case_names_spell_the_recipes_that_took_them_over(
 ) -> None:
     held = bundle(ports, AnsweringGuest({}))
     running(held, root, machines.VmRole.TEST, serial_console=True)
-    consoles = Consoles(AnsweringGuest({
-        "fault.live-lock": {"status": "PASS"},
-        "fault.live-write-denial": {"status": "PASS"},
-        "fault.usb-write-denial": {"status": "PASS"},
-    }))
+    consoles = Consoles(
+        AnsweringGuest(
+            {
+                "fault.live-lock": {"status": "PASS"},
+                "fault.live-write-denial": {"status": "PASS"},
+                "fault.usb-write-denial": {"status": "PASS"},
+            }
+        )
+    )
 
     lock = verify_command.run(request(held, root, "lock-fault", "--serial", serial=consoles))
     denial = verify_command.run(
@@ -413,7 +425,9 @@ def test_the_older_case_names_spell_the_recipes_that_took_them_over(
     assert denial.narrative.startswith("live-protection:")
     assert denial.document["not_tested"] == ["live.disk-protection"]
     assert consoles.guest.asked == [
-        "fault.live-lock", "fault.live-write-denial", "fault.usb-write-denial"
+        "fault.live-lock",
+        "fault.live-write-denial",
+        "fault.usb-write-denial",
     ]
     assert [target.user for target in consoles.guest.targets][-1] == "liveuser"
 
@@ -452,10 +466,17 @@ def test_serial_takes_no_credentials_and_no_builder_recipe(
     consoles = Consoles(AnsweringGuest({}))
 
     with pytest.raises(errors.Refusal) as with_credentials:
-        verify_command.run(request(
-            held, root, "live-observe", "--serial", "--credentials", "creds.json",
-            serial=consoles,
-        ))
+        verify_command.run(
+            request(
+                held,
+                root,
+                "live-observe",
+                "--serial",
+                "--credentials",
+                "creds.json",
+                serial=consoles,
+            )
+        )
     with pytest.raises(errors.Refusal) as builder:
         verify_command.run(request(held, root, "installer-trust", "--serial", serial=consoles))
 
@@ -496,15 +517,24 @@ def test_the_payload_fault_runs_over_serial_with_its_case_and_leaves_the_records
     run_directory, process = installer_run(held, root)
     consoles = Consoles(AnsweringGuest({"fault.installer-payload": installerruns.confirming()}))
 
-    reply = verify_command.run(request(
-        held, root, "installer-payload", "--case", installerruns.CASE, "--serial", serial=consoles
-    ))
+    reply = verify_command.run(
+        request(
+            held,
+            root,
+            "installer-payload",
+            "--case",
+            installerruns.CASE,
+            "--serial",
+            serial=consoles,
+        )
+    )
 
     assert isinstance(reply.document, dict)
     assert reply.document["succeeded"] is True and reply.exit_code == 0
     assert consoles.guest.asked == ["fault.installer-payload"]
     assert consoles.guest.requests[0]["arguments"] == {
-        "case": installerruns.CASE, "wrong_public_key": "",
+        "case": installerruns.CASE,
+        "wrong_public_key": "",
     }
     request_file = installerfault.read_request(held, run_directory)
     assert request_file.case == installerruns.CASE and request_file.process == process
@@ -521,12 +551,28 @@ def test_the_payload_fault_needs_its_case_and_a_second_attempt_is_refused(
 
     with pytest.raises(errors.Refusal) as unnamed:
         verify_command.run(request(held, root, "installer-payload", "--serial", serial=consoles))
-    first = verify_command.run(request(
-        held, root, "installer-payload", "--case", installerruns.CASE, "--serial", serial=consoles
-    ))
-    again = verify_command.run(request(
-        held, root, "installer-payload", "--case", installerruns.CASE, "--serial", serial=consoles
-    ))
+    first = verify_command.run(
+        request(
+            held,
+            root,
+            "installer-payload",
+            "--case",
+            installerruns.CASE,
+            "--serial",
+            serial=consoles,
+        )
+    )
+    again = verify_command.run(
+        request(
+            held,
+            root,
+            "installer-payload",
+            "--case",
+            installerruns.CASE,
+            "--serial",
+            serial=consoles,
+        )
+    )
 
     assert unnamed.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
     assert isinstance(first.document, dict) and first.document["succeeded"] is True
@@ -548,38 +594,69 @@ def test_the_wrong_key_case_reads_a_public_key_from_the_root_and_only_that_case_
     certificate = root.path / "wrong.crt"
     certificate.write_bytes(b"")
     held.files.write_atomic(
-        safepaths.SafePath(certificate), b"-----BEGIN CERTIFICATE-----\nnot a key\n",
+        safepaths.SafePath(certificate),
+        b"-----BEGIN CERTIFICATE-----\nnot a key\n",
         mode=defaults.RECORD_MODE,
     )
-    consoles = Consoles(AnsweringGuest({
-        "fault.installer-payload": installerruns.confirming("wrong-key"),
-    }))
+    consoles = Consoles(
+        AnsweringGuest({"fault.installer-payload": installerruns.confirming("wrong-key")})
+    )
 
     with pytest.raises(errors.Refusal) as not_a_key:
-        verify_command.run(request(
-            held, root, "installer-payload", "--case", "wrong-key", "--wrong-key",
-            str(certificate), "--serial", serial=consoles,
-        ))
+        verify_command.run(
+            request(
+                held,
+                root,
+                "installer-payload",
+                "--case",
+                "wrong-key",
+                "--wrong-key",
+                str(certificate),
+                "--serial",
+                serial=consoles,
+            )
+        )
     with pytest.raises(errors.Refusal) as unpaired:
-        verify_command.run(request(
-            held, root, "installer-payload", "--case", "corrupt-blob", "--wrong-key", str(public),
-            "--serial", serial=consoles,
-        ))
+        verify_command.run(
+            request(
+                held,
+                root,
+                "installer-payload",
+                "--case",
+                "corrupt-blob",
+                "--wrong-key",
+                str(public),
+                "--serial",
+                serial=consoles,
+            )
+        )
     with pytest.raises(errors.Refusal) as stray:
-        verify_command.run(request(
-            held, root, "live-observe", "--case", "corrupt-blob", "--serial", serial=consoles
-        ))
-    reply = verify_command.run(request(
-        held, root, "installer-payload", "--case", "wrong-key", "--wrong-key", str(public),
-        "--serial", serial=consoles,
-    ))
+        verify_command.run(
+            request(
+                held, root, "live-observe", "--case", "corrupt-blob", "--serial", serial=consoles
+            )
+        )
+    reply = verify_command.run(
+        request(
+            held,
+            root,
+            "installer-payload",
+            "--case",
+            "wrong-key",
+            "--wrong-key",
+            str(public),
+            "--serial",
+            serial=consoles,
+        )
+    )
 
     assert not_a_key.value.reason is refusals.RefusalReason.PUBLIC_KEY_MALFORMED
     assert unpaired.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
     assert stray.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
     assert isinstance(reply.document, dict) and reply.document["succeeded"] is True
     assert consoles.guest.requests[0]["arguments"] == {
-        "case": "wrong-key", "wrong_public_key": pem.decode(),
+        "case": "wrong-key",
+        "wrong_public_key": pem.decode(),
     }
 
 
@@ -590,10 +667,16 @@ def test_the_diagnostics_come_home_in_one_step_and_an_incomplete_log_is_the_run_
     installer_run(held, root)
     truncated = installerruns.whole_log(b"partial")
     truncated["truncated"] = True
-    consoles = Consoles(AnsweringGuest({"installer.diagnostics": [
-        installerruns.diagnostics(),
-        installerruns.diagnostics(**{"anaconda.log": truncated}),
-    ]}))
+    consoles = Consoles(
+        AnsweringGuest(
+            {
+                "installer.diagnostics": [
+                    installerruns.diagnostics(),
+                    installerruns.diagnostics(**{"anaconda.log": truncated}),
+                ]
+            }
+        )
+    )
 
     asked = request(held, root, "installer-diagnostics", "--serial", serial=consoles)
     whole = verify_command.run(asked)

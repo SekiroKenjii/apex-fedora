@@ -96,7 +96,11 @@ def test_the_ubuntu_image_is_accepted_against_the_signed_checksums_and_the_pinne
     assert gpgv.gpgv[0][:2] == ["gpgv", "--homedir"]
     assert gpgv.gpgv[0][2] == str(root.path / "exports" / str(RUN) / defaults.GPGV_HOME)
     assert gpgv.gpgv[0][3:] == [
-        "--keyring", str(inputs.keyring), "--status-fd", "1", str(inputs.signature),
+        "--keyring",
+        str(inputs.keyring),
+        "--status-fd",
+        "1",
+        str(inputs.signature),
         str(inputs.checksums),
     ]
     assert (root.path / "exports" / str(RUN) / defaults.UBUNTU_SIGNATURE_LOG).is_file()
@@ -114,9 +118,7 @@ def test_another_signer_a_wrong_checksum_line_or_a_different_image_are_refused(
     with pytest.raises(errors.Refusal) as signer:
         ventoymedia.verify_ubuntu(ports, root, RUN, inputs, lock)
     trusted = dataclasses.replace(ports, processes=inputs_support.Gpgv())
-    Path(inputs.checksums).write_bytes(
-        f"{'0' * 64} *{inputs_support.UBUNTU_NAME}\n".encode()
-    )
+    Path(inputs.checksums).write_bytes(f"{'0' * 64} *{inputs_support.UBUNTU_NAME}\n".encode())
     with pytest.raises(errors.Refusal) as line:
         ventoymedia.verify_ubuntu(trusted, root, RUN, inputs, lock)
     pinned = inputs_support.digest(inputs_support.UBUNTU_ISO)
@@ -173,8 +175,10 @@ def test_prepare_writes_the_request_and_every_proof_under_the_run(
     assert prepared.request_document["digest"] == inputs_support.SIGNED_DIGEST
     run_directory = root.path / "exports" / str(RUN)
     for name in (
-        ventoy_fixture.REQUEST_NAME, defaults.LIVE_VERIFICATION_NAME,
-        defaults.INPUTS_LOCK_NAME, defaults.UBUNTU_VERIFICATION_NAME,
+        ventoy_fixture.REQUEST_NAME,
+        defaults.LIVE_VERIFICATION_NAME,
+        defaults.INPUTS_LOCK_NAME,
+        defaults.UBUNTU_VERIFICATION_NAME,
     ):
         assert (run_directory / name).is_file(), name
     assert json.loads((run_directory / ventoy_fixture.REQUEST_NAME).read_text()) == (
@@ -193,7 +197,11 @@ def test_the_medium_is_bound_to_the_report_and_the_report_to_the_request(
     remote = safepaths.RemotePath(f"/var/tmp/apex-{RUN}/ventoy")
 
     image, execution = ventoymedia.bind(
-        ports, root, RUN, prepared, inputs_support.report(inputs_support.request_files()),
+        ports,
+        root,
+        RUN,
+        prepared,
+        inputs_support.report(inputs_support.request_files()),
         remote=remote,
     )
     other = inputs_support.report({**inputs_support.request_files(), "Ubuntu.iso": "0" * 64})
@@ -203,15 +211,21 @@ def test_the_medium_is_bound_to_the_report_and_the_report_to_the_request(
     ports.digests.forget()
     with pytest.raises(errors.Refusal) as differs:
         ventoymedia.bind(
-            ports, root, RUN, prepared, inputs_support.report(inputs_support.request_files()),
+            ports,
+            root,
+            RUN,
+            prepared,
+            inputs_support.report(inputs_support.request_files()),
             remote=remote,
         )
 
     assert image.path == output / ventoy_fixture.IMAGE
     assert execution == {
-        "status": "PASS", "remote": str(remote),
+        "status": "PASS",
+        "remote": str(remote),
         "image_sha256": inputs_support.digest(inputs_support.MEDIUM),
-        "boot_acceptance": "NOT TESTED", "physical_usb_written": False,
+        "boot_acceptance": "NOT TESTED",
+        "physical_usb_written": False,
     }
     assert (root.path / "exports" / str(RUN) / defaults.VENTOY_SUMS_NAME).read_bytes() == (
         inputs_support.sums_text()

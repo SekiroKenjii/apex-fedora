@@ -13,12 +13,7 @@ def node(name: str, reads: tuple[str, ...], writes: tuple[str, ...]) -> graph.No
 
 
 def test_a_chain_is_ordered_by_what_it_needs() -> None:
-    order = graph.order(
-        [
-            node("collect", ("output",), ("report",)),
-            node("build", (), ("output",)),
-        ]
-    )
+    order = graph.order([node("collect", ("output",), ("report",)), node("build", (), ("output",))])
 
     assert order == ["build", "collect"]
 
@@ -30,11 +25,7 @@ def test_independent_nodes_are_ordered_by_name() -> None:
 
 
 def test_the_order_is_the_same_whatever_order_the_nodes_arrive_in() -> None:
-    nodes = [
-        node("c", ("b",), ("c",)),
-        node("a", (), ("a",)),
-        node("b", ("a",), ("b",)),
-    ]
+    nodes = [node("c", ("b",), ("c",)), node("a", (), ("a",)), node("b", ("a",), ("b",))]
 
     assert graph.order(nodes) == graph.order(list(reversed(nodes))) == ["a", "b", "c"]
 

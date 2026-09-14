@@ -49,8 +49,11 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("ventoy.work"),
     reads=(
-        verifykeys.GUEST, verifykeys.AGENT, verifykeys.VENTOY_PREPARED,
-        composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID,
+        verifykeys.GUEST,
+        verifykeys.AGENT,
+        verifykeys.VENTOY_PREPARED,
+        composition_keys.RUNTIME_ROOT,
+        composition_keys.RUN_ID,
     ),
     writes=(verifykeys.WORK,),
     attests=frozenset(),

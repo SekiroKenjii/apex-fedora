@@ -24,6 +24,7 @@ from apex.cli.commands import machine_command
 from apex.config import loader
 from apex.kernel import errors, identifiers, quantities, refusals, safepaths
 from apex.ports import portset
+from apex.provisioning import compactledger
 from apex.verification import installerfault
 from apex.wiring import contexts
 
@@ -188,11 +189,23 @@ def test_a_test_machine_starts_over_overlays_with_the_medium_on_its_lease(
         safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
     )
 
-    started = machine_command.run(request(
-        held, settings, root, "start", "--role", "test",
-        "--disk", str(root.path / "target.qcow2"), "--iso", str(root.path / "apex-live.iso"),
-        "--medium", "live", "--guest-ssh",
-    ))
+    started = machine_command.run(
+        request(
+            held,
+            settings,
+            root,
+            "start",
+            "--role",
+            "test",
+            "--disk",
+            str(root.path / "target.qcow2"),
+            "--iso",
+            str(root.path / "apex-live.iso"),
+            "--medium",
+            "live",
+            "--guest-ssh",
+        )
+    )
 
     assert isinstance(started.document, dict)
     lease = started.document["started"]
@@ -241,18 +254,20 @@ def test_prepare_makes_the_builders_storage_from_the_reviewed_base(
 
     reply = machine_command.run(request(held, settings, root, "prepare"))
 
-    assert reply.document == {"prepared": {
-        "base": str(base / "builder-base.qcow2"),
-        "base_fetched": True,
-        "disk_created": True,
-        "key_created": True,
-        "seed_created": True,
-        "variables_copied": True,
-    }}
+    assert reply.document == {
+        "prepared": {
+            "base": str(base / "builder-base.qcow2"),
+            "base_fetched": True,
+            "disk_created": True,
+            "key_created": True,
+            "seed_created": True,
+            "variables_copied": True,
+        }
+    }
     fetcher = held.downloads
     assert isinstance(fetcher, fake_downloading.PinningFetcher)
     assert str(fetcher.fetched[0][0]).endswith(".qcow2")
-    assert (base / "seed.iso").read_bytes()[16 * 2048 + 40:16 * 2048 + 46] == b"cidata"
+    assert (base / "seed.iso").read_bytes()[16 * 2048 + 40 : 16 * 2048 + 46] == b"cidata"
     assert (base / "builder-vars.fd").read_bytes() == b"OVMF_VARS.fd"
 
 
@@ -270,11 +285,23 @@ def test_a_test_machine_boots_an_image_as_usb_storage_over_the_emulated_bus(
         safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
     )
 
-    started = machine_command.run(request(
-        held, settings, root, "start", "--role", "test",
-        "--disk", str(root.path / "target.qcow2"), "--extra-disk", str(root.path / "other.qcow2"),
-        "--usb-bus", "--boot-usb", str(root.path / "ventoy.qcow2"),
-    ))
+    started = machine_command.run(
+        request(
+            held,
+            settings,
+            root,
+            "start",
+            "--role",
+            "test",
+            "--disk",
+            str(root.path / "target.qcow2"),
+            "--extra-disk",
+            str(root.path / "other.qcow2"),
+            "--usb-bus",
+            "--boot-usb",
+            str(root.path / "ventoy.qcow2"),
+        )
+    )
 
     assert isinstance(started.document, dict)
     hypervisor = held.hypervisor
@@ -302,14 +329,23 @@ def test_a_usb_fixture_is_hot_plugged_into_the_running_test_machine(
     assert isinstance(monitor, fake_qmp.ScriptedQmp)
     monitor.reply("blockdev-add", {})
     monitor.reply("device_add", {})
-    machine_command.run(request(
-        held, settings, root, "start", "--role", "test",
-        "--disk", str(root.path / "target.qcow2"), "--usb-bus",
-    ))
+    machine_command.run(
+        request(
+            held,
+            settings,
+            root,
+            "start",
+            "--role",
+            "test",
+            "--disk",
+            str(root.path / "target.qcow2"),
+            "--usb-bus",
+        )
+    )
 
-    reply = machine_command.run(request(
-        held, settings, root, "hotplug-usb", "--source", str(root.path / "fixture.qcow2")
-    ))
+    reply = machine_command.run(
+        request(held, settings, root, "hotplug-usb", "--source", str(root.path / "fixture.qcow2"))
+    )
 
     assert isinstance(reply.document, dict)
     attached = reply.document["attached"]
@@ -340,9 +376,18 @@ def test_power_loss_kills_only_a_running_test_machine_and_records_the_fault(
     held.files.write_atomic(
         safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
     )
-    machine_command.run(request(
-        held, settings, root, "start", "--role", "test", "--disk", str(root.path / "target.qcow2"),
-    ))
+    machine_command.run(
+        request(
+            held,
+            settings,
+            root,
+            "start",
+            "--role",
+            "test",
+            "--disk",
+            str(root.path / "target.qcow2"),
+        )
+    )
 
     reply = machine_command.run(request(held, settings, root, "power-loss"))
     status = machine_command.run(request(held, settings, root, "status"))
@@ -378,10 +423,20 @@ def started_test_run(
     held.files.write_atomic(
         safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
     )
-    machine_command.run(request(
-        held, settings, root, "start", "--role", "test",
-        "--disk", str(root.path / "target.qcow2"), "--extra-disk", str(root.path / "other.qcow2"),
-    ))
+    machine_command.run(
+        request(
+            held,
+            settings,
+            root,
+            "start",
+            "--role",
+            "test",
+            "--disk",
+            str(root.path / "target.qcow2"),
+            "--extra-disk",
+            str(root.path / "other.qcow2"),
+        )
+    )
     machine_command.run(request(held, settings, root, "power-loss"))
     return held, settings
 
@@ -399,8 +454,16 @@ def test_a_stopped_run_is_compared_against_its_sources_by_its_directory(
     for overlay in ("disk.qcow2", "other-1.qcow2"):
         source = "target.qcow2" if overlay == "disk.qcow2" else "other.qcow2"
         tools.expect(
-            ("qemu-img", "compare", "-f", "qcow2", "-F", "qcow2",
-             str(root.path / source), str(run_directory / overlay)),
+            (
+                "qemu-img",
+                "compare",
+                "-f",
+                "qcow2",
+                "-F",
+                "qcow2",
+                str(root.path / source),
+                str(run_directory / overlay),
+            ),
             fake_process.Reply(exit_code=0, stdout=b"Images are identical."),
         )
 
@@ -456,11 +519,25 @@ def finished_fault_run(
     held.files.write_atomic(
         safepaths.SafePath(tmp_path / "OVMF_VARS.fd"), b"vars", mode=quantities.FileMode(0o600)
     )
-    machine_command.run(request(
-        held, settings, root, "start", "--role", "test",
-        "--disk", str(root.path / "target.qcow2"), "--extra-disk", str(root.path / "other.qcow2"),
-        "--iso", str(iso), "--medium", "installer", "--serial-console",
-    ))
+    machine_command.run(
+        request(
+            held,
+            settings,
+            root,
+            "start",
+            "--role",
+            "test",
+            "--disk",
+            str(root.path / "target.qcow2"),
+            "--extra-disk",
+            str(root.path / "other.qcow2"),
+            "--iso",
+            str(iso),
+            "--medium",
+            "installer",
+            "--serial-console",
+        )
+    )
     run_directory = next((root.path / "vm-runs").iterdir())
     held_run = safepaths.SafePath(run_directory)
     asked = installerfault.Request(
@@ -471,7 +548,9 @@ def finished_fault_run(
     )
     installerfault.write_request(held, held_run, asked)
     installerfault.write_kept(
-        held, held_run, request=asked,
+        held,
+        held_run,
+        request=asked,
         observations=installerruns.confirming() if guest is None else guest,  # type: ignore[arg-type]
     )
     machine_command.run(request(held, settings, root, "power-loss"))
@@ -486,8 +565,16 @@ def expect_comparisons(
     for overlay, exit_code in zip(("disk.qcow2", "other-1.qcow2"), exits, strict=True):
         source = "target.qcow2" if overlay == "disk.qcow2" else "other.qcow2"
         tools.expect(
-            ("qemu-img", "compare", "-f", "qcow2", "-F", "qcow2",
-             str(root.path / source), str(run_directory / overlay)),
+            (
+                "qemu-img",
+                "compare",
+                "-f",
+                "qcow2",
+                "-F",
+                "qcow2",
+                str(root.path / source),
+                str(run_directory / overlay),
+            ),
             fake_process.Reply(
                 exit_code=exit_code,
                 stdout=b"Images are identical." if exit_code == 0 else b"Content mismatch",
@@ -550,7 +637,8 @@ def test_a_report_that_does_not_confirm_the_rejection_is_not_collected(
 
 
 def test_compact_runs_the_compaction_and_a_resume_finalises_a_kept_copy(
-    ports: portset.HostPorts, prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
+    ports: portset.HostPorts,
+    prepared: tuple[loader.Settings, safepaths.RuntimeRoot],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from apex.provisioning import compacting  # noqa: PLC0415
@@ -560,17 +648,16 @@ def test_compact_runs_the_compaction_and_a_resume_finalises_a_kept_copy(
 
     def compacted(name: str | None) -> Any:
         seen.append(name)
-        return compacting.Compacted(
-            report=root.child("compactions/x/result.json"), status="PASS",
-            replacement="COMPLETE", projected_free=7,
+        return compactledger.Compacted(
+            report=root.child("compactions/x/result.json"),
+            status="PASS",
+            replacement="COMPLETE",
+            projected_free=7,
         )
 
+    monkeypatch.setattr(compacting, "compact", lambda _held, _settings, _root: compacted(None))
     monkeypatch.setattr(
-        compacting, "compact", lambda _held, _settings, _root: compacted(None)
-    )
-    monkeypatch.setattr(
-        compacting, "finalise",
-        lambda _held, _settings, _root, run: compacted(str(run)),
+        compacting, "finalise", lambda _held, _settings, _root, run: compacted(str(run))
     )
 
     first = machine_command.run(request(bundle(ports), settings, root, "compact"))

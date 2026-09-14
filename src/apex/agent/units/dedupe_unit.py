@@ -16,15 +16,7 @@ from pathlib import Path
 
 from apex.agent import agentports, builder, units
 from apex.config import defaults
-from apex.kernel import (
-    commands,
-    encoding,
-    errors,
-    identifiers,
-    quantities,
-    refusals,
-    safepaths,
-)
+from apex.kernel import commands, encoding, errors, identifiers, quantities, refusals, safepaths
 from apex.model import extents
 from apex.provisioning.fixtures import dedupe_fixture, update_fixture
 
@@ -99,11 +91,7 @@ def _self_test(ports: agentports.AgentPorts, work: safepaths.SafePath) -> encodi
         or ports.files.read_bytes(wrong, limit=limit) != changed
     ):
         raise _refuse("copy-on-write isolation failed")
-    return {
-        "identical": shared,
-        "kernel_rejected_difference": True,
-        "cow_write_isolation": True,
-    }
+    return {"identical": shared, "kernel_rejected_difference": True, "cow_write_isolation": True}
 
 
 def _share(
@@ -138,9 +126,7 @@ def _share_fixture(
     ports: agentports.AgentPorts, fixture: identifiers.RunId
 ) -> dict[str, encoding.JsonValue]:
     root = safepaths.SafePath(Path(f"{UPDATE_PREFIX}{fixture}"))
-    completed = update_fixture.parse_report(
-        _object(ports, root / "output" / "results.json")
-    )
+    completed = update_fixture.parse_report(_object(ports, root / "output" / "results.json"))
     if completed.run != fixture:
         raise _refuse("a completed fixture is required")
     source = root / dedupe_fixture.BLOB_SOURCE

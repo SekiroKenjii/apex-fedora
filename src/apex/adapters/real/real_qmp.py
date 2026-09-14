@@ -67,9 +67,7 @@ class _Session(qmp.QmpSession):
             if response.get("id") != identifier:
                 continue
             if "error" in response:
-                raise errors.PortFailure(
-                    port="qmp", cause=f"{command.name}: {response['error']}"
-                )
+                raise errors.PortFailure(port="qmp", cause=f"{command.name}: {response['error']}")
             return response.get("return")
 
     def _read(self) -> dict[str, object]:

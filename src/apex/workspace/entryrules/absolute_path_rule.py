@@ -25,8 +25,6 @@ def inspect(subject: rulespecs.EntrySubject) -> Sequence[rulespecs.Finding]:
 
 entryrules.declare(
     rulespecs.EntryRule(
-        id=RULE,
-        origin=ruleorigins.Decomposed(ruleorigins.LegacySurface.PERMITTED),
-        inspect=inspect,
+        id=RULE, origin=ruleorigins.Decomposed(ruleorigins.LegacySurface.PERMITTED), inspect=inspect
     )
 )

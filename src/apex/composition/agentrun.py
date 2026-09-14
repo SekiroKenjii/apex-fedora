@@ -104,8 +104,7 @@ def deliver(
     )
     if not completed.succeeded:
         raise errors.PortFailure(
-            port="guest",
-            cause=f"the guest could not unpack the agent: {_stderr(completed)}",
+            port="guest", cause=f"the guest could not unpack the agent: {_stderr(completed)}"
         )
     return AgentInstall(directory=directory, digest=digest)
 
@@ -137,8 +136,14 @@ def run_unit(
     )
     invocation = guestshell.RemoteScript.of(
         guestshell.Step.of(
-            "env", f"PYTHONPATH={install.library}", "python3", "-m", MODULE,
-            "run", "--framed", str(token),
+            "env",
+            f"PYTHONPATH={install.library}",
+            "python3",
+            "-m",
+            MODULE,
+            "run",
+            "--framed",
+            str(token),
         )
     )
     asked = invocation.steps[0]
@@ -159,8 +164,7 @@ def run_unit(
     )
     if completed.exit_code == errors.Refusal.exit_code:
         raise errors.Refusal(
-            refusals.RefusalReason.AGENT_REFUSED,
-            subject=f"{unit}: {_stderr(completed)}",
+            refusals.RefusalReason.AGENT_REFUSED, subject=f"{unit}: {_stderr(completed)}"
         )
     if not completed.succeeded:
         raise errors.PortFailure(

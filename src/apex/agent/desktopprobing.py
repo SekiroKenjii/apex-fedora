@@ -38,7 +38,7 @@ def display_type(journal: str) -> str | None:
     """The display the program reported when its window was presented, from its journal."""
     for line in journal.splitlines():
         try:
-            event = json.loads(line[line.index("{"):]) if "{" in line else None
+            event = json.loads(line[line.index("{") :]) if "{" in line else None
         except ValueError:
             continue
         if isinstance(event, dict) and event.get("event") == desktopprograms.PRESENTED:
@@ -48,10 +48,7 @@ def display_type(journal: str) -> str | None:
 
 
 def present(
-    ports: agentports.AgentPorts,
-    program: desktopprograms.Program,
-    unit: str,
-    *arguments: str,
+    ports: agentports.AgentPorts, program: desktopprograms.Program, unit: str, *arguments: str
 ) -> encoding.Document:
     guestguard.require_shell_session(ports)
     digest = program.place(ports.files)

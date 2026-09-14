@@ -40,7 +40,10 @@ class ScriptedQmp(qmp.QmpPort, qmp.QmpSession):
 
     @contextlib.contextmanager
     def connect(
-        self, socket_path: safepaths.SafePath, *, deadline: timing.Deadline  # noqa: ARG002
+        self,
+        socket_path: safepaths.SafePath,
+        *,
+        deadline: timing.Deadline,  # noqa: ARG002
     ) -> Iterator[qmp.QmpSession]:
         if not self._reachable:
             raise errors.PortFailure(port="qmp", cause=f"{socket_path}: Connection refused")

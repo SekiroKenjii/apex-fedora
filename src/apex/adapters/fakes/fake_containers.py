@@ -49,11 +49,13 @@ class FakeRegistry(containers.ContainerEnginePort):
             containers.ImageReference.stored("localhost/apex:fedora"), b'{"schemaVersion": 2}'
         )
         registry.reply(
-            "localhost/apex:fedora", ("rpm", "-qa"),
+            "localhost/apex:fedora",
+            ("rpm", "-qa"),
             commands.CompletedRun(exit_code=0, stdout=b"bash-5\n", stderr=b"", truncated=False),
         )
         registry.reply(
-            "localhost/apex:fedora", ("false",),
+            "localhost/apex:fedora",
+            ("false",),
             commands.CompletedRun(exit_code=1, stdout=b"", stderr=b"", truncated=False),
         )
         return registry

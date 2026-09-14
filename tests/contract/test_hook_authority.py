@@ -62,9 +62,7 @@ def test_every_rule_that_refuses_one_message_is_reported_in_one_pass(tmp_path: P
     assert "commit.co-author-trailer" in err
 
 
-def test_a_subject_carrying_a_line_break_never_breaks_the_line_structure(
-    tmp_path: Path,
-) -> None:
+def test_a_subject_carrying_a_line_break_never_breaks_the_line_structure(tmp_path: Path) -> None:
     code, _, err = hook(commit_message(tmp_path, "fix(audio): one\rtwo\n"))
 
     assert code == 2

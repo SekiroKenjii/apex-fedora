@@ -27,9 +27,7 @@ def test_every_real_adapter_has_a_fake_counterpart() -> None:
 
 
 def test_the_contract_suite_covers_every_port() -> None:
-    ports = {
-        item.name for item in pkgutil.iter_modules([str(SOURCE / "ports")])
-    } - {"portset"}
+    ports = {item.name for item in pkgutil.iter_modules([str(SOURCE / "ports")])} - {"portset"}
     covered = {
         path.stem.removeprefix("test_").removesuffix("_port")
         for path in (SOURCE.parents[1] / "tests" / "contract").glob("test_*_port.py")

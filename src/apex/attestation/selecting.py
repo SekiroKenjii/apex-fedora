@@ -53,7 +53,9 @@ def select(
         archived = archive / runtimestate.CANDIDATE_NAME
         ports.files.copy(target, archived)
     document: encoding.Document = {
-        "digest": str(digest), "build_id": str(build), "verification": verification,
+        "digest": str(digest),
+        "build_id": str(build),
+        "verification": verification,
     }
     ports.files.write_atomic(
         target, encoding.canonical(document) + b"\n", mode=defaults.RECORD_MODE

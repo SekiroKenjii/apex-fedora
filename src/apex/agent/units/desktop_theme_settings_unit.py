@@ -30,9 +30,7 @@ def run(
         "scope": SCOPE,
         "visual_review": desktopprobing.NOT_TESTED,
         "settings": observing.programs(ports, COMMANDS),
-        "composition": observing.text(
-            ports, safepaths.SafePath(Path(defaults.SHELL_THEME_SOURCE))
-        ),
+        "composition": observing.text(ports, safepaths.SafePath(Path(defaults.SHELL_THEME_SOURCE))),
     }
 
 

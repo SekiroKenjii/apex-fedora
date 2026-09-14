@@ -33,9 +33,7 @@ DIGEST = identifiers.Digest("a" * 64)
 
 def test_a_release_profile_carries_no_digest_field() -> None:
     """A profile edit must never be able to weaken a pin."""
-    annotations = {
-        field.name: field.type for field in dataclasses.fields(release.ReleaseProfile)
-    }
+    annotations = {field.name: field.type for field in dataclasses.fields(release.ReleaseProfile)}
 
     for name, annotation in annotations.items():
         assert "Digest" not in str(annotation), f"{name} would let a profile hold a hash"
@@ -75,9 +73,12 @@ def test_the_next_release_is_a_new_profile_and_nothing_else() -> None:
         mock_root="fedora-45-x86_64",
     )
 
-    assert fedora_45.render_nevra(
-        name="greenboot", version="0.16.4", build="0", architecture="x86_64"
-    ).filename == "greenboot-0.16.4-0.fc45.x86_64.rpm"
+    assert (
+        fedora_45.render_nevra(
+            name="greenboot", version="0.16.4", build="0", architecture="x86_64"
+        ).filename
+        == "greenboot-0.16.4-0.fc45.x86_64.rpm"
+    )
 
 
 def test_an_unreviewed_profile_declares_why_it_is_refused() -> None:

@@ -64,7 +64,9 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("installer.request"),
     reads=(
-        verifykeys.MACHINE_RUN, verifykeys.MACHINE_PROCESS, verifykeys.FAULT_CASE,
+        verifykeys.MACHINE_RUN,
+        verifykeys.MACHINE_PROCESS,
+        verifykeys.FAULT_CASE,
         composition_keys.RUNTIME_ROOT,
     ),
     writes=(verifykeys.INSTALLER_REQUEST,),

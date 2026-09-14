@@ -106,8 +106,7 @@ def test_a_test_machine_accepts_up_to_two_extra_disks(root: safepaths.RuntimeRoo
 def test_a_third_extra_disk_is_refused(root: safepaths.RuntimeRoot) -> None:
     with pytest.raises(errors.Refusal):
         build(
-            root,
-            extra_disks=(disk(root, "a.qcow2"), disk(root, "b.qcow2"), disk(root, "c.qcow2")),
+            root, extra_disks=(disk(root, "a.qcow2"), disk(root, "b.qcow2"), disk(root, "c.qcow2"))
         )
 
 
@@ -133,9 +132,7 @@ def test_a_rendered_specification_names_the_program_first(root: safepaths.Runtim
     assert tuple(spec.render())[0] == "qemu-system-x86_64"
 
 
-def test_a_rendered_specification_never_contains_a_host_device(
-    root: safepaths.RuntimeRoot,
-) -> None:
+def test_a_rendered_specification_never_contains_a_host_device(root: safepaths.RuntimeRoot) -> None:
     spec = build(root)
     rendered = " ".join(spec.render())
 
@@ -157,9 +154,7 @@ def test_an_owned_test_machine_compares_four_identity_fields() -> None:
 
 
 def test_only_a_disposable_machine_can_be_owned() -> None:
-    identity = machines.VmIdentity(
-        process=1, pidfd_inode=2, boot_ticks=3, monitor_socket_inode=4
-    )
+    identity = machines.VmIdentity(process=1, pidfd_inode=2, boot_ticks=3, monitor_socket_inode=4)
 
     with pytest.raises(errors.Refusal) as raised:
         machines.OwnedTestVm(identity=identity, role=machines.VmRole.BUILDER)
@@ -168,9 +163,7 @@ def test_only_a_disposable_machine_can_be_owned() -> None:
 
 
 def test_a_disposable_machine_is_owned_without_complaint() -> None:
-    identity = machines.VmIdentity(
-        process=1, pidfd_inode=2, boot_ticks=3, monitor_socket_inode=4
-    )
+    identity = machines.VmIdentity(process=1, pidfd_inode=2, boot_ticks=3, monitor_socket_inode=4)
 
     owned = machines.OwnedTestVm(identity=identity, role=machines.VmRole.TEST)
 
@@ -214,12 +207,7 @@ def test_usb_boot_takes_the_controller_and_exactly_one_other_disk(
 
 @pytest.mark.parametrize(
     "overrides",
-    [
-        {"extra_disks": ()},
-        {"seed": "seed.iso"},
-        {"network": "restricted"},
-        {"usb": None},
-    ],
+    [{"extra_disks": ()}, {"seed": "seed.iso"}, {"network": "restricted"}, {"usb": None}],
 )
 def test_usb_boot_with_anything_else_is_refused(
     root: safepaths.RuntimeRoot, overrides: dict[str, object]

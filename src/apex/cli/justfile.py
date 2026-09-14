@@ -13,12 +13,13 @@ from __future__ import annotations
 import re
 
 from apex.cli import commands, commandspecs
+from apex.config import toolchain
 
-PYTHON = "3.14.4"
+PYTHON = toolchain.PYTHON
 INDENT = "    "
 PLACEHOLDER = re.compile(r"\{\{([a-z_]+)\}\}")
 UV = "uv run --no-project --python {{python}}"
-PYTEST = f"{UV} --with pytest==9.1.1 pytest"
+PYTEST = f"{UV} --with {toolchain.pin('pytest')} pytest"
 MIGRATION = f"{UV} python tools/migration"
 HEADER = (
     'set shell := ["bash", "-eu", "-o", "pipefail", "-c"]\n'
@@ -42,16 +43,23 @@ BUS_MONITOR = (
     "monitor"
 )
 HOST_PIPELINES: tuple[Plain, ...] = (
-    ("observe-fingerprint", "", (
-        "{ " + BUS_MONITOR + "; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } "
-        "| {{apex}} hardware observe-fingerprint --lookup-system-clients",
-    )),
+    (
+        "observe-fingerprint",
+        "",
+        (
+            "{ " + BUS_MONITOR + "; s=$?; [ $s -eq 0 ] || [ $s -eq 124 ] || [ $s -eq 130 ]; } "
+            "| {{apex}} hardware observe-fingerprint --lookup-system-clients",
+        ),
+    ),
 )
 
 
 FOLDED: tuple[Plain, ...] = (
-    ("installer-logs-collect", "run_directory token",
-     ('{{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"',)),
+    (
+        "installer-logs-collect",
+        "run_directory token",
+        ('{{apex}} installer-logs collect --run "{{run_directory}}" --token "{{token}}"',),
+    ),
 )
 
 TOOLING: tuple[Plain, ...] = (
@@ -59,21 +67,21 @@ TOOLING: tuple[Plain, ...] = (
     ("test-integration", "", (f"{PYTEST} -m integration",)),
     ("runtime-freeze", "", (f"{MIGRATION}/runtime_inventory.py record",)),
     ("runtime-verify", "", (f"{MIGRATION}/runtime_inventory.py verify",)),
-    ("surface-freeze", "scratch",
-     (f'{MIGRATION}/surface_contract.py freeze --scratch "{{{{scratch}}}}"',)),
+    (
+        "surface-freeze",
+        "scratch",
+        (f'{MIGRATION}/surface_contract.py freeze --scratch "{{{{scratch}}}}"',),
+    ),
     ("surface", "", (f"{MIGRATION}/surface_contract.py check",)),
     ("ratchet-freeze", "", (f"{MIGRATION}/lint_ratchet.py freeze",)),
     ("ratchet", "", (f"{MIGRATION}/lint_ratchet.py check",)),
-    ("types", "", (f"{UV} --with mypy==1.18.2 mypy --strict src/apex",)),
-    ("pyright", "", (
-        f"{UV} --with pytest==9.1.1 --with pyright==1.1.407 sh -c "
-        "'pyright --pythonpath \"$(command -v python)\"'",
-    )),
-    ("deadcode", "", (
-        f"{UV} --with vulture==2.14 vulture src/apex tools/migration tests/unit tests/pipelines "
-        "tests/architecture tests/contract tests/property tests/support tests/integration "
-        "--min-confidence 80",
-    )),
+    ("format", "", ("{{apex}} check --only format",)),
+    ("lint", "", ("{{apex}} check --only lint",)),
+    ("types", "", ("{{apex}} check --only types",)),
+    ("pyright", "", ("{{apex}} check --only pyright",)),
+    ("deadcode", "", ("{{apex}} check --only deadcode",)),
+    ("duplicates", "", ("{{apex}} check --only duplicates",)),
+    ("imports", "", ("{{apex}} check --only imports",)),
     ("agent-wheel", "out", (f'{MIGRATION}/agent_wheel.py "{{{{out}}}}"',)),
     ("plans-freeze", "", (f"{MIGRATION}/golden_plans.py freeze",)),
     ("plans", "", (f"{MIGRATION}/golden_plans.py check",)),
@@ -82,15 +90,19 @@ TOOLING: tuple[Plain, ...] = (
     ("justfile-freeze", "", (f"{MIGRATION}/generated_justfile.py freeze",)),
     ("justfile", "", (f"{MIGRATION}/generated_justfile.py check",)),
     ("benchmarks", "", (f"{PYTEST} -q -m benchmark --durations=5",)),
-    ("lint", "", (
-        f"{UV} --with ruff==0.14.5 ruff check --no-cache src tools/migration tests/unit "
-        "tests/pipelines tests/architecture tests/contract tests/property tests/support",
-    )),
 )
 GATE: Lines = (
-    "just test", "just lint", "just types", "just pyright", "just deadcode", "just plans",
-    "just os", "just justfile", "just runtime-verify", "just verify-chain",
-    "just readiness-table", "just test-integration", "just surface", "just ratchet",
+    "just check",
+    "just test",
+    "just plans",
+    "just os",
+    "just justfile",
+    "just runtime-verify",
+    "just verify-chain",
+    "just readiness-table",
+    "just test-integration",
+    "just surface",
+    "just ratchet",
     "just benchmarks",
 )
 

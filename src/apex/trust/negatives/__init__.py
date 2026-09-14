@@ -24,11 +24,7 @@ class Trial:
 
 class Prepare(Protocol):
     def __call__(
-        self,
-        ports: portset.HostPorts,
-        *,
-        original: Trial,
-        scratch: verifying.BundleLocation,
+        self, ports: portset.HostPorts, *, original: Trial, scratch: verifying.BundleLocation
     ) -> Trial: ...
 
 

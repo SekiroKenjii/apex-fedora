@@ -48,7 +48,10 @@ def for_case(
         ports = context.ports
         try:
             observed = probing.observe(
-                ports, context.facts[verifykeys.GUEST], context.facts[verifykeys.AGENT], case,
+                ports,
+                context.facts[verifykeys.GUEST],
+                context.facts[verifykeys.AGENT],
+                case,
                 token=ports.identities.token(),
             )
         except errors.Refusal as refusal:

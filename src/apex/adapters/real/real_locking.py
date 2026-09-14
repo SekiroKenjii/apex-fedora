@@ -73,8 +73,7 @@ class FileLocks(locking.LockPort):
                     raise errors.Refusal(
                         refusals.RefusalReason.LOCK_HELD,
                         subject=(
-                            f"{scope.name} is held by "
-                            f"{self.holder(scope) or 'another process'}"
+                            f"{scope.name} is held by {self.holder(scope) or 'another process'}"
                         ),
                         remedy="wait for the holder to finish or stop it",
                     ) from error

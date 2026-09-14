@@ -76,7 +76,9 @@ def main(
     """Every refusal keeps the exit code its own kind carries."""
     try:
         code, text = run(
-            argv, standard_input, footer,
+            argv,
+            standard_input,
+            footer,
             processes=hostbundle.processes() if processes is None else processes,
         )
     except errors.ApexError as failure:

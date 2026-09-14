@@ -17,6 +17,7 @@ import dataclasses
 from collections.abc import Mapping
 from pathlib import PurePosixPath
 
+from apex.composition import artifactchecks
 from apex.config import defaults, sourcepins
 from apex.kernel import encoding, errors, hashing, identifiers, refusals, safepaths
 from apex.ports import portset
@@ -112,15 +113,18 @@ def load_lock(repository: safepaths.SourceRoot) -> PackageLock:
     try:
         packages = tuple(
             LockedPackage(
-                name=str(item["name"]), version=str(item["version"]),
-                archive=str(item["archive"]), patch=str(item["patch"]),
+                name=str(item["name"]),
+                version=str(item["version"]),
+                archive=str(item["archive"]),
+                patch=str(item["patch"]),
             )
             for item in listed
         )
     except (KeyError, TypeError) as error:
         raise _malformed(str(error)) from error
     return PackageLock(
-        release=str(parsed.get("release", "")), packages=packages,
+        release=str(parsed.get("release", "")),
+        packages=packages,
         digest=hashing.digest_bytes(document),
     )
 
@@ -178,7 +182,9 @@ def _artifacts(document: encoding.Document) -> dict[str, str]:
 
 
 def _package_entries(
-    document: encoding.Document, lock: PackageLock, patches: Mapping[str, identifiers.Digest],
+    document: encoding.Document,
+    lock: PackageLock,
+    patches: Mapping[str, identifiers.Digest],
     artifacts: Mapping[str, str],
 ) -> dict[str, str]:
     packages = document.get("packages")
@@ -217,29 +223,6 @@ def parse_rpm_report(
     return RpmBuildReport(document=dict(document), artifacts=artifacts, patches=found)
 
 
-def require_artifacts(
-    ports: portset.HostPorts,
-    root: safepaths.RuntimeRoot,
-    home: safepaths.SafePath,
-    artifacts: Mapping[str, str],
-) -> None:
-    """Every inventoried artifact digests on the host to what the report says it is."""
-    for relative, expected in artifacts.items():
-        try:
-            found = ports.digests.file(
-                safepaths.SafePath.regular_file(home.path / relative, within=root)
-            )
-        except (errors.Refusal, errors.PortFailure) as problem:
-            raise errors.Refusal(
-                refusals.RefusalReason.ARTIFACT_CHECKSUM_MISMATCH, subject=f"{relative}: {problem}"
-            ) from problem
-        if found.hex != expected:
-            raise errors.Refusal(
-                refusals.RefusalReason.ARTIFACT_CHECKSUM_MISMATCH,
-                subject=f"{relative}: differs from the transferred report",
-            )
-
-
 def parse_gtk_report(document: encoding.Document) -> GtkReport:
     """The dialog test's report, with every case's log named by digest."""
     if document.get("status") != PASS:
@@ -269,7 +252,7 @@ def require_gtk_logs(
     home: safepaths.SafePath,
     report: GtkReport,
 ) -> None:
-    require_artifacts(
+    artifactchecks.require_artifacts(
         ports, root, home, {f"{case}/dialog.log": digest for case, digest in report.logs.items()}
     )
 

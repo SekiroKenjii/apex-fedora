@@ -33,8 +33,10 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 
 def rescue(root: safepaths.RuntimeRoot) -> guestshell.GuestTarget:
     return guestshell.GuestTarget(
-        user="root", port=defaults.GUEST_SSH_PORT,
-        key=root.child(defaults.GUEST_KEY_NAME), known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
+        user="root",
+        port=defaults.GUEST_SSH_PORT,
+        key=root.child(defaults.GUEST_KEY_NAME),
+        known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
     )
 
 
@@ -103,14 +105,22 @@ def test_a_second_attempt_on_the_same_machine_is_refused_before_the_guest_is_tou
     held = dataclasses.replace(ports, guest=guest, files=fake_files.MemoryFiles())
     run_directory = root.child(f"vm-runs/{MACHINE_RUN}")
     installerruns.record(held, root, run_directory)
-    installerfault.write_request(held, run_directory, installerfault.Request(
-        case="missing-signature", image=identifiers.Digest("b" * 64), process=1, run=MACHINE_RUN
-    ))
+    installerfault.write_request(
+        held,
+        run_directory,
+        installerfault.Request(
+            case="missing-signature", image=identifiers.Digest("b" * 64), process=1, run=MACHINE_RUN
+        ),
+    )
 
     outcome = installer_payload_recipe.verify(
-        held, guest=rescue(root),
+        held,
+        guest=rescue(root),
         wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
-        root=root, run_directory=run_directory, process=4242, case=installerruns.CASE,
+        root=root,
+        run_directory=run_directory,
+        process=4242,
+        case=installerruns.CASE,
         wrong_key=None,
     )
 
@@ -146,25 +156,35 @@ def test_the_wrong_key_case_carries_the_key_and_the_pairing_is_refused_otherwise
 def test_a_report_the_guest_could_not_confirm_is_kept_with_its_own_verdict(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "fault.installer-payload": {
-            **installerruns.confirming(), "status": "FAIL", "returncode": 0,
-        },
-    })
+    guest = AnsweringGuest(
+        {
+            "fault.installer-payload": {
+                **installerruns.confirming(),
+                "status": "FAIL",
+                "returncode": 0,
+            }
+        }
+    )
     held = dataclasses.replace(ports, guest=guest, files=fake_files.MemoryFiles())
     run_directory = root.child(f"vm-runs/{MACHINE_RUN}")
     installerruns.record(held, root, run_directory)
 
     outcome = installer_payload_recipe.verify(
-        held, guest=rescue(root),
+        held,
+        guest=rescue(root),
         wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
-        root=root, run_directory=run_directory, process=4242, case=installerruns.CASE,
+        root=root,
+        run_directory=run_directory,
+        process=4242,
+        case=installerruns.CASE,
         wrong_key=None,
     )
 
     assert outcome.succeeded is True  # type: ignore[attr-defined]
-    kept = json.loads(held.files.read_bytes(
-        safepaths.SafePath(run_directory.path / defaults.FAULT_GUEST_NAME), limit=1 << 20
-    ))
+    kept = json.loads(
+        held.files.read_bytes(
+            safepaths.SafePath(run_directory.path / defaults.FAULT_GUEST_NAME), limit=1 << 20
+        )
+    )
     assert kept["guest"]["verdict"] == "FAIL"
     assert composition_keys.RUN_ID in outcome.facts  # type: ignore[attr-defined]

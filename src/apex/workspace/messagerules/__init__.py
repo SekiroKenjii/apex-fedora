@@ -11,9 +11,7 @@ from apex.workspace import rulespecs
 
 TRAILING_NEWLINE = "\n"
 
-_collector: registry.Registry[str, rulespecs.MessageRule] = registry.Registry(
-    "message rule"
-)
+_collector: registry.Registry[str, rulespecs.MessageRule] = registry.Registry("message rule")
 _sealed: registry.SealedRegistry[str, rulespecs.MessageRule] | None = None
 
 

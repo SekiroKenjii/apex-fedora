@@ -47,10 +47,14 @@ class Machine:
 
     def render(self) -> tuple[str, ...]:
         return (
-            "-machine", "q35,accel=kvm",
-            "-cpu", "host",
-            "-smp", str(self.processors),
-            "-m", str(self.memory.value),
+            "-machine",
+            "q35,accel=kvm",
+            "-cpu",
+            "host",
+            "-smp",
+            str(self.processors),
+            "-m",
+            str(self.memory.value),
         )
 
 
@@ -64,8 +68,10 @@ class Firmware:
         if not self.code_read_only:
             raise errors.InternalDefect("firmware code is always attached read only")
         return (
-            "-drive", f"if=pflash,format=raw,readonly=on,file={self.code}",
-            "-drive", f"if=pflash,format=raw,file={self.variables}",
+            "-drive",
+            f"if=pflash,format=raw,readonly=on,file={self.code}",
+            "-drive",
+            f"if=pflash,format=raw,file={self.variables}",
         )
 
 
@@ -138,8 +144,10 @@ class ExtraDisk:
     def render(self) -> tuple[str, ...]:
         name = f"apex-other-{self.index}"
         return (
-            "-drive", f"if=none,id={name},format=qcow2,file={self.path}",
-            "-device", f"virtio-blk-pci,drive={name},serial={name}",
+            "-drive",
+            f"if=none,id={name},format=qcow2,file={self.path}",
+            "-device",
+            f"virtio-blk-pci,drive={name},serial={name}",
         )
 
 
@@ -171,8 +179,10 @@ class UsbStorage:
     def render(self) -> tuple[str, ...]:
         options = f"usb-storage,bus={USB_ROOT_PORT},drive=apex-boot-usb,serial=apex-ventoy-fixture"
         return (
-            "-drive", f"if=none,id=apex-boot-usb,format=qcow2,file={self.path}",
-            "-device", options + (",bootindex=1" if self.boot_first else ""),
+            "-drive",
+            f"if=none,id=apex-boot-usb,format=qcow2,file={self.path}",
+            "-device",
+            options + (",bootindex=1" if self.boot_first else ""),
         )
 
 
@@ -185,8 +195,10 @@ class RestrictedNet:
         restriction = ",restrict=on" if self.role.is_disposable else ""
         forward = f"hostfwd=tcp:{LOOPBACK}:{self.forwarded_port}-:22"
         return (
-            "-netdev", f"user,id=net0{restriction},{forward}",
-            "-device", "virtio-net-pci,netdev=net0",
+            "-netdev",
+            f"user,id=net0{restriction},{forward}",
+            "-device",
+            "virtio-net-pci,netdev=net0",
         )
 
 
@@ -198,14 +210,37 @@ class NoNetwork:
 
 type Serial = SerialFile | SerialSocket
 type QemuDevice = (
-    Machine | Firmware | Display | MonitorSocket | SerialFile | SerialSocket | RootDisk
-    | ExtraDisk | Cdrom | UsbController | UsbStorage | RestrictedNet | NoNetwork
+    Machine
+    | Firmware
+    | Display
+    | MonitorSocket
+    | SerialFile
+    | SerialSocket
+    | RootDisk
+    | ExtraDisk
+    | Cdrom
+    | UsbController
+    | UsbStorage
+    | RestrictedNet
+    | NoNetwork
     | BootFromCdrom
 )
 
 DEVICE_TYPES: tuple[type, ...] = (
-    Machine, Firmware, Display, MonitorSocket, SerialFile, SerialSocket, RootDisk,
-    ExtraDisk, Cdrom, UsbController, UsbStorage, RestrictedNet, NoNetwork, BootFromCdrom,
+    Machine,
+    Firmware,
+    Display,
+    MonitorSocket,
+    SerialFile,
+    SerialSocket,
+    RootDisk,
+    ExtraDisk,
+    Cdrom,
+    UsbController,
+    UsbStorage,
+    RestrictedNet,
+    NoNetwork,
+    BootFromCdrom,
 )
 
 
@@ -239,10 +274,17 @@ class VmSpec:
         boot_usb: UsbStorage | None = None,
         boot_from_cdrom: bool = False,
     ) -> Self:
-        _require_disposable_for(role, extra_disks=extra_disks, serial=serial, usb=usb,
-                                boot_usb=boot_usb)
-        _require_consistent(seed=seed, network=network, usb=usb, boot_usb=boot_usb,
-                            extra_disks=extra_disks, boot_from_cdrom=boot_from_cdrom)
+        _require_disposable_for(
+            role, extra_disks=extra_disks, serial=serial, usb=usb, boot_usb=boot_usb
+        )
+        _require_consistent(
+            seed=seed,
+            network=network,
+            usb=usb,
+            boot_usb=boot_usb,
+            extra_disks=extra_disks,
+            boot_from_cdrom=boot_from_cdrom,
+        )
         if len(extra_disks) > MAXIMUM_EXTRA_DISKS:
             raise errors.Refusal(
                 refusals.RefusalReason.TOO_MANY_DEVICES, subject=f"{len(extra_disks)} extra disks"
@@ -271,9 +313,7 @@ class VmSpec:
         devices.append(network if network is not None else NoNetwork())
         if boot_from_cdrom:
             devices.append(BootFromCdrom())
-        return cls(
-            role=role, resources=resources, devices=tuple(devices), extra_disks=extra_disks
-        )
+        return cls(role=role, resources=resources, devices=tuple(devices), extra_disks=extra_disks)
 
     def render(self) -> commands.Argv:
         arguments: list[str] = ["-name", f"apex-{self.role}"]

@@ -23,8 +23,16 @@ ONE_LINE = "1"
 
 def journal_query(pid: int) -> commands.Argv:
     return commands.Argv.of(
-        "journalctl", "--user", "-b", f"{MESSAGE_ID}={defaults.SHELL_STARTED_MESSAGE}",
-        f"{PROCESS}={pid}", "-n", ONE_LINE, "-o", "json", "--no-pager",
+        "journalctl",
+        "--user",
+        "-b",
+        f"{MESSAGE_ID}={defaults.SHELL_STARTED_MESSAGE}",
+        f"{PROCESS}={pid}",
+        "-n",
+        ONE_LINE,
+        "-o",
+        "json",
+        "--no-pager",
     )
 
 

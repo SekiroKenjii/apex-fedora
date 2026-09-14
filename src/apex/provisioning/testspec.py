@@ -86,8 +86,10 @@ def prepare(
     disk = _overlay(ports, request.disk, into=run_directory / defaults.TEST_DISK_NAME, root=root)
     extras = tuple(
         _overlay(
-            ports, source,
-            into=run_directory / f"{defaults.TEST_EXTRA_DISK_PREFIX}{index}.qcow2", root=root,
+            ports,
+            source,
+            into=run_directory / f"{defaults.TEST_EXTRA_DISK_PREFIX}{index}.qcow2",
+            root=root,
         )
         for index, source in enumerate(request.extra_disks, 1)
     )
@@ -115,9 +117,17 @@ def prepare(
     )
     runrecord.write(ports, run_directory, record)
     spec = describe(
-        settings, root, run_directory, disk=disk, extras=extras, variables=variables,
-        iso=request.iso, guest_ssh=request.guest_ssh, serial_console=request.serial_console,
-        usb_bus=request.usb_bus, boot_usb=boot_usb,
+        settings,
+        root,
+        run_directory,
+        disk=disk,
+        extras=extras,
+        variables=variables,
+        iso=request.iso,
+        guest_ssh=request.guest_ssh,
+        serial_console=request.serial_console,
+        usb_bus=request.usb_bus,
+        boot_usb=boot_usb,
     )
     return Prepared(run=run, run_directory=run_directory, spec=spec, medium=request.medium)
 
@@ -167,11 +177,7 @@ def describe(  # noqa: PLR0913
 
 
 def _overlay(
-    ports: portset.HostPorts,
-    source: Path,
-    *,
-    into: safepaths.SafePath,
-    root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts, source: Path, *, into: safepaths.SafePath, root: safepaths.RuntimeRoot
 ) -> safepaths.SafePath:
     chain = backingchain.inspect(ports, source, root=root)
     return backingchain.overlay(ports, chain, into=into, root=root).disk

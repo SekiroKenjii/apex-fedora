@@ -22,10 +22,7 @@ class ExerciseReport:
 
 
 def exercise(
-    ports: portset.HostPorts,
-    *,
-    trial: negatives.Trial,
-    scratch: verifying.BundleLocation,
+    ports: portset.HostPorts, *, trial: negatives.Trial, scratch: verifying.BundleLocation
 ) -> ExerciseReport:
     accepted = verifying.verify_bundle(ports, location=trial.location, anchor=trial.anchor)
     refused: dict[str, refusals.RefusalReason] = {}

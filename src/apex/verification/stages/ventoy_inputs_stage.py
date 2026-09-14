@@ -28,7 +28,9 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("ventoy.inputs"),
     reads=(
-        composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID, composition_keys.REPOSITORY,
+        composition_keys.RUNTIME_ROOT,
+        composition_keys.RUN_ID,
+        composition_keys.REPOSITORY,
         verifykeys.VENTOY_INPUTS,
     ),
     writes=(verifykeys.VENTOY_PREPARED,),

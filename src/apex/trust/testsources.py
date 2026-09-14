@@ -32,9 +32,7 @@ class Acquired:
 
 
 def sources_directory(root: safepaths.RuntimeRoot) -> safepaths.SafePath:
-    return root.child(
-        f"{defaults.FINGERPRINT_TESTS_DIRECTORY}/{defaults.FINGERPRINT_SOURCES_NAME}"
-    )
+    return root.child(f"{defaults.FINGERPRINT_TESTS_DIRECTORY}/{defaults.FINGERPRINT_SOURCES_NAME}")
 
 
 def lock_copy(root: safepaths.RuntimeRoot) -> safepaths.SafePath:

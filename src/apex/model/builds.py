@@ -117,9 +117,7 @@ class BuildRecord:
             raise errors.Refusal(reason, subject=str(fault)) from fault
 
 
-def require_frozen(
-    record: BuildRecord, image: oci.FrozenImage, manifest: bytes
-) -> oci.FrozenImage:
+def require_frozen(record: BuildRecord, image: oci.FrozenImage, manifest: bytes) -> oci.FrozenImage:
     """The parent build's image, once its three documents agree with one another."""
     if record.status is not BuildStatus.PASS or record.kind is not ArtifactKind.IMAGE:
         raise errors.Refusal(

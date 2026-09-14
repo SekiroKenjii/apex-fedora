@@ -16,9 +16,12 @@ def observation(boot: str, phase: str, digest: str, *, counter: str | None, gdm:
     if counter is not None:
         grubenv += f"boot_counter={counter}\n"
     record = {
-        "boot_id": boot, "phase": phase, "digest": digest,
+        "boot_id": boot,
+        "phase": phase,
+        "digest": digest,
         "injected": phase == "gdm-start" and digest == BAD,
-        "gdm": {"stdout": gdm}, "grubenv": {"stdout": grubenv},
+        "gdm": {"stdout": gdm},
+        "grubenv": {"stdout": grubenv},
     }
     return gdmfallback.PREFIX + json.dumps(record)
 

@@ -41,12 +41,7 @@ class BlockDevicePort(Protocol):
 
     @abstractmethod
     def rewrite(
-        self,
-        node: safepaths.SafePath,
-        *,
-        expected: files.DeviceNumber,
-        offset: int,
-        length: int,
+        self, node: safepaths.SafePath, *, expected: files.DeviceNumber, offset: int, length: int
     ) -> Rewrite:
         """Read `length` bytes at `offset`, write them back there, read again.
 

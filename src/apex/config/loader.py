@@ -92,10 +92,7 @@ def _check_environment(environment: Mapping[str, str]) -> dict[str, str]:
 
 
 def _pick_path(
-    builder_file: Mapping[str, object],
-    origins: dict[str, layers.Layer],
-    key: str,
-    fallback: str,
+    builder_file: Mapping[str, object], origins: dict[str, layers.Layer], key: str, fallback: str
 ) -> Path:
     field = f"builder.{key}"
     if key not in builder_file:

@@ -128,5 +128,3 @@ def test_the_streaming_decoder_returns_the_payload_once_the_trailer_arrives() ->
     seen = [decoder.feed(stream[index : index + 7]) for index in range(0, len(stream), 7)]
 
     assert [item for item in seen if item is not None] == [BUNDLE]
-
-

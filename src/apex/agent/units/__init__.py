@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Protocol
 
 from apex.agent import agentports
-from apex.kernel import encoding, errors, identifiers, refusals
-from apex.registry import decorators, discovery, registry
+from apex.kernel import encoding, identifiers
+from apex.registry import casebook, registry
 
 DIRECTORY = Path(__file__).resolve().parent
 
@@ -30,32 +30,22 @@ class Unit:
     run: Run
 
 
-_collector: registry.Registry[str, Unit] = registry.Registry("unit")
-_sealed: registry.SealedRegistry[str, Unit] | None = None
+BOOK: casebook.Casebook[Unit] = casebook.Casebook(
+    kind="unit", namespace=__name__, key=lambda unit: str(unit.id), known="this guest answers for"
+)
 
 
 def declare(unit: Unit) -> Unit:
-    _collector.add(str(unit.id), unit, at=decorators.caller(2))
-    return unit
+    return BOOK.declare(unit)
 
 
 def sealed() -> registry.SealedRegistry[str, Unit]:
-    global _sealed
-    if _sealed is None:
-        discovery.discover([__name__])
-        _sealed = _collector.seal()
-    return _sealed
+    return BOOK.sealed()
 
 
 def registered() -> tuple[Unit, ...]:
-    return tuple(unit for _, unit in sorted(sealed().items(), key=lambda item: item[0]))
+    return BOOK.registered()
 
 
 def lookup(name: identifiers.ProbeId) -> Unit:
-    if str(name) not in sealed():
-        raise errors.Refusal(
-            refusals.RefusalReason.UNIT_UNKNOWN,
-            subject=str(name),
-            remedy=f"this guest answers for: {', '.join(sorted(sealed()))}",
-        )
-    return sealed().lookup(str(name))
+    return BOOK.lookup(name)

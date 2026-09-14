@@ -55,7 +55,7 @@ def test_a_later_release_moves_every_place_the_files_carried_it_by_hand() -> Non
 
     image = then["image-configure.sh"].decode()
     assert 'test "$VERSION_ID" = 45\n' in image and "greenboot-0.16.4-0.fc45" in image
-    assert "fc44" not in image and '= 44\n' not in image
+    assert "fc44" not in image and "= 44\n" not in image
     assert "/boot/efi/EFI/fedoraproject/shimx64.efi" in then["installer-configure.sh"].decode()
     assert "/boot/efi/EFI/fedoraproject/grubx64.efi" in then["live/configure.sh"].decode()
     assert then["Containerfile"] == now["Containerfile"]

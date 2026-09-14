@@ -12,15 +12,13 @@ its outcome is written to the report as it happens, and the swap is one atomic r
 
 from __future__ import annotations
 
-import dataclasses
-import json
 from collections.abc import Mapping
 from pathlib import Path
 
 from apex.config import defaults, loader
 from apex.kernel import commands, encoding, errors, identifiers, refusals, safepaths
 from apex.ports import locking, portset
-from apex.provisioning import backingchain, launching
+from apex.provisioning import backingchain, compactledger, launching
 
 PASS = "PASS"
 FAIL = "FAIL"
@@ -35,76 +33,19 @@ COMPARE = commands.Argv.of(
     backingchain.QEMU_IMG, "compare", "-f", backingchain.QCOW2, "-F", backingchain.QCOW2
 )
 CONVERT = commands.Argv.of(
-    backingchain.QEMU_IMG, "convert", "-f", backingchain.QCOW2, "-O", backingchain.QCOW2, "-c",
-    "-o", f"compression_type={defaults.COMPRESSION_TYPE}", "-m", defaults.CONVERT_THREADS,
+    backingchain.QEMU_IMG,
+    "convert",
+    "-f",
+    backingchain.QCOW2,
+    "-O",
+    backingchain.QCOW2,
+    "-c",
+    "-o",
+    f"compression_type={defaults.COMPRESSION_TYPE}",
+    "-m",
+    defaults.CONVERT_THREADS,
 )
 Identities = dict[str, dict[str, int]]
-
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class Compacted:
-    report: safepaths.SafePath
-    status: str
-    replacement: str
-    projected_free: int
-
-    def document(self) -> encoding.Document:
-        return {
-            "report": str(self.report),
-            "status": self.status,
-            "replacement": self.replacement,
-            "projected_free": self.projected_free,
-        }
-
-
-class Ledger:
-    """The report as it grows, written after every step so a stopped run still explains."""
-
-    def __init__(
-        self, ports: portset.HostPorts, path: safepaths.SafePath, document: encoding.Document
-    ) -> None:
-        self._ports = ports
-        self.path = path
-        self.document: dict[str, encoding.JsonValue] = dict(document)
-        self.document.setdefault("commands", [])
-        self.save()
-
-    def save(self) -> None:
-        self._ports.files.write_atomic(
-            self.path, json.dumps(self.document, indent=2, sort_keys=True).encode() + b"\n",
-            mode=defaults.RECORD_MODE,
-        )
-
-    def note(self, **fields: encoding.JsonValue) -> None:
-        self.document.update(fields)
-        self.save()
-
-    def command(
-        self, argv: commands.Argv, *, transcript: safepaths.SafePath | None = None
-    ) -> bytes:
-        """Run one image tool call under the compaction deadline, recorded before it is judged."""
-        completed = self._ports.processes.run(
-            argv, deadline=defaults.COMPACTION_DEADLINE, limit=commands.OutputLimit.default(),
-            transcript=transcript,
-        )
-        recorded = self.document["commands"]
-        if isinstance(recorded, list):
-            recorded.append({
-                "argv": list(argv), "returncode": completed.exit_code,
-                "stdout": completed.stdout.decode(errors="replace"),
-                "stderr": completed.stderr.decode(errors="replace"),
-            })
-        self.save()
-        if not completed.succeeded:
-            raise self.refuse(
-                refusals.RefusalReason.COMPACTION_VALIDATION_FAILED,
-                f"{argv.arguments[1]} exited with {completed.exit_code}; original retained",
-            )
-        return completed.stdout
-
-    def refuse(self, reason: refusals.RefusalReason, detail: str) -> errors.Refusal:
-        self.note(error=detail)
-        return errors.Refusal(reason, subject=detail, remedy=f"inspect {self.path}")
 
 
 def _information(document: bytes) -> list[dict[str, encoding.JsonValue]]:
@@ -113,7 +54,9 @@ def _information(document: bytes) -> list[dict[str, encoding.JsonValue]]:
     return [dict(item) for item in items if isinstance(item, Mapping)]
 
 
-def _require_plain(ledger: Ledger, chain: list[dict[str, encoding.JsonValue]]) -> None:
+def _require_plain(
+    ledger: compactledger.Ledger, chain: list[dict[str, encoding.JsonValue]]
+) -> None:
     """A QCOW2 chain with nothing a compressed copy would lose: no snapshot, bitmap or fault."""
     if not chain or chain[0].get("format") != backingchain.QCOW2:
         raise ledger.refuse(
@@ -147,8 +90,11 @@ def _free(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> int:
 
 
 def _projected(
-    ports: portset.HostPorts, settings: loader.Settings, root: safepaths.RuntimeRoot,
-    source: safepaths.SafePath, ledger: Ledger,
+    ports: portset.HostPorts,
+    settings: loader.Settings,
+    root: safepaths.RuntimeRoot,
+    source: safepaths.SafePath,
+    ledger: compactledger.Ledger,
 ) -> int:
     projected = _free(ports, root) + ports.files.identity(source).allocated
     if projected < settings.builder.minimum_free.bytes:
@@ -157,8 +103,11 @@ def _projected(
 
 
 def _require_unchanged(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, ledger: Ledger,
-    identities: Identities, paths: list[safepaths.SafePath],
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    ledger: compactledger.Ledger,
+    identities: Identities,
+    paths: list[safepaths.SafePath],
 ) -> None:
     current = {str(path): ports.files.identity(path).document() for path in paths}
     if launching.current(ports, root=root) is not None or current != identities:
@@ -169,7 +118,7 @@ def _require_unchanged(
 
 
 def _require_standalone(
-    ledger: Ledger, after: list[dict[str, encoding.JsonValue]], expected_size: object
+    ledger: compactledger.Ledger, after: list[dict[str, encoding.JsonValue]], expected_size: object
 ) -> None:
     _require_plain(ledger, after)
     if after[0].get("backing-filename") or after[0].get("virtual-size") != expected_size:
@@ -185,17 +134,18 @@ def _digest(ports: portset.HostPorts, path: safepaths.SafePath) -> str:
 
 
 def _swap(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, ledger: Ledger,
-    source: safepaths.SafePath, target: safepaths.SafePath,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    ledger: compactledger.Ledger,
+    source: safepaths.SafePath,
+    target: safepaths.SafePath,
 ) -> None:
     ledger.note(replacement=PENDING, phase="replacing validated builder file")
     ports.files.replace(target, source)
     ledger.note(replacement=COMPLETE, free_after=_free(ports, root), status=PASS, phase="complete")
 
 
-def _guarded_source(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot
-) -> safepaths.SafePath:
+def _guarded_source(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> safepaths.SafePath:
     if launching.current(ports, root=root) is not None:
         raise errors.Refusal(
             refusals.RefusalReason.MACHINE_RUNNING,
@@ -214,25 +164,33 @@ def _guarded_source(
 
 def compact(
     ports: portset.HostPorts, settings: loader.Settings, root: safepaths.RuntimeRoot
-) -> Compacted:
+) -> compactledger.Compacted:
     with ports.locks.acquire(launching.MACHINE, locking.AcquisitionPolicy.immediate()):
         source = _guarded_source(ports, root)
         directory = root.child(f"{defaults.COMPACTIONS_DIRECTORY}/{ports.identities.run_id()}")
         ports.files.make_directory(directory, mode=safepaths.PRIVATE_DIRECTORY_MODE)
         target = directory / defaults.COMPRESSED_DISK_NAME
-        ledger = Ledger(ports, directory / "result.json", {
-            "status": FAIL, "source": str(source), "replacement": NOT_PERFORMED,
-        })
+        ledger = compactledger.Ledger(
+            ports,
+            directory / "result.json",
+            {"status": FAIL, "source": str(source), "replacement": NOT_PERFORMED},
+        )
         return _compact(ports, settings, root, ledger, source, target)
 
 
 def _compact(
-    ports: portset.HostPorts, settings: loader.Settings, root: safepaths.RuntimeRoot,
-    ledger: Ledger, source: safepaths.SafePath, target: safepaths.SafePath,
-) -> Compacted:
-    ledger.note(version=ledger.command(
-        commands.Argv.of(backingchain.QEMU_IMG, "--version")
-    ).decode(errors="replace"))
+    ports: portset.HostPorts,
+    settings: loader.Settings,
+    root: safepaths.RuntimeRoot,
+    ledger: compactledger.Ledger,
+    source: safepaths.SafePath,
+    target: safepaths.SafePath,
+) -> compactledger.Compacted:
+    ledger.note(
+        version=ledger.command(commands.Argv.of(backingchain.QEMU_IMG, "--version")).decode(
+            errors="replace"
+        )
+    )
     chain = _information(ledger.command(INFO.extended("--backing-chain", source)))
     _require_plain(ledger, chain)
     identities, paths = _identities(ports, root, chain)
@@ -259,7 +217,7 @@ def _compact(
     projected = _projected(ports, settings, root, source, ledger)
     ledger.note(projected_free=projected)
     _swap(ports, root, ledger, source, target)
-    return Compacted(
+    return compactledger.Compacted(
         report=ledger.path, status=PASS, replacement=COMPLETE, projected_free=projected
     )
 
@@ -285,7 +243,8 @@ def _retained(
         identifiers.Digest(str(report.get(name, "")))
     recorded = report.get("commands")
     compared = [
-        item for item in (recorded if isinstance(recorded, list) else [])
+        item
+        for item in (recorded if isinstance(recorded, list) else [])
         if isinstance(item, Mapping)
         and item.get("argv") == [*COMPARE, str(source), str(target)]
         and item.get("returncode") == 0
@@ -303,7 +262,7 @@ def finalise(
     settings: loader.Settings,
     root: safepaths.RuntimeRoot,
     compaction: identifiers.RunId,
-) -> Compacted:
+) -> compactledger.Compacted:
     """Swap in a copy an earlier run compared in full and kept, after checking it all again."""
     with ports.locks.acquire(launching.MACHINE, locking.AcquisitionPolicy.immediate()):
         source = _guarded_source(ports, root)
@@ -311,20 +270,31 @@ def finalise(
         report, target = _retained(ports, source, previous)
         directory = previous / f"{defaults.FINALISE_PREFIX}{ports.identities.token()}"
         ports.files.make_directory(directory, mode=safepaths.PRIVATE_DIRECTORY_MODE)
-        ledger = Ledger(ports, directory / "result.json", {
-            "status": BLOCKED, "phase": "validating retained copy", "source": str(source),
-            "target": str(target), "replacement": NOT_PERFORMED,
-            "previous_report_sha256": _digest(ports, previous / "result.json"),
-            "previous_run": str(compaction),
-        })
+        ledger = compactledger.Ledger(
+            ports,
+            directory / "result.json",
+            {
+                "status": BLOCKED,
+                "phase": "validating retained copy",
+                "source": str(source),
+                "target": str(target),
+                "replacement": NOT_PERFORMED,
+                "previous_report_sha256": _digest(ports, previous / "result.json"),
+                "previous_run": str(compaction),
+            },
+        )
         return _finalise(ports, settings, root, ledger, report, source, target)
 
 
 def _finalise(
-    ports: portset.HostPorts, settings: loader.Settings, root: safepaths.RuntimeRoot,
-    ledger: Ledger, report: Mapping[str, encoding.JsonValue],
-    source: safepaths.SafePath, target: safepaths.SafePath,
-) -> Compacted:
+    ports: portset.HostPorts,
+    settings: loader.Settings,
+    root: safepaths.RuntimeRoot,
+    ledger: compactledger.Ledger,
+    report: Mapping[str, encoding.JsonValue],
+    source: safepaths.SafePath,
+    target: safepaths.SafePath,
+) -> compactledger.Compacted:
     chain = _information(ledger.command(INFO.extended("--backing-chain", source)))
     _require_plain(ledger, chain)
     identities, paths = _identities(ports, root, chain)
@@ -359,6 +329,6 @@ def _finalise(
     projected = _projected(ports, settings, root, source, ledger)
     ledger.note(projected_free=projected)
     _swap(ports, root, ledger, source, target)
-    return Compacted(
+    return compactledger.Compacted(
         report=ledger.path, status=PASS, replacement=COMPLETE, projected_free=projected
     )

@@ -35,9 +35,9 @@ STAGES = (
     probe_stage.for_case(CASE, arguments=_arguments, after=(verifykeys.PARENT,)),
     retain_report_stage.for_probe(CASE),
 )
-SEEDS = frozenset({
-    verifykeys.BUILDER, verifykeys.WHEEL, verifykeys.PARENT, composition_keys.RUNTIME_ROOT,
-})
+SEEDS = frozenset(
+    {verifykeys.BUILDER, verifykeys.WHEEL, verifykeys.PARENT, composition_keys.RUNTIME_ROOT}
+)
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 

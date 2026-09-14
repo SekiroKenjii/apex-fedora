@@ -31,9 +31,7 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         freeze_parent_stage.image_document(context.ports, root, parent),
         mode=defaults.RECORD_MODE,
     )
-    return stages.Advance(
-        facts={verifykeys.TARGET: frozen, verifykeys.CANDIDATE: frozen.digest}
-    )
+    return stages.Advance(facts={verifykeys.TARGET: frozen, verifykeys.CANDIDATE: frozen.digest})
 
 
 STAGE = stages.SimpleStage(

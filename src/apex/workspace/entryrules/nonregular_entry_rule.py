@@ -13,11 +13,7 @@ from apex.workspace import entryrules, ruleorigins, rulespecs
 
 RULE = identifiers.RuleId("repository.entry-not-regular")
 UNDERSTOOD = frozenset(
-    {
-        treerows.EntryMode.REGULAR,
-        treerows.EntryMode.EXECUTABLE,
-        treerows.EntryMode.SYMLINK,
-    }
+    {treerows.EntryMode.REGULAR, treerows.EntryMode.EXECUTABLE, treerows.EntryMode.SYMLINK}
 )
 
 
@@ -32,7 +28,6 @@ def inspect(subject: rulespecs.EntrySubject) -> Sequence[rulespecs.Finding]:
             remedy="a submodule needs a reviewed packaging route",
         ),
     )
-
 
 
 entryrules.declare(

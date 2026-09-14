@@ -24,7 +24,8 @@ RPM_QUERY = ("rpm", "-qa", "--qf", "%{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{
 LINT = ("bootc", "container", "lint", "--fatal-warnings")
 FRAGMENT = "/usr/lib/bootupd/grub2-static/configs.d/08_greenboot.cfg"
 RECOVERY_CHECK = (
-    "sh", "-c",
+    "sh",
+    "-c",
     "set -eu; sha256sum /etc/greenboot/greenboot.conf /usr/share/apex/greenboot.conf "
     f"{FRAGMENT}; "
     f'test "$(tail -c1 {FRAGMENT} | od -An -tu1 | tr -d " ")" = 10',

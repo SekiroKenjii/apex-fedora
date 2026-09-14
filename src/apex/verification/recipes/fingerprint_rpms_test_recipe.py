@@ -10,13 +10,12 @@ from __future__ import annotations
 
 from apex.composition import exports, fingerprintpackages
 from apex.composition import keys as composition_keys
-from apex.composition.stages import identify_run_stage
 from apex.config import defaults
 from apex.kernel import encoding, identifiers, safepaths
-from apex.pipeline import plans, runner, stages
+from apex.pipeline import runner, stages
 from apex.ports import guestshell, portset
-from apex.verification import verifykeys
-from apex.verification.stages import builder_guard_stage, builder_test_stage
+from apex.verification import buildertests, verifykeys
+from apex.verification.stages import builder_test_stage
 
 NAME = "verify-fingerprint-rpms"
 UNIT = "fingerprint.rpm-smoke"
@@ -30,9 +29,9 @@ def prepare(context: stages.RunContext[portset.HostPorts]) -> builder_test_stage
     repository = context.facts[composition_keys.REPOSITORY]
     lock = fingerprintpackages.load_lock(repository)
     packages = exports.inside(
-        root, context.facts[verifykeys.PARENT],
-        f"{exports.OUTPUT}/{fingerprintpackages.LIBRARY}/"
-        f"{defaults.FINGERPRINT_MOCK_DIRECTORY}",
+        root,
+        context.facts[verifykeys.PARENT],
+        f"{exports.OUTPUT}/{fingerprintpackages.LIBRARY}/{defaults.FINGERPRINT_MOCK_DIRECTORY}",
     )
     inputs = {
         name: ports.digests.file(
@@ -57,7 +56,11 @@ def prepare(context: stages.RunContext[portset.HostPorts]) -> builder_test_stage
         script=guestshell.RemoteScript.of(
             guestshell.Step.of("cd", str(remote)),
             guestshell.Step.of(
-                "sudo", "flock", "-n", str(defaults.FINGERPRINT_TEST_LOCK), "python3",
+                "sudo",
+                "flock",
+                "-n",
+                str(defaults.FINGERPRINT_TEST_LOCK),
+                "python3",
                 defaults.SMOKE_SCRIPT_NAME,
             ),
         ),
@@ -76,16 +79,7 @@ def judge(
     return fingerprintpackages.judge_smoke(document, test.inputs)
 
 
-STAGES = (
-    identify_run_stage.STAGE,
-    builder_guard_stage.STAGE,
-    builder_test_stage.for_test(UNIT, prepare=prepare, judge=judge),
-)
-SEEDS = frozenset({
-    verifykeys.BUILDER, verifykeys.PARENT, composition_keys.RUNTIME_ROOT,
-    composition_keys.REPOSITORY,
-})
-PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
+PLAN = buildertests.plan(NAME, UNIT, prepare=prepare, judge=judge)
 
 
 def verify(
@@ -96,13 +90,6 @@ def verify(
     root: safepaths.RuntimeRoot,
     repository: safepaths.SourceRoot,
 ) -> runner.Outcome:
-    return runner.run(
-        PLAN,
-        ports=ports,
-        seeds={
-            verifykeys.BUILDER: builder,
-            verifykeys.PARENT: parent,
-            composition_keys.RUNTIME_ROOT: root,
-            composition_keys.REPOSITORY: repository,
-        },
+    return buildertests.run(
+        PLAN, ports, builder=builder, parent=parent, root=root, repository=repository
     )

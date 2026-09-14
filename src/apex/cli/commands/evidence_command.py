@@ -51,7 +51,8 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
     if root is None:
         return commandspecs.Reply(document={"skipped": "no runtime root on this machine"})
     result = inspect(
-        root, request.context.bundle(root),
+        root,
+        request.context.bundle(root),
         fallback_key=request.context.environment.get(KEY_VARIABLE, ""),
     )
     if result["intact"]:
@@ -63,6 +64,4 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
 
 RECIPES = (commandspecs.Recipe("verify-chain", (), (NAME, VERIFY_CHAIN)),)
 
-commands.declare(
-    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
-)
+commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES))

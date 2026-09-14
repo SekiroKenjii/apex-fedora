@@ -58,7 +58,10 @@ def after(*earlier: facts.FactKey[Any]) -> stages.SimpleStage[portset.HostPorts]
     return stages.SimpleStage(
         id=identifiers.StageId("desktop.shell-surface"),
         reads=(
-            verifykeys.MONITOR, composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID, *earlier,
+            verifykeys.MONITOR,
+            composition_keys.RUNTIME_ROOT,
+            composition_keys.RUN_ID,
+            *earlier,
         ),
         writes=(KEY,),
         attests=frozenset(),

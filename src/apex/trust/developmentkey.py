@@ -45,7 +45,8 @@ def retrieve(
     fetched = ports.guest.run(
         builder,
         guestshell.GuestRun(
-            script=FETCH, deadline=defaults.GUEST_COMMAND_DEADLINE,
+            script=FETCH,
+            deadline=defaults.GUEST_COMMAND_DEADLINE,
             limit=commands.OutputLimit.default(),
         ),
     )
@@ -79,8 +80,7 @@ def retrieve(
 
 def _require_public_key(ports: portset.HostPorts, pem: bytes) -> None:
     checked = ports.processes.run(
-        CHECK, deadline=defaults.KEY_CHECK_DEADLINE, limit=commands.OutputLimit.default(),
-        stdin=pem,
+        CHECK, deadline=defaults.KEY_CHECK_DEADLINE, limit=commands.OutputLimit.default(), stdin=pem
     )
     if not checked.succeeded:
         raise errors.Refusal(

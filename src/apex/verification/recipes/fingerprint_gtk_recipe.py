@@ -11,13 +11,12 @@ from __future__ import annotations
 
 from apex.composition import exports, fingerprintpackages
 from apex.composition import keys as composition_keys
-from apex.composition.stages import identify_run_stage
 from apex.config import defaults
 from apex.kernel import encoding, errors, identifiers, refusals, safepaths
-from apex.pipeline import plans, runner, stages
+from apex.pipeline import runner, stages
 from apex.ports import guestshell, portset
-from apex.verification import verifykeys
-from apex.verification.stages import builder_guard_stage, builder_test_stage
+from apex.verification import buildertests, verifykeys
+from apex.verification.stages import builder_test_stage
 
 NAME = "verify-fingerprint-gtk"
 UNIT = "fingerprint.gtk"
@@ -26,8 +25,7 @@ RUNNER = "guest/fingerprint-gtk.py"
 
 
 def _archive(
-    root: safepaths.RuntimeRoot, parent: identifiers.BuildId,
-    lock: fingerprintpackages.PackageLock,
+    root: safepaths.RuntimeRoot, parent: identifiers.BuildId, lock: fingerprintpackages.PackageLock
 ) -> tuple[str, safepaths.SafePath]:
     settings = lock.package(fingerprintpackages.SETTINGS)
     archive = exports.inside(
@@ -37,15 +35,21 @@ def _archive(
 
 
 def _require_built_patch(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, parent: identifiers.BuildId,
-    lock: fingerprintpackages.PackageLock, patches: dict[str, identifiers.Digest],
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    parent: identifiers.BuildId,
+    lock: fingerprintpackages.PackageLock,
+    patches: dict[str, identifiers.Digest],
 ) -> None:
     report = fingerprintpackages.parse_rpm_report(
-        encoding.parse_object(ports.files.read_bytes(
-            exports.inside(root, parent, f"{exports.OUTPUT}/{defaults.RESULTS_NAME}"),
-            limit=defaults.DOCUMENT_LIMIT.value,
-        )),
-        lock, patches,
+        encoding.parse_object(
+            ports.files.read_bytes(
+                exports.inside(root, parent, f"{exports.OUTPUT}/{defaults.RESULTS_NAME}"),
+                limit=defaults.DOCUMENT_LIMIT.value,
+            )
+        ),
+        lock,
+        patches,
     )
     if report.patches[fingerprintpackages.SETTINGS] != patches[fingerprintpackages.SETTINGS].hex:
         raise errors.Refusal(
@@ -64,17 +68,16 @@ def prepare(context: stages.RunContext[portset.HostPorts]) -> builder_test_stage
     _require_built_patch(
         ports, root, parent, lock, fingerprintpackages.patch_digests(ports, repository, lock)
     )
-    files = {
-        name: safepaths.SafePath(repository.path / name) for name in defaults.GTK_INPUT_FILES
-    }
+    files = {name: safepaths.SafePath(repository.path / name) for name in defaults.GTK_INPUT_FILES}
     archive_name, archive = _archive(root, parent, lock)
     inputs = {name: ports.digests.file(path).hex for name, path in files.items()}
-    inputs[f"{defaults.FINGERPRINT_INPUTS_DIRECTORY}/{archive_name}"] = (
-        ports.digests.file(archive).hex
-    )
+    inputs[f"{defaults.FINGERPRINT_INPUTS_DIRECTORY}/{archive_name}"] = ports.digests.file(
+        archive
+    ).hex
     request = exports.inside(root, run, defaults.GTK_REQUEST_NAME)
     ports.files.write_atomic(
-        request, encoding.canonical({"parent_build": str(parent), "inputs": inputs}) + b"\n",
+        request,
+        encoding.canonical({"parent_build": str(parent), "inputs": inputs}) + b"\n",
         mode=defaults.RECORD_MODE,
     )
     remote = safepaths.RemotePath(f"{WORK_PREFIX}{run}")
@@ -109,16 +112,7 @@ def judge(
     return fingerprintpackages.judge_gtk(report, test.inputs)
 
 
-STAGES = (
-    identify_run_stage.STAGE,
-    builder_guard_stage.STAGE,
-    builder_test_stage.for_test(UNIT, prepare=prepare, judge=judge),
-)
-SEEDS = frozenset({
-    verifykeys.BUILDER, verifykeys.PARENT, composition_keys.RUNTIME_ROOT,
-    composition_keys.REPOSITORY,
-})
-PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
+PLAN = buildertests.plan(NAME, UNIT, prepare=prepare, judge=judge)
 
 
 def verify(
@@ -129,13 +123,6 @@ def verify(
     root: safepaths.RuntimeRoot,
     repository: safepaths.SourceRoot,
 ) -> runner.Outcome:
-    return runner.run(
-        PLAN,
-        ports=ports,
-        seeds={
-            verifykeys.BUILDER: builder,
-            verifykeys.PARENT: parent,
-            composition_keys.RUNTIME_ROOT: root,
-            composition_keys.REPOSITORY: repository,
-        },
+    return buildertests.run(
+        PLAN, ports, builder=builder, parent=parent, root=root, repository=repository
     )

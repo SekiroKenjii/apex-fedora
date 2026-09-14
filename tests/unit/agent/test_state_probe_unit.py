@@ -21,8 +21,13 @@ OLDER_OBSERVATIONS = {
     "bootc": ("bootc", "status", "--format", "json"),
     "gdm": ("systemctl", "is-active", "gdm"),
     "dbus": (
-        "busctl", "--system", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-        "org.freedesktop.DBus", "GetId",
+        "busctl",
+        "--system",
+        "call",
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        "org.freedesktop.DBus",
+        "GetId",
     ),
     "root_mount": ("findmnt", "--noheadings", "--output", "TARGET,SOURCE,FSTYPE,OPTIONS", "/"),
     "failed_units": ("systemctl", "--failed", "--no-legend"),
@@ -45,12 +50,15 @@ def scripted() -> fake_process.ScriptedProcess:
 
 def bundle(process: fake_process.ScriptedProcess) -> agentports.AgentPorts:
     return agentports.AgentPorts(
-        processes=process, files=fake_files.MemoryFiles(), clock=fake_clock.ManualClock(),
+        processes=process,
+        files=fake_files.MemoryFiles(),
+        clock=fake_clock.ManualClock(),
         containers=fake_containers.FakeRegistry(),
         digests=fake_digesting.CountingDigests(),
         archives=fake_archives.MemoryArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
 
 

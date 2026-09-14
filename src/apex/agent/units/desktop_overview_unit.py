@@ -15,8 +15,13 @@ from apex.kernel import commands, encoding, errors, identifiers, refusals
 
 SCOPE = "whether the Shell's Overview is open, read over the bus and never changed here"
 OVERVIEW = commands.Argv.of(
-    "busctl", "--user", "get-property", "org.gnome.Shell", "/org/gnome/Shell",
-    "org.gnome.Shell", "OverviewActive",
+    "busctl",
+    "--user",
+    "get-property",
+    "org.gnome.Shell",
+    "/org/gnome/Shell",
+    "org.gnome.Shell",
+    "OverviewActive",
 )
 EXPECTED = "expected"
 

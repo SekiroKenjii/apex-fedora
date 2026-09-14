@@ -24,13 +24,17 @@ def _verified(
     if frozen is None:
         return None, "no frozen image to bind the report to"
     home = exports.inside(
-        context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID],
+        context.facts[keys.RUNTIME_ROOT],
+        context.facts[keys.RUN_ID],
         f"{builds.OUTPUT_DIRECTORY}/{defaults.NVIDIA_OUTPUT_DIRECTORY}",
     )
     try:
         report = nvidialock.verify_report(
-            context.ports, context.facts[keys.RUNTIME_ROOT], home,
-            frozen=frozen, lock=context.facts[keys.NVIDIA_LOCK],
+            context.ports,
+            context.facts[keys.RUNTIME_ROOT],
+            home,
+            frozen=frozen,
+            lock=context.facts[keys.NVIDIA_LOCK],
         )
     except errors.Refusal as refusal:
         return None, str(refusal)
@@ -49,7 +53,8 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
     }
     context.ports.files.write_atomic(
         exports.inside(
-            context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID],
+            context.facts[keys.RUNTIME_ROOT],
+            context.facts[keys.RUN_ID],
             defaults.NVIDIA_VERIFICATION_NAME,
         ),
         encoding.canonical(verification) + b"\n",
@@ -65,9 +70,18 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("nvidia.record"),
     reads=(
-        keys.BUILD_RUN, keys.RETRIEVED, keys.KIND, keys.BUILD_PROFILE, keys.SOURCE_BUNDLE,
-        keys.REMOTE, keys.PARENT, keys.ACCESS, keys.FROZEN, keys.NVIDIA_LOCK,
-        keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.BUILD_RUN,
+        keys.RETRIEVED,
+        keys.KIND,
+        keys.BUILD_PROFILE,
+        keys.SOURCE_BUNDLE,
+        keys.REMOTE,
+        keys.PARENT,
+        keys.ACCESS,
+        keys.FROZEN,
+        keys.NVIDIA_LOCK,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
     ),
     writes=(keys.BUILD_RECORD, keys.NVIDIA_REPORT),
     attests=frozenset(),

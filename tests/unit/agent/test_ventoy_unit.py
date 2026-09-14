@@ -116,7 +116,8 @@ def bundle(tmp_path: Path) -> tuple[agentports.AgentPorts, Answering]:
         digests=real_digesting.CachedDigests(),
         archives=real_archives.TarArchives(),
         identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return ports, process
 
@@ -147,9 +148,7 @@ def test_the_unit_runs_the_older_steps_in_order(
         ("qemu-img", "check"),
         ("rpm", "-q"),
     ]
-    assert tuple(process.calls[3]) == (
-        "sh", "Ventoy2Disk.sh", "-i", "-r", "2048", loop,
-    )
+    assert tuple(process.calls[3]) == ("sh", "Ventoy2Disk.sh", "-i", "-r", "2048", loop)
     assert str(process.directories[3]) == f"{work}/upstream/ventoy-{VERSION}"
     assert report["status"] == "PASS"
     assert report["physical_media_accessed"] is False

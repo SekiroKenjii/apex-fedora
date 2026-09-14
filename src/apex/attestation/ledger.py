@@ -166,8 +166,7 @@ def parse_head(payload: bytes, *, origin: str) -> Head:
     try:
         document = json.loads(payload)
         return Head(
-            sequence=int(document["sequence"]),
-            link=identifiers.Digest(str(document["link"])),
+            sequence=int(document["sequence"]), link=identifiers.Digest(str(document["link"]))
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError, errors.Refusal) as error:
         raise errors.Refusal(
@@ -177,9 +176,7 @@ def parse_head(payload: bytes, *, origin: str) -> Head:
         ) from error
 
 
-def _stored_head(
-    location: proofs.StoreLocation, filesystem: files.FileSystemPort
-) -> Head | None:
+def _stored_head(location: proofs.StoreLocation, filesystem: files.FileSystemPort) -> Head | None:
     """Continue an existing chain rather than starting a second one over it."""
     path = location.head_path()
     if not filesystem.exists(path):
@@ -213,9 +210,7 @@ def read_chain(
 
 
 def link_after(previous: identifiers.Digest, entry: Entry) -> identifiers.Digest:
-    return hashing.digest_bytes(
-        previous.hex.encode() + encoding.canonical(entry.document())
-    )
+    return hashing.digest_bytes(previous.hex.encode() + encoding.canonical(entry.document()))
 
 
 class Ledger:
@@ -240,9 +235,7 @@ class Ledger:
         """Add one entry. There is no other way to change what the chain says."""
         claims.require_attestable(event.environment)
         entry = Entry(
-            sequence=self._head.sequence + 1,
-            stamp=self._clock.stamp().rendered,
-            event=event,
+            sequence=self._head.sequence + 1, stamp=self._clock.stamp().rendered, event=event
         )
         link = link_after(self._head.link, entry)
         sealed = Sealed(entry=entry, link=link, tag=self._signer.sign(link))
@@ -280,9 +273,7 @@ def _parse(line: bytes) -> Sealed | None:
         )
         entry = Entry(sequence=int(body["sequence"]), stamp=str(body["stamp"]), event=event)
         return Sealed(
-            entry=entry,
-            link=identifiers.Digest(document["link"]),
-            tag=str(document["mac"]),
+            entry=entry, link=identifiers.Digest(document["link"]), tag=str(document["mac"])
         )
     except (KeyError, TypeError, ValueError, errors.Refusal):
         return None
@@ -329,8 +320,6 @@ def verified(
     return tuple(held), Report(entries=len(lines), first_break=None)
 
 
-def replay(
-    lines: Sequence[bytes], *, signer: ChainSigner, head: Head | None
-) -> Report:
+def replay(lines: Sequence[bytes], *, signer: ChainSigner, head: Head | None) -> Report:
     """Decide over lines alone. Nothing here reads a file or trusts a stored digest."""
     return verified(lines, signer=signer, head=head)[1]

@@ -171,7 +171,8 @@ def test_a_parent_that_did_not_complete_refuses_the_target(
 
 def acquired(root: safepaths.RuntimeRoot) -> testsources.Acquired:
     return testsources.Acquired(
-        directory=root.child("fingerprint-tests"), files=SOURCES,
+        directory=root.child("fingerprint-tests"),
+        files=SOURCES,
         lock_record=identifiers.Digest("3" * 64),
     )
 
@@ -191,12 +192,18 @@ def test_the_work_directory_is_laid_out_file_by_file_under_its_run(
     for name in ("fingerprint-sources", "fingerprint-sources/dbusmock", "config"):
         assert f"{WORK}/{name}" in made
     assert [(str(item.local), str(item.remote)) for item in guest.sent] == [
-        (f"{root.path}/fingerprint-tests/fingerprint-sources/fprintd.py",
-         f"{WORK}/fingerprint-sources/fprintd.py"),
-        (f"{root.path}/fingerprint-tests/fingerprint-sources/dbusmock/polkitd.py",
-         f"{WORK}/fingerprint-sources/dbusmock/polkitd.py"),
-        (f"{root.path}/fingerprint-tests/config/fingerprint-tests.lock.json",
-         f"{WORK}/config/fingerprint-tests.lock.json"),
+        (
+            f"{root.path}/fingerprint-tests/fingerprint-sources/fprintd.py",
+            f"{WORK}/fingerprint-sources/fprintd.py",
+        ),
+        (
+            f"{root.path}/fingerprint-tests/fingerprint-sources/dbusmock/polkitd.py",
+            f"{WORK}/fingerprint-sources/dbusmock/polkitd.py",
+        ),
+        (
+            f"{root.path}/fingerprint-tests/config/fingerprint-tests.lock.json",
+            f"{WORK}/config/fingerprint-tests.lock.json",
+        ),
         (f"{root.path}/exports/{RUN}/target-image.json", f"{WORK}/target-image.json"),
     ]
 
@@ -242,7 +249,8 @@ def test_a_fault_case_is_asked_with_the_arguments_the_run_holds(
     case = faults.lookup(identifiers.ProbeId("fault.fingerprint-cleanup"))
     guest = AnsweringGuest({"fault.fingerprint-cleanup": {"status": "PASS"}})
     stage = fault_stage.for_case(
-        case, arguments=lambda held: {"work": str(held.facts[verifykeys.WORK])},
+        case,
+        arguments=lambda held: {"work": str(held.facts[verifykeys.WORK])},
         after=(verifykeys.WORK,),
     )
 
@@ -288,5 +296,7 @@ def test_a_fault_report_without_a_check_is_kept_under_the_runs_exports(
     kept = result.facts[verifykeys.retained(case)]
     assert kept.path == root.path / "exports" / str(RUN) / "fault.installer-trust.json"
     assert json.loads(run.ports.files.read_bytes(kept, limit=1 << 20)) == {
-        "status": "PASS", "cases": {"unsigned": "PASS"}, "verdict": "PASS",
+        "status": "PASS",
+        "cases": {"unsigned": "PASS"},
+        "verdict": "PASS",
     }

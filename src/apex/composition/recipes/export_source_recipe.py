@@ -35,7 +35,5 @@ def export(
     runtime_root: safepaths.RuntimeRoot,
 ) -> runner.Outcome:
     return runner.run(
-        PLAN,
-        ports=ports,
-        seeds={keys.REPOSITORY: repository, keys.RUNTIME_ROOT: runtime_root},
+        PLAN, ports=ports, seeds={keys.REPOSITORY: repository, keys.RUNTIME_ROOT: runtime_root}
     )

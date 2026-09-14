@@ -19,7 +19,7 @@ from apex.composition import keys as composition_keys
 from apex.config import defaults
 from apex.kernel import claims, identifiers, refusals, safepaths, secrets, verdicts
 from apex.ports import guestshell, portset, qmp
-from apex.verification import recording, verifykeys
+from apex.verification import desktopplans, recording, verifykeys
 from apex.verification.recipes import desktop_theme_recipe
 from apex.verification.stages import shell_surface_stage, theme_settings_stage
 
@@ -32,8 +32,11 @@ FRAMES = {"shell-before.ppm": BLACK, "shell-surface.ppm": GREY}
 
 def presented(mode: str) -> Answer:
     return {
-        "mode": mode, "unit": f"apex-theme-{mode}", "presented": True,
-        "display_type": "GdkWaylandDisplay", "visual_review": "NOT TESTED",
+        "mode": mode,
+        "unit": f"apex-theme-{mode}",
+        "presented": True,
+        "display_type": "GdkWaylandDisplay",
+        "visual_review": "NOT TESTED",
     }
 
 
@@ -69,9 +72,7 @@ class DrawingMonitor(fake_qmp.ScriptedQmp):
     def _draw(self, files: fake_files.MemoryFiles, command: qmp.QmpCommand) -> None:
         path = Path(str(command.arguments["filename"]))
         payload = self.frames.get(path.name, b"png bytes")
-        files.write_atomic(
-            safepaths.SafePath(path), payload, mode=defaults.RECORD_MODE
-        )
+        files.write_atomic(safepaths.SafePath(path), payload, mode=defaults.RECORD_MODE)
 
 
 @pytest.fixture
@@ -98,8 +99,10 @@ def recorder(root: safepaths.RuntimeRoot) -> recording.Recorder:
     return recording.Recorder(
         store=proofs.ProofStore(location=location, filesystem=filesystem),
         chain=ledger.Ledger(
-            location=location, filesystem=filesystem,
-            signer=ledger.ChainSigner(secrets.Secret("key")), clock=fake_clock.ManualClock(),
+            location=location,
+            filesystem=filesystem,
+            signer=ledger.ChainSigner(secrets.Secret("key")),
+            clock=fake_clock.ManualClock(),
         ),
     )
 
@@ -113,21 +116,31 @@ def verify(
     assert isinstance(ports.files, fake_files.MemoryFiles)
     monitor = DrawingMonitor(ports.files, dict(FRAMES if frames is None else frames))
     bundle = portset.HostPorts(
-        processes=ports.processes, files=ports.files, clock=ports.clock,
-        identities=ports.identities, locks=ports.locks, digests=ports.digests,
-        archives=ports.archives, signing=ports.signing, downloads=ports.downloads,
-        hypervisor=ports.hypervisor, monitor=monitor, guest=guest,
+        processes=ports.processes,
+        files=ports.files,
+        clock=ports.clock,
+        identities=ports.identities,
+        locks=ports.locks,
+        digests=ports.digests,
+        archives=ports.archives,
+        signing=ports.signing,
+        downloads=ports.downloads,
+        hypervisor=ports.hypervisor,
+        monitor=monitor,
+        guest=guest,
     )
     held = recorder(root)
     outcome = desktop_theme_recipe.verify(
         bundle,
-        guest=guest_target(root),
-        wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
-        candidate=CANDIDATE,
-        witness=claims.EnvironmentKind.VM,
-        recorder=held,
-        monitor=root.child("qmp.sock"),
-        root=root,
+        desktopplans.Inputs(
+            guest=guest_target(root),
+            wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
+            candidate=CANDIDATE,
+            witness=claims.EnvironmentKind.VM,
+            recorder=held,
+            monitor=root.child("qmp.sock"),
+            root=root,
+        ),
     )
     return outcome, held, monitor
 
@@ -154,13 +167,17 @@ def test_every_surface_is_judged_and_the_fake_bundle_is_refused_before_the_chain
     assert outcome.refusal is refusals.RefusalReason.SIMULATED_ENVIRONMENT  # type: ignore[attr-defined]
     assert outcome.not_tested == (desktop_theme_recipe.CHECK,)  # type: ignore[attr-defined]
     assert guest.asked == [
-        "desktop.theme-gtk3", "desktop.theme-gtk3",
-        "desktop.theme-adwaita", "desktop.theme-adwaita",
+        "desktop.theme-gtk3",
+        "desktop.theme-gtk3",
+        "desktop.theme-adwaita",
+        "desktop.theme-adwaita",
         "desktop.theme-settings",
     ]
     assert [request["arguments"] for request in guest.requests] == [
-        {"action": "present"}, {"action": "dismiss"},
-        {"action": "present"}, {"action": "dismiss"},
+        {"action": "present"},
+        {"action": "dismiss"},
+        {"action": "present"},
+        {"action": "dismiss"},
         {},
     ]
     assert all("sudo" not in run.script.rendered() for run in guest.runs)
@@ -168,9 +185,15 @@ def test_every_surface_is_judged_and_the_fake_bundle_is_refused_before_the_chain
     for name in ("window.gtk3", "window.adwaita", "shell.surface", "theme.settings"):
         assert facts[verifykeys.judged(name)].verdict is verdicts.PASSED, name
     assert [command.name for command in monitor.executed] == [
-        "send-key", "screendump",
-        "send-key", "screendump",
-        "screendump", "send-key", "screendump", "screendump", "send-key",
+        "send-key",
+        "screendump",
+        "send-key",
+        "screendump",
+        "screendump",
+        "send-key",
+        "screendump",
+        "screendump",
+        "send-key",
     ]
     run = facts[composition_keys.RUN_ID]
     names = [
@@ -179,7 +202,11 @@ def test_every_surface_is_judged_and_the_fake_bundle_is_refused_before_the_chain
         if command.name == "screendump"
     ]
     assert names == [
-        "gtk3.png", "adwaita.png", "shell-before.ppm", "shell-surface.ppm", "shell-surface.png",
+        "gtk3.png",
+        "adwaita.png",
+        "shell-before.ppm",
+        "shell-surface.ppm",
+        "shell-surface.png",
     ]
     assert all(
         str(command.arguments["filename"]).startswith(f"{root.path}/exports/{run}/screens/")
@@ -228,7 +255,8 @@ def test_an_unchanged_shell_fails_the_surface_and_other_themes_fail_the_settings
     settled = facts[theme_settings_stage.KEY]
     assert settled.verdict is verdicts.FAILED
     assert settled.observations["reported"] == {
-        "gtk_theme": "'Adwaita'", "shell_theme": "'Shadcn-Graphite'"
+        "gtk_theme": "'Adwaita'",
+        "shell_theme": "'Shadcn-Graphite'",
     }
 
 

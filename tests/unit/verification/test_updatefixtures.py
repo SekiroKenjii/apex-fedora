@@ -20,12 +20,15 @@ HEX = "e" * 64
 
 def report(*, a: str = "a" * 64, b: str = "b" * 64) -> dict[str, object]:
     return {
-        "status": "PASS", "id": RUN,
+        "status": "PASS",
+        "id": RUN,
         "images": {
             "a": {"digest": f"sha256:{a}", "config": f"sha256:{HEX}", "identity": "x:a"},
             "b": {"digest": f"sha256:{b}", "config": f"sha256:{HEX}", "identity": "x:b"},
         },
-        "files": {"a/manifest.json": HEX}, "public_key_sha256": HEX, "archive_sha256": HEX,
+        "files": {"a/manifest.json": HEX},
+        "public_key_sha256": HEX,
+        "archive_sha256": HEX,
         "greenboot_config_sha256": "9" * 64,
     }
 
@@ -40,7 +43,8 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 def placed(root: safepaths.RuntimeRoot, document: dict[str, object]) -> MirroredFiles:
     files = MirroredFiles()
     files.write_atomic(
-        root.child(f"exports/{RUN}/output/results.json"), json.dumps(document).encode(),
+        root.child(f"exports/{RUN}/output/results.json"),
+        json.dumps(document).encode(),
         mode=updatefixtures.defaults.RECORD_MODE,
     )
     return files
@@ -92,7 +96,8 @@ def test_the_exported_manifest_must_hash_to_the_image_s_digest(
     document = report(a=hashlib.sha256(manifest).hexdigest())
     files = placed(root, document)
     files.write_atomic(
-        root.child(f"exports/{RUN}/output/manifest-a.json"), manifest,
+        root.child(f"exports/{RUN}/output/manifest-a.json"),
+        manifest,
         mode=updatefixtures.defaults.RECORD_MODE,
     )
     held = dataclasses.replace(ports, files=files)

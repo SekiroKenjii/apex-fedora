@@ -54,15 +54,22 @@ def resume(
             subject=f"{variables}: the run left no firmware variables to boot with",
         )
     spec = testspec.describe(
-        settings, root, run_directory,
+        settings,
+        root,
+        run_directory,
         disk=present(record.disk.overlay),
         extras=tuple(present(item.overlay) for item in record.extras),
         variables=variables,
-        iso=iso, guest_ssh=record.guest_ssh, serial_console=record.serial_console,
-        usb_bus=False, boot_usb=None,
+        iso=iso,
+        guest_ssh=record.guest_ssh,
+        serial_console=record.serial_console,
+        usb_bus=False,
+        boot_usb=None,
     )
     return testspec.Prepared(
-        run=run, run_directory=run_directory, spec=spec,
+        run=run,
+        run_directory=run_directory,
+        spec=spec,
         medium=None if iso is None else record.medium,
     )
 

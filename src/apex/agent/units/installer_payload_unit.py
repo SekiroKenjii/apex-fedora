@@ -60,8 +60,13 @@ DIRECTORY_MODE = quantities.FileMode(0o700)
 ENTRY_POINT = commands.Argv.of("/usr/bin/anaconda", "--text")
 ENFORCEMENT = commands.Argv.of("getenforce")
 ANACONDA_STATE = commands.Argv.of(
-    "systemctl", "show", "anaconda.service", "-p", "ActiveState",
-    "-p", "ExecMainStartTimestampMonotonic",
+    "systemctl",
+    "show",
+    "anaconda.service",
+    "-p",
+    "ActiveState",
+    "-p",
+    "ExecMainStartTimestampMonotonic",
 )
 DISKS = commands.Argv.of("lsblk", "-bJ", "-o", "NAME,SIZE,TYPE,SERIAL,MOUNTPOINTS")
 NEVER_STARTED = frozenset({"ActiveState=inactive", "ExecMainStartTimestampMonotonic=0"})
@@ -121,12 +126,15 @@ def _disks(ports: agentports.AgentPorts) -> encoding.JsonValue:
     listing = encoding.parse_object(_output(ports, DISKS).encode()).get("blockdevices")
     devices = listing if isinstance(listing, list) else []
     physical = [
-        item for item in devices
-        if isinstance(item, dict) and item.get("type") == "disk"
+        item
+        for item in devices
+        if isinstance(item, dict)
+        and item.get("type") == "disk"
         and not str(item.get("name", "")).startswith("zram")
     ]
     if len(physical) != 2 or sorted(int(str(item.get("size", 0))) for item in physical) != [
-        SENTINEL_BYTES, TARGET_BYTES,
+        SENTINEL_BYTES,
+        TARGET_BYTES,
     ]:
         raise _unexpected("expected only the disposable 48 GiB target and 4 GiB sentinel disk")
     for disk in physical:
@@ -248,9 +256,7 @@ def mutate(ports: agentports.AgentPorts, case: str, key: str) -> encoding.Docume
     original = _read(ports, target)
     ports.files.write_atomic(FAULT_DIRECTORY / "original", original, mode=defaults.RECORD_MODE)
     _apply(ports, case, target, original, key)
-    after = (
-        hashlib.sha256(_read(ports, target)).hexdigest() if ports.files.exists(target) else None
-    )
+    after = hashlib.sha256(_read(ports, target)).hexdigest() if ports.files.exists(target) else None
     return {
         "target": str(target),
         "before_sha256": hashlib.sha256(original).hexdigest(),
@@ -272,9 +278,7 @@ def _judged(report: Mapping[str, encoding.JsonValue], case: str) -> bool:
 
 
 def run(
-    ports: agentports.AgentPorts,
-    *,
-    arguments: Mapping[str, encoding.JsonValue],
+    ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     case = str(arguments.get(CASE_ARGUMENT, ""))
     key = arguments.get(KEY_ARGUMENT, "")

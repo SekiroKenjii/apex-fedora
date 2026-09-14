@@ -38,7 +38,10 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("payload.tag"),
     reads=(
-        verifykeys.GUEST, verifykeys.AGENT, verifykeys.FIXTURE, composition_keys.REMOTE,
+        verifykeys.GUEST,
+        verifykeys.AGENT,
+        verifykeys.FIXTURE,
+        composition_keys.REMOTE,
         composition_keys.TRANSFERRED,
     ),
     writes=(verifykeys.TAGGED,),

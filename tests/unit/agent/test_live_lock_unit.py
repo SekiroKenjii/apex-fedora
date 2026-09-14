@@ -6,14 +6,7 @@ from pathlib import Path
 
 import pytest
 from livefixture_trees import Guest
-from lockfixtures import (
-    CAPS_WITH_ADMIN,
-    DIGEST,
-    LATCH,
-    PUBLIC,
-    Kernel,
-    breakpoint_guest,
-)
+from lockfixtures import CAPS_WITH_ADMIN, DIGEST, LATCH, PUBLIC, Kernel, breakpoint_guest
 
 from apex.adapters.fakes import fake_process
 from apex.agent import guestguard
@@ -43,7 +36,8 @@ def test_the_denied_lock_latches_and_the_fixture_is_restored() -> None:
     assert report["failure_latched"] is True
     assert report["ro_after_cleanup"] == "1"
     assert report["child_capabilities"] == {
-        "CapEff": "000001ffffdfffff", "CapBnd": "000001ffffdfffff",
+        "CapEff": "000001ffffdfffff",
+        "CapBnd": "000001ffffdfffff",
     }
     assert report["boot_rejection"] == "NOT TESTED"
     assert argv_of(fixture) == [
@@ -52,7 +46,8 @@ def test_the_denied_lock_latches_and_the_fixture_is_restored() -> None:
         ("udevadm", "control", "--stop-exec-queue"),
         ("blockdev", "--setrw", "/dev/vda"),
         (
-            "/bin/sh", "-c",
+            "/bin/sh",
+            "-c",
             'sed -n "/^CapEff:/p; /^CapBnd:/p" /proc/self/status; exec '
             "/usr/libexec/apex/live-disk-guard.sh /dev/vda",
         ),
@@ -62,7 +57,13 @@ def test_the_denied_lock_latches_and_the_fixture_is_restored() -> None:
     process = fixture.process
     assert isinstance(process, fake_process.ScriptedProcess)
     assert [bool(item) for item in process.restrictions] == [
-        False, False, False, False, True, False, False,
+        False,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
     ]
     assert process.restrictions[4] == frozenset({commands.Capability.SYS_ADMIN})
     assert all(item == {"LC_ALL": "C"} for item in process.variables[1:])

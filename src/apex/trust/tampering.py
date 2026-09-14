@@ -31,10 +31,7 @@ def copy_entry(
 
 
 def copy_headers(
-    ports: portset.HostPorts,
-    *,
-    source: verifying.BundleLocation,
-    target: verifying.BundleLocation,
+    ports: portset.HostPorts, *, source: verifying.BundleLocation, target: verifying.BundleLocation
 ) -> bytes:
     manifest = copy_entry(ports, source=source, target=target, name=bundles.MANIFEST_NAME)
     copy_entry(ports, source=source, target=target, name=bundles.SIGNATURE_NAME)

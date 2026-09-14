@@ -96,6 +96,4 @@ RECIPES = (
     commandspecs.Recipe("plan-upgrade", ("release",), (NAME, UPGRADE, "--release", "{{release}}")),
 )
 
-commands.declare(
-    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
-)
+commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES))

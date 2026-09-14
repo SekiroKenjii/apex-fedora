@@ -9,15 +9,15 @@ from apex.cli import commands, commandspecs, justfile
 
 def test_a_declared_recipe_renders_its_parameters_quoted_under_the_entry_point() -> None:
     recipe = commandspecs.Recipe(
-        "test-installer", ("disk", "iso"),
+        "test-installer",
+        ("disk", "iso"),
         ("machine", "start", "--disk", "{{disk}}", "--iso", "{{iso}}"),
     )
 
     rendered = justfile._command_recipe(recipe)  # noqa: SLF001
 
     assert rendered == (
-        "test-installer disk iso:\n"
-        '    {{apex}} machine start --disk "{{disk}}" --iso "{{iso}}"\n'
+        'test-installer disk iso:\n    {{apex}} machine start --disk "{{disk}}" --iso "{{iso}}"\n'
     )
 
 
@@ -40,11 +40,7 @@ def test_recipe_names_are_unique_across_commands_tools_and_the_older_tree() -> N
     declared = [
         recipe.name for name in commands.names() for recipe in registered.lookup(name).recipes
     ]
-    plain = [
-        name for name, _, _ in (
-            *justfile.FOLDED, *justfile.HOST_PIPELINES, *justfile.TOOLING,
-        )
-    ]
+    plain = [name for name, _, _ in (*justfile.FOLDED, *justfile.HOST_PIPELINES, *justfile.TOOLING)]
     names = [*declared, *plain, "gate", "default"]
 
     assert len(names) == len(set(names))

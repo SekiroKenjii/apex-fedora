@@ -101,7 +101,8 @@ def test_the_fault_runs_over_the_work_the_host_laid_out_and_the_fake_bundle_is_r
     work = facts[verifykeys.WORK]
     assert str(work).startswith("/var/tmp/apex-fingerprint-")
     assert [request["arguments"] for request in guest.requests] == [
-        {"work": str(work), "parent": str(PARENT)}, {"work": str(work)},
+        {"work": str(work), "parent": str(PARENT)},
+        {"work": str(work)},
     ]
     report = facts[verifykeys.fault_report(fingerprint_cleanup_recipe.CASE)]
     assert report.verdict is verdicts.PASSED

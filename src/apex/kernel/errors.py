@@ -22,9 +22,7 @@ class Refusal(ApexError):
 
     exit_code = 2
 
-    def __init__(
-        self, reason: refusals.RefusalReason, *, subject: str, remedy: str = ""
-    ) -> None:
+    def __init__(self, reason: refusals.RefusalReason, *, subject: str, remedy: str = "") -> None:
         self.reason = reason
         self.subject = subject
         self.remedy = remedy

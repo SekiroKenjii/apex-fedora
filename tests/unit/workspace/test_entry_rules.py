@@ -15,8 +15,9 @@ from apex.workspace import entryrules, gitguarding, rulespecs
 RULES = None
 
 
-def reasons(path: str, *, mode: treerows.EntryMode = treerows.EntryMode.REGULAR,
-            size: int | None = None) -> set[refusals.RefusalReason]:
+def reasons(
+    path: str, *, mode: treerows.EntryMode = treerows.EntryMode.REGULAR, size: int | None = None
+) -> set[refusals.RefusalReason]:
     subject = rulespecs.EntrySubject(
         path=treerows.RepoPath(path),
         mode=mode,
@@ -30,8 +31,16 @@ def reasons(path: str, *, mode: treerows.EntryMode = treerows.EntryMode.REGULAR,
 
 @pytest.mark.parametrize(
     "name",
-    ["agents.md", "claude.md", "handover.md", "memory.md", ".env", "cosign.key",
-     "id_rsa", "id_ed25519"],
+    [
+        "agents.md",
+        "claude.md",
+        "handover.md",
+        "memory.md",
+        ".env",
+        "cosign.key",
+        "id_rsa",
+        "id_ed25519",
+    ],
 )
 def test_all_eight_legacy_private_names_are_refused(name: str) -> None:
     """Including both key names, which must not move to a rule that refuses more.

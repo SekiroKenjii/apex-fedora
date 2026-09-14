@@ -72,8 +72,12 @@ def prepare(
     if copied:
         ports.files.copy(safepaths.SafePath(settings.builder.firmware_variables), variables)
     return Prepared(
-        base=image, base_fetched=fetched, disk_created=disk_created, key_created=key_created,
-        seed_created=seed_created, variables_copied=copied,
+        base=image,
+        base_fetched=fetched,
+        disk_created=disk_created,
+        key_created=key_created,
+        seed_created=seed_created,
+        variables_copied=copied,
     )
 
 
@@ -102,11 +106,13 @@ def _seeded(
         return False
     public = sshkeys.public_half(ports, key)
     ports.files.write_atomic(
-        root.child(defaults.USER_DATA_NAME), builderseed.user_data(public),
+        root.child(defaults.USER_DATA_NAME),
+        builderseed.user_data(public),
         mode=defaults.RECORD_MODE,
     )
     ports.files.write_atomic(
-        root.child(defaults.META_DATA_NAME), builderseed.meta_data(instance),
+        root.child(defaults.META_DATA_NAME),
+        builderseed.meta_data(instance),
         mode=defaults.RECORD_MODE,
     )
     ports.files.write_atomic(seed, builderseed.seed(public, instance), mode=defaults.RECORD_MODE)

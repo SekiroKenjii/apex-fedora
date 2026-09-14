@@ -49,9 +49,13 @@ def run(request: commandspecs.Request) -> commandspecs.Reply:
         checked = elancheck.check(ports, root, request.context.repository, arguments.source)
     cases = checked.document["cases"]
     counted = len(cases) if isinstance(cases, dict) else 0
-    return commandspecs.Reply(document={
-        "status": checked.document["status"], "cases": counted, "report": str(checked.proof),
-    })
+    return commandspecs.Reply(
+        document={
+            "status": checked.document["status"],
+            "cases": counted,
+            "report": str(checked.proof),
+        }
+    )
 
 
 RECIPES = (

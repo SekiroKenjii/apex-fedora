@@ -28,8 +28,7 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
     if not made.succeeded:
         return stages.Fail(cause=f"the guest could not create {inputs}")
     packages = exports.inside(
-        root, request.rpm_build,
-        f"{exports.OUTPUT}/{defaults.FINGERPRINT_PACKAGES_DIRECTORY}",
+        root, request.rpm_build, f"{exports.OUTPUT}/{defaults.FINGERPRINT_PACKAGES_DIRECTORY}"
     )
     deliveries: list[tuple[safepaths.SafePath, safepaths.RemotePath]] = [
         (
@@ -53,8 +52,12 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("fingerprint.deliver"),
     reads=(
-        keys.BUILDER_VERIFIED, keys.REMOTE, keys.TRANSFERRED, keys.FINGERPRINT_REQUEST,
-        keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.BUILDER_VERIFIED,
+        keys.REMOTE,
+        keys.TRANSFERRED,
+        keys.FINGERPRINT_REQUEST,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
     ),
     writes=(keys.FINGERPRINT_DELIVERED,),
     attests=frozenset(),

@@ -42,7 +42,11 @@ def test_every_virtio_fixture_denied_is_a_pass_in_snapshot_order() -> None:
 
     assert report["status"] == "PASS"
     assert [item.node for item in fixture.blocks.attempts] == [
-        "/dev/vda", "/dev/vda1", "/dev/vda2", "/dev/vda3", "/dev/vdb",
+        "/dev/vda",
+        "/dev/vda1",
+        "/dev/vda2",
+        "/dev/vda3",
+        "/dev/vdb",
     ]
     devices = report["devices"]
     assert isinstance(devices, list) and len(devices) == 5
@@ -89,7 +93,12 @@ def test_a_denied_write_whose_readback_changed_is_a_failure() -> None:
 @pytest.mark.parametrize(
     "change",
     [
-        "writable", "wrong-serial", "extra-disk", "missing-partition", "wrong-parent", "held",
+        "writable",
+        "wrong-serial",
+        "extra-disk",
+        "missing-partition",
+        "wrong-parent",
+        "held",
         "other-bus",
     ],
 )
@@ -188,10 +197,14 @@ def test_the_usb_fixture_is_settled_then_every_node_denied() -> None:
 
     assert report["status"] == "PASS"
     assert [tuple(call) for call in fixture.process.calls] == [
-        ("systemd-detect-virt", "--vm"), ("udevadm", "settle", "--timeout=20"),
+        ("systemd-detect-virt", "--vm"),
+        ("udevadm", "settle", "--timeout=20"),
     ]
     assert [item.node for item in fixture.blocks.attempts] == [
-        "/dev/sda", "/dev/sda1", "/dev/sda2", "/dev/sda3",
+        "/dev/sda",
+        "/dev/sda1",
+        "/dev/sda2",
+        "/dev/sda3",
     ]
     assert report["physical_usb"] == "NOT TESTED"
     assert report["hotplug_race_window"] == "NOT TESTED"

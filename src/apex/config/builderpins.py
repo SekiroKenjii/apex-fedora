@@ -29,9 +29,7 @@ class ReviewedBase:
 def load(repository: safepaths.SourceRoot) -> ReviewedBase:
     document, parsed = sourcepins.reviewed_document(repository.path / LOCK_PATH)
     if not isinstance(parsed, Mapping) or parsed.get(SCHEMA) != sourcelock.SCHEMA:
-        raise errors.Refusal(
-            refusals.RefusalReason.LOCK_SCHEMA_UNSUPPORTED, subject=str(LOCK_PATH)
-        )
+        raise errors.Refusal(refusals.RefusalReason.LOCK_SCHEMA_UNSUPPORTED, subject=str(LOCK_PATH))
     return ReviewedBase(
         source=sourcelock.LockedSource.parse(ENTRY, parsed.get(ENTRY)), document=document
     )

@@ -7,7 +7,7 @@ record says PASS only then, and the verification it rests on is kept beside it e
 
 from __future__ import annotations
 
-from apex.composition import exports, fingerprintpackages, keys
+from apex.composition import artifactchecks, exports, fingerprintpackages, keys
 from apex.composition.stages import record_result_stage
 from apex.config import defaults
 from apex.kernel import encoding, errors, identifiers
@@ -24,13 +24,15 @@ def _verified(
     home = exports.inside(root, context.facts[keys.RUN_ID], exports.OUTPUT)
     try:
         lock = fingerprintpackages.load_lock(repository)
-        document = encoding.parse_object(context.ports.files.read_bytes(
-            home / defaults.RESULTS_NAME, limit=defaults.DOCUMENT_LIMIT.value
-        ))
+        document = encoding.parse_object(
+            context.ports.files.read_bytes(
+                home / defaults.RESULTS_NAME, limit=defaults.DOCUMENT_LIMIT.value
+            )
+        )
         report = fingerprintpackages.parse_rpm_report(
             document, lock, fingerprintpackages.patch_digests(context.ports, repository, lock)
         )
-        fingerprintpackages.require_artifacts(context.ports, root, home, report.artifacts)
+        artifactchecks.require_artifacts(context.ports, root, home, report.artifacts)
     except (errors.Refusal, errors.PortFailure, ValueError) as problem:
         return None, str(problem)
     return report.document, ""
@@ -49,7 +51,8 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
     }
     context.ports.files.write_atomic(
         exports.inside(
-            context.facts[keys.RUNTIME_ROOT], context.facts[keys.RUN_ID],
+            context.facts[keys.RUNTIME_ROOT],
+            context.facts[keys.RUN_ID],
             defaults.FINGERPRINT_VERIFICATION_NAME,
         ),
         encoding.canonical(verification) + b"\n",
@@ -65,8 +68,17 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("fingerprint.rpm-record"),
     reads=(
-        keys.BUILD_RUN, keys.RETRIEVED, keys.KIND, keys.BUILD_PROFILE, keys.SOURCE_BUNDLE,
-        keys.REMOTE, keys.PARENT, keys.ACCESS, keys.REPOSITORY, keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.BUILD_RUN,
+        keys.RETRIEVED,
+        keys.KIND,
+        keys.BUILD_PROFILE,
+        keys.SOURCE_BUNDLE,
+        keys.REMOTE,
+        keys.PARENT,
+        keys.ACCESS,
+        keys.REPOSITORY,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
     ),
     writes=(keys.BUILD_RECORD, keys.FINGERPRINT_REPORT),
     attests=frozenset(),

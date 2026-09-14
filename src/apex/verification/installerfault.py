@@ -21,7 +21,11 @@ from apex.ports import portset
 from apex.provisioning import comparing, runrecord
 
 CASES = (
-    "missing-signature", "altered-signature", "wrong-key", "changed-manifest", "corrupt-blob",
+    "missing-signature",
+    "altered-signature",
+    "wrong-key",
+    "changed-manifest",
+    "corrupt-blob",
     "unexpected-source",
 )
 KEY_CASE = "wrong-key"
@@ -148,9 +152,7 @@ def write_kept(
     observations: encoding.Document,
 ) -> safepaths.SafePath:
     target = safepaths.SafePath(run_directory.path / defaults.FAULT_GUEST_NAME)
-    _write(
-        ports, target, {"schema": SCHEMA, "request": request.document(), GUEST: observations}
-    )
+    _write(ports, target, {"schema": SCHEMA, "request": request.document(), GUEST: observations})
     return target
 
 
@@ -176,15 +178,19 @@ def collect(
     )
     verdict: verdicts.Verdict = verdicts.PASSED if passed else verdicts.FAILED
     proof = safepaths.SafePath(run_directory.path / defaults.FAULT_RESULT_NAME)
-    _write(ports, proof, {
-        "schema": SCHEMA,
-        STATUS: verdict.stored_name,
-        "case": request.case,
-        "iso_sha256": request.image.hex,
-        GUEST: kept,
-        "disk_comparison": comparison.document(),
-        "run_directory": str(run_directory),
-    })
+    _write(
+        ports,
+        proof,
+        {
+            "schema": SCHEMA,
+            STATUS: verdict.stored_name,
+            "case": request.case,
+            "iso_sha256": request.image.hex,
+            GUEST: kept,
+            "disk_comparison": comparison.document(),
+            "run_directory": str(run_directory),
+        },
+    )
     if not passed:
         raise errors.Refusal(
             refusals.RefusalReason.FAULT_DISK_CHANGED,

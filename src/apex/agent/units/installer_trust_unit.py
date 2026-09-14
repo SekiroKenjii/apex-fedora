@@ -14,7 +14,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path
 
-from apex.agent import agentports, builder, units
+from apex.agent import agentports, builder, units, worksites
 from apex.config import defaults
 from apex.kernel import (
     commands,
@@ -116,20 +116,9 @@ def _save(
     ports.files.write_atomic(path, encoding.canonical(value) + b"\n", mode=PRIVATE)
 
 
-def _site_of(arguments: Mapping[str, encoding.JsonValue]) -> tuple[safepaths.SafePath, str]:
-    value = arguments.get("work")
-    if not isinstance(value, str) or not value.startswith(WORK_PREFIX):
-        raise errors.Refusal(
-            refusals.RefusalReason.REQUEST_MALFORMED,
-            subject=f"work must be a directory under {WORK_PREFIX}",
-        )
-    try:
-        run_id = identifiers.RunId.parse(value.removeprefix(WORK_PREFIX))
-    except errors.Refusal as fault:
-        raise errors.Refusal(
-            refusals.RefusalReason.REQUEST_MALFORMED, subject="work must be named for its run"
-        ) from fault
-    return safepaths.SafePath(Path(value)), str(run_id)
+def _site(arguments: Mapping[str, encoding.JsonValue]) -> tuple[safepaths.SafePath, str]:
+    site, run_id = worksites.site_of(arguments, prefix=WORK_PREFIX)
+    return site, str(run_id)
 
 
 def _requirement(site: Site, *, key: str, identity: str) -> list[encoding.JsonValue]:
@@ -152,15 +141,19 @@ def _policy(
     identity: str | None = None,
 ) -> safepaths.SafePath:
     requirement = _requirement(site, key=key, identity=identity or site.tag)
-    _save(ports, path, {
-        "default": [{"type": "reject"}],
-        "transports": {
-            "dir": {str(source_directory): requirement},
-            "containers-storage": {
-                f"{update_fixture.STORAGE_SCOPE}{site.verified_tag}": requirement
+    _save(
+        ports,
+        path,
+        {
+            "default": [{"type": "reject"}],
+            "transports": {
+                "dir": {str(source_directory): requirement},
+                "containers-storage": {
+                    f"{update_fixture.STORAGE_SCOPE}{site.verified_tag}": requirement
+                },
             },
         },
-    })
+    )
     return path
 
 
@@ -205,8 +198,10 @@ def _sign_and_verify(
     )
     trusted = _policy(ports, site, site.root / "trusted-policy.json", site.signed)
     ports.containers.copy(
-        _directory(site.signed), containers.ImageReference.stored(site.verified_tag),
-        policy=trusted, signing=None,
+        _directory(site.signed),
+        containers.ImageReference.stored(site.verified_tag),
+        policy=trusted,
+        signing=None,
     )
     ports.containers.copy(
         containers.ImageReference.stored(site.verified_tag),
@@ -226,7 +221,8 @@ def _sign_and_verify(
     ports.containers.copy(
         containers.ImageReference.stored(site.verified_tag),
         containers.ImageReference.stored(site.preflight_tag),
-        policy=trusted, signing=None,
+        policy=trusted,
+        signing=None,
     )
     report.cases["same-store-preflight"] = PASS
     proxy.verified_open(verified, trusted.path)
@@ -250,8 +246,7 @@ def _reject(
     except errors.PortFailure as failure:
         if re.search(pattern, failure.cause, re.IGNORECASE) is None:
             raise errors.Refusal(
-                refusals.RefusalReason.NEGATIVE_WRONG_REASON,
-                subject=f"{name}: {failure.cause}",
+                refusals.RefusalReason.NEGATIVE_WRONG_REASON, subject=f"{name}: {failure.cause}"
             ) from failure
     else:
         raise errors.Refusal(
@@ -294,10 +289,7 @@ def _signature_names(ports: agentports.AgentPorts, directory: safepaths.SafePath
 
 
 def _tamper(
-    ports: agentports.AgentPorts,
-    name: str,
-    destination: safepaths.SafePath,
-    signatures: list[str],
+    ports: agentports.AgentPorts, name: str, destination: safepaths.SafePath, signatures: list[str]
 ) -> None:
     if name == "unsigned":
         for filename in signatures:
@@ -318,11 +310,19 @@ def _negatives(ports: agentports.AgentPorts, site: Site, report: Report) -> None
     wrong = _policy(ports, site, site.root / "wrong-policy.json", site.signed, key="wrong")
     _reject(ports, site, report, "wrong-key", verified, wrong, "signature")
     wrong_identity = _policy(
-        ports, site, site.root / "wrong-identity-policy.json", site.signed,
+        ports,
+        site,
+        site.root / "wrong-identity-policy.json",
+        site.signed,
         identity=UNEXPECTED_IDENTITY,
     )
     _reject(
-        ports, site, report, "wrong-identity", verified, wrong_identity,
+        ports,
+        site,
+        report,
+        "wrong-identity",
+        verified,
+        wrong_identity,
         "identity|reference|signature",
     )
     signatures = _signature_names(ports, site.signed)
@@ -332,7 +332,9 @@ def _negatives(ports: agentports.AgentPorts, site: Site, report: Report) -> None
         destination = site.root / name
         _copy_tree(ports, site.signed, destination)
         policy = _policy(
-            ports, site, site.root / f"{name}-policy.json",
+            ports,
+            site,
+            site.root / f"{name}-policy.json",
             destination if name != "unexpected-source" else site.signed,
         )
         _tamper(ports, name, destination, signatures)
@@ -340,14 +342,14 @@ def _negatives(ports: agentports.AgentPorts, site: Site, report: Report) -> None
 
 
 def run(
-    ports: agentports.AgentPorts,
-    *,
-    arguments: Mapping[str, encoding.JsonValue],
+    ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     builder.require_isolated(ports)
-    root, run_id = _site_of(arguments)
+    root, run_id = _site(arguments)
     site = Site(
-        root=root, output=root / "output", tag=f"{TAG_PREFIX}{run_id}",
+        root=root,
+        output=root / "output",
+        tag=f"{TAG_PREFIX}{run_id}",
         passphrase=root / "passphrase",
     )
     ports.files.make_directory(site.output, mode=DIRECTORY_MODE)

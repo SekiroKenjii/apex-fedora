@@ -29,15 +29,27 @@ from apex.kernel import quantities, safepaths
 
 PUBLIC = quantities.FileMode(0o444)
 SHELL_OWNER = (
-    "busctl", "--user", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-    "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", "org.gnome.Shell",
+    "busctl",
+    "--user",
+    "call",
+    "org.freedesktop.DBus",
+    "/org/freedesktop/DBus",
+    "org.freedesktop.DBus",
+    "GetConnectionUnixProcessID",
+    "s",
+    "org.gnome.Shell",
 )
 WAYLAND = "GdkWaylandDisplay"
 COMPOSITION = {"palette": "Shadcn-Graphite", "source": "tools/compose-shell-theme"}
 LIST_SESSIONS = ("loginctl", "list-sessions", "--no-legend", "--no-pager")
 OVERVIEW = (
-    "busctl", "--user", "get-property", "org.gnome.Shell", "/org/gnome/Shell",
-    "org.gnome.Shell", "OverviewActive",
+    "busctl",
+    "--user",
+    "get-property",
+    "org.gnome.Shell",
+    "/org/gnome/Shell",
+    "org.gnome.Shell",
+    "OverviewActive",
 )
 SHELL_PID = "1687"
 GREETER_ID = "c1"
@@ -173,15 +185,21 @@ def session(
 ) -> tuple[Session, fake_files.MemoryFiles, fake_clock.ManualClock, agentports.AgentPorts]:
     files = fake_files.MemoryFiles()
     files.write_atomic(
-        safepaths.SafePath(Path(defaults.SHELL_THEME_SOURCE)), json.dumps(COMPOSITION).encode(),
+        safepaths.SafePath(Path(defaults.SHELL_THEME_SOURCE)),
+        json.dumps(COMPOSITION).encode(),
         mode=PUBLIC,
     )
     process = Session(spec)
     clock = fake_clock.ManualClock()
     ports = agentports.AgentPorts(
-        processes=process, files=files, clock=clock, containers=fake_containers.FakeRegistry(),
-        digests=fake_digesting.CountingDigests(), archives=fake_archives.MemoryArchives(),
-        identities=fake_ids.SequenceIdentities(), extents=fake_extents.FakeExtents(),
+        processes=process,
+        files=files,
+        clock=clock,
+        containers=fake_containers.FakeRegistry(),
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
         blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return process, files, clock, ports

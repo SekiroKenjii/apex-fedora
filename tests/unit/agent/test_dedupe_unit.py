@@ -27,7 +27,10 @@ BLOB = b"layer bytes" * 1000
 
 
 def bundle(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, filesystem: str = "btrfs",
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    filesystem: str = "btrfs",
     containers_running: bytes = b"[]",
 ) -> tuple[agentports.AgentPorts, fake_extents.FakeExtents]:
     marker = tmp_path / "apex-builder"
@@ -95,15 +98,29 @@ def test_a_completed_fixture_has_its_blobs_shared_and_its_manifests_kept(
         (root / directory / blob_name).write_bytes(BLOB)
         (root / directory / "signature-1").write_bytes(directory.encode())
     (root / "output").mkdir()
-    (root / "output" / "results.json").write_text(json.dumps({
-        "status": "PASS", "id": fixture,
-        "images": {
-            "a": {"digest": "sha256:" + "a" * 64, "config": "sha256:" + "c" * 64, "identity": "x"},
-            "b": {"digest": str(hashing.digest_bytes(manifest)), "config": "sha256:" + "c" * 64,
-                  "identity": "y"},
-        },
-        "files": {}, "public_key_sha256": "d" * 64, "archive_sha256": "e" * 64,
-    }))
+    (root / "output" / "results.json").write_text(
+        json.dumps(
+            {
+                "status": "PASS",
+                "id": fixture,
+                "images": {
+                    "a": {
+                        "digest": "sha256:" + "a" * 64,
+                        "config": "sha256:" + "c" * 64,
+                        "identity": "x",
+                    },
+                    "b": {
+                        "digest": str(hashing.digest_bytes(manifest)),
+                        "config": "sha256:" + "c" * 64,
+                        "identity": "y",
+                    },
+                },
+                "files": {},
+                "public_key_sha256": "d" * 64,
+                "archive_sha256": "e" * 64,
+            }
+        )
+    )
     work = tmp_path / ("apex-dedupe-" + "a" * 32)
 
     report = dedupe_unit.run(ports, arguments={"work": str(work), "fixture": fixture})

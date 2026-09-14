@@ -30,6 +30,13 @@ def derive(
             remedy="this recipe derives qcow2 and installer artifacts",
         )
     return buildplan.run(
-        PLAN, ports, repository=repository, runtime_root=runtime_root, builder=builder,
-        profile=builds.Profile.FEDORA, kind=kind, parent=parent, test_access=test_access,
+        PLAN,
+        ports,
+        repository=repository,
+        runtime_root=runtime_root,
+        builder=builder,
+        profile=builds.Profile.FEDORA,
+        kind=kind,
+        parent=parent,
+        test_access=test_access,
     )

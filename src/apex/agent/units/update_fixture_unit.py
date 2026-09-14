@@ -14,7 +14,7 @@ import dataclasses
 from collections.abc import Mapping
 from pathlib import Path
 
-from apex.agent import agentports, builder, units
+from apex.agent import agentports, builder, units, worksites
 from apex.config import defaults
 from apex.kernel import (
     commands,
@@ -59,7 +59,7 @@ def run(
     ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     builder.require_isolated(ports)
-    root, run_id = _site_of(arguments)
+    root, run_id = worksites.site_of(arguments, prefix=WORK_PREFIX)
     output = root / "output"
     ports.files.make_directory(output, mode=DIRECTORY_MODE)
     _storage_preflight(ports, root)
@@ -73,8 +73,13 @@ def run(
         )
     keys = _keys(ports, root)
     site = Site(
-        root=root, run=run_id, output=output, context=root / "context", bundle=root / "bundle",
-        keys=keys, greenboot=_context(ports, root, run_id, keys),
+        root=root,
+        run=run_id,
+        output=output,
+        context=root / "context",
+        bundle=root / "bundle",
+        keys=keys,
+        greenboot=_context(ports, root, run_id, keys),
     )
     ports.files.make_directory(site.bundle, mode=DIRECTORY_MODE)
     ports.files.copy(site.context / "policy.json", site.bundle / "policy.json")
@@ -107,20 +112,30 @@ def _finish(
     }
     image_documents: dict[str, encoding.JsonValue] = {
         version: {
-            "digest": str(image.digest), "config": str(image.config), "identity": image.identity,
+            "digest": str(image.digest),
+            "config": str(image.config),
+            "identity": image.identity,
         }
         for version, image in images.items()
     }
     public_key = ports.digests.file(site.keys.trusted_public).hex
     parent_document: encoding.Document = {
-        "profile": frozen.profile, "digest": str(frozen.digest), "image_id": str(frozen.image_id),
+        "profile": frozen.profile,
+        "digest": str(frozen.digest),
+        "image_id": str(frozen.image_id),
     }
     ports.files.write_atomic(
         site.bundle / "fixture.json",
-        encoding.canonical({
-            "id": str(site.run), "parent": parent_document, "images": image_documents,
-            "files": files, "public_key_sha256": public_key,
-        }) + b"\n",
+        encoding.canonical(
+            {
+                "id": str(site.run),
+                "parent": parent_document,
+                "images": image_documents,
+                "files": files,
+                "public_key_sha256": public_key,
+            }
+        )
+        + b"\n",
         mode=PLAIN,
     )
     archive = site.output / "payloads.tar"
@@ -138,7 +153,9 @@ def _finish(
         "public_key_sha256": public_key,
         "storage_sharing": {
             "filesystem": filesystem.stdout.decode(errors="replace").strip(),
-            "files_removed": 0, "blobs": 0, "bytes_submitted": 0,
+            "files_removed": 0,
+            "blobs": 0,
+            "bytes_submitted": 0,
         },
         "files": files,
         "archive_sha256": ports.digests.file(archive).hex,
@@ -159,9 +176,7 @@ def _storage_preflight(ports: agentports.AgentPorts, root: safepaths.SafePath) -
 
 def _keys(ports: agentports.AgentPorts, root: safepaths.SafePath) -> Keys:
     passphrase = root / "passphrase"
-    ports.files.write_atomic(
-        passphrase, f"{ports.identities.token()}\n".encode(), mode=PRIVATE
-    )
+    ports.files.write_atomic(passphrase, f"{ports.identities.token()}\n".encode(), mode=PRIVATE)
     for name in ("trusted", "wrong"):
         ports.containers.generate_sigstore_key(prefix=root / name, passphrase=passphrase)
     return Keys(
@@ -193,8 +208,10 @@ def _rpms(ports: agentports.AgentPorts, image: str) -> str:
     listing = _engine_run(
         ports,
         containers.RunRequest(
-            image=image, argv=commands.Argv.of(*update_fixture.RPM_QUERY),
-            read_only=True, network_none=True,
+            image=image,
+            argv=commands.Argv.of(*update_fixture.RPM_QUERY),
+            read_only=True,
+            network_none=True,
         ),
     )
     return "\n".join(sorted(listing.stdout.decode(errors="replace").splitlines())) + "\n"
@@ -217,9 +234,7 @@ def _build_version(
     recipe = update_fixture.containerfile(version, parent=parent, first=tags["a"])
     ports.files.write_atomic(site.context / "Containerfile", recipe.encode(), mode=PLAIN)
     ports.files.copy(site.context / "Containerfile", site.output / f"Containerfile.{version}")
-    ports.containers.build(
-        containers.BuildRequest(context=site.context, tag=tag, layers=False)
-    )
+    ports.containers.build(containers.BuildRequest(context=site.context, tag=tag, layers=False))
     if _rpms(ports, tag) != baseline:
         raise _unexpected("fixture changed the RPM inventory")
     _engine_run(
@@ -231,9 +246,7 @@ def _build_version(
     _check_recovery_configuration(ports, site, version, tag)
     signing_policy = site.root / "signing-policy.json"
     ports.files.write_atomic(
-        signing_policy,
-        encoding.canonical(update_fixture.signing_policy(tag)) + b"\n",
-        mode=PLAIN,
+        signing_policy, encoding.canonical(update_fixture.signing_policy(tag)) + b"\n", mode=PLAIN
     )
     destination = containers.ImageReference(
         containers.Transport.DIRECTORY, str(site.bundle / version)
@@ -262,8 +275,10 @@ def _check_recovery_configuration(
     checks = _engine_run(
         ports,
         containers.RunRequest(
-            image=tag, argv=commands.Argv.of(*update_fixture.RECOVERY_CHECK),
-            read_only=True, network_none=True,
+            image=tag,
+            argv=commands.Argv.of(*update_fixture.RECOVERY_CHECK),
+            read_only=True,
+            network_none=True,
         ),
     ).stdout.decode(errors="replace")
     lines = checks.splitlines()[:2]
@@ -329,8 +344,7 @@ def _signature_names(ports: agentports.AgentPorts, directory: safepaths.SafePath
     return sorted(
         entry.relative
         for entry in ports.files.list_tree(directory)
-        if "/" not in entry.relative
-        and entry.relative.startswith(update_fixture.SIGNATURE_PREFIX)
+        if "/" not in entry.relative and entry.relative.startswith(update_fixture.SIGNATURE_PREFIX)
     )
 
 
@@ -364,24 +378,6 @@ def _run(ports: agentports.AgentPorts, *argv: str) -> commands.CompletedRun:
 
 def _read(ports: agentports.AgentPorts, path: safepaths.SafePath) -> bytes:
     return ports.files.read_bytes(path, limit=defaults.DOCUMENT_LIMIT.value)
-
-
-def _site_of(
-    arguments: Mapping[str, encoding.JsonValue],
-) -> tuple[safepaths.SafePath, identifiers.RunId]:
-    value = arguments.get("work")
-    if not isinstance(value, str) or not value.startswith(WORK_PREFIX):
-        raise errors.Refusal(
-            refusals.RefusalReason.REQUEST_MALFORMED,
-            subject=f"work must be a directory under {WORK_PREFIX}",
-        )
-    try:
-        run_id = identifiers.RunId.parse(value.removeprefix(WORK_PREFIX))
-    except errors.Refusal as fault:
-        raise errors.Refusal(
-            refusals.RefusalReason.REQUEST_MALFORMED, subject="work must be named for its run"
-        ) from fault
-    return safepaths.SafePath(Path(value)), run_id
 
 
 def _unexpected(detail: str) -> errors.Refusal:

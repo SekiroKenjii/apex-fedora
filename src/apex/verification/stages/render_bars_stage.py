@@ -13,11 +13,11 @@ from collections.abc import Sequence
 
 from apex.composition import keys as composition_keys
 from apex.config import defaults
-from apex.kernel import encoding, errors, identifiers, timing, verdicts
+from apex.kernel import encoding, errors, timing, verdicts
 from apex.model import screens
-from apex.pipeline import effects, facts, stages
+from apex.pipeline import facts, stages
 from apex.ports import portset
-from apex.verification import console, judging, probing, verifykeys
+from apex.verification import console, desktopstages, judging, probing, verifykeys
 
 KEY = verifykeys.judged("render.bars")
 FRAME = "application.ppm"
@@ -60,21 +60,7 @@ def for_case(
             return stages.Advance(facts={KEY: blocked})
         return _judged(context, case)
 
-    return stages.SimpleStage(
-        id=identifiers.StageId("desktop.render-bars"),
-        reads=(
-            verifykeys.GUEST, verifykeys.AGENT, verifykeys.MONITOR,
-            composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID, *gates,
-        ),
-        writes=(KEY,),
-        attests=frozenset(),
-        effects=frozenset({
-            effects.Effect.REMOTE_EXEC, effects.Effect.MUTATES_GUEST,
-            effects.Effect.WRITES_RUNTIME,
-        }),
-        preflight=stages.always_ready,
-        apply=apply,
-    )
+    return desktopstages.stage("desktop.render-bars", KEY, apply, reads=gates)
 
 
 def _judged(
@@ -83,7 +69,10 @@ def _judged(
     ports = context.ports
     try:
         observed = probing.observe(
-            ports, context.facts[verifykeys.GUEST], context.facts[verifykeys.AGENT], case,
+            ports,
+            context.facts[verifykeys.GUEST],
+            context.facts[verifykeys.AGENT],
+            case,
             token=ports.identities.token(),
         )
         presented = observed.observations.get(PRESENTED) is True
@@ -93,7 +82,8 @@ def _judged(
             bars = _bars(context)
             monitor = context.facts[verifykeys.MONITOR]
             image = console.capture(
-                ports, monitor,
+                ports,
+                monitor,
                 into=console.capture_into(
                     context.facts[composition_keys.RUNTIME_ROOT],
                     context.facts[composition_keys.RUN_ID],

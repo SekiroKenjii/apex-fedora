@@ -20,7 +20,7 @@ from apex.adapters.fakes import fake_files
 from apex.attestation import ledger
 from apex.kernel import claims, refusals, safepaths, secrets, verdicts
 from apex.ports import portset
-from apex.verification import testaccess, verifykeys
+from apex.verification import desktopplans, testaccess, verifykeys
 from apex.verification.recipes import desktop_render_recipe
 from apex.verification.stages import login_stage, render_bars_stage, shell_startup_stage
 
@@ -60,22 +60,32 @@ def verify(
     assert isinstance(ports.files, fake_files.MemoryFiles)
     monitor = DrawingMonitor(ports.files, {"application.ppm": BARS})
     bundle = portset.HostPorts(
-        processes=ports.processes, files=ports.files, clock=ports.clock,
-        identities=ports.identities, locks=ports.locks, digests=ports.digests,
-        archives=ports.archives, signing=ports.signing, downloads=ports.downloads,
-        hypervisor=ports.hypervisor, monitor=monitor, guest=guest,
+        processes=ports.processes,
+        files=ports.files,
+        clock=ports.clock,
+        identities=ports.identities,
+        locks=ports.locks,
+        digests=ports.digests,
+        archives=ports.archives,
+        signing=ports.signing,
+        downloads=ports.downloads,
+        hypervisor=ports.hypervisor,
+        monitor=monitor,
+        guest=guest,
     )
     held = recorder(root)
     outcome = desktop_render_recipe.verify(
         bundle,
-        guest=guest_target(root),
-        wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
-        candidate=CANDIDATE,
-        witness=claims.EnvironmentKind.VM,
-        recorder=held,
-        monitor=root.child("qmp.sock"),
-        credentials=CREDENTIALS,
-        root=root,
+        desktopplans.Inputs(
+            guest=guest_target(root),
+            wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
+            candidate=CANDIDATE,
+            witness=claims.EnvironmentKind.VM,
+            recorder=held,
+            monitor=root.child("qmp.sock"),
+            root=root,
+            credentials=CREDENTIALS,
+        ),
     )
     assert held.chain.head() == ledger.EMPTY
     return outcome, monitor
@@ -102,8 +112,13 @@ def test_the_account_is_logged_in_by_keyboard_and_every_stage_passes_before_the_
     assert outcome.refusal is refusals.RefusalReason.SIMULATED_ENVIRONMENT  # type: ignore[attr-defined]
     assert outcome.not_tested == (desktop_render_recipe.CHECK,)  # type: ignore[attr-defined]
     assert guest.asked == [
-        "desktop.session", "desktop.greeter", "desktop.session",
-        "desktop.shell-startup", "desktop.overview", "desktop.overview", "desktop.overview",
+        "desktop.session",
+        "desktop.greeter",
+        "desktop.session",
+        "desktop.shell-startup",
+        "desktop.overview",
+        "desktop.overview",
+        "desktop.overview",
         "desktop.render",
     ]
     assert all("sudo" not in run.script.rendered() for run in guest.runs)
@@ -111,10 +126,21 @@ def test_the_account_is_logged_in_by_keyboard_and_every_stage_passes_before_the_
     for key in (login_stage.KEY, shell_startup_stage.KEY, render_bars_stage.KEY):
         assert facts[key].verdict is verdicts.PASSED, key
     assert monitor.captured() == [
-        "greeter.png", "shell-startup.png", "overview.png", "application.ppm", "application.png",
+        "greeter.png",
+        "shell-startup.png",
+        "overview.png",
+        "application.ppm",
+        "application.png",
     ]
     assert monitor.pressed()[:8] == [
-        ["ret"], ["shift", "a"], ["b"], ["minus"], ["1"], ["shift", "minus"], ["ret"], ["esc"],
+        ["ret"],
+        ["shift", "a"],
+        ["b"],
+        ["minus"],
+        ["1"],
+        ["shift", "minus"],
+        ["ret"],
+        ["esc"],
     ]
     keys = (login_stage.KEY, shell_startup_stage.KEY, render_bars_stage.KEY)
     filed = [facts[key] for key in keys]

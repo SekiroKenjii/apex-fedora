@@ -15,15 +15,29 @@ from pathlib import Path
 
 import pytest
 
+from apex.config import budgets
+
 REPOSITORY = Path(__file__).resolve().parents[2]
 SOURCE = REPOSITORY / "src" / "apex"
 LAYERS = {
-    "kernel": 0, "model": 1, "ports": 2, "registry": 3, "pipeline": 4,
-    "config": 5, "targeting": 5,
-    "attestation": 6, "workspace": 6, "trust": 6, "provisioning": 6, "composition": 6,
+    "kernel": 0,
+    "model": 1,
+    "ports": 2,
+    "registry": 3,
+    "pipeline": 4,
+    "config": 5,
+    "targeting": 5,
+    "attestation": 6,
+    "workspace": 6,
+    "trust": 6,
+    "provisioning": 6,
+    "composition": 6,
     "verification": 6,
     "generating": 6,
-    "adapters": 7, "wiring": 8, "cli": 9, "agent": 10,
+    "adapters": 7,
+    "wiring": 8,
+    "cli": 9,
+    "agent": 10,
 }
 
 # Phrases that only ever compare the tree with the code it replaced. Their history belongs in
@@ -65,7 +79,7 @@ KIND_SUFFIXES = {
     "targeting/releases": "_release",
 }
 
-COMMENT_BUDGET = 40
+COMMENT_BUDGET = budgets.COMMENT_LINE_BUDGET
 RENDERING_MODULE = "cli/rendering.py"
 
 
@@ -202,7 +216,8 @@ def test_the_style_document_names_every_test_here() -> None:
     names = [
         node.name
         for node in ast.parse(Path(__file__).read_text()).body
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+        if isinstance(node, ast.FunctionDef)
+        and node.name.startswith("test_")
         and node.name != "test_the_style_document_names_every_test_here"
     ]
     missing = [name for name in names if name not in document]

@@ -11,44 +11,13 @@ from pathlib import Path
 
 import pytest
 
+from apex.config import budgets
+
 SOURCE = Path(__file__).resolve().parents[2] / "src" / "apex"
-MODULE_LINE_LIMIT = 400
-FAN_IN_LIMIT = 40
-# The kernel is the shared vocabulary, `config.defaults` is the one place a number lives,
-# `ports.portset` is the bundle every host stage names in its signature and `agent.agentports`
-# the guest's own, `pipeline.stages` and
-# `pipeline.effects` are the stage vocabulary every stage is made of and answers with,
-# `composition.keys` is the fact vocabulary the build stages pass to one another,
-# `verification.verifykeys` the same for the verification stages, and `ports.guestshell` is
-# the port every stage that asks a guest names; the specification makes all nine central on
-# purpose, so none is a hidden hub.
-FAN_IN_EXEMPT = (
-    "apex.kernel", "apex.config.defaults", "apex.ports.portset", "apex.agent.agentports",
-    "apex.pipeline.stages",
-    "apex.pipeline.effects", "apex.composition.keys", "apex.verification.verifykeys",
-    "apex.ports.guestshell",
-)
-PACKAGE_LINE_BUDGETS = {
-    "kernel": 1500,
-    "assets": 100,
-    "model": 1800,
-    "ports": 1100,
-    "registry": 700,
-    "pipeline": 1200,
-    "config": 800,
-    "targeting": 600,
-    "attestation": 3600,
-    "composition": 2600,
-    "verification": 8000,
-    "generating": 800,
-    "provisioning": 2400,
-    "trust": 1200,
-    "agent": 6400,
-    "workspace": 2000,
-    "adapters": 3100,
-    "cli": 3600,
-    "wiring": 300,
-}
+MODULE_LINE_LIMIT = budgets.MODULE_LINE_LIMIT
+FAN_IN_LIMIT = budgets.FAN_IN_LIMIT
+FAN_IN_EXEMPT = budgets.FAN_IN_EXEMPT
+PACKAGE_LINE_BUDGETS = budgets.PACKAGE_LINE_BUDGETS
 
 
 def line_count(path: Path) -> int:
@@ -83,9 +52,7 @@ def importers_by_module() -> dict[str, int]:
             if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("apex"):
                 for alias in node.names:
                     target = (
-                        f"{node.module}.{alias.name}"
-                        if alias.name[0].islower()
-                        else node.module
+                        f"{node.module}.{alias.name}" if alias.name[0].islower() else node.module
                     )
                     counted[target] = counted.get(target, 0) + 1
             elif isinstance(node, ast.Import):
@@ -108,9 +75,7 @@ def test_no_module_outside_the_kernel_is_imported_by_more_than_the_fan_in_limit(
 
 def test_every_package_that_exists_has_a_budget() -> None:
     present = {
-        path.name
-        for path in SOURCE.iterdir()
-        if path.is_dir() and (path / "__init__.py").is_file()
+        path.name for path in SOURCE.iterdir() if path.is_dir() and (path / "__init__.py").is_file()
     }
 
     assert present <= set(PACKAGE_LINE_BUDGETS)

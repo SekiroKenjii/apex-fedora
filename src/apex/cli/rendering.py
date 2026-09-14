@@ -8,11 +8,11 @@ one module that prints.
 
 from __future__ import annotations
 
-import json
 from typing import TextIO
 
 from apex.attestation import columns
 from apex.cli import commandspecs
+from apex.kernel import encoding
 
 HEADINGS = ("CHECK", "VERDICT", "ORIGIN", "IMPORT LIMITS")
 GAP = "  "
@@ -36,8 +36,7 @@ def render(table: columns.Table) -> str:
         for index, heading in enumerate(HEADINGS)
     ]
     lines = [
-        f"store version {table.version}, "
-        f"{'strict' if table.strict else 'default'} readiness",
+        f"store version {table.version}, {'strict' if table.strict else 'default'} readiness",
         GAP.join(heading.ljust(widths[index]) for index, heading in enumerate(HEADINGS)),
     ]
     for row, cells in zip(table.rows, body, strict=True):
@@ -55,7 +54,7 @@ def render(table: columns.Table) -> str:
 
 def emit(reply: commandspecs.Reply, *, stdout: TextIO, stderr: TextIO) -> None:
     if reply.document is not None:
-        print(json.dumps(reply.document, indent=2, sort_keys=True), file=stdout)
+        print(encoding.readable(reply.document), file=stdout)
     elif reply.text is not None:
         stdout.write(reply.text)
     if reply.narrative:

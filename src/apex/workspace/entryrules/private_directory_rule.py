@@ -52,9 +52,7 @@ def _private(components: tuple[str, ...], index: int) -> bool:
 def inspect(subject: rulespecs.EntrySubject) -> Sequence[rulespecs.Finding]:
     components = subject.path.directory_components
     offending = [
-        component
-        for index, component in enumerate(components)
-        if _private(components, index)
+        component for index, component in enumerate(components) if _private(components, index)
     ]
     if not offending:
         return ()
@@ -70,8 +68,6 @@ def inspect(subject: rulespecs.EntrySubject) -> Sequence[rulespecs.Finding]:
 
 entryrules.declare(
     rulespecs.EntryRule(
-        id=RULE,
-        origin=ruleorigins.Decomposed(ruleorigins.LegacySurface.PERMITTED),
-        inspect=inspect,
+        id=RULE, origin=ruleorigins.Decomposed(ruleorigins.LegacySurface.PERMITTED), inspect=inspect
     )
 )

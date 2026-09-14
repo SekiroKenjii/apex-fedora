@@ -36,8 +36,7 @@ class TrustAnchor:
 
 def operator_supplied(candidate: Path) -> TrustAnchor:
     return TrustAnchor(
-        public_key=safepaths.RegularFile.adopt(candidate),
-        provenance=Provenance.OPERATOR_SUPPLIED,
+        public_key=safepaths.RegularFile.adopt(candidate), provenance=Provenance.OPERATOR_SUPPLIED
     )
 
 

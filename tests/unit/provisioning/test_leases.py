@@ -117,7 +117,8 @@ def test_an_intent_without_a_witness_is_malformed(host: Host) -> None:
     document = dict(intent(host).document())
     del document["witness"]
     host.files.write_atomic(
-        host.root.child(defaults.INTENT_NAME), json.dumps(document).encode(),
+        host.root.child(defaults.INTENT_NAME),
+        json.dumps(document).encode(),
         mode=defaults.RECORD_MODE,
     )
 

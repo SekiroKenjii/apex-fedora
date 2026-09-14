@@ -55,22 +55,22 @@ def image(volume: str, files: Mapping[str, bytes]) -> bytes:
     bodies: list[bytes] = []
     for name in names:
         body = files[name]
-        directory += _record(
-            _identifier(name), extent=extent, length=len(body), flags=FILE_FLAG
-        )
+        directory += _record(_identifier(name), extent=extent, length=len(body), flags=FILE_FLAG)
         bodies.append(_padded(body))
         extent += max(1, len(bodies[-1]) // SECTOR)
     if len(directory) > SECTOR:
         raise _malformed("too many files for one directory sector")
-    return b"".join((
-        bytes(SECTOR * SYSTEM_AREA),
-        _descriptor(volume, total=extent, root=root),
-        _padded(bytes((SET_TERMINATOR,)) + STANDARD + bytes((VERSION,))),
-        _padded(_path_table("<")),
-        _padded(_path_table(">")),
-        _padded(directory),
-        *bodies,
-    ))
+    return b"".join(
+        (
+            bytes(SECTOR * SYSTEM_AREA),
+            _descriptor(volume, total=extent, root=root),
+            _padded(bytes((SET_TERMINATOR,)) + STANDARD + bytes((VERSION,))),
+            _padded(_path_table("<")),
+            _padded(_path_table(">")),
+            _padded(directory),
+            *bodies,
+        )
+    )
 
 
 def _identifier(name: str) -> bytes:
@@ -109,10 +109,7 @@ def _record(identifier: bytes, *, extent: int, length: int, flags: int) -> bytes
 
 def _path_table(order: str) -> bytes:
     return (
-        bytes((1, 0))
-        + struct.pack(f"{order}I", ROOT)
-        + struct.pack(f"{order}H", 1)
-        + b"\x00\x00"
+        bytes((1, 0)) + struct.pack(f"{order}I", ROOT) + struct.pack(f"{order}H", 1) + b"\x00\x00"
     )
 
 
@@ -132,9 +129,9 @@ def _descriptor(volume: str, *, total: int, root: bytes) -> bytes:
     descriptor[148:152] = struct.pack(">I", PATH_TABLE_M)
     descriptor[156:190] = root
     for start, width in TEXT_FIELDS:
-        descriptor[start:start + width] = b" " * width
+        descriptor[start : start + width] = b" " * width
     for start in DATE_FIELDS:
-        descriptor[start:start + len(UNSPECIFIED_DATE)] = UNSPECIFIED_DATE
+        descriptor[start : start + len(UNSPECIFIED_DATE)] = UNSPECIFIED_DATE
     descriptor[881] = 1
     return bytes(descriptor)
 

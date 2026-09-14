@@ -210,8 +210,14 @@ def test_a_privileged_unit_with_a_password_has_sudo_read_it_from_the_first_line(
     )
 
     reply = agentrun.run_unit(
-        ports, target(root), install, unit=UNIT, arguments={}, token=TOKEN,
-        password=secrets.Secret("Ab-1_"), private_mounts=True,
+        ports,
+        target(root),
+        install,
+        unit=UNIT,
+        arguments={},
+        token=TOKEN,
+        password=secrets.Secret("Ab-1_"),
+        private_mounts=True,
     )
 
     assert reply.observations == {"ok": True}
@@ -226,13 +232,15 @@ def test_one_program_as_root_carries_the_password_and_nothing_else_on_stdin(
     from apex.kernel import secrets, timing  # noqa: PLC0415
 
     guest = guest_of(ports)
-    guest.expect(
-        "sudo -k -S -p '' systemctl reboot", fake_guestshell.GuestReply(exit_code=255)
-    )
+    guest.expect("sudo -k -S -p '' systemctl reboot", fake_guestshell.GuestReply(exit_code=255))
 
     completed = agentrun.as_root(
-        ports, target(root), "systemctl", "reboot",
-        password=secrets.Secret("Ab-1_"), deadline=timing.Deadline(timing.Elapsed(5)),
+        ports,
+        target(root),
+        "systemctl",
+        "reboot",
+        password=secrets.Secret("Ab-1_"),
+        deadline=timing.Deadline(timing.Elapsed(5)),
     )
 
     assert completed.exit_code == 255

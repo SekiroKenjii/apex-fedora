@@ -140,9 +140,7 @@ def test_the_desktop_cases_are_asked_as_the_session_s_user_without_the_lock(
 ) -> None:
     guest = ports.guest
     assert isinstance(guest, fake_guestshell.ScriptedGuest)
-    document = {
-        "protocol": 1, "unit": "desktop.render", "observations": {"presented": True},
-    }
+    document = {"protocol": 1, "unit": "desktop.render", "observations": {"presented": True}}
     lines = serialframe.encode(json.dumps(document).encode(), token=TOKEN)
     script = (
         "cd /var/tmp/apex-run/agent && "

@@ -83,9 +83,7 @@ def witness_of(
     return claims.EnvironmentKind.VM
 
 
-def current(
-    ports: portset.HostPorts, *, root: safepaths.RuntimeRoot
-) -> leases.MachineLease | None:
+def current(ports: portset.HostPorts, *, root: safepaths.RuntimeRoot) -> leases.MachineLease | None:
     """The lease of the machine that is running now, or nothing."""
     lease = leases.read_lease(ports, root=root)
     if lease is None or lease.released or not ports.hypervisor.running(lease.identity):
@@ -159,9 +157,7 @@ def reclaim(ports: portset.HostPorts, *, root: safepaths.RuntimeRoot) -> Reclaim
         )
         if stale_lease and lease is not None:
             leases.write_lease(ports, lease.release(), root=root)
-        return Reclaimed(
-            intent=intent, lease=lease, orphaned=started_without_lease or stale_lease
-        )
+        return Reclaimed(intent=intent, lease=lease, orphaned=started_without_lease or stale_lease)
 
 
 def _require_no_machine(ports: portset.HostPorts, *, root: safepaths.RuntimeRoot) -> None:

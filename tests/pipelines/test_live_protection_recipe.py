@@ -49,18 +49,28 @@ def recorder(root: safepaths.RuntimeRoot) -> recording.Recorder:
     return recording.Recorder(
         store=proofs.ProofStore(location=location, filesystem=filesystem),
         chain=ledger.Ledger(
-            location=location, filesystem=filesystem,
-            signer=ledger.ChainSigner(secrets.Secret("key")), clock=fake_clock.ManualClock(),
+            location=location,
+            filesystem=filesystem,
+            signer=ledger.ChainSigner(secrets.Secret("key")),
+            clock=fake_clock.ManualClock(),
         ),
     )
 
 
 def bundle(ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest) -> portset.HostPorts:
     return portset.HostPorts(
-        processes=ports.processes, files=ports.files, clock=ports.clock,
-        identities=ports.identities, locks=ports.locks, digests=ports.digests,
-        archives=ports.archives, signing=ports.signing, downloads=ports.downloads,
-        hypervisor=ports.hypervisor, monitor=ports.monitor, guest=guest,
+        processes=ports.processes,
+        files=ports.files,
+        clock=ports.clock,
+        identities=ports.identities,
+        locks=ports.locks,
+        digests=ports.digests,
+        archives=ports.archives,
+        signing=ports.signing,
+        downloads=ports.downloads,
+        hypervisor=ports.hypervisor,
+        monitor=ports.monitor,
+        guest=guest,
     )
 
 
@@ -96,10 +106,12 @@ def test_the_plan_delivers_the_agent_then_attempts_every_fault_then_records_once
 def test_every_fault_runs_and_the_fake_bundle_is_refused_before_the_chain(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
-    guest = AnsweringGuest({
-        "fault.live-write-denial": {"status": "PASS"},
-        "fault.usb-write-denial": {"status": "PASS"},
-    })
+    guest = AnsweringGuest(
+        {
+            "fault.live-write-denial": {"status": "PASS"},
+            "fault.usb-write-denial": {"status": "PASS"},
+        }
+    )
 
     outcome, held = verify(ports, root, guest)
 

@@ -10,9 +10,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping, Sequence
 
-type JsonValue = (
-    str | int | float | bool | None | Sequence[JsonValue] | Mapping[str, JsonValue]
-)
+type JsonValue = str | int | float | bool | None | Sequence[JsonValue] | Mapping[str, JsonValue]
 type Document = Mapping[str, JsonValue]
 
 
@@ -31,6 +29,9 @@ def parse_object(payload: bytes) -> dict[str, JsonValue]:
 
 
 def canonical(document: JsonValue) -> bytes:
-    return json.dumps(
-        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
-    ).encode()
+    return json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+
+
+def readable(document: JsonValue) -> str:
+    """The document as a person reads it: indented, keys sorted, one shape everywhere."""
+    return json.dumps(document, indent=2, sort_keys=True)

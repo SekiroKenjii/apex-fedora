@@ -19,10 +19,7 @@ PRIVATE = quantities.FileMode(0o600)
 VERSION = "610.57.04"
 KERNEL = "7.1.13-200.fc44.x86_64"
 COMPILER = "gcc (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)"
-VENDOR = {
-    "nvidia-driver": b"the driver package",
-    "nvidia-driver-libs": b"the driver libraries",
-}
+VENDOR = {"nvidia-driver": b"the driver package", "nvidia-driver-libs": b"the driver libraries"}
 KMOD = f"packages/{defaults.NVIDIA_KMOD_PACKAGE}-{VERSION}-1.fc44.x86_64.rpm"
 
 
@@ -37,8 +34,13 @@ def lock_document() -> dict[str, object]:
         "kernel_release": KERNEL,
         "compiler_text": COMPILER,
         "packages": [
-            {"name": name, "version": VERSION, "release": "1.fc44", "arch": "x86_64",
-             "sha256": digest(data)}
+            {
+                "name": name,
+                "version": VERSION,
+                "release": "1.fc44",
+                "arch": "x86_64",
+                "sha256": digest(data),
+            }
             for name, data in VENDOR.items()
         ],
     }
@@ -63,9 +65,7 @@ def kernel_config(compiler: str = COMPILER) -> bytes:
 
 def artifacts() -> dict[str, bytes]:
     """Every file the guest leaves under output/nvidia, the report excepted."""
-    found = {
-        f"packages/{name}-{VERSION}-1.fc44.x86_64.rpm": data for name, data in VENDOR.items()
-    }
+    found = {f"packages/{name}-{VERSION}-1.fc44.x86_64.rpm": data for name, data in VENDOR.items()}
     found[KMOD] = b"the kernel module package"
     found[defaults.NVIDIA_LOCK_COPY] = lock_bytes()
     found["nvidia-kmod-common.files.txt"] = b"/usr/lib/firmware/nvidia/610.57.04/gsp_ga10x.bin\n"

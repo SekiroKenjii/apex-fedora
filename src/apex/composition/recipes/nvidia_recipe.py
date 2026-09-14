@@ -9,11 +9,7 @@ is ready to install; the older tool said the same.
 from __future__ import annotations
 
 from apex.composition import buildplan
-from apex.composition.stages import (
-    nvidia_lock_stage,
-    nvidia_record_stage,
-    record_result_stage,
-)
+from apex.composition.stages import nvidia_lock_stage, nvidia_record_stage, record_result_stage
 from apex.kernel import identifiers, safepaths
 from apex.model import builds
 from apex.pipeline import plans, runner
@@ -37,6 +33,12 @@ def build(
     parent: identifiers.BuildId,
 ) -> runner.Outcome:
     return buildplan.run(
-        PLAN, ports, repository=repository, runtime_root=runtime_root, builder=builder,
-        profile=builds.Profile.FEDORA, kind=builds.ArtifactKind.NVIDIA, parent=parent,
+        PLAN,
+        ports,
+        repository=repository,
+        runtime_root=runtime_root,
+        builder=builder,
+        profile=builds.Profile.FEDORA,
+        kind=builds.ArtifactKind.NVIDIA,
+        parent=parent,
     )

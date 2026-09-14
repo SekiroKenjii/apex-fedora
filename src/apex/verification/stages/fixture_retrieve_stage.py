@@ -89,9 +89,7 @@ def for_case(case: probing.ProbeCase) -> stages.SimpleStage[portset.HostPorts]:
 
     return stages.SimpleStage(
         id=identifiers.StageId("fixture.retrieve"),
-        reads=(
-            verifykeys.GUEST, observed, composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID
-        ),
+        reads=(verifykeys.GUEST, observed, composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID),
         writes=(verifykeys.FIXTURES,),
         attests=frozenset(),
         effects=frozenset({effects.Effect.REMOTE_EXEC, effects.Effect.WRITES_RUNTIME}),

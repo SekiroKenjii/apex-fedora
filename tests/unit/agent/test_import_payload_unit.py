@@ -58,10 +58,15 @@ def guest(
     )
     registry.hold(TAG, identifiers.ImageId(stored), b"[]")
     ports = agentports.AgentPorts(
-        processes=Builder(BuilderSpec(), write), files=files, clock=fake_clock.ManualClock(),
-        containers=registry, digests=fake_digesting.CountingDigests(),
-        archives=fake_archives.MemoryArchives(), identities=fake_ids.SequenceIdentities(),
-        extents=fake_extents.FakeExtents(), blocks=fake_blockdevices.FakeBlockDevices(),
+        processes=Builder(BuilderSpec(), write),
+        files=files,
+        clock=fake_clock.ManualClock(),
+        containers=registry,
+        digests=fake_digesting.CountingDigests(),
+        archives=fake_archives.MemoryArchives(),
+        identities=fake_ids.SequenceIdentities(),
+        extents=fake_extents.FakeExtents(),
+        blocks=fake_blockdevices.FakeBlockDevices(),
     )
     return registry, files, ports
 
@@ -115,8 +120,7 @@ def test_an_archive_the_parent_did_not_leave_is_refused_before_any_copy() -> Non
 
 
 @pytest.mark.parametrize(
-    "arguments",
-    [{}, {"work": "/tmp/x", "parent": PARENT}, {"work": WORK, "parent": "not-a-build"}],
+    "arguments", [{}, {"work": "/tmp/x", "parent": PARENT}, {"work": WORK, "parent": "not-a-build"}]
 )
 def test_a_request_outside_the_run_layout_is_refused(arguments: dict[str, str]) -> None:
     registry, _, ports = guest()

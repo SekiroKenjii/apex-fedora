@@ -45,11 +45,7 @@ class SerialGuestShell(guestshell.GuestShellPort):
     environment = claims.EnvironmentKind.BUILD
 
     def __init__(
-        self,
-        socket_path: safepaths.SafePath,
-        *,
-        expected_process: int,
-        expected_user: int = 0,
+        self, socket_path: safepaths.SafePath, *, expected_process: int, expected_user: int = 0
     ) -> None:
         self._socket_path = socket_path
         self.expected_process = expected_process
@@ -57,7 +53,9 @@ class SerialGuestShell(guestshell.GuestShellPort):
         self._lock_path = socket_path.path.with_name(defaults.SERIAL_LOCK_NAME)
 
     def run(
-        self, target: guestshell.GuestTarget, run: guestshell.GuestRun  # noqa: ARG002
+        self,
+        target: guestshell.GuestTarget,  # noqa: ARG002
+        run: guestshell.GuestRun,
     ) -> commands.CompletedRun:
         token = secrets.token_hex(16)
         stdin = base64.encodebytes(run.stdin or b"").decode()
@@ -81,7 +79,9 @@ class SerialGuestShell(guestshell.GuestShellPort):
         out = bounded.take(stdout, bounded.Limit(run.limit.value))
         err = bounded.take(stderr, bounded.Limit(run.limit.value))
         return commands.CompletedRun(
-            exit_code=code, stdout=out.data, stderr=err.data,
+            exit_code=code,
+            stdout=out.data,
+            stderr=err.data,
             truncated=out.truncated or err.truncated,
         )
 
@@ -137,7 +137,8 @@ class SerialGuestShell(guestshell.GuestShellPort):
         with self._session(deadline) as session:
             session.handshake(token)
             response = session.exchange(
-                command.encode(), until=_done(token),
+                command.encode(),
+                until=_done(token),
                 limit=bounded.Limit(defaults.SERIAL_TRANSFER_LIMIT.value * 2),
             )
         if _code(response, token) != 0:
@@ -174,9 +175,7 @@ class SerialGuestShell(guestshell.GuestShellPort):
             lock.close()
 
     def _require_peer(self, connection: socket.socket) -> None:
-        raw = connection.getsockopt(
-            socket.SOL_SOCKET, socket.SO_PEERCRED, PEER_CREDENTIALS.size
-        )
+        raw = connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, PEER_CREDENTIALS.size)
         process, user, _ = PEER_CREDENTIALS.unpack(raw)
         if process != self.expected_process or user != os.getuid():
             raise errors.PortFailure(
@@ -197,11 +196,13 @@ class _Session:
     def handshake(self, token: str) -> None:
         """Echo off, and the token printed back by the expected user's shell before anything."""
         probe = (
-            f"\nstty -echo 2>/dev/null; test \"$(id -u)\" = {self._expected_user} && "
+            f'\nstty -echo 2>/dev/null; test "$(id -u)" = {self._expected_user} && '
             f"printf '\\n{READY}:{token}\\n'\n"
         )
         self.exchange(
-            probe.encode(), until=_line(READY, token), limit=bounded.Limit(CHUNK),
+            probe.encode(),
+            until=_line(READY, token),
+            limit=bounded.Limit(CHUNK),
             budget=defaults.SERIAL_HANDSHAKE_DEADLINE.budget.seconds,
         )
 
@@ -261,7 +262,7 @@ def _between(response: bytes, start: re.Pattern[bytes], end: re.Pattern[bytes]) 
     closed = end.search(response, opened.end() if opened else 0)
     if opened is None or closed is None:
         raise errors.PortFailure(port=PORT, cause="the guest's answer lacks its markers")
-    return response[opened.end():closed.start()]
+    return response[opened.end() : closed.start()]
 
 
 def _decode(text: bytes) -> bytes:

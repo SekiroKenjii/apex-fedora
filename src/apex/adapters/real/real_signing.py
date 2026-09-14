@@ -52,8 +52,17 @@ class OpensslSigner(signing.SigningPort):
             signature = Path(scratch) / "signature"
             document.write_bytes(payload)
             _succeed(
-                ["pkeyutl", "-sign", "-rawin", "-inkey", str(private_key),
-                 "-in", str(document), "-out", str(signature)]
+                [
+                    "pkeyutl",
+                    "-sign",
+                    "-rawin",
+                    "-inkey",
+                    str(private_key),
+                    "-in",
+                    str(document),
+                    "-out",
+                    str(signature),
+                ]
             )
             return signature.read_bytes()
 
@@ -68,8 +77,18 @@ class OpensslSigner(signing.SigningPort):
             document.write_bytes(payload)
             sigfile.write_bytes(signature)
             completed = _run(
-                ["pkeyutl", "-verify", "-rawin", "-pubin", "-inkey", str(public_key),
-                 "-in", str(document), "-sigfile", str(sigfile)]
+                [
+                    "pkeyutl",
+                    "-verify",
+                    "-rawin",
+                    "-pubin",
+                    "-inkey",
+                    str(public_key),
+                    "-in",
+                    str(document),
+                    "-sigfile",
+                    str(sigfile),
+                ]
             )
         if completed.returncode == 0:
             return True

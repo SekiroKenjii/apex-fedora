@@ -30,21 +30,23 @@ class Converting(fake_process.ScriptedProcess):
         self.filesystem = filesystem
         self.source, self.target = source, target
         info = json.dumps({"format": "qcow2", "virtual-size": VIRTUAL_SIZE}).encode()
-        chain = json.dumps([
-            {"format": "qcow2", "filename": str(source), "virtual-size": VIRTUAL_SIZE}
-        ]).encode()
-        super().__init__({
-            ("qemu-img", "--version"): fake_process.Reply(stdout=b"qemu-img version 10.0\n"),
-            ("qemu-img", "info", "--output=json", str(source)): fake_process.Reply(stdout=info),
-            ("qemu-img", "info", "--output=json", "--backing-chain", str(source)): (
-                fake_process.Reply(stdout=chain)
-            ),
-            ("qemu-img", "info", "--output=json", str(target)): fake_process.Reply(stdout=info),
-            ("qemu-img", "check", "--output=json", str(source)): fake_process.Reply(),
-            ("qemu-img", "check", "--output=json", str(target)): fake_process.Reply(),
-            (*compacting.CONVERT, str(source), str(target)): fake_process.Reply(),
-            (*compacting.COMPARE, str(source), str(target)): fake_process.Reply(),
-        })
+        chain = json.dumps(
+            [{"format": "qcow2", "filename": str(source), "virtual-size": VIRTUAL_SIZE}]
+        ).encode()
+        super().__init__(
+            {
+                ("qemu-img", "--version"): fake_process.Reply(stdout=b"qemu-img version 10.0\n"),
+                ("qemu-img", "info", "--output=json", str(source)): fake_process.Reply(stdout=info),
+                ("qemu-img", "info", "--output=json", "--backing-chain", str(source)): (
+                    fake_process.Reply(stdout=chain)
+                ),
+                ("qemu-img", "info", "--output=json", str(target)): fake_process.Reply(stdout=info),
+                ("qemu-img", "check", "--output=json", str(source)): fake_process.Reply(),
+                ("qemu-img", "check", "--output=json", str(target)): fake_process.Reply(),
+                (*compacting.CONVERT, str(source), str(target)): fake_process.Reply(),
+                (*compacting.COMPARE, str(source), str(target)): fake_process.Reply(),
+            }
+        )
 
     def run(self, argv: Any, **keywords: Any) -> Any:
         if tuple(argv)[:2] == ("qemu-img", "convert"):
@@ -91,7 +93,11 @@ def host(ports: portset.HostPorts, tmp_path: Path) -> Host:
     processes = Converting(filesystem, source, target)
     return Host(
         ports=dataclasses.replace(ports, files=filesystem, processes=processes),
-        root=root, files=filesystem, processes=processes, source=source, target=target,
+        root=root,
+        files=filesystem,
+        processes=processes,
+        source=source,
+        target=target,
     )
 
 
@@ -118,7 +124,14 @@ def test_a_clean_chain_is_converted_checked_compared_and_swapped_in(
     assert host.files.read_bytes(safepaths.SafePath(host.source), limit=100) == COMPRESSED
     assert not host.files.exists(safepaths.SafePath(host.target))
     assert steps(host.processes) == [
-        "info", "--version", "info", "check", "convert", "info", "check", "compare",
+        "info",
+        "--version",
+        "info",
+        "check",
+        "convert",
+        "info",
+        "check",
+        "compare",
     ]
     kept = report(host, f"compactions/{RUN}/result.json")
     assert kept["status"] == "PASS" and kept["replacement"] == "COMPLETE"
@@ -129,20 +142,19 @@ def test_a_clean_chain_is_converted_checked_compared_and_swapped_in(
     assert host.ports.locks.holder(compacting.launching.MACHINE) is None
 
 
-def test_a_running_machine_refuses_before_anything_is_converted(
-    host: Host, tmp_path: Path
-) -> None:
+def test_a_running_machine_refuses_before_anything_is_converted(host: Host, tmp_path: Path) -> None:
     identity = machines.VmIdentity(
         process=4242, pidfd_inode=1, boot_ticks=2, monitor_socket_inode=3
     )
     host.ports.hypervisor._alive[4242] = identity  # type: ignore[attr-defined]  # noqa: SLF001
     intent = leases.MachineIntent(
-        role=machines.VmRole.BUILDER, run=identifiers.RunId("b" * 32),
-        run_directory=host.root.child("vm-runs/b"), monitor=host.root.child("qmp.sock"),
+        role=machines.VmRole.BUILDER,
+        run=identifiers.RunId("b" * 32),
+        run_directory=host.root.child("vm-runs/b"),
+        monitor=host.root.child("qmp.sock"),
         command=compacting.commands.Argv.of("qemu-system-x86_64"),
-        written_at=host.ports.clock.stamp(), witness=compacting.launching.witness_of(
-            host.ports, machines.VmRole.BUILDER
-        ),
+        written_at=host.ports.clock.stamp(),
+        witness=compacting.launching.witness_of(host.ports, machines.VmRole.BUILDER),
     )
     leases.write_lease(
         host.ports, leases.MachineLease(intent=intent, identity=identity), root=host.root
@@ -160,9 +172,11 @@ def test_a_chain_holding_a_snapshot_is_refused_with_the_reason_in_its_report(
 ) -> None:
     host.processes.expect(
         ("qemu-img", "info", "--output=json", "--backing-chain", str(host.source)),
-        fake_process.Reply(stdout=json.dumps([
-            {"format": "qcow2", "filename": str(host.source), "snapshots": [{}]}
-        ]).encode()),
+        fake_process.Reply(
+            stdout=json.dumps(
+                [{"format": "qcow2", "filename": str(host.source), "snapshots": [{}]}]
+            ).encode()
+        ),
     )
 
     with pytest.raises(errors.Refusal) as raised:
@@ -175,9 +189,7 @@ def test_a_chain_holding_a_snapshot_is_refused_with_the_reason_in_its_report(
     assert host.source.read_bytes() == ORIGINAL
 
 
-def test_a_copy_short_of_space_is_kept_and_named_for_finalising(
-    host: Host, tmp_path: Path
-) -> None:
+def test_a_copy_short_of_space_is_kept_and_named_for_finalising(host: Host, tmp_path: Path) -> None:
     host.files.free = quantities.Gib(5).as_bytes()
 
     with pytest.raises(errors.Refusal) as raised:

@@ -47,8 +47,14 @@ def run(
     _verify_inputs(ports, work, request)
     if ports.files.free_space(work) < ventoy_fixture.REQUIRED_FREE.as_bytes():
         raise _unexpected(f"need {ventoy_fixture.REQUIRED_FREE.value} GiB free inside builder")
-    _run(ports, "dnf5", "-y", "install", *ventoy_fixture.PACKAGES,
-         deadline=defaults.PACKAGE_INSTALL_DEADLINE)
+    _run(
+        ports,
+        "dnf5",
+        "-y",
+        "install",
+        *ventoy_fixture.PACKAGES,
+        deadline=defaults.PACKAGE_INSTALL_DEADLINE,
+    )
     upstream = _unpack(ports, work, request)
     raw = work / ventoy_fixture.RAW_IMAGE
     ports.files.reserve(raw, size=ventoy_fixture.MEDIA_SIZE.as_bytes(), mode=defaults.RECORD_MODE)
@@ -61,8 +67,16 @@ def run(
         partition = f"{loop}p1"
         table = _table(ports, loop, partition)
         info = _installed_version(ports, upstream, loop, request)
-        _run(ports, "mount", "-t", ventoy_fixture.FILESYSTEM, "-o", ventoy_fixture.MOUNT_OPTIONS,
-             partition, str(mount))
+        _run(
+            ports,
+            "mount",
+            "-t",
+            ventoy_fixture.FILESYSTEM,
+            "-o",
+            ventoy_fixture.MOUNT_OPTIONS,
+            partition,
+            str(mount),
+        )
         mounted = True
         _copy_isos(ports, work, mount, request)
         os.sync()
@@ -88,15 +102,34 @@ def _finish(
     output = work / "output"
     ports.files.make_directory(output, mode=OUTPUT_MODE)
     image = output / ventoy_fixture.IMAGE
-    _run(ports, backingchain.QEMU_IMG, "convert", "-f", "raw", "-O", "qcow2", str(raw), str(image),
-         deadline=defaults.IMAGE_TOOL_DEADLINE)
-    _run(ports, backingchain.QEMU_IMG, "check", "-f", "qcow2", str(image),
-         deadline=defaults.IMAGE_TOOL_DEADLINE)
+    _run(
+        ports,
+        backingchain.QEMU_IMG,
+        "convert",
+        "-f",
+        "raw",
+        "-O",
+        "qcow2",
+        str(raw),
+        str(image),
+        deadline=defaults.IMAGE_TOOL_DEADLINE,
+    )
+    _run(
+        ports,
+        backingchain.QEMU_IMG,
+        "check",
+        "-f",
+        "qcow2",
+        str(image),
+        deadline=defaults.IMAGE_TOOL_DEADLINE,
+    )
     tools = _run(ports, "rpm", "-q", *ventoy_fixture.PACKAGES).stdout.decode(errors="replace")
     report: encoding.Document = {
         "status": "PASS",
-        "request": {"files": {name: d.hex for name, d in request.files.items()},
-                    "ventoy_version": request.version},
+        "request": {
+            "files": {name: d.hex for name, d in request.files.items()},
+            "ventoy_version": request.version,
+        },
         "partition_table": table,
         "ventoy_info": info,
         "image_sha256": ports.digests.file(image).hex,
@@ -109,7 +142,8 @@ def _finish(
         "tools": tools,
     }
     ports.files.write_atomic(
-        output / ventoy_fixture.REPORT_NAME, encoding.canonical(report) + b"\n",
+        output / ventoy_fixture.REPORT_NAME,
+        encoding.canonical(report) + b"\n",
         mode=defaults.RECORD_MODE,
     )
     return report
@@ -163,8 +197,18 @@ def _install(
     ports: agentports.AgentPorts, upstream: safepaths.SafePath, loop: str, raw: safepaths.SafePath
 ) -> None:
     # No arbitrary device operand: only the loop returned for the new raw file.
-    _run(ports, "sh", ventoy_fixture.INSTALLER, "-i", "-r", str(ventoy_fixture.RESERVED.value),
-         loop, cwd=upstream, stdin=ACCEPT, deadline=defaults.IMAGE_TOOL_DEADLINE)
+    _run(
+        ports,
+        "sh",
+        ventoy_fixture.INSTALLER,
+        "-i",
+        "-r",
+        str(ventoy_fixture.RESERVED.value),
+        loop,
+        cwd=upstream,
+        stdin=ACCEPT,
+        deadline=defaults.IMAGE_TOOL_DEADLINE,
+    )
     _verify_loop(ports, loop, raw)
     _run(ports, "udevadm", "settle", "--timeout=30")
 

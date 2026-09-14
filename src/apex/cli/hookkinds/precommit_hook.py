@@ -19,7 +19,8 @@ SUBJECT = "what is staged"
 def inspect(request: hookspecs.HookRequest) -> Sequence[rulespecs.Finding]:
     rows = gitreading.staged_rows(request.processes, request.repository)
     sizes = gitreading.sizes(
-        request.processes, request.repository,
+        request.processes,
+        request.repository,
         tuple({row.object_name: None for row in rows if row.mode.carries_blob}),
     )
     contents = gitreading.contents(
@@ -35,7 +36,5 @@ def inspect(request: hookspecs.HookRequest) -> Sequence[rulespecs.Finding]:
 
 
 hookkinds.declare(
-    hookspecs.HookKind(
-        name=NAME, subject=SUBJECT, remedy="change what is staged", inspect=inspect
-    )
+    hookspecs.HookKind(name=NAME, subject=SUBJECT, remedy="change what is staged", inspect=inspect)
 )

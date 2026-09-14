@@ -50,9 +50,7 @@ def program(ports: agentports.AgentPorts, argv: commands.Argv) -> encoding.Docum
     }
 
 
-def programs(
-    ports: agentports.AgentPorts, named: Mapping[str, commands.Argv]
-) -> encoding.Document:
+def programs(ports: agentports.AgentPorts, named: Mapping[str, commands.Argv]) -> encoding.Document:
     return {name: program(ports, argv) for name, argv in named.items()}
 
 

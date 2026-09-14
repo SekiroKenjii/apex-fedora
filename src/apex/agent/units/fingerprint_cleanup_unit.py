@@ -150,9 +150,7 @@ def _verified_sources(
         except errors.PortFailure as failure:
             raise _unexpected(f"the host did not deliver {item.name}: {failure.cause}") from failure
         if kind is not files.EntryKind.REGULAR:
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(path)
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_NOT_A_REGULAR_FILE, subject=str(path))
         found = hashing.digest_bytes(_read(ports, path))
         if found != item.sha256:
             raise errors.Refusal(
@@ -209,9 +207,7 @@ def _install(ports: agentports.AgentPorts, site: Site, target: list[str]) -> Non
     )
 
 
-def _installed_packages(
-    ports: agentports.AgentPorts, site: Site, target: list[str]
-) -> list[str]:
+def _installed_packages(ports: agentports.AgentPorts, site: Site, target: list[str]) -> list[str]:
     completed = _run(
         ports,
         commands.Argv.of(
@@ -234,8 +230,7 @@ def _environment_packages(ports: agentports.AgentPorts, site: Site) -> int:
     )
     listed = sorted(completed.stdout.decode(errors="replace").splitlines())
     ports.files.write_atomic(
-        site.output / ENVIRONMENT_RPMS, "".join(f"{line}\n" for line in listed).encode(),
-        mode=PLAIN,
+        site.output / ENVIRONMENT_RPMS, "".join(f"{line}\n" for line in listed).encode(), mode=PLAIN
     )
     return len(listed)
 
@@ -268,9 +263,7 @@ def _harness(ports: agentports.AgentPorts, site: Site) -> Outcome:
 
 
 def run(
-    ports: agentports.AgentPorts,
-    *,
-    arguments: Mapping[str, encoding.JsonValue],
+    ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     builder.require_isolated(ports)
     site = _site_of(arguments)

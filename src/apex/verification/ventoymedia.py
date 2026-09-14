@@ -131,7 +131,8 @@ def _signers(status: bytes) -> list[str]:
 def _checksum_entries(text: str, filename: str) -> list[str]:
     entries = [line.split() for line in text.splitlines() if line.strip()]
     return [
-        entry[0] for entry in entries
+        entry[0]
+        for entry in entries
         if len(entry) == 2 and entry[1].lstrip("*") == filename  # noqa: PLR2004
     ]
 
@@ -152,15 +153,23 @@ def verify_ubuntu(
     ports.files.make_directory(home, mode=safepaths.PRIVATE_DIRECTORY_MODE)
     checked = ports.processes.run(
         commands.Argv.of(
-            GPGV, "--homedir", str(home), "--keyring", str(keyring.path), "--status-fd", "1",
-            str(signature.path), str(checksums.path),
+            GPGV,
+            "--homedir",
+            str(home),
+            "--keyring",
+            str(keyring.path),
+            "--status-fd",
+            "1",
+            str(signature.path),
+            str(checksums.path),
         ),
         deadline=defaults.GPGV_DEADLINE,
         limit=commands.OutputLimit.default(),
     )
     ports.files.write_atomic(
         exports.inside(root, run, defaults.UBUNTU_SIGNATURE_LOG),
-        checked.stdout + checked.stderr, mode=defaults.RECORD_MODE,
+        checked.stdout + checked.stderr,
+        mode=defaults.RECORD_MODE,
     )
     signers = _signers(checked.stdout)
     if not checked.succeeded or signers != [lock.ubuntu_signer]:
@@ -191,7 +200,8 @@ def verify_ubuntu(
     }
     ports.files.write_atomic(
         exports.inside(root, run, defaults.UBUNTU_VERIFICATION_NAME),
-        encoding.canonical(report) + b"\n", mode=defaults.RECORD_MODE,
+        encoding.canonical(report) + b"\n",
+        mode=defaults.RECORD_MODE,
     )
     return report, iso
 
@@ -216,9 +226,11 @@ def fetch_ventoy(
     sums = root.child(f"{defaults.VENTOY_INPUTS_DIRECTORY}/{defaults.VENTOY_SUMS_NAME}")
     _fetched(ports, lock.url, archive, lock.digest)
     _fetched(ports, lock.checksum_url, sums, lock.checksum_digest)
-    lines = ports.files.read_bytes(sums, limit=defaults.DOCUMENT_LIMIT.value).decode(
-        errors="replace"
-    ).splitlines()
+    lines = (
+        ports.files.read_bytes(sums, limit=defaults.DOCUMENT_LIMIT.value)
+        .decode(errors="replace")
+        .splitlines()
+    )
     if f"{lock.digest.hex}  {lock.archive_name}" not in lines:
         raise errors.Refusal(
             refusals.RefusalReason.DOWNLOAD_CHECKSUM_MISMATCH,
@@ -253,20 +265,26 @@ def prepare(
     documents: dict[str, encoding.Document] = {
         ventoy_fixture.REQUEST_NAME: request_document,
         defaults.LIVE_VERIFICATION_NAME: {
-            "status": PASS, "digest": str(verified.digest),
+            "status": PASS,
+            "digest": str(verified.digest),
             "files_verified": verified.files_verified,
         },
         defaults.INPUTS_LOCK_NAME: lock.document,
     }
     for name, document in documents.items():
         ports.files.write_atomic(
-            exports.inside(root, run, name), encoding.canonical(document) + b"\n",
+            exports.inside(root, run, name),
+            encoding.canonical(document) + b"\n",
             mode=defaults.RECORD_MODE,
         )
     return Prepared(
         request=ventoy_fixture.VentoyRequest(files=files, version=lock.version),
         request_document=request_document,
-        archive=archive, live=live, ubuntu=ubuntu, sums=sums, live_digest=verified.digest,
+        archive=archive,
+        live=live,
+        ubuntu=ubuntu,
+        sums=sums,
+        live_digest=verified.digest,
     )
 
 
@@ -304,6 +322,7 @@ def bind(
     }
     ports.files.write_atomic(
         exports.inside(root, run, defaults.MEDIA_EXECUTION_NAME),
-        encoding.canonical(execution) + b"\n", mode=defaults.RECORD_MODE,
+        encoding.canonical(execution) + b"\n",
+        mode=defaults.RECORD_MODE,
     )
     return image, execution

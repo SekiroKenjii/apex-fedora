@@ -54,7 +54,8 @@ def root(tmp_path: Path) -> safepaths.RuntimeRoot:
 
 def builder(root: safepaths.RuntimeRoot) -> guestshell.GuestTarget:
     return guestshell.GuestTarget(
-        user=defaults.BUILDER_USER, port=defaults.BUILDER_SSH_PORT,
+        user=defaults.BUILDER_USER,
+        port=defaults.BUILDER_SSH_PORT,
         key=safepaths.SafePath.regular_file(root.path / "builder_ed25519", within=root),
         known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
     )
@@ -64,7 +65,10 @@ def held(
     ports: portset.HostPorts, files: MirroredFiles, guest: DeliveringGuest
 ) -> portset.HostPorts:
     return dataclasses.replace(
-        ports, files=files, guest=guest, downloads=fake_downloading.PinningFetcher(),
+        ports,
+        files=files,
+        guest=guest,
+        downloads=fake_downloading.PinningFetcher(),
         digests=real_digesting.CachedDigests(),
     )
 
@@ -100,9 +104,11 @@ def test_the_packages_are_built_from_the_sources_alone_and_the_report_is_bound(
     record = outcome.facts[keys.BUILD_RECORD]
     assert str(record.kind) == "fingerprint-rpms" and str(record.status) == "PASS"
     assert record.parent is None
-    verification = json.loads(files.read_bytes(
-        exports.inside(root, run, defaults.FINGERPRINT_VERIFICATION_NAME), limit=4096
-    ))
+    verification = json.loads(
+        files.read_bytes(
+            exports.inside(root, run, defaults.FINGERPRINT_VERIFICATION_NAME), limit=4096
+        )
+    )
     assert verification["status"] == "PASS" and verification["artifacts"] > 5
 
 
@@ -156,16 +162,18 @@ def image_outputs(ports: portset.HostPorts, root: safepaths.RuntimeRoot) -> dict
     """A derived image's signed output: its image document, manifest and inventory."""
     manifest = json.dumps({"config": {"digest": "sha256:" + "f" * 64}}).encode()
     digest = hashing.digest_bytes(manifest)
-    image = json.dumps({
-        "profile": "fedora", "digest": str(digest), "image_id": "sha256:" + "f" * 64,
-    }).encode()
+    image = json.dumps(
+        {"profile": "fedora", "digest": str(digest), "image_id": "sha256:" + "f" * 64}
+    ).encode()
     listed = {"image.json": hashing.digest_bytes(image).hex, "manifest.json": digest.hex}
     inventory = json.dumps({"schema": 1, "digest": str(digest), "files": listed}).encode()
     signature = ports.signing.sign(
         payload=inventory, private_key=safepaths.RegularFile.adopt(root.path / "keys/dev.key")
     )
     return {
-        "image.json": image, "manifest.json": manifest, bundles.MANIFEST_NAME: inventory,
+        "image.json": image,
+        "manifest.json": manifest,
+        bundles.MANIFEST_NAME: inventory,
         bundles.SIGNATURE_NAME: signature,
     }
 
@@ -180,8 +188,12 @@ def test_the_image_binds_the_tested_packages_and_verifies_its_own_signed_output(
     guest = DeliveringGuest(files, image_outputs(ports, root))
 
     outcome = fingerprint_image_recipe.build(
-        held(ports, files, guest), repository=REPOSITORY, runtime_root=root, builder=builder(root),
-        parent=parentbuild.PARENT, rpm_build=fingerprintbuilds.RPM_BUILD,
+        held(ports, files, guest),
+        repository=REPOSITORY,
+        runtime_root=root,
+        builder=builder(root),
+        parent=parentbuild.PARENT,
+        rpm_build=fingerprintbuilds.RPM_BUILD,
         gtk_test=fingerprintbuilds.GTK_TEST,
     )
 
@@ -195,9 +207,9 @@ def test_the_image_binds_the_tested_packages_and_verifies_its_own_signed_output(
     scripts = [run.script.rendered() for run in guest.runs]
     build = [script for script in scripts if "fingerprint-image.py" in script]
     assert len(build) == 1 and "import-payload.sh" in build[0] and "sign-artifacts" not in build[0]
-    request = json.loads(files.read_bytes(
-        exports.inside(root, run, defaults.FINGERPRINT_REQUEST_NAME), limit=4096
-    ))
+    request = json.loads(
+        files.read_bytes(exports.inside(root, run, defaults.FINGERPRINT_REQUEST_NAME), limit=4096)
+    )
     assert request["rpm_build"] == str(fingerprintbuilds.RPM_BUILD) and len(request["rpms"]) == 3
     record = outcome.facts[keys.BUILD_RECORD]
     assert str(record.kind) == "fingerprint-image" and str(record.status) == "PASS"
@@ -215,13 +227,18 @@ def test_a_dialog_test_of_another_patch_is_refused_before_anything_is_sent(
     report["patch_sha256"] = "0" * 64
     files.write_atomic(
         exports.inside(root, fingerprintbuilds.GTK_TEST, "output/results.json"),
-        json.dumps(report).encode(), mode=PRIVATE,
+        json.dumps(report).encode(),
+        mode=PRIVATE,
     )
     guest = DeliveringGuest(files, {})
 
     outcome = fingerprint_image_recipe.build(
-        held(ports, files, guest), repository=REPOSITORY, runtime_root=root, builder=builder(root),
-        parent=parentbuild.PARENT, rpm_build=fingerprintbuilds.RPM_BUILD,
+        held(ports, files, guest),
+        repository=REPOSITORY,
+        runtime_root=root,
+        builder=builder(root),
+        parent=parentbuild.PARENT,
+        rpm_build=fingerprintbuilds.RPM_BUILD,
         gtk_test=fingerprintbuilds.GTK_TEST,
     )
 
@@ -242,8 +259,12 @@ def test_an_unsigned_parent_is_refused_and_a_bad_output_signature_fails_the_reco
     rejecting = dataclasses.replace(held(ports, files, guest), signing=fake_signing.FakeSigner())
 
     outcome = fingerprint_image_recipe.build(
-        rejecting, repository=REPOSITORY, runtime_root=root, builder=builder(root),
-        parent=parentbuild.PARENT, rpm_build=fingerprintbuilds.RPM_BUILD,
+        rejecting,
+        repository=REPOSITORY,
+        runtime_root=root,
+        builder=builder(root),
+        parent=parentbuild.PARENT,
+        rpm_build=fingerprintbuilds.RPM_BUILD,
         gtk_test=fingerprintbuilds.GTK_TEST,
     )
 

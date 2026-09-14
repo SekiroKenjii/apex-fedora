@@ -40,8 +40,13 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
 STAGE = stages.SimpleStage(
     id=identifiers.StageId("guest.transfer"),
     reads=(
-        keys.BUILDER_VERIFIED, keys.REMOTE, keys.SOURCE_BUNDLE, keys.SOURCE_MANIFEST,
-        keys.FROZEN, keys.RUNTIME_ROOT, keys.RUN_ID,
+        keys.BUILDER_VERIFIED,
+        keys.REMOTE,
+        keys.SOURCE_BUNDLE,
+        keys.SOURCE_MANIFEST,
+        keys.FROZEN,
+        keys.RUNTIME_ROOT,
+        keys.RUN_ID,
     ),
     writes=(keys.TRANSFERRED,),
     attests=frozenset(),

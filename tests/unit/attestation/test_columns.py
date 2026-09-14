@@ -2,14 +2,7 @@
 
 from __future__ import annotations
 
-from apex.attestation import (
-    attesting,
-    columns,
-    ledger,
-    readerspecs,
-    readiness,
-    retracting,
-)
+from apex.attestation import attesting, columns, ledger, readerspecs, readiness, retracting
 from apex.kernel import claims, identifiers, refusals, verdicts
 
 CANDIDATE = identifiers.Digest("c" * 64)
@@ -32,9 +25,7 @@ def attestation(check: str) -> attesting.Attestation:
     )
 
 
-def reading(
-    *checks: str, faults: tuple[str, ...] = ()
-) -> readerspecs.StoreReading:
+def reading(*checks: str, faults: tuple[str, ...] = ()) -> readerspecs.StoreReading:
     return readerspecs.StoreReading(
         version=1,
         attestations=tuple(attestation(name) for name in checks),
@@ -62,10 +53,7 @@ def outcome(
 
 def test_an_imported_row_names_its_origin_and_both_permanent_limits() -> None:
     table = columns.tabulate(
-        reading=reading("one"),
-        outcome=outcome(one=verdicts.PASSED),
-        withheld=(),
-        strict=False,
+        reading=reading("one"), outcome=outcome(one=verdicts.PASSED), withheld=(), strict=False
     )
 
     row = table.rows[0]
@@ -106,9 +94,7 @@ def test_a_strict_row_shows_the_verdict_that_was_withheld() -> None:
     default = outcome(one=verdicts.PASSED)
     strict, withheld = retracting.retract(default, attestations=[attestation("one")])
 
-    table = columns.tabulate(
-        reading=reading("one"), outcome=strict, withheld=withheld, strict=True
-    )
+    table = columns.tabulate(reading=reading("one"), outcome=strict, withheld=withheld, strict=True)
 
     assert table.strict
     assert table.rows[0].withheld == verdicts.PASSED
@@ -118,10 +104,7 @@ def test_a_table_standing_on_imported_passes_is_not_ready_even_when_every_check_
     table = columns.tabulate(
         reading=reading("one", "two"),
         outcome=readiness.evaluate(
-            required={
-                "one": claims.EnvironmentKind.BUILD,
-                "two": claims.EnvironmentKind.BUILD,
-            },
+            required={"one": claims.EnvironmentKind.BUILD, "two": claims.EnvironmentKind.BUILD},
             records=[attestation("one").resolved, attestation("two").resolved],
             candidate=CANDIDATE,
         ),
@@ -146,10 +129,7 @@ def test_the_rows_are_ordered_by_check() -> None:
 
 def test_the_document_is_canonical_and_names_the_store_version() -> None:
     table = columns.tabulate(
-        reading=reading("one"),
-        outcome=outcome(one=verdicts.PASSED),
-        withheld=(),
-        strict=False,
+        reading=reading("one"), outcome=outcome(one=verdicts.PASSED), withheld=(), strict=False
     )
 
     document = columns.document(table)

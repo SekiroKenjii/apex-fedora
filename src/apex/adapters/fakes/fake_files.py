@@ -45,7 +45,7 @@ class MemoryFiles(files.FileSystemPort):
         for _ in range(len(self.links) + 1):
             for source, target in self.links.items():
                 if name == source or name.startswith(source + "/"):
-                    name = target + name[len(source):]
+                    name = target + name[len(source) :]
                     break
             else:
                 return name
@@ -129,7 +129,9 @@ class MemoryFiles(files.FileSystemPort):
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         inode = self._inodes[name]
         return files.FileIdentity(
-            device=1, inode=inode, size=len(stored.payload),
+            device=1,
+            inode=inode,
+            size=len(stored.payload),
             modified_nanoseconds=self._versions[name],
             links=sum(1 for held in self._inodes.values() if held == inode),
             allocated=len(stored.payload),
@@ -166,19 +168,19 @@ class MemoryFiles(files.FileSystemPort):
         found: dict[str, files.EntryKind] = {}
         for name in self._files:
             if name.startswith(prefix):
-                head, _, rest = name[len(prefix):].partition("/")
+                head, _, rest = name[len(prefix) :].partition("/")
                 found.setdefault(
                     head, files.EntryKind.DIRECTORY if rest else files.EntryKind.REGULAR
                 )
         direct = [
-            (name[len(prefix):], kind)
+            (name[len(prefix) :], kind)
             for names, kind in (
                 (self.directories, files.EntryKind.DIRECTORY),
                 (self.devices, files.EntryKind.OTHER),
                 (self.links, files.EntryKind.SYMLINK),
             )
             for name in names
-            if name.startswith(prefix) and "/" not in name[len(prefix):]
+            if name.startswith(prefix) and "/" not in name[len(prefix) :]
         ]
         for name, kind in direct:
             found[name] = kind
@@ -207,26 +209,41 @@ class MemoryFiles(files.FileSystemPort):
         name = str(path)
         if name in self.links:
             return files.Inspection(
-                kind=files.EntryKind.SYMLINK, owner=0, group=0,
-                mode=quantities.FileMode(0o777), label=self.labels.get(name), device=None,
+                kind=files.EntryKind.SYMLINK,
+                owner=0,
+                group=0,
+                mode=quantities.FileMode(0o777),
+                label=self.labels.get(name),
+                device=None,
             )
         if name in self.devices:
             return files.Inspection(
-                kind=files.EntryKind.OTHER, owner=0, group=0,
-                mode=quantities.FileMode(0o660), label=self.labels.get(name),
+                kind=files.EntryKind.OTHER,
+                owner=0,
+                group=0,
+                mode=quantities.FileMode(0o660),
+                label=self.labels.get(name),
                 device=self.devices[name],
             )
         if name in self.directories:
             return files.Inspection(
-                kind=files.EntryKind.DIRECTORY, owner=0, group=0,
-                mode=quantities.FileMode(0o700), label=self.labels.get(name), device=None,
+                kind=files.EntryKind.DIRECTORY,
+                owner=0,
+                group=0,
+                mode=quantities.FileMode(0o700),
+                label=self.labels.get(name),
+                device=None,
             )
         stored = self._files.get(self._canonical(name))
         if stored is None:
             raise errors.PortFailure(port="files", cause=f"{path}: no such file")
         return files.Inspection(
-            kind=files.EntryKind.REGULAR, owner=0, group=0, mode=stored.mode,
-            label=self.labels.get(name), device=None,
+            kind=files.EntryKind.REGULAR,
+            owner=0,
+            group=0,
+            mode=stored.mode,
+            label=self.labels.get(name),
+            device=None,
         )
 
     def list_tree(self, directory: safepaths.SafePath) -> tuple[files.TreeEntry, ...]:
@@ -235,7 +252,7 @@ class MemoryFiles(files.FileSystemPort):
         for stored in self._files:
             if not stored.startswith(prefix):
                 continue
-            relative = stored[len(prefix):]
+            relative = stored[len(prefix) :]
             parts = relative.split("/")
             for depth in range(1, len(parts)):
                 found.setdefault("/".join(parts[:depth]), files.EntryKind.DIRECTORY)

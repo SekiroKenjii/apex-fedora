@@ -62,9 +62,7 @@ GREEN_LOW_FOR_BLUE = _table(lambda value: value < GREEN_UNDER_BLUE)
 def _bars_pattern() -> re.Pattern[bytes]:
     run = b"{%d,}" % BAR_RUN
     gap = bytes([NONE]) + b"{0,%d}" % BAR_GAP
-    return re.compile(
-        bytes([RED]) + run + gap + bytes([GREEN]) + run + gap + bytes([BLUE]) + run
-    )
+    return re.compile(bytes([RED]) + run + gap + bytes([GREEN]) + run + gap + bytes([BLUE]) + run)
 
 
 BARS = _bars_pattern()

@@ -52,9 +52,7 @@ def test_an_existing_destination_is_never_overwritten() -> None:
     files.write_atomic(safepaths.SafePath(Path(DESTINATION)), b"earlier capture\n", mode=PUBLIC)
 
     with pytest.raises(errors.Refusal) as caught:
-        guest_diagnostics_unit.run(
-            bundle(process, files), arguments={"destination": DESTINATION}
-        )
+        guest_diagnostics_unit.run(bundle(process, files), arguments={"destination": DESTINATION})
 
     assert caught.value.reason is refusals.RefusalReason.PROBE_DESTINATION_TAKEN
     kept = files.read_bytes(safepaths.SafePath(Path(DESTINATION)), limit=64)
@@ -68,7 +66,8 @@ def test_a_destination_that_is_not_an_absolute_path_is_refused(destination: obje
 
     with pytest.raises(errors.Refusal) as caught:
         guest_diagnostics_unit.run(
-            bundle(process, laptop()), arguments={"destination": destination}  # type: ignore[dict-item]
+            bundle(process, laptop()),
+            arguments={"destination": destination},  # type: ignore[dict-item]
         )
 
     assert caught.value.reason is refusals.RefusalReason.REQUEST_MALFORMED
@@ -109,7 +108,10 @@ def test_the_installer_bundle_carries_the_older_shape_bounded_the_same_way() -> 
     assert isinstance(observations, dict)
     assert list(observations) == ["preflight", *installer_diagnostics_unit.COMMANDS]
     assert observations["selinux"] == {
-        "returncode": 0, "stdout": "observed\n", "stderr": "", "truncated": False,
+        "returncode": 0,
+        "stdout": "observed\n",
+        "stderr": "",
+        "truncated": False,
     }
     assert [tuple(call) for call in process.calls] == [
         ("systemd-detect-virt", "--vm"),

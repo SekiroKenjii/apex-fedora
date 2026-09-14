@@ -261,7 +261,8 @@ def gather(context: contexts.Context, *, role: machines.VmRole, asked: Asked) ->
         parent=_parent(asked.build),
         case=asked.case,
         wrong_key=(
-            None if asked.wrong_key is None
+            None
+            if asked.wrong_key is None
             else installerfault.read_key(ports, root, asked.wrong_key)
         ),
     )

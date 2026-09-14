@@ -77,9 +77,9 @@ def running(ports: portset.HostPorts, root: safepaths.RuntimeRoot, role: machine
         monitor=machines.MonitorSocket(root.child("qmp.sock")),
         serial=machines.SerialFile(root.child("serial.log")),
     )
-    declared_real = type("RealQemu", (fake_hypervisor.FakeQemu,), {
-        "environment": claims.EnvironmentKind.BUILD
-    })
+    declared_real = type(
+        "RealQemu", (fake_hypervisor.FakeQemu,), {"environment": claims.EnvironmentKind.BUILD}
+    )
     launcher = dataclasses.replace(ports, hypervisor=declared_real())
     run = launcher.identities.run_id()
     launching.launch(
@@ -129,7 +129,9 @@ def test_an_image_build_runs_in_the_leased_builder_and_replies_with_its_record(
 
 
 def test_a_qcow2_with_test_access_is_derived_from_its_parent(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    repository: safepaths.SourceRoot,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     guest = AnsweringGuest({})
@@ -139,7 +141,8 @@ def test_a_qcow2_with_test_access_is_derived_from_its_parent(
     from apex.composition import accessgrant
 
     monkeypatch.setattr(
-        accessgrant, "grant",
+        accessgrant,
+        "grant",
         lambda ports, *, root, run: accessgrant.Granted(
             directory=root.child(f"exports/{run}/test-access"),
             credentials=root.child(f"exports/{run}/test-access/credentials.json"),
@@ -175,7 +178,8 @@ def test_a_failed_guest_build_is_reported_with_its_log_and_the_refusal_exit(
             guest.runs.append(run)  # type: ignore[arg-type]
             return dataclasses.replace(
                 original(target, run),  # type: ignore[arg-type]
-                exit_code=failing.exit_code, stderr=failing.stderr,
+                exit_code=failing.exit_code,
+                stderr=failing.stderr,
             )
         return original(target, run)  # type: ignore[arg-type]
 
@@ -197,8 +201,11 @@ def test_a_failed_guest_build_is_reported_with_its_log_and_the_refusal_exit(
     ],
 )
 def test_a_request_that_contradicts_itself_is_refused_before_the_root_is_touched(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot,
-    arguments: tuple[str, ...], reason: refusals.RefusalReason,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    repository: safepaths.SourceRoot,
+    arguments: tuple[str, ...],
+    reason: refusals.RefusalReason,
 ) -> None:
     with pytest.raises(errors.Refusal) as raised:
         build_command.run(request(bundle(ports, AnsweringGuest({})), root, repository, *arguments))
@@ -258,11 +265,16 @@ def test_the_installer_fixture_disks_are_built_by_the_agent_in_the_leased_builde
     ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot
 ) -> None:
     (root.path / defaults.AGENT_WHEEL_NAME).write_bytes(b"wheel")
-    guest = DeliveringGuest({"fixture.installer-disks": {
-        "sha256": {
-            name: hashlib.sha256(data).hexdigest() for name, data in DeliveringGuest.outputs.items()
-        },
-    }})
+    guest = DeliveringGuest(
+        {
+            "fixture.installer-disks": {
+                "sha256": {
+                    name: hashlib.sha256(data).hexdigest()
+                    for name, data in DeliveringGuest.outputs.items()
+                }
+            }
+        }
+    )
     held = bundle(ports, guest)
     running(held, root, machines.VmRole.BUILDER)
 
@@ -297,7 +309,8 @@ class NvidiaGuest(AnsweringGuest):
             (home / name).write_bytes(data)
         self.filesystem.write_atomic(
             safepaths.SafePath(home / defaults.NVIDIA_REPORT_NAME),
-            json.dumps(nvidia.report(parentbuild_image_id())).encode(), mode=nvidia.PRIVATE,
+            json.dumps(nvidia.report(parentbuild_image_id())).encode(),
+            mode=nvidia.PRIVATE,
         )
 
 
@@ -318,7 +331,8 @@ def test_the_nvidia_packages_are_built_for_a_frozen_parent_and_bound_to_it(
     documents(filesystem, root, PARENT)
     filesystem.write_atomic(
         exports.inside(root, PARENT, f"output/{defaults.KERNEL_CONFIG_NAME}"),
-        nvidia.kernel_config(), mode=nvidia.PRIVATE,
+        nvidia.kernel_config(),
+        mode=nvidia.PRIVATE,
     )
 
     reply = build_command.run(request(held, root, repository, "nvidia", "--parent", str(PARENT)))
@@ -357,8 +371,11 @@ def test_the_nvidia_packages_are_built_for_a_frozen_parent_and_bound_to_it(
     ],
 )
 def test_each_kind_takes_exactly_the_operands_its_recipe_seeds_from(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot, repository: safepaths.SourceRoot,
-    arguments: tuple[str, ...], reason: refusals.RefusalReason,
+    ports: portset.HostPorts,
+    root: safepaths.RuntimeRoot,
+    repository: safepaths.SourceRoot,
+    arguments: tuple[str, ...],
+    reason: refusals.RefusalReason,
 ) -> None:
     with pytest.raises(errors.Refusal) as raised:
         build_command.run(request(bundle(ports, AnsweringGuest({})), root, repository, *arguments))
@@ -376,9 +393,7 @@ def test_the_fingerprint_packages_are_built_in_the_leased_builder_from_the_check
     scratch = MirroredFiles()
     fingerprintbuilds.rpm_build(scratch, root)
     home = root.path / "exports" / str(fingerprintbuilds.RPM_BUILD) / "output"
-    outputs = {
-        str(p.relative_to(home)): p.read_bytes() for p in home.rglob("*") if p.is_file()
-    }
+    outputs = {str(p.relative_to(home)): p.read_bytes() for p in home.rglob("*") if p.is_file()}
     shutil.rmtree(home.parent)
 
     class Guest(AnsweringGuest):

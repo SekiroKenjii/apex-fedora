@@ -22,9 +22,9 @@ FIXTURE = "fixture.recovery"
 
 def _installed(operation: operating.Operation) -> str:
     preset = recoveryops.require_preset(operation.located.preset)
-    installed = operation.ask(INSTALLED, {
-        "expected_digest": operation.image("a"), "config_sha256": preset,
-    })
+    installed = operation.ask(
+        INSTALLED, {"expected_digest": operation.image("a"), "config_sha256": preset}
+    )
     operation.report["installed"] = installed
     return str(installed.get("status", operating.FAIL))
 
@@ -32,8 +32,10 @@ def _installed(operation: operating.Operation) -> str:
 def _reboot(operation: operating.Operation, status: encoding.Document) -> str:
     recoveryops.require_staged(status, operation.image("b"))
     completed = agentrun.as_root(
-        operation.context.ports, operation.context.facts[verifykeys.GUEST],
-        "systemctl", "reboot",
+        operation.context.ports,
+        operation.context.facts[verifykeys.GUEST],
+        "systemctl",
+        "reboot",
         password=operation.context.facts[verifykeys.CREDENTIALS].password,
         deadline=defaults.PROBE_DEADLINE,
     )
@@ -46,7 +48,8 @@ def _reboot(operation: operating.Operation, status: encoding.Document) -> str:
 
 def _change(operation: operating.Operation, before: encoding.Document) -> None:
     arguments: dict[str, encoding.JsonValue] = {
-        "action": operation.action, "expected_digest": operation.image("a"),
+        "action": operation.action,
+        "expected_digest": operation.image("a"),
         "run_id": str(operation.context.facts[composition_keys.RUN_ID]),
     }
     if operation.action == recoveryops.REPAIR_GRUB:
@@ -76,7 +79,8 @@ def body(operation: operating.Operation) -> str | None:
         collected = operation.ask(OPERATE, {"operation": "collect"})
         operation.report["collected"] = collected
         operation.report["evaluation"] = gdmfallback.evaluate(
-            gdmfallback.require_journal(collected), good=operation.image("a"),
+            gdmfallback.require_journal(collected),
+            good=operation.image("a"),
             bad=operation.image("b"),
         )
     operation.report["after"] = operation.ask(INSPECT)

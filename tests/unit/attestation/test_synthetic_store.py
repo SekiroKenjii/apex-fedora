@@ -11,9 +11,7 @@ from migration import synthetic_root
 
 def test_the_deliberately_corrupted_proof_is_blocked_not_passed(tmp_path: Path) -> None:
     root = synthetic_root.build(tmp_path / "runtime")
-    records, candidate = resolving.resolve_store(
-        root, files=real_files.LocalFiles()
-    )
+    records, candidate = resolving.resolve_store(root, files=real_files.LocalFiles())
 
     fresh = readiness.evaluate(
         required=resolving.required_environments(), records=records, candidate=candidate

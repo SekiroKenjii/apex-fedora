@@ -54,11 +54,13 @@ def _root(context: contexts.Context) -> safepaths.RuntimeRoot:
 def run(request: commandspecs.Request) -> commandspecs.Reply:
     arguments = _parser().parse_args(list(request.arguments))
     if arguments.action == DECODE:
-        return commandspecs.Reply(document=hdacoefficient.decode(
-            hdacoefficient.operand(arguments.nid, "nid"),
-            hdacoefficient.operand(arguments.verb, "verb"),
-            hdacoefficient.operand(arguments.parameter, "parameter"),
-        ))
+        return commandspecs.Reply(
+            document=hdacoefficient.decode(
+                hdacoefficient.operand(arguments.nid, "nid"),
+                hdacoefficient.operand(arguments.verb, "verb"),
+                hdacoefficient.operand(arguments.parameter, "parameter"),
+            )
+        )
     root = _root(request.context)
     if arguments.action == OBSERVE:
         return _observe(request, root, lookup=bool(arguments.lookup_system_clients))
@@ -78,8 +80,7 @@ def _observe(
             remedy="run it as your normal user, after the privileged monitor pipe",
         )
     captured = fingerprinttrace.capture(
-        request.context.bundle(root), root, request.read_input().encode(),
-        lookup_clients=lookup,
+        request.context.bundle(root), root, request.read_input().encode(), lookup_clients=lookup
     )
     document = {**captured.summary, "directory": str(captured.directory)}
     if captured.observed:

@@ -13,12 +13,19 @@ from apex.workspace import messagerules, ruleorigins, rulespecs
 
 RULE = identifiers.RuleId("commit.subject-malformed")
 TYPES = (
-    "feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore",
+    "feat",
+    "fix",
+    "docs",
+    "style",
+    "refactor",
+    "perf",
+    "test",
+    "build",
+    "ci",
+    "chore",
     "revert",
 )
-PATTERN = re.compile(
-    rf"(?:{'|'.join(TYPES)})(?:\([a-z0-9][a-z0-9._/-]*\))?: [^\s].*"
-)
+PATTERN = re.compile(rf"(?:{'|'.join(TYPES)})(?:\([a-z0-9][a-z0-9._/-]*\))?: [^\s].*")
 
 
 def inspect(subject: rulespecs.MessageSubject) -> Sequence[rulespecs.Finding]:
@@ -29,7 +36,7 @@ def inspect(subject: rulespecs.MessageSubject) -> Sequence[rulespecs.Finding]:
         rulespecs.Finding(
             rule=RULE,
             reason=refusals.RefusalReason.COMMIT_SUBJECT_MALFORMED,
-            subject=text or '(empty)',
+            subject=text or "(empty)",
             remedy="write type(scope): description, with a permitted type",
         ),
     )

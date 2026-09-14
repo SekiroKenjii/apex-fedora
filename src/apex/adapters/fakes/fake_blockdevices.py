@@ -37,12 +37,7 @@ class FakeBlockDevices(blockdevices.BlockDevicePort):
         self.nodes[str(node)] = device
 
     def rewrite(
-        self,
-        node: safepaths.SafePath,
-        *,
-        expected: files.DeviceNumber,
-        offset: int,
-        length: int,
+        self, node: safepaths.SafePath, *, expected: files.DeviceNumber, offset: int, length: int
     ) -> blockdevices.Rewrite:
         self.attempts.append(Attempt(str(node), offset, length))
         device = self.nodes.get(str(node))

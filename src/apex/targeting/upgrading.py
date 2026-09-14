@@ -73,9 +73,7 @@ def markers(profile: release.ReleaseProfile) -> tuple[str, ...]:
     return (profile.dist_tag.value, profile.mock_root)
 
 
-def pins_to_review(
-    current: release.ReleaseProfile, locks: Mapping[str, str]
-) -> tuple[str, ...]:
+def pins_to_review(current: release.ReleaseProfile, locks: Mapping[str, str]) -> tuple[str, ...]:
     found = []
     for name, text in sorted(locks.items()):
         named = [marker for marker in markers(current) if marker in text]

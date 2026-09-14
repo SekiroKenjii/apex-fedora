@@ -30,6 +30,12 @@ def build(
     builder: guestshell.GuestTarget,
 ) -> runner.Outcome:
     return buildplan.run(
-        PLAN, ports, repository=repository, runtime_root=runtime_root, builder=builder,
-        profile=builds.Profile.FEDORA, kind=builds.ArtifactKind.FINGERPRINT_RPMS, parent=None,
+        PLAN,
+        ports,
+        repository=repository,
+        runtime_root=runtime_root,
+        builder=builder,
+        profile=builds.Profile.FEDORA,
+        kind=builds.ArtifactKind.FINGERPRINT_RPMS,
+        parent=None,
     )

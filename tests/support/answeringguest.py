@@ -50,7 +50,9 @@ class AnsweringGuest(fake_guestshell.ScriptedGuest):
         self.requests.append(request)
         if unit not in self.answers:
             return commands.CompletedRun(
-                exit_code=2, stdout=b"", stderr=b"BLOCKED: agent.unit-unknown: " + unit.encode(),
+                exit_code=2,
+                stdout=b"",
+                stderr=b"BLOCKED: agent.unit-unknown: " + unit.encode(),
                 truncated=False,
             )
         answer = self.answers[unit]

@@ -19,9 +19,13 @@ def test_reason_codes_are_unique() -> None:
 
 def test_the_reasons_the_current_tools_already_express_are_present() -> None:
     required = {
-        "malformed.digest", "malformed.identifier", "evidence.no-verified-result",
-        "evidence.hardware-requires-physical", "evidence.pass-requires-proof",
-        "path.outside-runtime-root", "path.not-a-regular-file",
+        "malformed.digest",
+        "malformed.identifier",
+        "evidence.no-verified-result",
+        "evidence.hardware-requires-physical",
+        "evidence.pass-requires-proof",
+        "path.outside-runtime-root",
+        "path.not-a-regular-file",
     }
 
     assert required <= {reason.value for reason in refusals.RefusalReason}

@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime
 from collections.abc import Callable
 
-from apex.kernel import claims, errors, timing
+from apex.kernel import claims, timing
 from apex.ports import clock
 
 EPOCH = timing.Instant(0)
@@ -40,16 +40,4 @@ class ManualClock(clock.ClockPort):
     def wait_until(
         self, condition: Callable[[], bool], policy: timing.WaitPolicy
     ) -> timing.Elapsed:
-        started = self.now()
-        attempt = 0
-        while True:
-            if condition():
-                return timing.Elapsed(self.now().seconds - started.seconds)
-            deadline = timing.Deadline(policy.deadline.budget, started=started)
-            if deadline.expired_at(self.now()):
-                raise errors.PortFailure(
-                    port="clock",
-                    cause=f"waited {policy.deadline.budget.seconds}s for {policy.description}",
-                )
-            self.sleep(policy.backoff.delay(attempt))
-            attempt += 1
+        return clock.wait(self.now, self.sleep, condition, policy)

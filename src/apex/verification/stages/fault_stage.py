@@ -30,8 +30,10 @@ def for_case(
     key = verifykeys.fault_report(case)
 
     def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
-        asked = case if arguments is None else dataclasses.replace(
-            case, arguments=dict(arguments(context))
+        asked = (
+            case
+            if arguments is None
+            else dataclasses.replace(case, arguments=dict(arguments(context)))
         )
         try:
             reply = agentrun.run_unit(
@@ -58,4 +60,3 @@ def for_case(
         preflight=stages.always_ready,
         apply=apply,
     )
-

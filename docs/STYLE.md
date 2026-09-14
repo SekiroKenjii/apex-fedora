@@ -1,8 +1,8 @@
 # House style
 
 These are the rules the code under `src/` is written to. Each rule names how it is held:
-by a tool in `just gate`, by a test under `tests/architecture/`, or by review. A rule with no
-check is a preference, and preferences are not listed here.
+by a check `apex check` runs, by a test under `tests/architecture/`, or by review. A rule with
+no check is a preference, and preferences are not listed here.
 
 The rules apply to `src/` in full, to `tools/migration/` and to `tests/` where stated. The
 tree under `guest/` is being replaced and is held only by the lint ratchet, which lets a
@@ -46,9 +46,12 @@ name as the type's module, since the field would shadow the module inside the cl
 exceptions in force are listed in `test_name_imports_are_limited_to_the_declared_exceptions`,
 and adding one means adding a line there with the field that forces it.
 
-Relative imports are not used.
+Relative imports are not used. A layer imports only the layers below it, and the six contexts
+of layer six import only the contexts before them in their declared order.
 
-Held by: ruff `TID`; the test named above.
+Held by: ruff `TID`; the test named above; `test_no_module_imports_a_higher_layer` and
+`test_no_context_imports_a_later_context`; the import linter's layer contract in
+`pyproject.toml`, run by the `imports` check as the second holder of the same rule.
 
 ## Types
 
@@ -70,7 +73,7 @@ as the refusing double or a legacy object, still passes structurally. Protocol m
 callers pass the argument positionally declare it positional-only, so a callable field can
 stand in for the method.
 
-Held by: `just types`; `just pyright`; `test_every_adapter_inherits_the_port_it_implements`.
+Held by: the `types` and `pyright` checks; `test_every_adapter_inherits_the_port_it_implements`.
 
 ## Functions
 
@@ -138,11 +141,34 @@ Held by: `test_version_literals_live_only_in_targeting_and_pins`; review for the
 ## Formatting
 
 The ruff formatter, line length 100, four-space indentation, double quotes, trailing commas in
-multi-line constructs. The width is wider than the reference style this document was derived
-from; the project's type names are long and 80 columns forced wrapping that hid the shape of a
-call. Running prose in docstrings wraps at the same width.
+multi-line constructs. A trailing comma the author left does not force a construct open: a
+construct that fits on one line is written on one line (`skip-magic-trailing-comma`). The
+width is wider than the reference style this document was derived from; the project's type
+names are long and 80 columns forced wrapping that hid the shape of a call. Running prose in
+docstrings wraps at the same width.
 
-Held by: `just lint` in check mode.
+Held by: the `format` check, the formatter in check mode over `src/`, `tools/migration/` and
+every restructured test tree.
+
+## Duplication
+
+Two modules do not carry the same ten lines. A shape that two modules need, a plan's seeds,
+a stage's declaration, a registry's four functions, a delivery into a guest, is named once
+in a module of its own and used from both. The threshold, the imports, signatures and
+docstrings it ignores, are set in `pyproject.toml`.
+
+Held by: the `duplicates` check, pylint's `R0801` over `src/apex`; the `deadcode` check,
+vulture at confidence 80, for the code nobody uses.
+
+## Sizes
+
+A module has at most 400 lines and a package at most the lines its budget declares; a module
+outside the kernel and the declared vocabularies is imported by at most 40 others. The numbers
+live in `config/budgets.py`, where the tests and the `sizes` check both read them.
+
+Held by: `test_no_module_exceeds_the_line_limit`, `test_no_package_exceeds_its_line_budget`,
+`test_no_module_outside_the_kernel_is_imported_by_more_than_the_fan_in_limit`; the `sizes`
+check prints the table.
 
 ## External organisations
 
@@ -151,11 +177,26 @@ coordinate: an upstream package name that happens to carry one is data pointing 
 upstream, not an attribution, and it is allowed only in that exact form.
 
 Held by: the repository content rule `repository.vendor-attribution`, which refuses any
-tracked file that carries the name outside a package coordinate.
+tracked file that carries the name outside a package coordinate, at commit and at push; the
+`tree` check, which judges every tracked file by the same rules.
 
 ## Enforcement
 
-`just gate` runs the formatter in check mode, ruff, `mypy --strict`, pyright, the lint ratchet, dead
-code detection, the architecture tests, and every test in this document. No rule runs in a
-warning mode. A new rule arrives with its check and with the fix for every existing
-violation, in one change.
+`apex check` runs ten checks in order and exits non-zero at the first that fails: `format`
+(the formatter in check mode), `lint` (ruff), `types` (`mypy --strict`), `pyright`,
+`deadcode` (vulture), `duplicates` (pylint `R0801`), `imports` (the import linter),
+`architecture` (every test under `tests/architecture/`, which holds every rule above that
+names a test), `tree` (the repository's entry and content rules over every tracked file) and
+`sizes` (the line table against `config/budgets.py`). `just check` runs it; `just gate` runs
+it first, then the tests, the frozen artefacts, the runtime inventory, the evidence chain and
+the surface contract. No check runs in a warning mode. A new rule arrives with its check and
+with the fix for every existing violation, in one change.
+
+| Requirement | Held by | The refusal on record |
+|---|---|---|
+| R1, the strict standard and no organisation named | `format`, `lint`, `types`, `pyright`, `tree` | `test_one_failing_check_fails_the_command_and_its_words_are_in_the_narrative`; `test_the_tree_check_judges_every_tracked_file_by_the_repository_rules` |
+| R2, code that says what it means, comments minimal | `lint` (`ERA`), `architecture` | `test_comment_lines_stay_within_the_budget`; `test_docstrings_and_comments_describe_the_tree_as_it_is` |
+| R3, versions, threats and thresholds as data | `architecture` | `test_version_literals_live_only_in_targeting_and_pins`; every invariant's refusing test in `tests/unit/` |
+| R4, single responsibility, open and closed | `lint` (`C901`, `PLR0915`), `imports`, `sizes`, `architecture` | `test_no_module_imports_a_higher_layer`; `test_no_module_exceeds_the_line_limit`; the size table's FAIL over an oversize module |
+| R5, one behavioural pattern for multi-step work | `architecture` | the golden plan test, red when a stage's reads or writes change |
+| R6, ports with fakes, one home for numbers, no duplicate and no dead code | `deadcode`, `duplicates`, `architecture` | `test_the_tool_checks_run_in_order_and_every_verdict_is_named`; `test_every_adapter_inherits_the_port_it_implements` |

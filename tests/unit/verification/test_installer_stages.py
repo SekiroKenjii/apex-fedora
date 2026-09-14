@@ -58,10 +58,7 @@ def target(root: safepaths.RuntimeRoot) -> guestshell.GuestTarget:
 
 
 def context(
-    ports: portset.HostPorts,
-    root: safepaths.RuntimeRoot,
-    guest: AnsweringGuest,
-    **held: object,
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, guest: AnsweringGuest, **held: object
 ) -> stages.RunContext[portset.HostPorts]:
     bundle = dataclasses.replace(ports, guest=guest, files=fake_files.MemoryFiles())
     given = facts.FactMap()
@@ -108,9 +105,9 @@ def test_the_request_is_written_before_the_guest_is_touched_and_names_the_image(
     assert request.run == MACHINE_RUN
     image = run.ports.digests.file(safepaths.SafePath.regular_file(iso, within=root))
     assert request.image == image
-    written = json.loads(run.ports.files.read_bytes(
-        installerfault.request_path(run_directory), limit=1 << 20
-    ))
+    written = json.loads(
+        run.ports.files.read_bytes(installerfault.request_path(run_directory), limit=1 << 20)
+    )
     assert written["iso_sha256"] == request.image.hex and written["vm_pid"] == 4242
     again = installer_request_stage.STAGE.apply(run)
     assert isinstance(again, stages.Refuse)
@@ -119,12 +116,7 @@ def test_the_request_is_written_before_the_guest_is_touched_and_names_the_image(
 
 @pytest.mark.parametrize(
     "shape",
-    [
-        {"medium": machines.Medium.LIVE},
-        {"serial_console": False},
-        {"extras": 2},
-        {"extras": 0},
-    ],
+    [{"medium": machines.Medium.LIVE}, {"serial_console": False}, {"extras": 2}, {"extras": 0}],
 )
 def test_a_machine_that_is_not_the_installer_boot_the_fault_needs_is_refused(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot, shape: dict[str, Any]
@@ -188,16 +180,26 @@ def test_whole_logs_advance_and_the_first_incomplete_log_fails_the_run_by_name(
     whole = advanced(whole, retain_report_stage.for_probe(DIAGNOSTICS))
     truncated = installerruns.whole_log(b"partial")
     truncated["truncated"] = True
-    broken = context(ports, root, AnsweringGuest({
-        "installer.diagnostics": installerruns.diagnostics(**{"storage.log": truncated}),
-    }))
+    broken = context(
+        ports,
+        root,
+        AnsweringGuest(
+            {"installer.diagnostics": installerruns.diagnostics(**{"storage.log": truncated})}
+        ),
+    )
     broken = advanced(broken, probe_stage.for_case(DIAGNOSTICS))
     broken = advanced(broken, retain_report_stage.for_probe(DIAGNOSTICS))
-    missing = context(ports, root, AnsweringGuest({
-        "installer.diagnostics": installerruns.diagnostics(**{
-            "program.log": {"error": "not a regular file"}
-        }),
-    }))
+    missing = context(
+        ports,
+        root,
+        AnsweringGuest(
+            {
+                "installer.diagnostics": installerruns.diagnostics(
+                    **{"program.log": {"error": "not a regular file"}}
+                )
+            }
+        ),
+    )
     missing = advanced(missing, probe_stage.for_case(DIAGNOSTICS))
     missing = advanced(missing, retain_report_stage.for_probe(DIAGNOSTICS))
 

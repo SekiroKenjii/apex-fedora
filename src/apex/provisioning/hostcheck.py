@@ -49,17 +49,21 @@ class Report:
         found: list[errors.Refusal] = []
         missing = sorted(name for name, path in self.tools.items() if path is None)
         if missing:
-            found.append(errors.Refusal(
-                refusals.RefusalReason.HOST_TOOL_MISSING,
-                subject=", ".join(missing),
-                remedy="install the missing tools",
-            ))
+            found.append(
+                errors.Refusal(
+                    refusals.RefusalReason.HOST_TOOL_MISSING,
+                    subject=", ".join(missing),
+                    remedy="install the missing tools",
+                )
+            )
         if not self.firmware:
-            found.append(errors.Refusal(
-                refusals.RefusalReason.FIRMWARE_ABSENT,
-                subject="the OVMF firmware the settings name",
-                remedy="install the firmware or point the settings at it",
-            ))
+            found.append(
+                errors.Refusal(
+                    refusals.RefusalReason.FIRMWARE_ABSENT,
+                    subject="the OVMF firmware the settings name",
+                    remedy="install the firmware or point the settings at it",
+                )
+            )
         shortfalls = {
             f"{self.required_memory_mib} MiB of memory including the host reserve; found "
             f"{self.available_memory_mib} MiB": (
@@ -71,7 +75,8 @@ class Report:
         }
         found.extend(
             errors.Refusal(refusals.RefusalReason.HOST_CAPACITY_INSUFFICIENT, subject=subject)
-            for subject, short in shortfalls.items() if short
+            for subject, short in shortfalls.items()
+            if short
         )
         return tuple(found)
 

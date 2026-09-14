@@ -21,13 +21,32 @@ PNG = "png"
 QCODE = "qcode"
 SHIFT = "shift"
 PLAIN_KEYS = {
-    " ": "spc", "\n": "ret", "\t": "tab", "-": "minus", "=": "equal", "[": "bracket_left",
-    "]": "bracket_right", "\\": "backslash", ";": "semicolon", "'": "apostrophe", ",": "comma",
-    ".": "dot", "/": "slash", "`": "grave_accent",
+    " ": "spc",
+    "\n": "ret",
+    "\t": "tab",
+    "-": "minus",
+    "=": "equal",
+    "[": "bracket_left",
+    "]": "bracket_right",
+    "\\": "backslash",
+    ";": "semicolon",
+    "'": "apostrophe",
+    ",": "comma",
+    ".": "dot",
+    "/": "slash",
+    "`": "grave_accent",
 }
 SHIFTED_KEYS = dict(zip("!@#$%^&*()", "1234567890", strict=True)) | {
-    "_": "minus", "+": "equal", "{": "bracket_left", "}": "bracket_right", "|": "backslash",
-    ":": "semicolon", '"': "apostrophe", "<": "comma", ">": "dot", "?": "slash",
+    "_": "minus",
+    "+": "equal",
+    "{": "bracket_left",
+    "}": "bracket_right",
+    "|": "backslash",
+    ":": "semicolon",
+    '"': "apostrophe",
+    "<": "comma",
+    ">": "dot",
+    "?": "slash",
     "~": "grave_accent",
 }
 

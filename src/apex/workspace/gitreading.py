@@ -72,7 +72,10 @@ def sizes(
     if not names:
         return {}
     answer = _git(
-        processes, repository, "cat-file", "--batch-check",
+        processes,
+        repository,
+        "cat-file",
+        "--batch-check",
         stdin="".join(f"{name}\n" for name in names).encode(),
     )
     found: dict[str, quantities.ByteCount] = {}
@@ -96,7 +99,10 @@ def contents(
     if not names:
         return {}
     answer = _git(
-        processes, repository, "cat-file", "--batch",
+        processes,
+        repository,
+        "cat-file",
+        "--batch",
         stdin="".join(f"{name}\n" for name in names).encode(),
         limit=commands.OutputLimit(defaults.HOOK_CONTENT_LIMIT.value),
     )
@@ -109,7 +115,7 @@ def contents(
         if len(fields) != 3:
             continue
         size = int(fields[2])
-        found[fields[0]] = answer[at:at + size]
+        found[fields[0]] = answer[at : at + size]
         at += size + 1
     absent = [name for name in names if name not in found]
     if absent:
@@ -151,9 +157,7 @@ def outgoing_commits(
         processes, repository, update.remote_commit
     )
     selection = outgoing.revision_arguments(update, remote_is_known=known)
-    answer = _git(
-        processes, repository, "rev-list", "--reverse", *selection, "--not", "--remotes"
-    )
+    answer = _git(processes, repository, "rev-list", "--reverse", *selection, "--not", "--remotes")
     return tuple(answer.decode(errors="replace").split())
 
 

@@ -24,13 +24,15 @@ COMMANDS: Mapping[str, commands.Argv] = {
         "systemctl", "show", "gdm", "greenboot-healthcheck", "-p", "ActiveState", "-p", "Result"
     ),
     "boot_files": commands.Argv.of(
-        "sh", "-c",
+        "sh",
+        "-c",
         f"sha256sum {initramfs_fixture.GRUB_CONFIG} {initramfs_fixture.GRUB_ENVIRONMENT} "
         f"/boot/bootupd-state.json {initramfs_fixture.EFI_DIRECTORY}/*/* "
         f"{initramfs_fixture.BOOT_ENTRIES}/*",
     ),
     "kernel_inputs": commands.Argv.of(
-        "sh", "-c",
+        "sh",
+        "-c",
         f"sha256sum {update_fixture.MODULES_DIRECTORY}/*/vmlinuz "
         f"{update_fixture.MODULES_DIRECTORY}/*/initramfs.img "
         f"/var/home/{defaults.TEST_ACCOUNT}/{defaults.UPDATE_SENTINEL_NAME}",

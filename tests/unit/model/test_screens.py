@@ -143,7 +143,7 @@ def runs_of(width: int, row: bytes) -> list[tuple[str, int, int]]:
     current: str | None = None
     start = 0
     for x in range(width):
-        color = classify(*row[x * 3:x * 3 + 3])
+        color = classify(*row[x * 3 : x * 3 + 3])
         if color != current:
             if current:
                 runs.append((current, start, x))
@@ -165,14 +165,14 @@ def has_bars(runs: list[tuple[str, int, int]]) -> bool:
 def reference_swatches(width: int, height: int, data: bytes) -> int:
     stride = width * 3
     return sum(
-        has_bars(runs_of(width, data[y * stride:(y + 1) * stride])) for y in range(0, height, 4)
+        has_bars(runs_of(width, data[y * stride : (y + 1) * stride])) for y in range(0, height, 4)
     )
 
 
 def reference_change(width: int, height: int, first: bytes, second: bytes) -> int:
     begin = min(40, height) * width * 3
     return sum(
-        max(abs(a - b) for a, b in zip(first[i:i + 3], second[i:i + 3], strict=True)) >= 20
+        max(abs(a - b) for a, b in zip(first[i : i + 3], second[i : i + 3], strict=True)) >= 20
         for i in range(begin, len(first), 3)
     )
 
@@ -184,8 +184,9 @@ def test_both_judgements_agree_with_a_pixel_by_pixel_reading_on_random_frames() 
         width, height = generator.randint(1, 260), generator.randint(1, 50)
         first = b"".join(generator.choice(palette) for _ in range(width * height))
         noise = b"".join(
-            bytes(generator.randint(0, 255) for _ in range(3)) if generator.random() < 0.3
-            else first[i * 3:i * 3 + 3]
+            bytes(generator.randint(0, 255) for _ in range(3))
+            if generator.random() < 0.3
+            else first[i * 3 : i * 3 + 3]
             for i in range(width * height)
         )
         before, after = frame(width, height, first), frame(width, height, noise)

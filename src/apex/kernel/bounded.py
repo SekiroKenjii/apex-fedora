@@ -14,9 +14,7 @@ class Limit:
 
     def __post_init__(self) -> None:
         if self.value <= 0:
-            raise errors.Refusal(
-                refusals.RefusalReason.LIMIT_NOT_POSITIVE, subject=str(self.value)
-            )
+            raise errors.Refusal(refusals.RefusalReason.LIMIT_NOT_POSITIVE, subject=str(self.value))
 
 
 CAPTURE_LIMIT = Limit(262144)

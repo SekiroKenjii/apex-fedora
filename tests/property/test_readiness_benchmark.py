@@ -32,7 +32,9 @@ pytestmark = pytest.mark.benchmark
 def filled_store(root: safepaths.RuntimeRoot) -> fake_files.MemoryFiles:
     files = fake_files.MemoryFiles()
     recorder = recording.Recorder.open(
-        root, filesystem=files, identities=fake_ids.SequenceIdentities(),
+        root,
+        filesystem=files,
+        identities=fake_ids.SequenceIdentities(),
         clock=fake_clock.ManualClock(),
     )
     specs = list(catalogue.sealed().values())

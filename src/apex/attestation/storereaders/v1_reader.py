@@ -12,14 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from apex.attestation import (
-    attesting,
-    ledger,
-    markclaims,
-    proofhashing,
-    readerspecs,
-    storereaders,
-)
+from apex.attestation import attesting, ledger, markclaims, proofhashing, readerspecs, storereaders
 from apex.kernel import errors, refusals
 from apex.model import runtimestate, storemark
 from apex.ports import files as files_port
@@ -41,9 +34,7 @@ def read(
     # arrived with the store that is written through it and this reader has no use for it.
     evidence_root = runtime_root / runtimestate.EVIDENCE_DIRECTORY
     document = runtime_root / runtimestate.CANDIDATE_NAME
-    candidate = (
-        runtimestate.read_candidate(document).digest if document.is_file() else None
-    )
+    candidate = runtimestate.read_candidate(document).digest if document.is_file() else None
     faults: list[str] = []
     attestations: list[attesting.Attestation] = []
     imported = spec.kind is ledger.EntryKind.IMPORTED

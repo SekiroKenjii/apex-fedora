@@ -108,9 +108,7 @@ def test_an_object_that_grew_cannot_exhaust_memory(location: proofs.StoreLocatio
     proof = store.absorb(REPORT, kind=".json")
 
     filesystem.write_atomic(
-        location.object_path(proof.digest),
-        REPORT + b"x" * 4096,
-        mode=quantities.FileMode(0o600),
+        location.object_path(proof.digest), REPORT + b"x" * 4096, mode=quantities.FileMode(0o600)
     )
 
     with pytest.raises(errors.Refusal) as raised:
@@ -122,9 +120,7 @@ def test_the_store_refuses_to_live_inside_the_legacy_directory(tmp_path: Path) -
     tmp_path.chmod(0o700)
 
     with pytest.raises(errors.Refusal) as raised:
-        proofs.StoreLocation(
-            root=safepaths.RuntimeRoot.adopt(tmp_path), area=proofs.LEGACY_AREA
-        )
+        proofs.StoreLocation(root=safepaths.RuntimeRoot.adopt(tmp_path), area=proofs.LEGACY_AREA)
 
     assert raised.value.reason is refusals.RefusalReason.STORE_AREA_NOT_PERMITTED
 

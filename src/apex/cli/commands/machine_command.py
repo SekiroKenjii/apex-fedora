@@ -228,12 +228,20 @@ def resume(
     arguments: argparse.Namespace,
 ) -> encoding.Document:
     prepared = resuming.resume(
-        ports, context.settings, root, _run_id(arguments.run),
-        stamp=ports.identities.token(), without_iso=arguments.without_iso,
+        ports,
+        context.settings,
+        root,
+        _run_id(arguments.run),
+        stamp=ports.identities.token(),
+        without_iso=arguments.without_iso,
     )
     lease = launching.launch(
-        ports, root=root, spec=prepared.spec, run=prepared.run,
-        run_directory=prepared.run_directory, medium=prepared.medium,
+        ports,
+        root=root,
+        spec=prepared.spec,
+        run=prepared.run,
+        run_directory=prepared.run_directory,
+        medium=prepared.medium,
     )
     return {"resumed": lease.document()}
 
@@ -325,27 +333,46 @@ RECIPES = (
     ),
     commandspecs.Recipe("test-vm", ("disk",), _test()),
     commandspecs.Recipe(
-        "test-installer", ("disk", "iso", "other_disk"),
+        "test-installer",
+        ("disk", "iso", "other_disk"),
         _test("--iso", "{{iso}}", "--medium", "installer", "--extra-disk", "{{other_disk}}"),
     ),
     commandspecs.Recipe(
-        "test-installer-diagnostic", ("disk", "iso", "other_disk"),
+        "test-installer-diagnostic",
+        ("disk", "iso", "other_disk"),
         _test(
-            "--iso", "{{iso}}", "--medium", "installer", "--extra-disk", "{{other_disk}}",
+            "--iso",
+            "{{iso}}",
+            "--medium",
+            "installer",
+            "--extra-disk",
+            "{{other_disk}}",
             "--serial-console",
         ),
     ),
     commandspecs.Recipe(
-        "test-live-hotplug", ("disk", "iso", "other_disk"),
+        "test-live-hotplug",
+        ("disk", "iso", "other_disk"),
         _test(
-            "--iso", "{{iso}}", "--medium", "live", "--extra-disk", "{{other_disk}}",
-            "--serial-console", "--usb-bus",
+            "--iso",
+            "{{iso}}",
+            "--medium",
+            "live",
+            "--extra-disk",
+            "{{other_disk}}",
+            "--serial-console",
+            "--usb-bus",
         ),
     ),
     commandspecs.Recipe(
-        "test-ventoy", ("disk", "other_disk", "usb_image"),
+        "test-ventoy",
+        ("disk", "other_disk", "usb_image"),
         _test(
-            "--extra-disk", "{{other_disk}}", "--boot-usb", "{{usb_image}}", "--usb-bus",
+            "--extra-disk",
+            "{{other_disk}}",
+            "--boot-usb",
+            "{{usb_image}}",
+            "--usb-bus",
             "--serial-console",
         ),
     ),
@@ -355,15 +382,15 @@ RECIPES = (
         "test-compare-disks", ("run_directory",), (NAME, COMPARE, "--run", "{{run_directory}}")
     ),
     commandspecs.Recipe(
-        "test-resume-installed", ("run_directory",),
+        "test-resume-installed",
+        ("run_directory",),
         (NAME, RESUME, "--run", "{{run_directory}}", "--without-iso"),
     ),
     commandspecs.Recipe(
-        "test-installer-fault-collect", ("run_directory",),
+        "test-installer-fault-collect",
+        ("run_directory",),
         (NAME, COLLECT, "--run", "{{run_directory}}"),
     ),
 )
 
-commands.declare(
-    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
-)
+commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES))

@@ -16,9 +16,7 @@ from apex.config import defaults
 from apex.kernel import commands, encoding, errors, refusals, safepaths, timing
 
 STATUS = commands.Argv.of("bootc", "status", "--format", "json")
-COMPONENTS = commands.Argv.of(
-    "rpm", "-q", "--qf", "%{NAME}=%{VERSION}\n", "bootupd", "greenboot"
-)
+COMPONENTS = commands.Argv.of("rpm", "-q", "--qf", "%{NAME}=%{VERSION}\n", "bootupd", "greenboot")
 OWN_NAMESPACE = "/proc/self/ns/mnt"
 INIT_NAMESPACE = "/proc/1/ns/mnt"
 DEPLOYMENTS = "/sysroot/ostree/deploy"
@@ -100,9 +98,7 @@ def output(
     *,
     deadline: timing.Deadline = defaults.PROBE_DEADLINE,
 ) -> str:
-    completed = ports.processes.run(
-        argv, deadline=deadline, limit=commands.OutputLimit.default()
-    )
+    completed = ports.processes.run(argv, deadline=deadline, limit=commands.OutputLimit.default())
     if not completed.succeeded:
         raise unexpected(f"{argv.arguments[0]} exited with {completed.exit_code}")
     return completed.stdout.decode(errors="replace")

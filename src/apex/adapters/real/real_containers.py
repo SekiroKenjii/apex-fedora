@@ -18,10 +18,14 @@ class PodmanEngine(containers.ContainerEnginePort):
         self._processes = processes
 
     def image_id(self, name: str) -> identifiers.ImageId:
-        text = self._output(
-            commands.Argv.of(PODMAN, "image", "inspect", "--format", ID_FORMAT, name),
-            deadline=defaults.ENGINE_QUERY_DEADLINE,
-        ).decode().strip()
+        text = (
+            self._output(
+                commands.Argv.of(PODMAN, "image", "inspect", "--format", ID_FORMAT, name),
+                deadline=defaults.ENGINE_QUERY_DEADLINE,
+            )
+            .decode()
+            .strip()
+        )
         return identifiers.ImageId.parse(text if text.startswith("sha256:") else f"sha256:{text}")
 
     def inspect(self, name: str) -> bytes:
@@ -83,9 +87,12 @@ class PodmanEngine(containers.ContainerEnginePort):
         argv += ["copy", "--preserve-digests"]
         if signing is not None:
             argv += [
-                "--sign-by-sigstore-private-key", str(signing.private_key),
-                "--sign-passphrase-file", str(signing.passphrase),
-                "--sign-identity", signing.identity,
+                "--sign-by-sigstore-private-key",
+                str(signing.private_key),
+                "--sign-passphrase-file",
+                str(signing.passphrase),
+                "--sign-identity",
+                signing.identity,
             ]
         argv += [str(source), str(destination)]
         self._output(commands.Argv.of(*argv), deadline=defaults.ENGINE_BUILD_DEADLINE)
@@ -95,8 +102,12 @@ class PodmanEngine(containers.ContainerEnginePort):
     ) -> None:
         self._output(
             commands.Argv.of(
-                SKOPEO, "generate-sigstore-key", "--passphrase-file", passphrase,
-                "--output-prefix", prefix,
+                SKOPEO,
+                "generate-sigstore-key",
+                "--passphrase-file",
+                passphrase,
+                "--output-prefix",
+                prefix,
             ),
             deadline=defaults.ENGINE_QUERY_DEADLINE,
         )

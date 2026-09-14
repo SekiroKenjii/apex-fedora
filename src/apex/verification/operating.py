@@ -59,9 +59,14 @@ class Operation:
         credentials = self.context.facts[verifykeys.CREDENTIALS]
         given = dict(arguments or {})
         reply = agentrun.run_unit(
-            ports, self.context.facts[verifykeys.GUEST], self.context.facts[verifykeys.AGENT],
-            unit=identifiers.ProbeId(unit), arguments=given, token=ports.identities.token(),
-            privileged=privileged, password=credentials.password if privileged else None,
+            ports,
+            self.context.facts[verifykeys.GUEST],
+            self.context.facts[verifykeys.AGENT],
+            unit=identifiers.ProbeId(unit),
+            arguments=given,
+            token=ports.identities.token(),
+            privileged=privileged,
+            password=credentials.password if privileged else None,
             private_mounts=private_mounts,
         )
         asked = self.report.setdefault("requests", [])
@@ -82,15 +87,16 @@ def _write(operation: Operation, name: str) -> safepaths.SafePath:
     return target
 
 
-def run(
-    context: stages.RunContext[portset.HostPorts], name: str, body: Body
-) -> stages.StageResult:
+def run(context: stages.RunContext[portset.HostPorts], name: str, body: Body) -> stages.StageResult:
     """The body over a fresh report; the report is kept however the body ends."""
     located = context.facts[verifykeys.FIXTURE]
     operation = Operation(
-        context=context, located=located, action=context.facts[verifykeys.ACTION],
+        context=context,
+        located=located,
+        action=context.facts[verifykeys.ACTION],
         report={
-            STATUS: FAIL, "action": context.facts[verifykeys.ACTION],
+            STATUS: FAIL,
+            "action": context.facts[verifykeys.ACTION],
             "fixture": str(located.report.run),
             "images": {v: str(i.digest) for v, i in located.report.images.items()},
             "machine_process": context.facts[verifykeys.MACHINE_PROCESS],
@@ -107,14 +113,22 @@ def run(
         _write(operation, name)
         return stages.Fail(cause=failure.cause)
     kept = _write(operation, name)
-    return stages.Advance(facts={
-        verifykeys.test_report(name): operation.report, verifykeys.retained_report(name): kept,
-    })
+    return stages.Advance(
+        facts={
+            verifykeys.test_report(name): operation.report,
+            verifykeys.retained_report(name): kept,
+        }
+    )
 
 
 READS: tuple[facts.FactKey[Any], ...] = (
-    verifykeys.GUEST, verifykeys.AGENT, verifykeys.FIXTURE, verifykeys.ACTION,
-    verifykeys.CREDENTIALS, verifykeys.MACHINE_PROCESS, composition_keys.RUNTIME_ROOT,
+    verifykeys.GUEST,
+    verifykeys.AGENT,
+    verifykeys.FIXTURE,
+    verifykeys.ACTION,
+    verifykeys.CREDENTIALS,
+    verifykeys.MACHINE_PROCESS,
+    composition_keys.RUNTIME_ROOT,
     composition_keys.RUN_ID,
 )
 
@@ -128,10 +142,13 @@ def stage(
         reads=(*READS, *after),
         writes=(verifykeys.test_report(name), verifykeys.retained_report(name)),
         attests=frozenset(),
-        effects=frozenset({
-            effects.Effect.REMOTE_EXEC, effects.Effect.MUTATES_GUEST,
-            effects.Effect.WRITES_RUNTIME,
-        }),
+        effects=frozenset(
+            {
+                effects.Effect.REMOTE_EXEC,
+                effects.Effect.MUTATES_GUEST,
+                effects.Effect.WRITES_RUNTIME,
+            }
+        ),
         preflight=stages.always_ready,
         apply=lambda context: run(context, name, body),
     )

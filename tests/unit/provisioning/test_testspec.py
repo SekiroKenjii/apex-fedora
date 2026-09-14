@@ -92,7 +92,8 @@ def test_an_image_to_boot_is_attached_as_a_cdrom_and_boots_first(
     iso = source(host, "apex-live.iso")
 
     found = prepared(
-        host, tmp_path,
+        host,
+        tmp_path,
         testspec.TestRequest(disk=disk, iso=iso, medium=machines.Medium.LIVE, guest_ssh=True),
     )
 
@@ -143,7 +144,8 @@ def test_the_usb_bus_and_a_boot_image_ride_over_a_fresh_overlay(host: Host, tmp_
     ventoy = source(host, "ventoy.qcow2")
 
     found = prepared(
-        host, tmp_path,
+        host,
+        tmp_path,
         testspec.TestRequest(disk=disk, extra_disks=(other,), usb_bus=True, boot_usb=ventoy),
     )
 

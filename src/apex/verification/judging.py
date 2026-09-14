@@ -65,9 +65,7 @@ def capture(payload: bytes, *, name: str) -> minting.Offered:
     return minting.Offered(payload=payload, kind=Path(name).suffix)
 
 
-def blocked_by(
-    held: facts.FactMap, gates: Sequence[facts.FactKey[Judged]]
-) -> Judged | None:
+def blocked_by(held: facts.FactMap, gates: Sequence[facts.FactKey[Judged]]) -> Judged | None:
     """A BLOCKED judgement naming the first earlier one that did not pass, or nothing.
 
     A stage that needs the guest in the state an earlier stage proved does not ask the

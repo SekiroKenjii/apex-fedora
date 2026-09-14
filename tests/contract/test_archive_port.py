@@ -201,9 +201,7 @@ def test_overlapping_roots_bundle_each_file_once(
 
     bundle = archives.bundle(declared, into=root.child("source.tar"), screen=archive_port.admit_all)
 
-    assert [entry.path for entry in bundle.files] == sorted(
-        {entry.path for entry in bundle.files}
-    )
+    assert [entry.path for entry in bundle.files] == sorted({entry.path for entry in bundle.files})
     assert bundle.reads == len(bundle.files)
 
 

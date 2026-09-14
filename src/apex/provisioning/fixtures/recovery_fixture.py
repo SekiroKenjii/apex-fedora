@@ -41,7 +41,7 @@ def retry_config(before: bytes) -> bytes:
 
 def observer_program(bad: identifiers.ImageId, destination: safepaths.RemotePath) -> str:
     """The program that records each boot phase and fails gdm once on the faulted B."""
-    return f'''#!/usr/bin/python3
+    return f"""#!/usr/bin/python3
 import json
 import os
 from pathlib import Path
@@ -68,15 +68,13 @@ with path.open('w') as stream:
 print('APEX_RECOVERY_OBSERVATION ' + json.dumps(record), flush=True)
 if record['injected']:
     sys.exit({OBSERVED_EXIT})
-'''
+"""
 
 
 def unit_overrides(program: safepaths.RemotePath) -> Mapping[str, str]:
     """The systemd drop-ins that run the observer around gdm and the health check."""
     return {
-        "gdm.service": (
-            f"[Service]\nRestart=no\nExecStartPre={INTERPRETER} {program} gdm-start\n"
-        ),
+        "gdm.service": (f"[Service]\nRestart=no\nExecStartPre={INTERPRETER} {program} gdm-start\n"),
         "greenboot-healthcheck.service": (
             f"[Service]\nExecStartPre={INTERPRETER} {program} health-before\n"
             f"ExecStopPost={INTERPRETER} {program} health-after\n"

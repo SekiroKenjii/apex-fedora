@@ -34,14 +34,29 @@ ERROR_NAME = re.compile(rf"{re.escape(SERVICE)}\.Error\.[A-Za-z]+")
 PROCESS_ANSWER = re.compile(r"u ([1-9][0-9]*)\s*")
 METHODS = frozenset({"Claim", "Release", "EnrollStart", "EnrollStop", "VerifyStart", "VerifyStop"})
 STATUS_SIGNALS = frozenset({"EnrollStatus", "VerifyStatus"})
-STATUSES = frozenset({
-    "enroll-stage-passed", "enroll-completed", "enroll-failed", "enroll-data-full",
-    "enroll-disconnected", "enroll-unknown-error", "enroll-retry-scan",
-    "enroll-swipe-too-short", "enroll-finger-not-centered", "enroll-remove-and-retry",
-    "enroll-duplicate", "verify-match", "verify-no-match", "verify-retry-scan",
-    "verify-swipe-too-short", "verify-finger-not-centered", "verify-remove-and-retry",
-    "verify-disconnected", "verify-unknown-error",
-})
+STATUSES = frozenset(
+    {
+        "enroll-stage-passed",
+        "enroll-completed",
+        "enroll-failed",
+        "enroll-data-full",
+        "enroll-disconnected",
+        "enroll-unknown-error",
+        "enroll-retry-scan",
+        "enroll-swipe-too-short",
+        "enroll-finger-not-centered",
+        "enroll-remove-and-retry",
+        "enroll-duplicate",
+        "verify-match",
+        "verify-no-match",
+        "verify-retry-scan",
+        "verify-swipe-too-short",
+        "verify-finger-not-centered",
+        "verify-remove-and-retry",
+        "verify-disconnected",
+        "verify-unknown-error",
+    }
+)
 OBSERVED = "OBSERVED"
 INCOMPLETE = "INCOMPLETE"
 UNKNOWN = "UNKNOWN"
@@ -52,8 +67,16 @@ MALFORMED = "Malformed monitor event"
 SIZE_LIMIT = "Capture size limit reached"
 PARTIAL = "Partial final monitor event"
 PROCESS_QUERY = commands.Argv.of(
-    "busctl", "--system", "--auto-start=no", "--timeout=1", "call", BUS, "/org/freedesktop/DBus",
-    BUS, "GetConnectionUnixProcessID", "s",
+    "busctl",
+    "--system",
+    "--auto-start=no",
+    "--timeout=1",
+    "call",
+    BUS,
+    "/org/freedesktop/DBus",
+    BUS,
+    "GetConnectionUnixProcessID",
+    "s",
 )
 Lookup = Callable[[str], encoding.Document]
 
@@ -164,8 +187,13 @@ class Trace:
                 self._lookup(client) if self._lookup is not None else {"status": UNKNOWN}
             )
         self.pending[(client, serial)] = Pending(method, path, str(destination))
-        return {"kind": "call", "client": client, "serial": serial, "method": method,
-                "device": path}
+        return {
+            "kind": "call",
+            "client": client,
+            "serial": serial,
+            "method": method,
+            "device": path,
+        }
 
     def _reply(
         self, message: Mapping[str, object], kind: str
@@ -181,8 +209,11 @@ class Trace:
             raise ValueError("reply sender differs from the called device owner")
         del self.pending[(str(destination), serial)]
         event: dict[str, encoding.JsonValue] = {
-            "kind": "reply", "client": str(destination), "serial": serial,
-            "method": call.method, "device": call.device,
+            "kind": "reply",
+            "client": str(destination),
+            "serial": serial,
+            "method": call.method,
+            "device": call.device,
             "outcome": "OK" if kind == "method_return" else "ERROR",
         }
         if kind == "error":
@@ -226,12 +257,15 @@ class Trace:
         if not isinstance(data, list) or len(data) != 2 or type(data[1]) is not bool:
             raise ValueError("malformed fingerprint status")
         status = data[0] if isinstance(data[0], str) and data[0] in STATUSES else UNKNOWN
-        return {"kind": "status", "device": path, "signal": member, "status": status,
-                "done": data[1]}
+        return {
+            "kind": "status",
+            "device": path,
+            "signal": member,
+            "status": status,
+            "done": data[1],
+        }
 
-    def _owner_change(
-        self, message: Mapping[str, object]
-    ) -> dict[str, encoding.JsonValue] | None:
+    def _owner_change(self, message: Mapping[str, object]) -> dict[str, encoding.JsonValue] | None:
         payload = message.get("payload")
         data = payload.get("data", []) if isinstance(payload, Mapping) else []
         shaped = isinstance(payload, Mapping) and payload.get("type") == "sss"
@@ -301,11 +335,7 @@ def _consume(trace: Trace, stream: bytes) -> list[bytes]:
 
 
 def capture(
-    ports: portset.HostPorts,
-    root: safepaths.RuntimeRoot,
-    stream: bytes,
-    *,
-    lookup_clients: bool,
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot, stream: bytes, *, lookup_clients: bool
 ) -> Captured:
     """Reduce one monitor transcript to its events and a summary, written beside the store."""
     started = ports.clock.stamp().rendered
@@ -337,6 +367,8 @@ def capture(
 
 
 def _read(ports: portset.HostPorts, path: str) -> str:
-    return ports.files.read_bytes(
-        safepaths.SafePath(Path(path)), limit=defaults.DOCUMENT_LIMIT.value
-    ).decode(errors="replace").strip()
+    return (
+        ports.files.read_bytes(safepaths.SafePath(Path(path)), limit=defaults.DOCUMENT_LIMIT.value)
+        .decode(errors="replace")
+        .strip()
+    )

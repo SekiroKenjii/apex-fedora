@@ -38,22 +38,28 @@ def test_the_plan_guards_delivers_asks_for_the_fixture_and_keeps_the_report(
     outcome = dedupe_recipe.verify(
         dataclasses.replace(ports, guest=guest, files=files),
         builder=guestshell.GuestTarget(
-            user=defaults.BUILDER_USER, port=defaults.BUILDER_SSH_PORT,
+            user=defaults.BUILDER_USER,
+            port=defaults.BUILDER_SSH_PORT,
             key=safepaths.SafePath.regular_file(root.path / "builder_ed25519", within=root),
             known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
         ),
         wheel=safepaths.SafePath.regular_file(root.path / "apex-agent.whl", within=root),
-        parent=FIXTURE, root=root,
+        parent=FIXTURE,
+        root=root,
     )
 
     assert outcome.succeeded, outcome.detail
     assert [str(item) for item in dedupe_recipe.PLAN.order] == [
-        "builder.guard", "run.identify", "agent.deliver", "fixture.dedupe",
+        "builder.guard",
+        "run.identify",
+        "agent.deliver",
+        "fixture.dedupe",
         "retain.fixture.dedupe",
     ]
     run = outcome.facts[composition_keys.RUN_ID]
     assert guest.requests[0]["arguments"] == {
-        "work": f"/var/tmp/apex-dedupe-{run}", "fixture": str(FIXTURE),
+        "work": f"/var/tmp/apex-dedupe-{run}",
+        "fixture": str(FIXTURE),
     }
     kept = outcome.facts[verifykeys.retained_observation(dedupe_recipe.CASE)]
     assert kept.path.name == "fixture.dedupe.json"

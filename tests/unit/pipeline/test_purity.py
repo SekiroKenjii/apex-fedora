@@ -41,9 +41,7 @@ def acting_stage(during: str) -> stages.Stage[portset.HostPorts]:
     )
 
 
-def test_a_stage_that_runs_a_program_during_preflight_is_a_defect(
-    ports: portset.HostPorts,
-) -> None:
+def test_a_stage_that_runs_a_program_during_preflight_is_a_defect(ports: portset.HostPorts) -> None:
     plan = plans.Plan.of("demo", [acting_stage("preflight")])
 
     with pytest.raises(errors.InternalDefect) as raised:
@@ -58,9 +56,7 @@ def test_a_well_behaved_stage_passes_preflight(ports: portset.HostPorts) -> None
     assert runner.run(plan, ports=ports).succeeded
 
 
-def test_the_ports_a_stage_sees_during_apply_are_the_real_bundle(
-    ports: portset.HostPorts,
-) -> None:
+def test_the_ports_a_stage_sees_during_apply_are_the_real_bundle(ports: portset.HostPorts) -> None:
     seen: list[object] = []
 
     def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:

@@ -34,9 +34,7 @@ STAGES = (
     tag_payload_stage.STAGE,
     fixture_disk_stage.STAGE,
 )
-SEEDS = frozenset({
-    *buildplan.SEEDS, verifykeys.BUILDER, verifykeys.WHEEL, verifykeys.FIXTURE,
-})
+SEEDS = frozenset({*buildplan.SEEDS, verifykeys.BUILDER, verifykeys.WHEEL, verifykeys.FIXTURE})
 PLAN: plans.Plan[portset.HostPorts] = plans.Plan.of(NAME, STAGES, seeds=SEEDS)
 
 

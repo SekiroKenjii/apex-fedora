@@ -21,27 +21,31 @@ SHORT = 12
 
 def _commit(request: hookspecs.HookRequest, commit: str) -> tuple[rulespecs.Finding, ...]:
     message = gitreading.commit_message(request.processes, request.repository, commit)
-    findings = list(gitguarding.judge_message(
-        rulespecs.MessageSubject(raw=message), rules=gitguarding.registered_message_rules()
-    ))
+    findings = list(
+        gitguarding.judge_message(
+            rulespecs.MessageSubject(raw=message), rules=gitguarding.registered_message_rules()
+        )
+    )
     rows = gitreading.tree_rows(request.processes, request.repository, commit)
     sizes = gitreading.sizes(
-        request.processes, request.repository,
+        request.processes,
+        request.repository,
         tuple({row.object_name: None for row in rows if row.mode.carries_blob}),
     )
     contents = gitreading.contents(
         request.processes, request.repository, treejudging.readable(rows, sizes)
     )
-    findings.extend(treejudging.judge_rows(
-        rows,
-        sizes=sizes,
-        contents=contents,
-        entry_rules=gitguarding.registered_entry_rules(),
-        content_rules=gitguarding.registered_content_rules(),
-    ))
+    findings.extend(
+        treejudging.judge_rows(
+            rows,
+            sizes=sizes,
+            contents=contents,
+            entry_rules=gitguarding.registered_entry_rules(),
+            content_rules=gitguarding.registered_content_rules(),
+        )
+    )
     return tuple(
-        dataclasses.replace(item, subject=f"{commit[:SHORT]}: {item.subject}")
-        for item in findings
+        dataclasses.replace(item, subject=f"{commit[:SHORT]}: {item.subject}") for item in findings
     )
 
 

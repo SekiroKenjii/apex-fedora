@@ -30,9 +30,7 @@ def test_an_operator_supplied_key_becomes_an_anchor(root: safepaths.RuntimeRoot)
     assert anchor.public_key.path == key.resolve()
 
 
-def test_a_key_inside_the_judged_directory_is_not_independent(
-    root: safepaths.RuntimeRoot,
-) -> None:
+def test_a_key_inside_the_judged_directory_is_not_independent(root: safepaths.RuntimeRoot) -> None:
     (root.path / "output").mkdir()
     key = root.path / "output" / "development-signing.pub"
     key.write_text("public:x")

@@ -55,9 +55,7 @@ def _directory(root: safepaths.RuntimeRoot, value: str) -> safepaths.SafePath:
     if candidate.is_absolute():
         resolved = candidate.resolve()
         if not resolved.is_relative_to(root.path):
-            raise errors.Refusal(
-                refusals.RefusalReason.PATH_OUTSIDE_RUNTIME_ROOT, subject=value
-            )
+            raise errors.Refusal(refusals.RefusalReason.PATH_OUTSIDE_RUNTIME_ROOT, subject=value)
         return safepaths.SafePath(resolved)
     return root.child(f"{defaults.EXPORT_DIRECTORY}/{identifiers.RunId.parse(value)}")
 
@@ -83,7 +81,9 @@ def locate(ports: portset.HostPorts, root: safepaths.RuntimeRoot, value: str) ->
         )
     preset = document.get(PRESET_DIGEST)
     return Located(
-        directory=directory, report=report, document=document,
+        directory=directory,
+        report=report,
+        document=document,
         preset=identifiers.Digest(str(preset)) if isinstance(preset, str) else None,
     )
 

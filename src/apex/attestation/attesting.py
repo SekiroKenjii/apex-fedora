@@ -16,10 +16,7 @@ from apex.attestation import ledger, readiness
 from apex.kernel import claims, errors
 
 LEGACY_LIMITS = frozenset(
-    {
-        claims.ScopeLimit.LEGACY_NO_PORT_PROOF,
-        claims.ScopeLimit.LEGACY_NO_CANDIDATE_READBACK,
-    }
+    {claims.ScopeLimit.LEGACY_NO_PORT_PROOF, claims.ScopeLimit.LEGACY_NO_CANDIDATE_READBACK}
 )
 
 

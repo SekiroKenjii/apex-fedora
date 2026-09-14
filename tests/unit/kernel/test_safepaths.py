@@ -37,9 +37,7 @@ def test_a_path_outside_the_root_is_refused(root: safepaths.RuntimeRoot, tmp_pat
     assert raised.value.reason is refusals.RefusalReason.PATH_OUTSIDE_RUNTIME_ROOT
 
 
-def test_a_symlink_is_refused_even_when_it_points_inside(
-    root: safepaths.RuntimeRoot,
-) -> None:
+def test_a_symlink_is_refused_even_when_it_points_inside(root: safepaths.RuntimeRoot) -> None:
     real = root.path / "real.json"
     real.write_text("{}")
     link = root.path / "link.json"

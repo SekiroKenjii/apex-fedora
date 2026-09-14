@@ -100,15 +100,24 @@ def parent_documents(
     ports: portset.HostPorts, root: safepaths.RuntimeRoot, *, image_id: str = IMAGE_ID
 ) -> None:
     manifest = json.dumps({"config": {"digest": f"sha256:{IMAGE_ID}"}}).encode()
-    image = json.dumps({
-        "profile": "fedora",
-        "digest": str(hashing.digest_bytes(manifest)),
-        "image_id": f"sha256:{image_id}",
-    }).encode()
-    record = json.dumps({
-        "status": "PASS", "kind": "image", "profile": "fedora", "source_sha256": "a" * 64,
-        "remote": f"/var/tmp/apex-{PARENT}", "parent_build": None, "test_access": False,
-    }).encode()
+    image = json.dumps(
+        {
+            "profile": "fedora",
+            "digest": str(hashing.digest_bytes(manifest)),
+            "image_id": f"sha256:{image_id}",
+        }
+    ).encode()
+    record = json.dumps(
+        {
+            "status": "PASS",
+            "kind": "image",
+            "profile": "fedora",
+            "source_sha256": "a" * 64,
+            "remote": f"/var/tmp/apex-{PARENT}",
+            "parent_build": None,
+            "test_access": False,
+        }
+    ).encode()
     mode = quantities.FileMode(0o600)
     ports.files.write_atomic(exports.inside(root, PARENT, "result.json"), record, mode=mode)
     ports.files.write_atomic(exports.inside(root, PARENT, "output/image.json"), image, mode=mode)
@@ -127,16 +136,25 @@ def test_the_plan_puts_every_local_decision_before_the_first_remote_effect() -> 
     assert order.index("build.freeze") < order.index("builder.check")
     assert order.index("builder.check") < order.index("sources.acquire")
     assert order[-5:] == [
-        "guest.transfer", "access.grant", "build.run", "build.retrieve", "build.record",
+        "guest.transfer",
+        "access.grant",
+        "build.run",
+        "build.retrieve",
+        "build.record",
     ]
 
 
 def test_an_image_build_runs_the_older_tree_s_three_guest_scripts(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     outcome = image_recipe.build(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
         profile=builds.Profile.FEDORA,
     )
 
@@ -161,11 +179,16 @@ def test_an_image_build_runs_the_older_tree_s_three_guest_scripts(
 
 
 def test_an_unreviewed_profile_is_refused_before_any_effect(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     outcome = image_recipe.build(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
         profile=builds.Profile.CACHYOS,
     )
 
@@ -176,14 +199,20 @@ def test_an_unreviewed_profile_is_refused_before_any_effect(
 
 
 def test_a_disk_artifact_imports_the_frozen_payload_and_signs_the_output(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     parent_documents(ports, root)
 
     outcome = disk_artifact_recipe.derive(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
-        kind=builds.ArtifactKind.INSTALLER, parent=PARENT,
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
+        kind=builds.ArtifactKind.INSTALLER,
+        parent=PARENT,
     )
 
     assert outcome.succeeded, outcome.detail
@@ -197,19 +226,22 @@ def test_a_disk_artifact_imports_the_frozen_payload_and_signs_the_output(
         " && python3 guest/sign-artifacts.py output target-image.json'"
     )
     assert [str(item.remote) for item in guest.sent] == [
-        f"{remote}/source.tar", f"{remote}/target-image.json",
+        f"{remote}/source.tar",
+        f"{remote}/target-image.json",
     ]
     assert outcome.facts[keys.BUILD_RECORD].parent == PARENT
 
 
 def test_a_live_artifact_uses_the_live_script_without_the_archive_argument(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     parent_documents(ports, root)
 
     outcome = live_artifact_recipe.derive(
-        ports, repository=repository, runtime_root=root, builder=builder(root), parent=PARENT,
+        ports, repository=repository, runtime_root=root, builder=builder(root), parent=PARENT
     )
 
     assert outcome.succeeded, outcome.detail
@@ -217,8 +249,10 @@ def test_a_live_artifact_uses_the_live_script_without_the_archive_argument(
 
 
 def test_a_derived_artifact_without_a_parent_is_refused_in_preflight(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     outcome = disk_artifact_recipe.PLAN
     result = image_recipe.PLAN  # both plans share the stages; the seed decides
@@ -227,8 +261,13 @@ def test_a_derived_artifact_without_a_parent_is_refused_in_preflight(
     from apex.composition import buildplan  # noqa: PLC0415
 
     ran = buildplan.run(
-        disk_artifact_recipe.PLAN, ports, repository=repository, runtime_root=root,
-        builder=builder(root), profile=builds.Profile.FEDORA, kind=builds.ArtifactKind.QCOW2,
+        disk_artifact_recipe.PLAN,
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
+        profile=builds.Profile.FEDORA,
+        kind=builds.ArtifactKind.QCOW2,
         parent=None,
     )
 
@@ -237,14 +276,20 @@ def test_a_derived_artifact_without_a_parent_is_refused_in_preflight(
 
 
 def test_a_parent_whose_documents_disagree_is_refused_before_the_guest_is_touched(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     parent_documents(ports, root, image_id="d" * 64)
 
     outcome = disk_artifact_recipe.derive(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
-        kind=builds.ArtifactKind.QCOW2, parent=PARENT,
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
+        kind=builds.ArtifactKind.QCOW2,
+        parent=PARENT,
     )
 
     assert outcome.refusal is refusals.RefusalReason.FROZEN_IMAGE_MISMATCH
@@ -252,8 +297,10 @@ def test_a_parent_whose_documents_disagree_is_refused_before_the_guest_is_touche
 
 
 def test_a_failed_guest_build_is_recorded_and_its_output_still_retrieved(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     run = identifiers.RunId(f"{1:032x}")
     remote = f"/var/tmp/apex-{run}"
@@ -264,7 +311,10 @@ def test_a_failed_guest_build_is_recorded_and_its_output_still_retrieved(
     )
 
     outcome = image_recipe.build(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
         profile=builds.Profile.FEDORA,
     )
 
@@ -278,7 +328,7 @@ def test_a_failed_guest_build_is_recorded_and_its_output_still_retrieved(
 
 
 def test_every_stage_only_computes_while_the_plan_is_checked(
-    ports: portset.HostPorts, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts, root: safepaths.RuntimeRoot
 ) -> None:
     given = FactMap()
     for key, value in (
@@ -307,7 +357,8 @@ class AccountGuest(fake_process.ScriptedProcess):
             key = Path(vector[-1])
             for suffix, body in (("", b"private"), (".pub", b"ssh-ed25519 AAAA test\n")):
                 self.files.write_atomic(
-                    safepaths.SafePath(key.with_name(key.name + suffix)), body,
+                    safepaths.SafePath(key.with_name(key.name + suffix)),
+                    body,
                     mode=quantities.FileMode(0o600),
                 )
             self.expect(vector, fake_process.Reply())
@@ -323,22 +374,31 @@ def test_the_plan_grants_the_account_after_the_transfer_and_before_the_build() -
 
 
 def test_a_qcow2_with_test_access_carries_the_blueprint_and_says_so_in_its_record(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     parent_documents(ports, root)
     held = dataclasses.replace(ports, processes=AccountGuest(memory(ports)))
 
     outcome = disk_artifact_recipe.derive(
-        held, repository=repository, runtime_root=root, builder=builder(root),
-        kind=builds.ArtifactKind.QCOW2, parent=PARENT, test_access=True,
+        held,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
+        kind=builds.ArtifactKind.QCOW2,
+        parent=PARENT,
+        test_access=True,
     )
 
     assert outcome.succeeded, outcome.detail
     run = outcome.facts[keys.RUN_ID]
     remote = f"/var/tmp/apex-{run}"
     assert [str(item.remote) for item in guest.sent] == [
-        f"{remote}/source.tar", f"{remote}/target-image.json", f"{remote}/test-blueprint.toml",
+        f"{remote}/source.tar",
+        f"{remote}/target-image.json",
+        f"{remote}/test-blueprint.toml",
     ]
     granted = outcome.facts[keys.ACCESS]
     assert granted is not None
@@ -352,14 +412,21 @@ def test_a_qcow2_with_test_access_carries_the_blueprint_and_says_so_in_its_recor
 
 
 def test_test_access_on_anything_but_a_qcow2_is_refused_before_the_guest_is_touched(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     parent_documents(ports, root)
 
     outcome = disk_artifact_recipe.derive(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
-        kind=builds.ArtifactKind.INSTALLER, parent=PARENT, test_access=True,
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
+        kind=builds.ArtifactKind.INSTALLER,
+        parent=PARENT,
+        test_access=True,
     )
 
     assert outcome.refusal is refusals.RefusalReason.TEST_ACCESS_NOT_QCOW2
@@ -367,14 +434,20 @@ def test_test_access_on_anything_but_a_qcow2_is_refused_before_the_guest_is_touc
 
 
 def test_without_test_access_no_account_is_made_and_the_record_says_so(
-    ports: portset.HostPorts, guest: fake_guestshell.ScriptedGuest,
-    repository: safepaths.SourceRoot, root: safepaths.RuntimeRoot,
+    ports: portset.HostPorts,
+    guest: fake_guestshell.ScriptedGuest,
+    repository: safepaths.SourceRoot,
+    root: safepaths.RuntimeRoot,
 ) -> None:
     parent_documents(ports, root)
 
     outcome = disk_artifact_recipe.derive(
-        ports, repository=repository, runtime_root=root, builder=builder(root),
-        kind=builds.ArtifactKind.QCOW2, parent=PARENT,
+        ports,
+        repository=repository,
+        runtime_root=root,
+        builder=builder(root),
+        kind=builds.ArtifactKind.QCOW2,
+        parent=PARENT,
     )
 
     assert outcome.succeeded, outcome.detail

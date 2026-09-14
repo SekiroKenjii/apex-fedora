@@ -90,15 +90,11 @@ def collect(ports: agentports.AgentPorts) -> encoding.Document:
 
 
 def run(
-    ports: agentports.AgentPorts,
-    *,
-    arguments: Mapping[str, encoding.JsonValue],
+    ports: agentports.AgentPorts, *, arguments: Mapping[str, encoding.JsonValue]
 ) -> encoding.Document:
     destination = _destination(arguments)
     try:
-        ports.files.reserve(
-            destination, size=quantities.ByteCount(0), mode=defaults.RECORD_MODE
-        )
+        ports.files.reserve(destination, size=quantities.ByteCount(0), mode=defaults.RECORD_MODE)
     except errors.PortFailure as failure:
         raise errors.Refusal(
             refusals.RefusalReason.PROBE_DESTINATION_TAKEN,

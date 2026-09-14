@@ -65,8 +65,7 @@ def test_strict_leaves_an_imported_blocked_exactly_as_the_default_fold_reported_
     )
 
     strict, withheld = retracting.retract(
-        default,
-        attestations=[attestation("one"), attestation("two"), attestation("three")],
+        default, attestations=[attestation("one"), attestation("two"), attestation("three")]
     )
 
     for name, verdict in default.verdicts.items():
@@ -75,9 +74,7 @@ def test_strict_leaves_an_imported_blocked_exactly_as_the_default_fold_reported_
 
 
 def test_a_withheld_verdict_names_the_legacy_import_and_not_a_check_nobody_ran() -> None:
-    strict, _ = retracting.retract(
-        outcome(one=verdicts.PASSED), attestations=[attestation("one")]
-    )
+    strict, _ = retracting.retract(outcome(one=verdicts.PASSED), attestations=[attestation("one")])
 
     stated = strict.verdict_of("one")
     assert isinstance(stated, verdicts.NotTested)
@@ -114,9 +111,7 @@ def test_strict_tolerates_an_imported_record_for_a_check_outside_the_catalogue()
 def test_strict_never_raises_readiness_and_the_counts_still_sum_to_the_catalogue() -> None:
     default = outcome(one=verdicts.PASSED, two=verdicts.PASSED, three=verdicts.BLOCKED)
 
-    strict, _ = retracting.retract(
-        default, attestations=[attestation("one"), attestation("two")]
-    )
+    strict, _ = retracting.retract(default, attestations=[attestation("one"), attestation("two")])
 
     assert not strict.ready
     assert sum(strict.counts.values()) == len(default.verdicts)
@@ -124,9 +119,7 @@ def test_strict_never_raises_readiness_and_the_counts_still_sum_to_the_catalogue
 
 def test_strict_adds_no_fault() -> None:
     """A demotion is policy. Reporting it as a fault would perturb what the gate compares."""
-    strict, _ = retracting.retract(
-        outcome(one=verdicts.PASSED), attestations=[attestation("one")]
-    )
+    strict, _ = retracting.retract(outcome(one=verdicts.PASSED), attestations=[attestation("one")])
 
     assert strict.faults == ()
 

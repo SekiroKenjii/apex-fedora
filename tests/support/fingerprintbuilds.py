@@ -31,9 +31,7 @@ def digest(payload: bytes) -> str:
 
 def patch_digests() -> dict[str, str]:
     lock = fingerprintpackages.load_lock(safepaths.SourceRoot.adopt(REPOSITORY))
-    return {
-        item.name: digest((REPOSITORY / item.patch).read_bytes()) for item in lock.packages
-    }
+    return {item.name: digest((REPOSITORY / item.patch).read_bytes()) for item in lock.packages}
 
 
 def rpm_build(
@@ -61,9 +59,14 @@ def rpm_build(
     place(f"{settings.name}/sources/{settings.archive}", b"settings archive")
     place(f"{defaults.FINGERPRINT_REPODATA_PREFIX}repomd.xml", b"<repomd/>")
     report = {
-        "stage": "rpm-build", "status": "PASS", "source_lock_sha256": lock.digest.hex,
-        "packages": packages, "ready_to_install": False, "hardware": "NOT TESTED",
-        "image_integration": "NOT TESTED", "full_gtk_dbus_integration": "NOT TESTED",
+        "stage": "rpm-build",
+        "status": "PASS",
+        "source_lock_sha256": lock.digest.hex,
+        "packages": packages,
+        "ready_to_install": False,
+        "hardware": "NOT TESTED",
+        "image_integration": "NOT TESTED",
+        "full_gtk_dbus_integration": "NOT TESTED",
         "artifacts": artifacts,
     }
     files.write_atomic(home / defaults.RESULTS_NAME, json.dumps(report).encode(), mode=PRIVATE)
@@ -95,7 +98,9 @@ def gtk_test(
         variants[variant] = cases
     inputs = dict.fromkeys(defaults.GTK_INPUT_FILES, "0" * 64)
     report = {
-        "status": "PASS", "inputs": inputs, "variants": variants,
+        "status": "PASS",
+        "inputs": inputs,
+        "variants": variants,
         "patch_sha256": patch_digests()[fingerprintpackages.SETTINGS],
     }
     files.write_atomic(home / defaults.RESULTS_NAME, json.dumps(report).encode(), mode=PRIVATE)

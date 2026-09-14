@@ -26,7 +26,9 @@ Rendering = Callable[[Any], encoding.Document]
 def for_case(case: faulting.FaultCase) -> stages.SimpleStage[portset.HostPorts]:
     """The fault's observations with the verdict written into them."""
     return _retaining(
-        case.unit, verifykeys.fault_report(case), verifykeys.retained(case),
+        case.unit,
+        verifykeys.fault_report(case),
+        verifykeys.retained(case),
         lambda found: {**found.observations, judging.VERDICT: found.verdict.stored_name},
     )
 
@@ -34,7 +36,9 @@ def for_case(case: faulting.FaultCase) -> stages.SimpleStage[portset.HostPorts]:
 def for_probe(case: probing.ProbeCase) -> stages.SimpleStage[portset.HostPorts]:
     """The probe's observations as the guest gave them, with no verdict at all."""
     return _retaining(
-        case.unit, verifykeys.observed(case), verifykeys.retained_observation(case),
+        case.unit,
+        verifykeys.observed(case),
+        verifykeys.retained_observation(case),
         lambda found: dict(found.observations),
     )
 

@@ -20,11 +20,7 @@ from apex.config import defaults
 from apex.kernel import refusals, safepaths, verdicts
 from apex.ports import guestshell, portset
 from apex.verification import verifykeys
-from apex.verification.recipes import (
-    live_lock_recipe,
-    live_observe_recipe,
-    ventoy_observe_recipe,
-)
+from apex.verification.recipes import live_lock_recipe, live_observe_recipe, ventoy_observe_recipe
 
 
 @pytest.fixture
@@ -70,7 +66,10 @@ def test_each_plan_delivers_the_agent_asks_one_unit_and_keeps_its_answer(
     plan = recipe.PLAN  # type: ignore[attr-defined]
 
     assert [str(item) for item in plan.order] == [
-        "run.identify", "agent.deliver", unit, f"retain.{unit}"
+        "run.identify",
+        "agent.deliver",
+        unit,
+        f"retain.{unit}",
     ]
     assert not any(stage.attests for stage in plan.stages)
     assert plan.name == recipe.NAME  # type: ignore[attr-defined]

@@ -19,9 +19,7 @@ DECLARE = "declare"
 
 
 def units() -> list[Path]:
-    return sorted(
-        path for path in READERS.glob("*.py") if not path.name.startswith("_")
-    )
+    return sorted(path for path in READERS.glob("*.py") if not path.name.startswith("_"))
 
 
 def parsed(path: Path) -> ast.Module:

@@ -89,9 +89,12 @@ def repair_grub(
         raise deployments.unexpected("unexpected GRUB environment change")
     ports.digests.forget()
     return {
-        "status": PASS, "scope": "VM-only exact newline diagnostic repair",
-        "production_migration": "BLOCKED", "before_sha256": preimage,
-        "after_sha256": ports.digests.file(target).hex, "grubenv_unchanged": True,
+        "status": PASS,
+        "scope": "VM-only exact newline diagnostic repair",
+        "production_migration": "BLOCKED",
+        "before_sha256": preimage,
+        "after_sha256": ports.digests.file(target).hex,
+        "grubenv_unchanged": True,
     }
 
 
@@ -113,8 +116,10 @@ def arm_gdm(
         ports.files.write_atomic(drop_in, text.encode(), mode=quantities.FileMode(0o644))
     deployments.output(ports, RELOAD)
     return {
-        "status": PASS, "scope": "Fault armed for next B boot only, not acceptance",
-        "bad_digest": bad, "program_sha256": ports.digests.file(program).hex,
+        "status": PASS,
+        "scope": "Fault armed for next B boot only, not acceptance",
+        "bad_digest": bad,
+        "program_sha256": ports.digests.file(program).hex,
         "directory": str(report),
     }
 
@@ -129,7 +134,8 @@ def retry_config(ports: agentports.AgentPorts, report: safepaths.SafePath) -> en
     deployments.output(ports, commands.Argv.of("sync", "-f", str(path)))
     ports.digests.forget()
     return {
-        "status": PASS, "scope": "VM configuration variation, not rebuilt image",
+        "status": PASS,
+        "scope": "VM configuration variation, not rebuilt image",
         "before_sha256": ports.digests.file(report / "greenboot.conf.before").hex,
         "after_sha256": ports.digests.file(path).hex,
     }

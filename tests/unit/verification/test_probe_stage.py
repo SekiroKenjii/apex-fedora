@@ -113,5 +113,7 @@ def test_the_retained_observation_is_the_guest_s_document_with_no_verdict_added(
     assert document == {"cmdline": "rd.live.image", "status": "PASS"}
     assert str(stage.id) == "retain.live.observe"
     assert set(stage.reads) == {
-        verifykeys.observed(CASE), composition_keys.RUNTIME_ROOT, composition_keys.RUN_ID
+        verifykeys.observed(CASE),
+        composition_keys.RUNTIME_ROOT,
+        composition_keys.RUN_ID,
     }

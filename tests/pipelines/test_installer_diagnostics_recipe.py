@@ -34,7 +34,8 @@ def verify(
     return held, installer_diagnostics_recipe.verify(
         held,
         guest=guestshell.GuestTarget(
-            user="root", port=defaults.GUEST_SSH_PORT,
+            user="root",
+            port=defaults.GUEST_SSH_PORT,
             key=root.child(defaults.GUEST_KEY_NAME),
             known_hosts=root.child(defaults.KNOWN_HOSTS_NAME),
         ),
@@ -78,9 +79,9 @@ def test_an_incomplete_log_fails_the_run_after_the_bundle_is_kept(
 ) -> None:
     truncated = installerruns.whole_log(b"partial")
     truncated["truncated"] = True
-    guest = AnsweringGuest({
-        "installer.diagnostics": installerruns.diagnostics(**{"anaconda.log": truncated}),
-    })
+    guest = AnsweringGuest(
+        {"installer.diagnostics": installerruns.diagnostics(**{"anaconda.log": truncated})}
+    )
 
     _, outcome = verify(ports, root, guest)
 

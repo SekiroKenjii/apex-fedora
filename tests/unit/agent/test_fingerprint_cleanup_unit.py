@@ -79,17 +79,36 @@ def test_the_programs_run_in_the_older_order_and_the_harness_runs_as_builder_in_
 
     assert [tuple(call) for call in process.calls] == [
         ("systemd-detect-virt", "--vm"),
-        ("dnf5", "install", "-y", *TARGET_RPMS.splitlines(), "python3-dbusmock",
-         "python3-gobject", "python3-cairo", "dbus-daemon"),
+        (
+            "dnf5",
+            "install",
+            "-y",
+            *TARGET_RPMS.splitlines(),
+            "python3-dbusmock",
+            "python3-gobject",
+            "python3-cairo",
+            "dbus-daemon",
+        ),
         ("rpm", "-q", "fprintd", "libfprint", "--qf", defaults.RPM_NEVRA_FORMAT),
         ("rpm", "-qa", "--qf", defaults.RPM_EVRA_FORMAT),
         ("chown", "builder:builder", str(OUTPUT)),
-        ("runuser", "-u", "builder", "--", "env", "PYTHONDONTWRITEBYTECODE=1", "python3",
-         f"{ROOT}/test-fingerprint.py", str(SOURCES), str(OUTPUT)),
+        (
+            "runuser",
+            "-u",
+            "builder",
+            "--",
+            "env",
+            "PYTHONDONTWRITEBYTECODE=1",
+            "python3",
+            f"{ROOT}/test-fingerprint.py",
+            str(SOURCES),
+            str(OUTPUT),
+        ),
     ]
     assert process.directories[-1] == safepaths.SafePath(ROOT)
     assert [str(item) for item in process.transcripts] == [
-        f"{OUTPUT}/install.log", f"{OUTPUT}/harness.log"
+        f"{OUTPUT}/install.log",
+        f"{OUTPUT}/harness.log",
     ]
     assert registry_of(ports).runs == [
         containers.RunRequest(
@@ -101,7 +120,11 @@ def test_the_programs_run_in_the_older_order_and_the_harness_runs_as_builder_in_
         )
     ]
     assert list(registry_of(ports).runs[0].argv) == [
-        "-q", "fprintd", "libfprint", "--qf", defaults.RPM_NEVRA_FORMAT
+        "-q",
+        "fprintd",
+        "libfprint",
+        "--qf",
+        defaults.RPM_NEVRA_FORMAT,
     ]
 
 
@@ -149,7 +172,9 @@ def test_a_target_image_that_does_not_name_two_packages_is_refused_before_instal
 
 def test_installed_packages_that_differ_from_the_target_s_are_refused_before_the_harness() -> None:
     process, _, ports = fingerprint_guest(
-        BuilderSpec(installed_rpms="fprintd-1.94.4-1.fc44.x86_64\nlibfprint-1.94.100-1.fc44.x86_64\n")
+        BuilderSpec(
+            installed_rpms="fprintd-1.94.4-1.fc44.x86_64\nlibfprint-1.94.100-1.fc44.x86_64\n"
+        )
     )
 
     with pytest.raises(errors.Refusal) as caught:
@@ -206,7 +231,8 @@ def test_a_work_directory_that_is_not_named_for_a_run_is_refused(work: Any) -> N
 def test_a_lock_that_is_not_a_document_is_refused() -> None:
     _, files, ports = fingerprint_guest(BuilderSpec())
     files.write_atomic(
-        safepaths.SafePath(ROOT / "config" / "fingerprint-tests.lock.json"), b"{",
+        safepaths.SafePath(ROOT / "config" / "fingerprint-tests.lock.json"),
+        b"{",
         mode=fingerprint_cleanup_unit.PLAIN,
     )
 
@@ -219,7 +245,8 @@ def test_a_lock_that_is_not_a_document_is_refused() -> None:
 def test_a_target_document_that_names_no_image_is_refused() -> None:
     _, files, ports = fingerprint_guest(BuilderSpec())
     files.write_atomic(
-        safepaths.SafePath(ROOT / "target-image.json"), json.dumps({"profile": "fedora"}).encode(),
+        safepaths.SafePath(ROOT / "target-image.json"),
+        json.dumps({"profile": "fedora"}).encode(),
         mode=fingerprint_cleanup_unit.PLAIN,
     )
 

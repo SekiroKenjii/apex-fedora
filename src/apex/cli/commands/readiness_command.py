@@ -33,9 +33,7 @@ def tabulate(
 ) -> columns.Table:
     found = reading.read_store(root.path, files=ports.files)
     outcome = readiness.evaluate(
-        required=resolving.required_environments(),
-        records=found.records,
-        candidate=found.candidate,
+        required=resolving.required_environments(), records=found.records, candidate=found.candidate
     )
     withheld: tuple[retracting.Withheld, ...] = ()
     if strict:
@@ -70,6 +68,4 @@ RECIPES = (
     commandspecs.Recipe("readiness-table-strict", (), (NAME, "--table", "--strict")),
 )
 
-commands.declare(
-    commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES)
-)
+commands.declare(commandspecs.Command(name=NAME, summary=SUMMARY, run=run, recipes=RECIPES))

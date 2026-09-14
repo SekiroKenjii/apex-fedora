@@ -57,14 +57,9 @@ def filesystem() -> fake_files.MemoryFiles:
 
 
 @pytest.fixture
-def chain(
-    location: proofs.StoreLocation, filesystem: fake_files.MemoryFiles
-) -> ledger.Ledger:
+def chain(location: proofs.StoreLocation, filesystem: fake_files.MemoryFiles) -> ledger.Ledger:
     return ledger.Ledger(
-        location=location,
-        filesystem=filesystem,
-        signer=signer(),
-        clock=fake_clock.ManualClock(),
+        location=location, filesystem=filesystem, signer=signer(), clock=fake_clock.ManualClock()
     )
 
 
@@ -130,11 +125,7 @@ def test_recomputing_the_link_still_needs_the_key(
 
     document = json.loads(lines[1])
     document["entry"]["verdict"] = verdicts.Passed.stored_name
-    forged = ledger.Entry(
-        sequence=1,
-        stamp=document["entry"]["stamp"],
-        event=event("build.two"),
-    )
+    forged = ledger.Entry(sequence=1, stamp=document["entry"]["stamp"], event=event("build.two"))
     document["link"] = ledger.link_after(
         identifiers.Digest(json.loads(lines[0])["link"]), forged
     ).hex
@@ -242,19 +233,13 @@ def test_a_second_ledger_continues_the_chain_rather_than_restarting_it(
     location: proofs.StoreLocation, filesystem: fake_files.MemoryFiles
 ) -> None:
     first = ledger.Ledger(
-        location=location,
-        filesystem=filesystem,
-        signer=signer(),
-        clock=fake_clock.ManualClock(),
+        location=location, filesystem=filesystem, signer=signer(), clock=fake_clock.ManualClock()
     )
     first.append(event("build.one"))
     first.append(event("build.two"))
 
     resumed = ledger.Ledger(
-        location=location,
-        filesystem=filesystem,
-        signer=signer(),
-        clock=fake_clock.ManualClock(),
+        location=location, filesystem=filesystem, signer=signer(), clock=fake_clock.ManualClock()
     )
     sealed = resumed.append(event("build.three"))
 
@@ -269,9 +254,7 @@ def test_a_second_ledger_continues_the_chain_rather_than_restarting_it(
 def test_an_unreadable_head_stops_the_chain_from_being_continued(
     location: proofs.StoreLocation, filesystem: fake_files.MemoryFiles
 ) -> None:
-    filesystem.write_atomic(
-        location.head_path(), b"{ truncated", mode=ledger.RECORD_MODE
-    )
+    filesystem.write_atomic(location.head_path(), b"{ truncated", mode=ledger.RECORD_MODE)
 
     with pytest.raises(errors.Refusal) as raised:
         ledger.Ledger(

@@ -17,9 +17,7 @@ def apply(context: stages.RunContext[portset.HostPorts]) -> stages.StageResult:
         )
     try:
         lock = nvidialock.load(context.ports, context.facts[keys.REPOSITORY])
-        nvidialock.require_compiler(
-            context.ports, context.facts[keys.RUNTIME_ROOT], parent, lock
-        )
+        nvidialock.require_compiler(context.ports, context.facts[keys.RUNTIME_ROOT], parent, lock)
     except errors.Refusal as refusal:
         return stages.Refuse(reason=refusal.reason, detail=refusal.subject)
     return stages.Advance(facts={keys.NVIDIA_LOCK: lock})

@@ -21,6 +21,12 @@ def derive(
     parent: identifiers.BuildId,
 ) -> runner.Outcome:
     return buildplan.run(
-        PLAN, ports, repository=repository, runtime_root=runtime_root, builder=builder,
-        profile=builds.Profile.FEDORA, kind=builds.ArtifactKind.LIVE, parent=parent,
+        PLAN,
+        ports,
+        repository=repository,
+        runtime_root=runtime_root,
+        builder=builder,
+        profile=builds.Profile.FEDORA,
+        kind=builds.ArtifactKind.LIVE,
+        parent=parent,
     )

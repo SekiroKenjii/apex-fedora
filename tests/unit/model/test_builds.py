@@ -44,8 +44,7 @@ def test_a_completed_image_whose_documents_agree_is_frozen() -> None:
 
 
 @pytest.mark.parametrize(
-    "bad",
-    [record(status=builds.BuildStatus.FAIL), record(kind=builds.ArtifactKind.QCOW2)],
+    "bad", [record(status=builds.BuildStatus.FAIL), record(kind=builds.ArtifactKind.QCOW2)]
 )
 def test_a_parent_that_did_not_complete_an_image_is_refused(bad: builds.BuildRecord) -> None:
     with pytest.raises(errors.Refusal) as raised:
