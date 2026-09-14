@@ -43,6 +43,6 @@ PACKAGE_LINE_BUDGETS: Mapping[str, int] = {
     "agent": 6400,
     "workspace": 2400,
     "adapters": 3100,
-    "cli": 3700,
+    "cli": 3800,
     "wiring": 300,
 }

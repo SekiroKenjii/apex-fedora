@@ -50,6 +50,7 @@ def test_every_command_module_declares_one_command_and_the_registry_holds_them_a
         "operate",
         "patch",
         "plan",
+        "prove",
         "readiness",
         "record",
         "sources",
