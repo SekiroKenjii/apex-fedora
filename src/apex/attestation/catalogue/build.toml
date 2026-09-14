@@ -98,23 +98,23 @@ environment = "build"
 summary = "Establishes that the detached artifact signature over a completed OCI and QCOW2 bundle verifies against a development public key that was retrieved and checked independently of the artifact directory."
 accepted_proof_kinds = [".json"]
 scope_limits = [
-    "Record reason: \"Detached artifact signatures only. Bootc update trust and negative update tests remain untested.\"",
-    "docs/BUILD.md: \"This is development signing\"; the exported public key is for out-of-band review, not automatic trust establishment, and a matching.",
+    "Detached artifact signatures only; bootc update trust and the negative update tests are separate checks inside a booted guest.",
+    "docs/BUILD.md: \"This is development signing\"; the exported public key is for out-of-band review, not automatic trust establishment, and a matching checksum alone establishes no trust.",
     "docs/BUILD.md: signed OCI update acceptance must be demonstrated separately inside a booted guest.",
 ]
-sourced_from = "runtime:evidence/signature.accept.json ..."
+sourced_from = "src/apex/cli/commands/prove_command.py, signature: the bundle verified against the operator's key and recorded for the selected candidate."
 
 [[check]]
 id = "signature.reject"
 environment = "build"
-summary = "Establishes that artifact verification rejects a changed manifest, a changed payload, a wrong key and a bundled key offered as its own trust root, run against a completed artifact without altering."
+summary = "Establishes that artifact verification rejects a changed manifest, a changed payload, a wrong key and a bundled key offered as its own trust root, run against a completed artifact without altering the original."
 accepted_proof_kinds = [".json"]
 scope_limits = [
-    "Record reason: \"Detached artifact signatures only. Bootc update trust and negative update tests remain untested.\"",
+    "Detached artifact signatures only; bootc update trust and the negative update tests are separate checks inside a booted guest.",
     "docs/TESTING.md: installer.payload-rejection is separate from detached artifact-signature and update tests.",
     "docs/BUILD.md: the target's container policy still rejects all sources; do not weaken the policy to make an update test pass.",
 ]
-sourced_from = "runtime:evidence/signature.reject.json ..."
+sourced_from = "src/apex/trust/negatives/: the four registered negatives, each prepared over a scratch copy and expected to be refused for its own reason."
 
 [[check]]
 id = "sources.locked"

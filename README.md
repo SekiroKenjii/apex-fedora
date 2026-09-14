@@ -43,6 +43,7 @@ unit test or image build does not override this gate.
 - [Architecture](docs/ARCHITECTURE.md)
 - [Build and artifact handling](docs/BUILD.md)
 - [Test protocol and evidence](docs/TESTING.md)
+- [Reproving the imported evidence](docs/REPROVING.md)
 - [Installer acceptance and current failures](docs/INSTALLER.md)
 - [Boot diagnostics](docs/BOOT-DIAGNOSTICS.md)
 - [Recovery, including first installation](docs/RECOVERY.md)

@@ -1,35 +1,35 @@
 [[check]]
 id = "git.commit-policy"
 environment = "build"
-summary = "A commit message must be one Conventional Commit subject of at most 72 characters, and the commit-msg hook rejects unknown types, multi-line messages, bodies and co- author trailers."
+summary = "A commit message must be one Conventional Commit subject of at most 72 characters, and the commit-msg hook rejects unknown types, multi-line messages, bodies and co-author trailers."
 accepted_proof_kinds = [".json", ".xml"]
 scope_limits = [
-    "The record explicitly states no external push was performed (runtime:evidence/git.commit-policy.json, reason; history record reason \"No external.",
-    "CONTRIBUTING.md: hooks are local safety checks, not server-side access control; the check establishes local hook behaviour, not enforcement on a.",
-    "The evidence is from disposable local repositories with fixture Git identity and configuration isolated from the contributor's settings.",
+    "No push to any external remote is made: the questions are asked of repositories made for the purpose under the runtime root, and the proof records each question with the hook's answer.",
+    "CONTRIBUTING.md: hooks are local safety checks, not server-side access control; the check establishes local hook behaviour, not enforcement on a remote.",
+    "The repositories carry a fixture identity and none of the operator's configuration, so a global hook path or signing setting cannot answer for the rules.",
 ]
-sourced_from = "runtime:candidate-history/4a24fbbec73d49ca9e7604cf9e965419/evidence/git.commit- policy.json, environment.description (\"Local Git fixtures validate ..."
+sourced_from = "src/apex/workspace/hookproving.py, MESSAGES: the seven messages the commit-msg hook is asked, and the rule each must name."
 
 [[check]]
 id = "git.outgoing-history"
 environment = "build"
-summary = "Every commit a push would send has its subject and its full tree re-checked, so a private file deleted in a later commit, a commit body or a co-author trailer anywhere in outgoing history still."
+summary = "Every commit a push would send has its subject and its full tree re-checked, so a private file deleted in a later commit, a commit body or a co-author trailer anywhere in outgoing history is still refused before the push."
 accepted_proof_kinds = [".json", ".xml"]
 scope_limits = [
-    "No push to any external remote was performed; the record's own environment.description is \"Full local history audit; no push\" and the proof artifact.",
-    "The push path is exercised only against a temporary bare repository on disk, with no network destination (CONTRIBUTING.md.",
-    "The audit covers commits reachable from the current local HEAD at the time of the record (32 commits at head 1bede3f in the current proof artifact).",
+    "No push to any external remote is made: the pre-push hook is asked about the updates it would judge, over a repository made for the purpose, and the proof records each answer.",
+    "The push path is asked four ways: the commits a push would send, a branch created from the clean base, a branch deleted, and a remote commit never fetched, which is refused rather than treated as empty.",
+    "A private file is caught in the commit that added it although a later commit removed it, because every outgoing commit's whole tree is judged.",
 ]
-sourced_from = "runtime:candidate-history/4a24fbbec73d49ca9e7604cf9e965419/evidence/git.outgoing- history.json, environment.description (\"Local Git fixtures reject ..."
+sourced_from = "src/apex/workspace/hookproving.py, outgoing_history: the history built and the four updates asked."
 
 [[check]]
 id = "git.private-stage"
 environment = "build"
-summary = "Staged content, not the working tree, is inspected before a commit is created, so private or local-only paths, renamed local-only documents, symlinks, submodules, opaque binaries and secret material."
+summary = "Staged content, not the working tree, is inspected before a commit is created, so private or local-only paths, renamed local-only documents, symlinks, submodules, opaque binaries and secret material are refused before a commit exists."
 accepted_proof_kinds = [".json", ".xml"]
 scope_limits = [
-    "The record explicitly states no external push was performed (runtime:evidence/git.private-stage.json, reason).",
-    "The claim about the local-only pointer is about its current state: AGENTS.md remains unstaged and not ignored, not that it can never be staged (same.",
+    "No push to any external remote is made; the pre-commit hook is asked about what is staged in a repository made for the purpose.",
+    "The check establishes what the index refuses: a private document, a private key, a local-only marker under another name, an opaque binary, a symlink entry and a submodule entry; a clean file is permitted.",
     "CONTRIBUTING.md: hooks are local safety checks, not server-side access control, and must not be bypassed.",
 ]
-sourced_from = "runtime:candidate-history/4a24fbbec73d49ca9e7604cf9e965419/evidence/git.private- stage.json, environment.description (\"Local Git fixtures test staged ..."
+sourced_from = "src/apex/workspace/hookproving.py, STAGED and private_stage: the seven entries the pre-commit hook is asked about."

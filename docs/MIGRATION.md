@@ -3882,6 +3882,74 @@ fake archive port had to learn to hold members for the shared walk; the pyright 
 the gate types the tests and found `JsonValue` indexed without a cast in the new tests.
 `golden_change`: none; the plans' digests are unchanged by formatting. `supersedes`: none.
 
+## P23a. The host proves what needs no machine, and the imported records are named
+
+Goal: the first slice of section F's last phase. The store's imported records, read with
+the permanent limits `legacy-no-port-proof` and `legacy-no-candidate-readback`, are
+replaced by records made through the real ports, one check at a time, and every imported
+check has a named way back. This slice records the five the host can establish on its own
+and writes the way for the other nineteen. On `work/phase-23-reprove`, the whole gate
+green at the head.
+
+### The command
+
+`apex prove git` makes three repositories under `runtime/git-proofs/<run>/`, each with a
+fixture identity and none of the operator's configuration, and asks the hooks as Git
+calls them: seven messages to the commit-msg hook, seven staged entries to the pre-commit
+hook (a clean file, a private document, a private key, a local-only marker under another
+name, an opaque binary, a symlink entry and a submodule entry), four updates to the
+pre-push hook (the commits a push would send, a branch created, a branch deleted, a remote
+never fetched). Each answer is the rules the hook named against the rules it had to name;
+the report of every answer is the one proof, and `git.commit-policy`, `git.private-stage`
+and `git.outgoing-history` are recorded with the selected candidate and the host bundle as
+witness (`workspace/hookproving.py`, `verification/hostproofs.py`). `apex prove signature
+--build ID --key KEY` verifies the build's output against the operator's key, records
+`signature.accept`, runs every registered negative over a scratch copy and records
+`signature.reject`; a build that is not the selected candidate is refused before anything
+is recorded. `just prove-git` and `just prove-signature BUILD_ID KEY` run them. A record
+made this way supersedes the imported one for its check on the next reading; the imported
+document stays where it is.
+
+### The runbook
+
+`docs/REPROVING.md` names, for each of the twenty-four imported checks, the command that
+records it again: the two families above; the four recipes that mint (`verify-desktop-render`,
+`verify-desktop-theme`, `verify-live-protection`, `test-fingerprint`); the nine recorded by
+hand from a machine run's retained reports; the three recorded by hand from a build; the two
+physical ones recorded on the laptop; and `sources.locked`, which stays BLOCKED until the
+lock pins RPM repositories and buildroots.
+
+### What the reproof found
+
+The commit-msg hook read its file as text, and a text read folds a carriage return into a
+newline before `commit.carriage-return` could see it; the pre-push hook, which reads the
+commit object's bytes, saw it. The hook reads bytes now. The catalogue prose of the five
+checks is re-sourced from the code that proves them; the three git limits that had been cut
+mid-sentence by the sourcing tool read whole.
+
+### What this slice did not do
+
+Append to the operator's store: `apex prove git` ran against a copy of the real root, where
+the three git records went onto a new chain and the table read them as `recorded` with no
+limits, twenty-one imported remaining; the real root is the operator's to write. `apex prove
+signature` is NOT TESTED against the real output (2.7 GiB) beyond its unit tests on a
+signed fixture. The nineteen other checks are not recorded here.
+
+### Result
+
+| Item | Value |
+|---|---|
+| Checks reproved on the host | five: three git, two signature |
+| Imported after `prove git` on the copy | 21 of 24 |
+| Hook defect found | one: the commit-msg carriage return, fixed |
+| Default suite | 2 211 passed, 8 skipped, 13 deselected |
+
+`migration_red`: the carriage-return question failed until the hook read bytes; the cli
+package passed its 3 700 lines with the command (3 819), so the minter moved to the
+verification layer (`hostproofs.py`) and the budget is 3 800, the package at 3 785; mypy
+caught a loop variable reused for a string where the earlier loop had bound a tuple.
+`golden_change`: none; no plan. `supersedes`: none.
+
 ## Commands
 
 ```sh
@@ -3905,5 +3973,7 @@ just agent-wheel <dir>      # build the agent as a wheel and print its digest
 just verify-chain           # replay the attestation chain and name the first break
 just readiness-table        # read the real store through the versioned reader
 just readiness-table-strict # the same, withholding every imported result
+just prove-git              # record the three git checks through the hooks, no machine
+just prove-signature ID KEY # record the two signature checks for the candidate's build
 just gate                   # the standing gate for the current phase
 ```

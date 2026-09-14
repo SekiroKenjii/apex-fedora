@@ -3,7 +3,7 @@
 Run tool tests and inspect the source diff before staging explicit file paths. Do not
 use a blanket add command in a workspace containing local instructions or logs.
 
-Install the local guards with `python3 tools/apex.py hooks` before the first commit.
+Install the local guards with `just hooks` before the first commit.
 They check staged content, commit messages and outgoing history. They preserve existing
 hooks rather than overwrite another policy. Hooks are local safety checks, not server-side
 access control; do not bypass them.
@@ -22,7 +22,9 @@ The way out is `git revert --quit`, then `git revert -n <sha>`, resolve, then
 The tool suite runs Git itself against temporary repositories to check rejected
 commits, recovery after unstaging local files and outgoing history. Its push tests
 use a temporary bare repository on disk, with no network destination. Fixture authors
-and Git configuration are isolated from the contributor's settings.
+and Git configuration are isolated from the contributor's settings. `just prove-git`
+asks the hooks the same questions over disposable repositories under the runtime root
+and records the three git checks with the answers as proof.
 
 Use one short commit subject, at most 72 characters:
 
